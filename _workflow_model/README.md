@@ -42,7 +42,7 @@ Explain how the workflow works.
 
 ## Image
 Provide an exported .png of the workflow in the `/resources` directory from [Workflow stuio](https://docs.aws.amazon.com/step-functions/latest/dg/workflow-studio.html) and add here.
-![image](/resources/satemachine.png)
+![image](./resources/statemachine.png)
 
 ## Testing
 
