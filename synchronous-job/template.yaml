@@ -1,0 +1,221 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Request response
+
+  Sample SAM Template for simple retry
+
+
+Resources:
+  statemachineRequestResponse:
+    Type: AWS::Serverless::StateMachine 
+    Properties:
+      Role: !GetAtt BatchJobNotificationExecutionRole.Arn
+      DefinitionUri: statemachine/statemachine.asl.json
+      DefinitionSubstitutions:
+        topicArn: !Ref SNSTopic
+        jobQueueArn: !Ref BatchJobQueue
+        jobDefinitionArn: !Ref BatchJobDefinition
+
+
+  SNSTopic:
+    Type: AWS::SNS::Topic
+
+
+  BatchJobNotificationExecutionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: states.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Path: '/'
+      Policies:
+        - PolicyName: BatchJobNotificationAccessPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'sns:Publish'
+                Resource:
+                  - !Ref SNSTopic
+              - Effect: Allow
+                Action:
+                  - 'batch:SubmitJob'
+                  - 'batch:DescribeJobs'
+                  - 'batch:TerminateJob'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'events:PutTargets'
+                  - 'events:PutRule'
+                  - 'events:DescribeRule'
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/StepFunctionsGetEventsForBatchJobsRule'
+  
+  
+  
+  
+  
+  
+  
+  #### Batch configureations  #####
+  BatchVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+  BatchInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    DependsOn: BatchVPC
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    DependsOn:
+      - BatchVPC
+      - BatchVPCGatewayAttachment
+    Properties:
+      VpcId:
+        Ref: BatchVPC
+  BatchVPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    DependsOn:
+      - BatchVPC
+      - BatchInternetGateway
+    Properties:
+      VpcId:
+        Ref: BatchVPC
+      InternetGatewayId:
+        Ref: BatchInternetGateway
+  BatchSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+      GroupDescription: A security group for region-agnostic Batch resources
+      VpcId:
+        Ref: BatchVPC
+  BatchSubnet:
+    Type: AWS::EC2::Subnet
+    DependsOn: BatchVPCGatewayAttachment
+    Properties:
+      CidrBlock: 10.0.0.0/24
+      VpcId:
+        Ref: BatchVPC
+      MapPublicIpOnLaunch: 'True'
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn:
+      - PublicRouteTable
+      - BatchVPCGatewayAttachment
+    Properties:
+      RouteTableId:
+        Ref: PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+        Ref: BatchInternetGateway
+  BatchSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: PublicRouteTable
+      SubnetId:
+        Ref: BatchSubnet
+  BatchAWSBatchServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: batch.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole
+  BatchIamInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - Ref: BatchEcsInstanceRole
+  BatchEcsInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2008-10-17'
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role
+  BatchJobDefinition:
+    Type: AWS::Batch::JobDefinition
+    Properties:
+      Type: container
+      ContainerProperties:
+        Image:
+          Fn::Join:
+            - ''
+            - - 137112412989.dkr.ecr.
+              - Ref: AWS::Region
+              - '.amazonaws.com/amazonlinux:latest'
+        Vcpus: 2
+        Memory: 2000
+        Command:
+          - echo
+          - Hello world
+      RetryStrategy:
+        Attempts: 1
+  BatchJobQueue:
+    Type: AWS::Batch::JobQueue
+    DependsOn:
+      - BatchComputeEnvironment
+    Properties:
+      Priority: 1
+      ComputeEnvironmentOrder:
+        - Order: 1
+          ComputeEnvironment:
+            Ref: BatchComputeEnvironment
+  BatchComputeEnvironment:
+    Type: AWS::Batch::ComputeEnvironment
+    DependsOn:
+      - BatchSubnet
+      - BatchSecurityGroup
+      - BatchIamInstanceProfile
+      - BatchAWSBatchServiceRole
+    Properties:
+      Type: MANAGED
+      ComputeResources:
+        Type: EC2
+        MinvCpus: 0
+        DesiredvCpus: 0
+        MaxvCpus: 64
+        InstanceTypes:
+          - optimal
+        Subnets:
+          - Ref: BatchSubnet
+        SecurityGroupIds:
+          - Ref: BatchSecurityGroup
+        InstanceRole:
+          Ref: BatchIamInstanceProfile
+      ServiceRole:
+        Ref: BatchAWSBatchServiceRole
+
+
+Outputs:
+  statemachineRequestResponseARN:
+    Description: "state machine ARN"
+    Value: !Ref statemachineRequestResponse
+

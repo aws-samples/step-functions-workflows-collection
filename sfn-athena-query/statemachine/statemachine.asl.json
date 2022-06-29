@@ -1,0 +1,68 @@
+{
+    "StartAt": "Start Athena Query",
+    "States": {
+      "Start Athena Query": {
+        "Next": "Get Query Results",
+        "Type": "Task",
+        "Resource": "arn:aws:states:::athena:startQueryExecution.sync",
+        "Parameters": {
+          "QueryString": "SELECT uri FROM cf_access_logs limit 10",
+          "QueryExecutionContext": {
+            "Database": "serverlessland_database"
+          },
+          "ResultConfiguration": {
+            "OutputLocation": "s3://sfnathenacdkpythonstack-athenaresultsbucket879938-kofgclbeydzu/results/"
+          }
+        }
+      },
+      "Get Query Results": {
+        "Next": "Map State",
+        "Type": "Task",
+        "ResultPath": "$.GetQueryResults",
+        "Resource": "arn:aws:states:::athena:getQueryResults",
+        "Parameters": {
+          "QueryExecutionId.$": "$.QueryExecution.QueryExecutionId"
+        }
+      },
+      "Prepare Next Query Params": {
+        "Type": "Pass",
+        "ResultPath": "$.StartQueryParams",
+        "Parameters": {
+          "QueryExecutionId.$": "$.StartQueryParams.QueryExecutionId",
+          "NextToken.$": "$.GetQueryResults.NextToken"
+        },
+        "Next": "Get Query Results"
+      },
+      "Has More Results?": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "Variable": "$.GetQueryResults.NextToken",
+            "IsPresent": true,
+            "Next": "Prepare Next Query Params"
+          }
+        ],
+        "Default": "Done"
+      },
+      "Map State": {
+        "Type": "Map",
+        "ResultPath": null,
+        "Next": "Has More Results?",
+        "InputPath": "$.GetQueryResults.ResultSet.Rows[1:]",
+        "Iterator": {
+          "StartAt": "DoSomething",
+          "States": {
+            "DoSomething": {
+              "Type": "Pass",
+              "End": true
+            }
+          }
+        },
+        "MaxConcurrency": 1
+      },
+      "Done": {
+        "Type": "Succeed"
+      }
+    },
+    "TimeoutSeconds": 3600
+  }

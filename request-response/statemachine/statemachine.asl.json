@@ -1,0 +1,22 @@
+{
+    "Comment": "A request response pattern",
+    "StartAt": "Wait for timestamp",
+    "States": {
+    "Wait for timestamp": {
+      "Type": "Wait",
+      "SecondsPath": "$.timer_seconds",
+      "Next": "Send message to SNS"
+    },
+    "Send message to SNS": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "${topicArn}",
+        "Message": {
+          "Input": "Hello from Step Functions!"
+        }
+      },
+      "End": true
+    }
+  }
+}

@@ -1,0 +1,120 @@
+{
+    "Comment": "A description of my state machine",
+    "StartAt": "Emit - PHASE 1",
+    "States": {
+      "TIMEOUT": {
+        "Type": "Pass",
+        "Next": "Emit - TIMEDOUT"
+      },
+      "Emit - TIMEDOUT": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::events:putEvents",
+        "Parameters": {
+          "Entries": [
+            {
+              "Detail": {
+                "Message": "The workflow has reached timedout",
+                "TaskToken.$": "$$.Task.Token"
+              },
+              "DetailType": "timeout",
+              "EventBusName": "Default",
+              "Source": "emitAndWait"
+            }
+          ]
+        },
+        "ResultPath": null,
+        "HeartbeatSeconds": 300,
+        "End": true
+      },
+      "Emit - PHASE 1": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::events:putEvents.waitForTaskToken",
+        "Parameters": {
+            "Entries": [
+                {
+                  "Detail": {
+                    "Message": "The workflow has reached Phase 2",
+                    "TaskToken.$": "$$.Task.Token"
+                  },
+                  "DetailType": "Phase",
+                  "EventBusName": "Default",
+                  "Source": "emitAndWait"
+                }
+              ]
+        },
+        "Next": "Emit - PHASE 2",
+        "ResultPath": null,
+        "Catch": [
+          {
+            "ErrorEquals": [
+              "States.Timeout"
+            ],
+            "Comment": "Customer timed out",
+            "ResultPath": "$.comment",
+            "Next": "TIMEOUT"
+          }
+        ],
+        "HeartbeatSeconds": 300
+      },
+      "Emit - PHASE 2": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::events:putEvents.waitForTaskToken",
+        "Parameters": {
+            "Entries": [
+                {
+                  "Detail": {
+                    "Message": "The workflow has reached Phase 2",
+                    "TaskToken.$": "$$.Task.Token"
+                  },
+                  "DetailType": "Phase",
+                  "EventBusName": "Default",
+                  "Source": "emitAndWait"
+                }
+              ]
+        },
+        "Next": "Emit - PHASE 3",
+        "ResultPath": null,
+        "Catch": [
+          {
+            "ErrorEquals": [
+              "States.Timeout"
+            ],
+            "Comment": "Customer timed out",
+            "ResultPath": "$.comment",
+            "Next": "TIMEOUT"
+          }
+        ],
+        "HeartbeatSeconds": 300
+      },
+      "Emit - PHASE 3": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::events:putEvents.waitForTaskToken",
+        "Parameters": {
+            "Entries": [
+                {
+                  "Detail": {
+                    "Message": "The workflow has reached Phase 3",
+                    "TaskToken.$": "$$.Task.Token"
+                  },
+                  "DetailType": "Phase",
+                  "EventBusName": "Default",
+                  "Source": "emitAndWait"
+                }
+              ]
+        },
+        "ResultPath": null,
+        "Catch": [
+          {
+            "ErrorEquals": [
+              "States.Timeout"
+            ],
+            "Comment": "Customer timed out",
+            "ResultPath": "$.comment",
+            "Next": "TIMEOUT"
+          }
+        ],
+        "HeartbeatSeconds": 300,
+        "End": true
+      }
+    }
+  }

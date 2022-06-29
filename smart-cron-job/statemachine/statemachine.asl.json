@@ -1,0 +1,20 @@
+{
+    "StartAt": "Wait until timestamp",
+    "States": {
+      "Wait until timestamp": {
+        "Type": "Wait",
+        "TimestampPath": "$.timestamp",
+        "Next": "MainState"
+      },
+      "MainState": {
+        "End": true,
+        "Type": "Task",
+        "OutputPath": "$.Output",
+        "Resource": "arn:aws:states:::states:startExecution.sync:2",
+        "Parameters": {
+          "Input.$": "$",
+          "StateMachineArn": "arn:aws:states:eu-west-1:867201269000:stateMachine:WaitEventInnerSFFFF5A18D-JhGidF4UTlNn"
+        }
+      }
+    }
+  }

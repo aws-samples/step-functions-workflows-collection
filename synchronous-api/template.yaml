@@ -1,0 +1,100 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Request response
+
+  Sample SAM Template for sync api with express SFN workflow
+
+
+Resources:
+##########################################################################
+#   STEP FUNCTION                                                        #
+##########################################################################
+  syncronousApiStateMachine:
+    Type: AWS::Serverless::StateMachine 
+    Properties:
+      Type: EXPRESS
+      DefinitionUri: statemachine/statemachine.asl.json
+      DefinitionSubstitutions:
+        sumFunction: !Ref LambdaFunctionsumFunction
+        AvgFunction: !Ref LambdaFunctionAvgFunction
+        MaxMinFunction : !Ref LambdaFunctionMaxMinFunction
+      Policies:
+        - LambdaInvokePolicy: 
+            FunctionName: !Ref LambdaFunctionsumFunction
+        - LambdaInvokePolicy: 
+            FunctionName: !Ref LambdaFunctionAvgFunction
+        - LambdaInvokePolicy: 
+            FunctionName: !Ref LambdaFunctionMaxMinFunction
+
+##########################################################################
+#   Lambda Functions                  #
+##########################################################################
+  LambdaFunctionsumFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      CodeUri: sumFunction/function/
+      Handler: app.lambdaHandler
+      Runtime: nodejs14.x
+      Timeout: 3
+
+  LambdaFunctionAvgFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      CodeUri: AvgFunction/function/
+      Handler: app.lambdaHandler
+      Runtime: nodejs14.x
+      Timeout: 3
+
+  LambdaFunctionMaxMinFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      CodeUri: MaxMinFunction/function/
+      Handler: app.lambdaHandler
+      Runtime: nodejs14.x
+      Timeout: 3
+      
+##########################################################################
+#   REST API                                                             #
+##########################################################################
+  RESTApiforSyncWF:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      DefinitionBody:
+        'Fn::Transform':
+          Name: 'AWS::Include'
+          Parameters:
+            Location: 'api.yaml'
+##########################################################################
+#   Roles                                                               #
+##########################################################################
+  RestApiRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - apigateway.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+      - PolicyName: AllowSFNExec
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+            - Effect: Allow
+              Action: "states:StartSyncExecution"
+              Resource: !GetAtt syncronousApiStateMachine.Arn
+
+Outputs:
+  syncronousApiStateMachine:
+    Description: "state machine ARN"
+    Value: !Ref syncronousApiStateMachine
+
+  API:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${ RESTApiforSyncWF}.execute-api.${AWS::Region}.amazonaws.com/Prod"

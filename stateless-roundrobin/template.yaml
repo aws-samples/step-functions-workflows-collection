@@ -1,0 +1,59 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  emit-and-wait
+
+  Sample SAM Template for emit-and-wait
+
+Parameters:
+  ArrayToRoundRobin:
+    Type: String
+    Description: The array of items to roundrobin 
+    Default: "a,b,c,d"
+
+  EndPoint:
+    Type: String
+    Description: The array of items to roundrobin 
+    Default: "https://YourEndpoint.com"
+
+Resources:
+  StateMachineArn:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      DefinitionUri: statemachine/statemachine.asl.json
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - LambdaInvokePolicy:
+            FunctionName:  !Ref LambdaFunctionModuloFunction
+        - LambdaInvokePolicy:
+            FunctionName:  !Ref LambdaFunctionCallToApiFunction
+           
+  LambdaFunctionModuloFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      CodeUri: ModuloFunction/function/
+      Handler: app.lambdaHandler
+      Runtime: nodejs16.x
+      Timeout: 3
+      Environment:
+        Variables:
+          ArrayToRoundRobin: !Ref ArrayToRoundRobin
+
+  LambdaFunctionCallToApiFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      CodeUri: CallToApiFunction/function/
+      Handler: app.lambdaHandler
+      Runtime: nodejs16.x
+      Timeout: 3
+      Environment:
+        Variables:
+          EndPoint: !Ref EndPoint
+
+Outputs:
+  # StockTradingStateMachineHourlyTradingSchedule is an implicit Schedule event rule created out of Events key under Serverless::StateMachine
+  # Find out more about other implicit resources you can reference within SAM
+  # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-specification-generated-resources.html
+  StateMachineArn:
+    Description: "state machine ARN"
+    Value: !Ref StateMachineArn
+

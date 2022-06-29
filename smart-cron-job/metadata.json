@@ -1,0 +1,78 @@
+{
+    "title": "Smart cron job",
+    "description": "Use AWS Step Function to build a smart cron job.",
+    "language": "Typescript",
+    "implementation": "App",
+    "usecase": "Scheduled job",
+    "type": "Standard",
+    "diagram":"https://github.com/bls20AWS/stepfunctions-workflows-collection/blob/main/smart-cron-job/statemachine/statemachine.png?raw=true",
+    "videoId": "",
+    "level": "100",
+    "framework": "CDK",
+    "services": {
+      "from": "eventbridge",
+      "to": "sfn"
+    },
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "A DynamoDB Table is created to hold all your event.",
+        "Every day at 00:01 an Event Bridge cron will trigger the Lambda which will query the table to get all the events for that specific day.",
+        "For each event scheduled to run that day, an instance of the Step Function will be triggered and will execute the first state which represents a wait until the specific timestamp for the event is reached.",
+        "For each event, all fields from DynamoDB table are sent to the Step Function as input and which then is sent to the inner Step Function.",
+        "Once the timestamp is reached, the second step is triggered which is another step function. Modify the inner Step Function with your own logic."
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>cdk destroy</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "npm install",
+        "cdk deploy"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/bls20AWS/stepfunctions-workflows-collection/tree/main/smart-cron-job/",
+        "templateDir":"smart-cron-job/",
+        "templateFile": "lib/smart-cron-job-stack.ts",
+        "ASL": "statemachine/statemachine.asl.json",
+        "definition": "statemachine/statemachine.png"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+      {
+        "headline": "Presented by Corneliu Croitoru, Prototyping Architect",
+        "name": "Corneliu Croitoru",
+        "image": "https://serverlessland.com/assets/images/resources/contributors/ext-corneliu-croitoru.jpg",
+        "bio": "Developer at heart, in 2018 joined AWS as a Solution Architect and in 2021 joined EMEA Prototyping Team. Now he is building, jointly with customers, the most exciting and innovative prototypes on AWS. Specialized on Serverless/Edge Services/Media Streaming",
+        "linkedin": "corneliucroitoru",
+        "twitter": "@cornel_croi"
+      }
+    ]
+  }

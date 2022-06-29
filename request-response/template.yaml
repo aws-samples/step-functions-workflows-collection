@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Request response
+
+  Sample SAM Template for simple retry
+
+
+Resources:
+  statemachineRequestResponse:
+    Type: AWS::Serverless::StateMachine 
+    Properties:
+      DefinitionUri: statemachine/statemachine.asl.json
+      DefinitionSubstitutions:
+        topicArn: !Ref SNSTopic
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt SNSTopic.TopicName
+
+  SNSTopic:
+    Type: AWS::SNS::Topic
+
+Outputs:
+  statemachineRequestResponseARN:
+    Description: "state machine ARN"
+    Value: !Ref statemachineRequestResponse
+

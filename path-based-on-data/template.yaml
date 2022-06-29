@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Path based on data
+
+  Sample SAM Template for simple retry
+
+
+Resources:
+  StateMachineArn:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      DefinitionUri: statemachine/statemachine.asl.json
+
+Outputs:
+  StateMachineArn:
+    Description: "state machine ARN"
+    Value: !Ref StateMachineArn
+

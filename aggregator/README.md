@@ -1,0 +1,2 @@
+# The “the Aggregator” pattern
+

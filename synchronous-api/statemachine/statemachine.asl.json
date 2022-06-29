@@ -1,0 +1,65 @@
+{
+  "Comment": "An example of the Amazon States Language for starting a task and waiting for a callback.",
+  "StartAt": "ParallelState",
+  "States": {
+    "ParallelState": {
+      "Type": "Parallel",
+      "Branches": [
+        {
+          "StartAt": "sumFunction",
+          "States": {
+            "sumFunction": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${sumFunction}",
+                "Payload.$": "$"
+                
+              },
+              "End": true,
+              "ResultSelector": {
+                "sum.$": "$.Payload.sum"
+              }
+            } 
+          }
+        },
+        {
+          "StartAt": "AvgFunction",
+          "States": {
+            "AvgFunction": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${AvgFunction}",
+                "Payload.$": "$"
+              },
+              "End": true,
+              "ResultSelector": {
+                "avg.$": "$.Payload.avg"
+              }
+            }
+          }
+        },
+        {
+          "StartAt": "MaxMinFunction",
+          "States": {
+            "MaxMinFunction": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${MaxMinFunction}",
+                "Payload.$": "$"
+              },
+              "End": true,
+              "ResultSelector": {
+                "min.$": "$.Payload.min",
+                "max.$": "$.Payload.max"
+              }
+            }
+          }
+        }
+      ],
+      "End": true
+    }
+  }
+}
