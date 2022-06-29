@@ -3,4 +3,4 @@ A Choice state adds branching logic to a state machine. You can think of this li
 
 In our example workflow, we want to move on to `NEXT_STATE_ONE` if the input payload `$.type` is set to `Private`. Move to `NEXT_STATE_TWO` if the `$.value` is between 20 and 30. If neither of these criteria are met then the execution will fall back to the `DEFAULT_STATE`.
 
-![Path based on data](https://serverelssland.com/assets/images/workflows/branch-on-data.png)
+![Path based on data](https://serverlessland.com/assets/images/workflows/branch-on-data.png)
