@@ -68,7 +68,9 @@ Now is the time to create your new workflow or modify existing code.
 
 1. If you are creating a new workflow, copy the folder named "_workflow-model" to start with a template: `cp -r _workflow-model {new-folder-name}`
 1. If you are modifying existing code, make your code changes now. 
-    ** Alternatively, if you  have an existing GitHub repository with the associated template and workflow files you can use this to host your workflow instead. **
+    ``` 
+    Alternatively, if you  have an existing GitHub repository with the associated template and workflow files you can use this to host your workflow instead. 
+    ```
 1. When your code is complete, stage the changes to your local branch: `git add .`
 1. Commit the changes to your local branch: `git commit -m 'Comment here'`
 
