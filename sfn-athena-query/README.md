@@ -1,4 +1,4 @@
-# The "query Athena” pattern
+# The "Query Athena” pattern
 
 
 How to use an AWS Step Functions state machine to query Athena and get the results by leveraging Step Function native integration with Amazon Athena.
