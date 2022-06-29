@@ -11,14 +11,17 @@ To submit a workflow to the Step Functions Workflows Collection, submit an issue
 
 To learn more about submitting a workflow, read the publishing guidelines page.
 
-    Use the model template located at https://github.com/aws-samples/serverless-patterns/tree/main/_pattern-model to set up a README, template and any associated code.
+    Use the model template located at https://github.com/aws-samples/step-functions-workflows-collection/tree/main/_workflow-mode to set up a README, template and any associated code.
 
-    THIS PROCESS HAS BEEN SIMPLIFIED. All the information below must be provided in the "example-pattern.json" file cloned from the model **
+    All the information below must be provided in the "example-workflow.json" file cloned from the [model](https://github.com/aws-samples/step-functions-workflows-collection/tree/main/_workflow-model) **
 
 Note the following information for the model:
 
     Description (intro.text) should be a 300-500 word explanation of how the pattern works.
-    Resources should like to AWS documentation and AWS blogs related to the post (1-5 maximum).
+    Simplicity: must be 1 of ("1 - Fundamental", "2 -  Pattern", "3 - Applicaiton" )
+    Diagram: This must link to an Exported PNG of the workflow that shows any service integrations, you can export this from Workflow studio.
+    Type: Must be one of ("Standard", "Express")
+    Resources should link to AWS documentation and AWS blogs related to the post (1-5 maximum).
     Framework: currently, we support SAM or CDK.
     Author bio may include a LinkedIn and/or Twitter reference and a 1-sentence bio.
 
