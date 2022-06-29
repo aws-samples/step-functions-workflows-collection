@@ -1,4 +1,4 @@
-# How to Publish a Step Fucntions Workflow on [ServerlessLand](https://serverlessland.com/)
+# How to Publish a Step Functions Workflow on [ServerlessLand](https://serverlessland.com/)
 
 To submit a new workflow, or to make changes to existing code, follow the instructions below.
 
