@@ -5,7 +5,7 @@ For integrated services such as AWS Batch and Amazon ECS, Step Functions can wai
 With this pattern you can run a synchronized task using Run a Job (.sync).
 
 
-##Testing  
+## Testing  
 Execute the state machine, you will notice that the Submit Batch Job state will not advance until the job is completed.
 
 ![image](./resources/synchronous-job.png)
