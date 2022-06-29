@@ -2,6 +2,21 @@
 
 To submit a new workflow, or to make changes to existing code, follow the instructions below.
 
+Thre are two ways to submit a new workflow:
+
+1. Self hosted
+
+2. Hosted on this repo [https://github.com/aws-samples/step-functions-workflows-collection/](https://github.com/aws-samples/step-functions-workflows-collection/)
+
+
+
+## Self hosted
+If you already have an existing GitHub repository with the associated template and workflow files you can use this to host your workflow. Jump to xxxxx
+
+## Hosted on this repo
+If you need a place to upload the associated template and workflow files you can follow teh steps below to make a Pull request to this repo.
+
+
 ## Repo Names
 
 * **local:** Your local copy of the forked repository.
@@ -10,7 +25,7 @@ To submit a new workflow, or to make changes to existing code, follow the instru
 
 ## Initial Setup
 
-[Fork and Clone](https://docs.github.com/en/github/getting-started-with-github/fork-a-repo) the serverless-patterns repo.
+[Fork and Clone](https://docs.github.com/en/github/getting-started-with-github/fork-a-repo) the workflows-collection repo.
 
 1. Fork the original workflows-collection repo to create a copy of the repo in your own GitHub account: https://github.com/aws-samples/step-fucntions-workflows-collection
 1. Clone your copy of the repo to download it locally: `git clone https://github.com/{your-github-username}/step-fucntions-workflows-collection.git`
@@ -35,7 +50,7 @@ Create a new local branch for each workflow or modification being made. This all
     
     Branch name syntax: `{username}-{feature|fix}-{description}`
     
-    Example branch name: `myusername-feature-lambda-aurora-serverless`
+    Example branch name: `try-catch-workflow`
 
 1. For verification, display all branches: `git branch -a`
 
