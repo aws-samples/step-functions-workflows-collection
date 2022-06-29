@@ -2,20 +2,6 @@
 
 To submit a new workflow, or to make changes to existing code, follow the instructions below.
 
-Thre are two ways to submit a new workflow:
-
-1. Self hosted
-
-2. Hosted on this repo [https://github.com/aws-samples/step-functions-workflows-collection/](https://github.com/aws-samples/step-functions-workflows-collection/)
-
-
-## Self hosted
-If you  have an existing GitHub repository with the associated template and workflow files you can use this to host your workflow. Provide the correct URL to the your workflow template file, ASL, and image in the 
-
-## Hosted on this repo
-If you need a place to upload the associated template and workflow files you can follow the steps below to make a Pull request to this repo.
-
-
 ## Repo Names
 
 * **local:** Your local copy of the forked repository.
@@ -68,9 +54,10 @@ Now is the time to create your new workflow or modify existing code.
 
 1. If you are creating a new workflow, copy the folder named "_workflow-model" to start with a template: `cp -r _workflow-model {new-folder-name}`
 1. If you are modifying existing code, make your code changes now. 
-    ``` 
-    Alternatively, if you  have an existing GitHub repository with the associated template and workflow files you can use this to host your workflow instead. 
-    ```
+
+    *** 
+    Alternatively, if you  have an existing GitHub repository with the associated template and workflow files you can use thisit to host your workflow instead. 
+    ***
 1. When your code is complete, stage the changes to your local branch: `git add .`
 1. Commit the changes to your local branch: `git commit -m 'Comment here'`
 
