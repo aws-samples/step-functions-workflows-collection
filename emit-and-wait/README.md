@@ -1,4 +1,4 @@
-# emit-and-wait Pattern
+# emit-and-wait pattern
 
 Implement a callback pattern within your workflow
 
