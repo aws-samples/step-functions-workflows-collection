@@ -109,7 +109,7 @@ Delete any unnecessary local and origin branches.
 1. Within your code and the SAM template, use comments liberally to help others understand what is going on.
 1. You must include an image of teh Step functions workflow exported from workflow studio.
 
-## Example Patterns
+## Example workflows
 
-1. API Gateway HTTP API to Lambda: [Website](https://serverlessland.com/patterns/apigw-lambda) | [GitHub](https://github.com/aws-samples/serverless-patterns/tree/main/apigw-http-api-lambda)
-2. API Gateway REST API to DynamoDB: [Website](https://serverlessland.com/patterns/apigw-dynamodb) | [GitHub](https://github.com/aws-samples/serverless-patterns/tree/main/apigw-rest-api-dynamodb)
+1. Wait for callback (hosted in this repo): [Website](https://serverlessland.com/workflows/wait-for-callback) | [GitHub](https://github.com/aws-samples/step-functions-workflows-collection/tree/main/wait-for-callback)
+2. Query athena: [Website](https://serverlessland.com/workflowss/query-athena) | [GitHub](https://github.com/aws-samples/step-functions-workflows-collection/tree/main/sfn-athena-query)

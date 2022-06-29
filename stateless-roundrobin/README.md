@@ -6,4 +6,4 @@ The Step Functions `SDK:ListExecutions` task retrieves the total number of succe
 
 This workflow pattern Is used in production to assign new serverlessLand pattern pull requests to the DA team via Asana. 
 
-![Stateless roundrobin](https://github.com/bls20AWS/stepfunctions-workflows-collection/blob/main/stateless-roundrobin/images/stateless-roundrobin-image.png?raw=true)
+![Stateless roundrobin](https://github.com/aws-samples/step-functions-workflows-collection/blob/main/stateless-roundrobin/images/stateless-roundrobin-image.png?raw=true)

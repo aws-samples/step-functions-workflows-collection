@@ -5,7 +5,7 @@
     "implementation": "App",
     "usecase": "Scheduled job",
     "type": "Standard",
-    "diagram":"https://github.com/bls20AWS/stepfunctions-workflows-collection/blob/main/smart-cron-job/statemachine/statemachine.png?raw=true",
+    "diagram":"https://github.com/aws-samples/step-functions-workflows-collection/blob/main/smart-cron-job/statemachine/statemachine.png?raw=true",
     "videoId": "",
     "level": "100",
     "framework": "CDK",
@@ -43,7 +43,7 @@
     },
     "gitHub": {
       "template": {
-        "repoURL": "https://github.com/bls20AWS/stepfunctions-workflows-collection/tree/main/smart-cron-job/",
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/smart-cron-job/",
         "templateDir":"smart-cron-job/",
         "templateFile": "lib/smart-cron-job-stack.ts",
         "ASL": "statemachine/statemachine.asl.json",
