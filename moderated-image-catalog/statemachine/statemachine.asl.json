@@ -1,0 +1,121 @@
+{
+  "StartAt": "Check for inappropriate content",
+  "States": {
+    "Check for inappropriate content": {
+      "Type": "Task",
+      "Parameters": {
+        "Image": {
+          "S3Object": {
+            "Bucket.$": "$.bucket",
+            "Name.$": "$.key"
+          }
+        }
+      },
+      "Resource": "arn:aws:states:::aws-sdk:rekognition:detectModerationLabels",
+      "Next": "Inappropriate content detected?",
+      "ResultPath": "$.moderationResult"
+    },
+    "Inappropriate content detected?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.moderationResult.ModerationLabels[0]",
+          "IsPresent": true,
+          "Next": "Notify content moderators"
+        }
+      ],
+      "Default": "Process image"
+    },
+    "Process image": {
+      "Type": "Parallel",
+      "End": true,
+      "Branches": [
+        {
+          "StartAt": "Detect objects in image",
+          "States": {
+            "Detect objects in image": {
+              "Type": "Task",
+              "Parameters": {
+                "Image": {
+                  "S3Object": {
+                    "Bucket.$": "$.bucket",
+                    "Name.$": "$.key"
+                  }
+                }
+              },
+              "Resource": "arn:aws:states:::aws-sdk:rekognition:detectLabels",
+              "Next": "Record objects in database",
+              "ResultPath": "$.output"
+            },
+            "Record objects in database": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::dynamodb:updateItem",
+              "Parameters": {
+                "TableName": "${CatalogTable}",
+                "Key": {
+                  "Id": {
+                    "S.$": "$.key"
+                  }
+                },
+                "UpdateExpression": "set detectedObjects=:o",
+                "ExpressionAttributeValues": {
+                  ":o": {
+                    "S.$": "States.JsonToString($.output.Labels)"
+                  }
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Detect text in image",
+          "States": {
+            "Detect text in image": {
+              "Type": "Task",
+              "Parameters": {
+                "Image": {
+                  "S3Object": {
+                    "Bucket.$": "$.bucket",
+                    "Name.$": "$.key"
+                  }
+                }
+              },
+              "Resource": "arn:aws:states:::aws-sdk:rekognition:detectText",
+              "Next": "Record text in database",
+              "ResultPath": "$.output"
+            },
+            "Record text in database": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::dynamodb:updateItem",
+              "Parameters": {
+                "TableName": "${CatalogTable}",
+                "Key": {
+                  "Id": {
+                    "S.$": "$.key"
+                  }
+                },
+                "UpdateExpression": "set detectedText=:t",
+                "ExpressionAttributeValues": {
+                  ":t": {
+                    "S.$": "States.JsonToString($.output.TextDetections)"
+                  }
+                }
+              },
+              "End": true
+            }
+          }
+        }
+      ]
+    },
+    "Notify content moderators": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "Message.$": "$",
+        "TopicArn": "${ModeratorSNSTopic}"
+      },
+      "End": true
+    }
+  }
+}
