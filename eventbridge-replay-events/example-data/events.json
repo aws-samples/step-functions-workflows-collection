@@ -1,0 +1,26 @@
+[
+  {
+    "version": "0",
+    "id": "bfde51cc-d2c3-3dfc-0a7d-2a401648bd2c",
+    "detail-type": "UserCreated",
+    "source": "myapp.users",
+    "time": "2022-07-06T01:00:00Z",
+    "region": "us-east-1",
+    "resources": [],
+    "detail": {
+      "id": "b0f04be0-fd28-11ec-929b-fd818923bcef"
+    }
+  },
+  {
+    "version": "0",
+    "id": "bfde51cc-d2c3-3dfc-0a7d-2a401648bd2d",
+    "detail-type": "UserCreated",
+    "source": "myapp.users",
+    "time": "2022-07-06T12:00:00Z",
+    "region": "us-east-1",
+    "resources": [],
+    "detail": {
+      "id": "b0f04be0-fd28-11ec-929b-fd818923bcef"
+    }
+  }
+]

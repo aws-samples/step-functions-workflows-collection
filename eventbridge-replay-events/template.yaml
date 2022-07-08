@@ -1,0 +1,61 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Step function workflow that replays events the same time they happened
+
+Parameters:
+  EventBusName:
+    Description: 'Required event bus name to send events to'
+    Type: String
+    Default: default
+
+Resources:
+
+  TransformEvents:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: app.handler
+      Runtime: nodejs14.x
+      Timeout: 3
+      Policies: 
+        - CloudWatchPutMetricPolicy: {}
+        
+  EventBridgeReplayTimer:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/statemachine.asl.json
+      DefinitionSubstitutions:
+        functionArn: !GetAtt TransformEvents.Arn
+        EventBusName: !Ref EventBusName
+      Role: !GetAtt WorkflowExecutionRole.Arn
+
+  WorkflowExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: states.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: AllowEventBridgePutEvents
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: events:PutEvents
+                Resource: !Sub arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/${EventBusName}
+        - PolicyName: LambdaExecute
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "lambda:InvokeFunction"
+                Resource: !GetAtt TransformEvents.Arn        
+
+Outputs:
+  EventBridgeReplayTimerArn:
+    Value: !Ref EventBridgeReplayTimer

@@ -1,0 +1,74 @@
+{
+  "Comment": "Replay a list of EventBridge events the same time they were orginally generated",
+  "StartAt": "For Each Event",
+  "States": {
+    "For Each Event": {
+      "End": true,
+      "Iterator": {
+        "StartAt": "Convert past event to today",
+        "States": {
+          "Convert past event to today": {
+            "Next": "Is event in the future?",
+            "OutputPath": "$.Payload",
+            "Parameters": {
+              "FunctionName": "${functionArn}",
+              "Payload.$": "$"
+            },
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Retry": [
+              {
+                "BackoffRate": 2,
+                "ErrorEquals": [
+                  "Lambda.ServiceException",
+                  "Lambda.AWSLambdaException",
+                  "Lambda.SdkClientException"
+                ],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 6
+              }
+            ],
+            "Type": "Task"
+          },
+          "Is event in the future?": {
+            "Choices": [
+              {
+                "BooleanEquals": true,
+                "Next": "Wait",
+                "Variable": "$.process"
+              }
+            ],
+            "Default": "Pass",
+            "Type": "Choice"
+          },
+          "Pass": {
+            "End": true,
+            "Type": "Pass"
+          },
+          "Simulate Event": {
+            "End": true,
+            "Parameters": {
+              "Entries": [
+                {
+                  "Detail.$": "$.detail",
+                  "DetailType.$": "$.detail-type",
+                  "EventBusName": "${EventBusName}",
+                  "Source.$": "$.source"
+                }
+              ]
+            },
+            "Resource": "arn:aws:states:::events:putEvents",
+            "Type": "Task"
+          },
+          "Wait": {
+            "Next": "Simulate Event",
+            "OutputPath": "$.event",
+            "TimestampPath": "$.time",
+            "Type": "Wait"
+          }
+        }
+      },
+      "MaxConcurrency": 40,
+      "Type": "Map"
+    }
+  }
+}
