@@ -1,0 +1,67 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Moderated image catalog example
+
+Parameters:
+  # During deployment, this paramter will prompt for the email address of a content moderator.
+  ModeratorEmailAddress:
+    Type: String
+    Default: moderator@example.com
+    Description: Enter the email address that will receive content moderation alerts.
+
+Resources:
+  # State machine containing the core logic of the Moderated Image Catalog workflow.
+  ImageCatalogStateMachine:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      Name: moderated-image-catalog-workflow
+      DefinitionUri: statemachine/statemachine.asl.json
+      DefinitionSubstitutions:
+        CatalogTable: !Ref CatalogTable
+        ModeratorSNSTopic: !Ref ModeratorSNSTopic
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - RekognitionDetectOnlyPolicy: {}
+        - S3ReadPolicy:
+            BucketName: !Ref IngestionBucket
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt ModeratorSNSTopic.TopicName
+        - DynamoDBWritePolicy:
+            TableName: !Ref CatalogTable
+
+  # Amazon S3 bucket to which images as input for the workflow will be uploaded.
+  IngestionBucket:
+    Type: AWS::S3::Bucket
+
+  # Amazon DynamoDB table to which the workflow will write tags if it detects objects or text in processed images.
+  CatalogTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: Id
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+
+  # Amazon Simple Notification Service (SNS) topic and subscription.
+  # Triggers notification email if unsuitable content is detected by Amazon Rekognition.
+  ModeratorSNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Endpoint: !Ref ModeratorEmailAddress
+          Protocol: "email"
+
+Outputs:
+  IngestionBucket:
+    Description: "S3 bucket name"
+    Value: !Ref IngestionBucket
+  CatalogTable:
+    Description: "DynamoDB table name"
+    Value: !Ref CatalogTable
+  ModeratorSNSTopic:
+    Description: "SNS topic ARN"
+    Value: !Ref ModeratorSNSTopic
