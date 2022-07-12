@@ -331,3 +331,5 @@ cython_debug/
 cdk.out
 lib/*.js
 bin/*.js
+
+.idea
