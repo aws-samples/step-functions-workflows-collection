@@ -34,7 +34,7 @@ export class IdempotentWorkflow extends Construct {
     const idempotencyFunc: lambda.IFunction =
       props?.idempotencyHashFunction !== undefined
         ? props.idempotencyHashFunction
-        : new lambdapy.PythonFunction(this, "IdempotencyConfigr", {
+        : new lambdapy.PythonFunction(this, "IdempotencyConfig", {
             entry: "lambda/idempotency-config/",
             runtime: lambda.Runtime.PYTHON_3_9,
             architecture: lambda.Architecture.ARM_64,
