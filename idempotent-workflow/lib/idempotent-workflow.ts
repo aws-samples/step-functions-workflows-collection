@@ -13,9 +13,9 @@ export enum WorkflowStatus {
 }
 
 export interface IdempotentWorkflowProps {
+  workflowSteps: sfn.IChainable & sfn.INextable;
   idempotencyHashFunction?: lambda.IFunction;
   idempotencyTable?: ddb.ITable;
-  workflowSteps: sfn.IChainable & sfn.INextable;
   express?: boolean,
   ttlMinutes?: number
 }
@@ -26,7 +26,6 @@ const IDEMPOTENCY_KEY_JSON_PATH = `${IDEMPOTENCY_SETTINGS_JSON_PATH}.idempotency
 const IDEMPOTENCY_TTL_JSON_PATH = `${IDEMPOTENCY_SETTINGS_JSON_PATH}.ttl`;
 
 export class IdempotentWorkflow extends Construct {
-  readonly function: lambda.IFunction;
 
   constructor(scope: Construct, id: string, props: IdempotentWorkflowProps) {
     super(scope, id);
@@ -317,7 +316,7 @@ export class IdempotentWorkflow extends Construct {
     extractPreviousResultFromDynamo.next(success);
     const sfn_definition = wrap_payload.next(jmesPathChoice);
 
-    const statemachine = new sfn.StateMachine(this, "MyStateMachine", {
+    const statemachine = new sfn.StateMachine(this, "Statemachine", {
       definition: sfn_definition,
       stateMachineType: props.express ? sfn.StateMachineType.EXPRESS : sfn.StateMachineType.STANDARD
     });

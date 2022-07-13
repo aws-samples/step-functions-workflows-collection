@@ -107,7 +107,7 @@ the key should be calculated by passing in a JMESPath expression as part of the 
       "key1": "value1",
       "key2": "value2"
    },
-   "idempotencyKeyJmespath": "[nested.key, nested.key2"
+   "idempotencyKeyJmespath": "[nested.key, nested.key2]"
 } 
 ```
 uses the values of the two nested attributes to calculate the key.
