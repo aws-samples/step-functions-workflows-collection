@@ -1,0 +1,55 @@
+
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Step Functions Workflow Pattern - Human in the loop
+
+Parameters:
+  # During deployment, this paramter will prompt for the email address of a reviewer.
+  ModeratorEmailAddress:
+    Type: String
+    Default: moderator@example.com
+    Description: Enter the email address that will receive review notifications.
+
+# Comment each resource section to explain usage.
+Resources:
+  StateMachine:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      Name: human-in-the-loop
+      DefinitionUri: statemachine/statemachine.asl.json
+      DefinitionSubstitutions:
+        ProcessingLambda: !Ref ProcessingLambda
+        TopicName: !Ref NotificationTopic
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt NotificationTopic.TopicName
+        - LambdaInvokePolicy:
+            FunctionName: !Ref ProcessingLambda
+
+  # Amazon SNS topic and subscription, triggers notification email when content needs to be reviewed.
+  NotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Endpoint: !Ref ModeratorEmailAddress
+          Protocol: "email"
+
+  # AWS Lambda function processes the review result.
+  # Consider using different functions when your logic gets more complex.
+  ProcessingLambda:
+    Type: AWS::Serverless::Function 
+    Properties:
+      FunctionName: ProcessingLambda
+      CodeUri: lambda/
+      Handler: app.handler
+      Runtime: nodejs14.x
+      Timeout: 3
+      Policies:
+        - AWSLambdaBasicExecutionRole
+
+Outputs:
+  StepFunctionConsoleUrl:
+    Description: AWS Console URL of the created StepFunction
+    Value: !Sub
+      - "https://${AWS::Region}.console.aws.amazon.com/states/home?region=${AWS::Region}#/statemachines/view/${statemachine}"
+      - statemachine: !Ref StateMachine
