@@ -10,6 +10,9 @@ Learn more about this workflow at Step Functions workflows collection: https://s
 
 Important: this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the [AWS Pricing page](https://aws.amazon.com/pricing/) for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
 
+**Important**: The workflow uses DynamoDB to store the results of the actual workflow steps. Therefore, the maximum
+size of the results must not exceed ~399 KB (400 KB is maximum but the workflow stores some metadata too).
+
 ## Requirements
 
 * [Create an AWS account](https://portal.aws.amazon.com/gp/aws/developer/registration/index.html) if you do not already have one and log in. The IAM user that you use must have sufficient permissions to make necessary AWS service calls and manage AWS resources.
@@ -55,7 +58,7 @@ continues as described above, or `FAILED`, in which case the workflow tries to a
 Start the workflow with some test event, e.g.
 ```json
 {
-   "foo": "bar",
+   "top": "level",
    "nested": {
       "key1": "value1",
       "key2": "value2"
@@ -102,12 +105,12 @@ By default the workflow uses the entire input event to calculate the idempotency
 the key should be calculated by passing in a JMESPath expression as part of the event. For example
 ```json
 {
-   "foo": "bar",
+   "top": "level",
    "nested": {
       "key1": "value1",
       "key2": "value2"
    },
-   "idempotencyKeyJmespath": "[nested.key, nested.key2]"
+   "idempotencyKeyJmespath": "[nested.key1, nested.key2]"
 } 
 ```
 uses the values of the two nested attributes to calculate the key.

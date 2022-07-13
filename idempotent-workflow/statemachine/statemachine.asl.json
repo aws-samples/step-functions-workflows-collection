@@ -1,24 +1,6 @@
 {
-  "StartAt": "Nest payload under dedicated attribute",
+  "StartAt": "Create idempotency settings (key and ttl)",
   "States": {
-    "Nest payload under dedicated attribute": {
-      "Type": "Pass",
-      "Parameters": {
-        "payload.$": "$"
-      },
-      "Next": "Idempotency key JMESPath included in payload?"
-    },
-    "Idempotency key JMESPath included in payload?": {
-      "Type": "Choice",
-      "Choices": [
-        {
-          "Variable": "$.payload.idempotencyKeyJmespath",
-          "IsPresent": true,
-          "Next": "Extract idempotency key JMESPath"
-        }
-      ],
-      "Default": "Create idempotency settings (key and ttl)"
-    },
     "Create idempotency settings (key and ttl)": {
       "Next": "Create and lock idempotency record",
       "Retry": [
@@ -31,22 +13,37 @@
           "IntervalSeconds": 2,
           "MaxAttempts": 6,
           "BackoffRate": 2
+        },
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 3,
+          "MaxAttempts": 10,
+          "BackoffRate": 2
         }
       ],
       "Type": "Task",
-      "ResultPath": "$.idempotencySettings",
-      "Resource": "arn:aws:lambda:eu-central-1:513725428015:function:IdempotentStepfunctionsWo-IdempotentStepfunctionsW-MtKgqP9kMNHG"
-    },
-    "Extract idempotency key JMESPath": {
-      "Type": "Pass",
-      "Parameters": {
-        "payload.$": "$.payload",
-        "idempotencyKeyJmespath.$": "$.payload.idempotencyKeyJmespath"
-      },
-      "Next": "Create idempotency settings (key and ttl)"
+      "ResultPath": "$",
+      "Resource": "arn:aws:lambda:eu-central-1:513725428015:function:IdempotentStepfunctionsWo-IdempotentStepfunctionsW-bURHFStl0ZL3"
     },
     "Create and lock idempotency record": {
       "Next": "Your Workflow",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "DynamoDb.ProvisionedThroughputExceededException",
+            "DynamoDb.RequestLimitExceeded",
+            "DynamoDb.ThrottlingException"
+          ],
+          "IntervalSeconds": 3,
+          "MaxAttempts": 10,
+          "BackoffRate": 2
+        }
+      ],
       "Catch": [
         {
           "ErrorEquals": [
@@ -84,12 +81,12 @@
                   "S.$": "$$.Execution.StartTime"
                 },
                 ":ttl": {
-                  "N.$": "$.idempotencySettings.ttl"
+                  "N.$": "$.idempotencyConfig.ttl"
                 }
               },
               "Key": {
                 "id": {
-                  "S.$": "$.idempotencySettings.idempotencyKey"
+                  "S.$": "$.idempotencyConfig.idempotencyKey"
                 }
               },
               "UpdateExpression": "set #s = :inprogress, #e = :e, #st = :st, #ttl = :ttl",
@@ -130,13 +127,25 @@
     },
     "Get idempotency record from DynamoDB": {
       "Next": "Previous or concurrent execution SUCCEEDED, IN_PROGRESS, or FAILED?",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "DynamoDb.ProvisionedThroughputExceededException",
+            "DynamoDb.RequestLimitExceeded",
+            "DynamoDb.ThrottlingException"
+          ],
+          "IntervalSeconds": 3,
+          "MaxAttempts": 10,
+          "BackoffRate": 2
+        }
+      ],
       "Type": "Task",
       "ResultPath": "$.idempotencyTable",
       "Resource": "arn:aws:states:::dynamodb:getItem",
       "Parameters": {
         "Key": {
           "id": {
-            "S.$": "$.idempotencySettings.idempotencyKey"
+            "S.$": "$.idempotencyConfig.idempotencyKey"
           }
         },
         "TableName": "IdempotentStepfunctionsWorkflowStack-IdempotentStepfunctionsWorkflowIdempotencyTable276F57BD-VXO568YJ8PJ7",
@@ -167,6 +176,18 @@
     },
     "Save execution results": {
       "Next": "Success",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "DynamoDb.ProvisionedThroughputExceededException",
+            "DynamoDb.RequestLimitExceeded",
+            "DynamoDb.ThrottlingException"
+          ],
+          "IntervalSeconds": 3,
+          "MaxAttempts": 10,
+          "BackoffRate": 2
+        }
+      ],
       "Type": "Task",
       "OutputPath": "$.results",
       "ResultPath": "$.idempotencyTable.updateResult",
@@ -174,7 +195,7 @@
       "Parameters": {
         "Key": {
           "id": {
-            "S.$": "$.idempotencySettings.idempotencyKey"
+            "S.$": "$.idempotencyConfig.idempotencyKey"
           }
         },
         "TableName": "IdempotentStepfunctionsWorkflowStack-IdempotentStepfunctionsWorkflowIdempotencyTable276F57BD-VXO568YJ8PJ7",
@@ -269,6 +290,18 @@
     },
     "Save failure": {
       "Next": "Failure",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "DynamoDb.ProvisionedThroughputExceededException",
+            "DynamoDb.RequestLimitExceeded",
+            "DynamoDb.ThrottlingException"
+          ],
+          "IntervalSeconds": 3,
+          "MaxAttempts": 10,
+          "BackoffRate": 2
+        }
+      ],
       "Type": "Task",
       "OutputPath": "$.errors.childworkflow",
       "ResultPath": "$.idempotencyTable.updateErrorResult",
@@ -276,7 +309,7 @@
       "Parameters": {
         "Key": {
           "id": {
-            "S.$": "$.idempotencySettings.idempotencyKey"
+            "S.$": "$.idempotencyConfig.idempotencyKey"
           }
         },
         "TableName": "IdempotentStepfunctionsWorkflowStack-IdempotentStepfunctionsWorkflowIdempotencyTable276F57BD-VXO568YJ8PJ7",

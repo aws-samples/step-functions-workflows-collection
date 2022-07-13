@@ -16,17 +16,15 @@ export interface IdempotentWorkflowProps {
   workflowSteps: sfn.IChainable & sfn.INextable;
   idempotencyHashFunction?: lambda.IFunction;
   idempotencyTable?: ddb.ITable;
-  express?: boolean,
-  ttlMinutes?: number
+  express?: boolean;
+  ttlMinutes?: number;
 }
 
-const IDEMPOTENCY_KEY_JMESPATH_JSON_PATH = "$.payload.idempotencyKeyJmespath";
-const IDEMPOTENCY_SETTINGS_JSON_PATH = "$.idempotencySettings";
+const IDEMPOTENCY_SETTINGS_JSON_PATH = "$.idempotencyConfig";
 const IDEMPOTENCY_KEY_JSON_PATH = `${IDEMPOTENCY_SETTINGS_JSON_PATH}.idempotencyKey`;
 const IDEMPOTENCY_TTL_JSON_PATH = `${IDEMPOTENCY_SETTINGS_JSON_PATH}.ttl`;
 
 export class IdempotentWorkflow extends Construct {
-
   constructor(scope: Construct, id: string, props: IdempotentWorkflowProps) {
     super(scope, id);
 
@@ -50,7 +48,10 @@ export class IdempotentWorkflow extends Construct {
               ),
             ],
             environment: {
-              IDEMPOTENCY_RECORD_TTL_MINUTES: props.ttlMinutes !== undefined ? props.ttlMinutes.toFixed(0).toString() : "1440", // 24h
+              IDEMPOTENCY_RECORD_TTL_MINUTES:
+                props.ttlMinutes !== undefined
+                  ? props.ttlMinutes.toFixed(0).toString()
+                  : "1440", // 24h
               IDEMPOTENCY_JMESPATH_ATTRIBUTE: "idempotencyKeyJmespath",
             },
           });
@@ -65,48 +66,25 @@ export class IdempotentWorkflow extends Construct {
             encryption: ddb.TableEncryption.DEFAULT,
           });
 
-    const wrap_payload = new sfn.Pass(
-      this,
-      "Nest payload under dedicated attribute",
-      {
-        parameters: {
-          payload: sfn.JsonPath.entirePayload,
-        },
-      }
-    );
-
-    const pullUpJmesPath = new sfn.Pass(
-      this,
-      "Extract idempotency key JMESPath",
-      {
-        parameters: {
-          payload: sfn.JsonPath.objectAt("$.payload"),
-          idempotencyKeyJmespath: sfn.JsonPath.stringAt(
-            IDEMPOTENCY_KEY_JMESPATH_JSON_PATH
-          ),
-        },
-      }
-    );
-
     const createIdempotencyKey = new sfnt.LambdaInvoke(
       this,
       "Create idempotency settings (key and ttl)",
       {
         lambdaFunction: idempotencyFunc,
         payloadResponseOnly: true,
-        resultPath: IDEMPOTENCY_SETTINGS_JSON_PATH,
+        resultPath: "$",
       }
-    );
-
-    const jmesPathChoice = new sfn.Choice(
-      this,
-      "Idempotency key JMESPath included in payload?"
-    )
-      .when(
-        sfn.Condition.isPresent(IDEMPOTENCY_KEY_JMESPATH_JSON_PATH),
-        pullUpJmesPath
-      )
-      .otherwise(createIdempotencyKey);
+    ).addRetry({
+      errors: [
+        "Lambda.ServiceException",
+        "Lambda.AWSLambdaException",
+        "Lambda.SdkClientException",
+        "Lambda.TooManyRequestsException",
+      ],
+      interval: Duration.seconds(3),
+      backoffRate: 2,
+      maxAttempts: 10,
+    });
 
     const getItem = new sfnt.DynamoGetItem(
       this,
@@ -129,7 +107,16 @@ export class IdempotentWorkflow extends Construct {
         table: idempotencyTable,
         resultPath: "$.idempotencyTable",
       }
-    );
+    ).addRetry({
+      errors: [
+        "DynamoDb.ProvisionedThroughputExceededException",
+        "DynamoDb.RequestLimitExceeded",
+        "DynamoDb.ThrottlingException",
+      ],
+      interval: Duration.seconds(3),
+      backoffRate: 2,
+      maxAttempts: 10,
+    });
 
     const extractPreviousResultFromDynamo = new sfn.Pass(
       this,
@@ -191,10 +178,21 @@ export class IdempotentWorkflow extends Construct {
         resultPath: sfn.JsonPath.DISCARD,
         iamResources: [idempotencyTable.tableArn],
       }
-    ).addCatch(getItem, {
-      errors: ["DynamoDb.TransactionCanceledException"],
-      resultPath: "$.errors.lockItem",
-    });
+    )
+      .addRetry({
+        errors: [
+          "DynamoDb.ProvisionedThroughputExceededException",
+          "DynamoDb.RequestLimitExceeded",
+          "DynamoDb.ThrottlingException",
+        ],
+        interval: Duration.seconds(3),
+        backoffRate: 2,
+        maxAttempts: 10,
+      })
+      .addCatch(getItem, {
+        errors: ["DynamoDb.TransactionCanceledException"],
+        resultPath: "$.errors.lockItem",
+      });
 
     const checkForFinishedAndGotResult = new sfn.Choice(
       this,
@@ -256,7 +254,16 @@ export class IdempotentWorkflow extends Construct {
         resultPath: "$.idempotencyTable.updateResult",
         outputPath: "$.results",
       }
-    );
+    ).addRetry({
+      errors: [
+        "DynamoDb.ProvisionedThroughputExceededException",
+        "DynamoDb.RequestLimitExceeded",
+        "DynamoDb.ThrottlingException",
+      ],
+      interval: Duration.seconds(3),
+      backoffRate: 2,
+      maxAttempts: 10,
+    });
 
     const saveFailureToDynamo = new sfnt.DynamoUpdateItem(
       this,
@@ -284,7 +291,16 @@ export class IdempotentWorkflow extends Construct {
         resultPath: "$.idempotencyTable.updateErrorResult",
         outputPath: "$.errors.childworkflow",
       }
-    );
+    ).addRetry({
+      errors: [
+        "DynamoDb.ProvisionedThroughputExceededException",
+        "DynamoDb.RequestLimitExceeded",
+        "DynamoDb.ThrottlingException",
+      ],
+      interval: Duration.seconds(3),
+      backoffRate: 2,
+      maxAttempts: 10,
+    });
 
     const success = new sfn.Succeed(this, "Success");
     const failure = new sfn.Fail(this, "Failure", {
@@ -306,19 +322,20 @@ export class IdempotentWorkflow extends Construct {
         resultPath: "$.errors.childworkflow",
       });
     saveFailureToDynamo.next(failure);
-    pullUpJmesPath
-      .next(createIdempotencyKey)
+
+    delayAndRetryGet.next(getItem).next(checkForFinishedAndGotResult);
+    extractPreviousResultFromDynamo.next(success);
+    const sfn_definition = createIdempotencyKey
       .next(conditionallyLockItem)
       .next(childworkflow)
       .next(saveResultToDynamo)
       .next(success);
-    delayAndRetryGet.next(getItem).next(checkForFinishedAndGotResult);
-    extractPreviousResultFromDynamo.next(success);
-    const sfn_definition = wrap_payload.next(jmesPathChoice);
 
     const statemachine = new sfn.StateMachine(this, "Statemachine", {
       definition: sfn_definition,
-      stateMachineType: props.express ? sfn.StateMachineType.EXPRESS : sfn.StateMachineType.STANDARD
+      stateMachineType: props.express
+        ? sfn.StateMachineType.EXPRESS
+        : sfn.StateMachineType.STANDARD,
     });
 
     idempotencyTable.grantReadWriteData(statemachine);

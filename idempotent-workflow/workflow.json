@@ -2,7 +2,7 @@
     "title": "Idempotent Workflow",
     "description": "A workflow that uses DynamoDB to implement idempotency ",
     "language": "",
-    "simplicity": "3 - Application",
+    "simplicity": "2 - Pattern",
     "usecase": "",
     "type": "Standard",
     "diagram":"/resources/statemachine.png",
@@ -69,7 +69,7 @@
     "authors": [
         {
           "name": "Daniel Moser",
-          "image": "link-to-your-photo.jpg",
+          "image": "https://avatars.githubusercontent.com/u/32679309",
           "bio": "Daniel Moser is an Solutions Architect at Amazon Web Services (AWS).",
           "linkedin": "moserd"
         }
