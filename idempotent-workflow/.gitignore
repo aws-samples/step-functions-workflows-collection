@@ -333,3 +333,5 @@ lib/*.js
 bin/*.js
 
 .idea
+
+*.d.ts
