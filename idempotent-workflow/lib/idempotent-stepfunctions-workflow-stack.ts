@@ -16,7 +16,7 @@ export class IdempotentStepfunctionsWorkflowStack extends Stack {
       {
         entry: "lambda/inject-failure/",
         runtime: lambda.Runtime.PYTHON_3_9,
-        architecture: lambda.Architecture.ARM_64,
+        architecture: lambda.Architecture.X86_64,
         index: "index.py",
         handler: "lambda_handler",
         timeout: Duration.seconds(10),

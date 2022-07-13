@@ -37,7 +37,7 @@ export class IdempotentWorkflow extends Construct {
         : new lambdapy.PythonFunction(this, "IdempotencyConfig", {
             entry: "lambda/idempotency-config/",
             runtime: lambda.Runtime.PYTHON_3_9,
-            architecture: lambda.Architecture.ARM_64,
+            architecture: lambda.Architecture.X86_64,
             index: "index.py",
             handler: "lambda_handler",
             timeout: Duration.seconds(10),
