@@ -27,19 +27,20 @@
   "cleanup": {
     "headline": "Cleanup",
     "text": [
-      "1. Delete the stack: <code>npx cdk destroy</code>."
+      "1. Delete the stack: <code>sam delete</code>."
     ]
   },
   "deploy": {
     "text": [
-      "npx cdk deploy"
+      "sam build --use-container",
+      "sam deploy --guided"
     ]
   },
   "gitHub": {
     "template": {
-      "repoURL": "https://github.com/aws-samples/stepfunctions-workflows-collection/tree/main/idempotent-workflow/",
-      "templateDir":"idempotent-workflow/lib",
-      "templateFile": "idempotent-stepfunctions-workflow-stack.ts",
+      "repoURL": "https://github.com/aws-samples/stepfunctions-workflows-collection/tree/main/idempotent-workflow-sam/",
+      "templateDir":"idempotent-workflow-sam",
+      "templateFile": "template.yaml",
       "ASL": "statemachine/statemachine.asl.json"
     },
     "payloads": [

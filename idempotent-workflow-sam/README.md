@@ -6,7 +6,7 @@ with the same payload previously and the previous results are retrieved from Dyn
 The workflow also implements the concurrency controller pattern which prohibits multiple instances of the workflow to
 run concurrently.
 
-Learn more about this workflow at Step Functions workflows collection: https://serverlessland.com/workflows/idempotent-workflow
+Learn more about this workflow at Step Functions workflows collection: https://serverlessland.com/workflows/idempotent-workflow-sam
 
 Important: this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the [AWS Pricing page](https://aws.amazon.com/pricing/) for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
 
