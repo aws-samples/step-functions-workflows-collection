@@ -1,0 +1,95 @@
+
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Step Functions Workflow - Idempotent Workflows
+
+Parameters:
+  TTLMinutes:
+    Type: Number
+    Default: 1440
+    Description: Time-to-live in minutes until idempotency records are expired from DynamoDB
+
+  JMESPathAttribute:
+    Type: String
+    Default: idempotencyKeyJmespath
+    Description: Name of the attribute in the workflow input to specify a custom JMESPath for calculating the idempotency hash
+
+
+Resources:
+  # This function calculates the idempotency key (hash of attributes of the payloads)
+  IdempotencyConfigFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: ./lambda/idempotency-config/
+      Handler: index.lambda_handler
+      Runtime: python3.9
+      MemorySize: 128
+      Timeout: 10
+      Layers:
+        - !Sub arn:aws:lambda:${AWS::Region}:017000801446:layer:AWSLambdaPowertoolsPython:22
+      Environment:
+        Variables:
+          IDEMPOTENCY_RECORD_TTL_MINUTES: !Ref TTLMinutes
+          IDEMPOTENCY_JMESPATH_ATTRIBUTE: !Ref JMESPathAttribute
+      Policies:
+        - AWSLambdaBasicExecutionRole
+
+  # Table to store execution results and track execution status. Items in the table act as semaphore
+  IdempotencyTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: IdempotencyTable
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+
+  # Function to inject failures into the workflow to demonstrate handling of those
+  FailureDemoFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: ./lambda/inject-failure/
+      Handler: index.lambda_handler
+      Runtime: python3.9
+      MemorySize: 128
+      Timeout: 10
+      Policies:
+        - AWSLambdaBasicExecutionRole
+
+  IdempotentStateMachine:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      DefinitionUri: statemachine/statemachine.asl.json
+      DefinitionSubstitutions:
+        IdempotencyConfigFunctionArn: !GetAtt IdempotencyConfigFunction.Arn
+        FailureInjectFunctionArn: !GetAtt FailureDemoFunction.Arn
+        DDBUpdateItem: !Sub arn:${AWS::Partition}:states:::dynamodb:updateItem
+        DDBGetItem: !Sub arn:${AWS::Partition}:states:::dynamodb:getItem
+        DDBTransactWriteItems: !Sub arn:${AWS::Partition}:states:::aws-sdk:dynamodb:transactWriteItems
+        DDBTable: !Ref IdempotencyTable
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - AWSLambdaRole
+        - DynamoDBCrudPolicy:
+            TableName: !Ref IdempotencyTable
+
+
+# Outputs you might need to test the workflow
+Outputs:
+  StepFunctionConsoleUrl:
+    Description: AWS Console URL of the created StepFunction
+    Value: !Sub
+      - "https://${AWS::Region}.console.aws.amazon.com/states/home?region=${AWS::Region}#/statemachines/view/${statemachine}"
+      - statemachine: !Ref IdempotentStateMachine
+  DynamoDBConsoleUrl:
+    Description: AWS Console URL of the created DynamoDB table
+    Value: !Sub
+      - "https://${AWS::Region}.console.aws.amazon.com/dynamodbv2/home?region=${AWS::Region}#item-explorer?initialTagKey=&table=${table}"
+      - table: !Ref IdempotencyTable
