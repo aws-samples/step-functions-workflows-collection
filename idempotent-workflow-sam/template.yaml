@@ -81,10 +81,15 @@ Resources:
             TableName: !Ref IdempotencyTable
 
 
-# List all common outputs for usage
+# Outputs you might need to test the workflow
 Outputs:
   StepFunctionConsoleUrl:
     Description: AWS Console URL of the created StepFunction
     Value: !Sub
       - "https://${AWS::Region}.console.aws.amazon.com/states/home?region=${AWS::Region}#/statemachines/view/${statemachine}"
       - statemachine: !Ref IdempotentStateMachine
+  DynamoDBConsoleUrl:
+    Description: AWS Console URL of the created DynamoDB table
+    Value: !Sub
+      - "https://${AWS::Region}.console.aws.amazon.com/dynamodbv2/home?region=${AWS::Region}#item-explorer?initialTagKey=&table=${table}"
+      - table: !Ref IdempotencyTable
