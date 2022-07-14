@@ -1,0 +1,337 @@
+{
+  "StartAt": "Create idempotency settings (key and ttl)",
+  "States": {
+    "Create idempotency settings (key and ttl)": {
+      "Next": "Create and lock idempotency record",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        },
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 3,
+          "MaxAttempts": 10,
+          "BackoffRate": 2
+        }
+      ],
+      "Type": "Task",
+      "ResultPath": "$",
+      "Resource": "arn:aws:lambda:eu-central-1:513725428015:function:IdempotentStepfunctionsWo-IdempotentStepfunctionsW-bURHFStl0ZL3"
+    },
+    "Create and lock idempotency record": {
+      "Next": "Your Workflow",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "DynamoDb.ProvisionedThroughputExceededException",
+            "DynamoDb.RequestLimitExceeded",
+            "DynamoDb.ThrottlingException"
+          ],
+          "IntervalSeconds": 3,
+          "MaxAttempts": 10,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "DynamoDb.TransactionCanceledException"
+          ],
+          "ResultPath": "$.errors.lockItem",
+          "Next": "Get idempotency record from DynamoDB"
+        }
+      ],
+      "Type": "Task",
+      "ResultPath": null,
+      "Resource": "arn:aws:states:::aws-sdk:dynamodb:transactWriteItems",
+      "Parameters": {
+        "TransactItems": [
+          {
+            "Update": {
+              "ConditionExpression": "attribute_not_exists(#s) or #s = :failed",
+              "ExpressionAttributeNames": {
+                "#s": "executionstatus",
+                "#e": "execution",
+                "#st": "starttime",
+                "#ttl": "ttl"
+              },
+              "ExpressionAttributeValues": {
+                ":failed": {
+                  "S": "FAILED"
+                },
+                ":inprogress": {
+                  "S": "IN_PROGRESS"
+                },
+                ":e": {
+                  "S.$": "$$.Execution.Id"
+                },
+                ":st": {
+                  "S.$": "$$.Execution.StartTime"
+                },
+                ":ttl": {
+                  "N.$": "$.idempotencyConfig.ttl"
+                }
+              },
+              "Key": {
+                "id": {
+                  "S.$": "$.idempotencyConfig.idempotencyKey"
+                }
+              },
+              "UpdateExpression": "set #s = :inprogress, #e = :e, #st = :st, #ttl = :ttl",
+              "TableName": "IdempotentStepfunctionsWorkflowStack-IdempotentStepfunctionsWorkflowIdempotencyTable276F57BD-VXO568YJ8PJ7"
+            }
+          }
+        ]
+      }
+    },
+    "Previous or concurrent execution SUCCEEDED, IN_PROGRESS, or FAILED?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "And": [
+            {
+              "Variable": "$.idempotencyTable.Item.executionstatus.S",
+              "StringEquals": "SUCCEEDED"
+            },
+            {
+              "Variable": "$.idempotencyTable.Item.executionresult.S",
+              "IsPresent": true
+            }
+          ],
+          "Next": "De-serialize previous results"
+        },
+        {
+          "Variable": "$.idempotencyTable.Item.executionstatus.S",
+          "StringEquals": "FAILED",
+          "Next": "Create and lock idempotency record"
+        },
+        {
+          "Variable": "$.idempotencyTable.Item.executionstatus.S",
+          "StringEquals": "IN_PROGRESS",
+          "Next": "Still IN_PROGRESS, wait for 10s"
+        }
+      ],
+      "Default": "Undefined execution state in idempotency record"
+    },
+    "Get idempotency record from DynamoDB": {
+      "Next": "Previous or concurrent execution SUCCEEDED, IN_PROGRESS, or FAILED?",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "DynamoDb.ProvisionedThroughputExceededException",
+            "DynamoDb.RequestLimitExceeded",
+            "DynamoDb.ThrottlingException"
+          ],
+          "IntervalSeconds": 3,
+          "MaxAttempts": 10,
+          "BackoffRate": 2
+        }
+      ],
+      "Type": "Task",
+      "ResultPath": "$.idempotencyTable",
+      "Resource": "arn:aws:states:::dynamodb:getItem",
+      "Parameters": {
+        "Key": {
+          "id": {
+            "S.$": "$.idempotencyConfig.idempotencyKey"
+          }
+        },
+        "TableName": "IdempotentStepfunctionsWorkflowStack-IdempotentStepfunctionsWorkflowIdempotencyTable276F57BD-VXO568YJ8PJ7",
+        "ConsistentRead": false,
+        "ProjectionExpression": "executionstatus,executionresult"
+      }
+    },
+    "Still IN_PROGRESS, wait for 10s": {
+      "Type": "Wait",
+      "Seconds": 10,
+      "Next": "Get idempotency record from DynamoDB"
+    },
+    "Undefined execution state in idempotency record": {
+      "Type": "Fail",
+      "Error": "UndefinedExecutionState",
+      "Cause": "The idempotency records exists but the executionstatus is neither SUCCEEDED, IN_PROGRESS, or FAILED"
+    },
+    "De-serialize previous results": {
+      "Type": "Pass",
+      "Parameters": {
+        "previous_results.$": "States.StringToJson($.idempotencyTable.Item.executionresult.S)"
+      },
+      "OutputPath": "$.previous_results",
+      "Next": "Success"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "Save execution results": {
+      "Next": "Success",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "DynamoDb.ProvisionedThroughputExceededException",
+            "DynamoDb.RequestLimitExceeded",
+            "DynamoDb.ThrottlingException"
+          ],
+          "IntervalSeconds": 3,
+          "MaxAttempts": 10,
+          "BackoffRate": 2
+        }
+      ],
+      "Type": "Task",
+      "OutputPath": "$.results",
+      "ResultPath": "$.idempotencyTable.updateResult",
+      "Resource": "arn:aws:states:::dynamodb:updateItem",
+      "Parameters": {
+        "Key": {
+          "id": {
+            "S.$": "$.idempotencyConfig.idempotencyKey"
+          }
+        },
+        "TableName": "IdempotentStepfunctionsWorkflowStack-IdempotentStepfunctionsWorkflowIdempotencyTable276F57BD-VXO568YJ8PJ7",
+        "ExpressionAttributeNames": {
+          "#s": "executionstatus",
+          "#r": "executionresult"
+        },
+        "ExpressionAttributeValues": {
+          ":s": {
+            "S": "SUCCEEDED"
+          },
+          ":r": {
+            "S.$": "States.JsonToString($.results)"
+          }
+        },
+        "UpdateExpression": "SET #s = :s, #r = :r"
+      }
+    },
+    "Your Workflow": {
+      "Type": "Parallel",
+      "Next": "Save execution results",
+      "OutputPath": "$.results",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.errors.childworkflow",
+          "Next": "Save failure"
+        }
+      ],
+      "Branches": [
+        {
+          "StartAt": "Here",
+          "States": {
+            "Here": {
+              "Type": "Pass",
+              "ResultPath": "$.results.step1",
+              "Parameters": {
+                "result": "Output of step 1"
+              },
+              "Next": "Goes"
+            },
+            "Goes": {
+              "Type": "Pass",
+              "ResultPath": "$.results.step2",
+              "Parameters": {
+                "result": "Output of step 2"
+              },
+              "Next": "Your"
+            },
+            "Your": {
+              "Type": "Pass",
+              "ResultPath": "$.results.step3",
+              "Parameters": {
+                "result": "Output of step 3"
+              },
+              "Next": "Workflow"
+            },
+            "Workflow": {
+              "Type": "Pass",
+              "ResultPath": "$.results.step4",
+              "Parameters": {
+                "result": "Output of step 4"
+              },
+              "Next": "(which can fail occasionally)"
+            },
+            "(which can fail occasionally)": {
+              "End": true,
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 6,
+                  "BackoffRate": 2
+                }
+              ],
+              "Type": "Task",
+              "ResultPath": "$.results.randomFailureFunc",
+              "Resource": "arn:aws:lambda:eu-central-1:513725428015:function:IdempotentStepfunctionsWo-IdempotencyWorkflowInjec-ptf6qWpoUL4E"
+            }
+          }
+        }
+      ],
+      "ResultSelector": {
+        "results.$": "$.[0]"
+      }
+    },
+    "Save failure": {
+      "Next": "Failure",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "DynamoDb.ProvisionedThroughputExceededException",
+            "DynamoDb.RequestLimitExceeded",
+            "DynamoDb.ThrottlingException"
+          ],
+          "IntervalSeconds": 3,
+          "MaxAttempts": 10,
+          "BackoffRate": 2
+        }
+      ],
+      "Type": "Task",
+      "OutputPath": "$.errors.childworkflow",
+      "ResultPath": "$.idempotencyTable.updateErrorResult",
+      "Resource": "arn:aws:states:::dynamodb:updateItem",
+      "Parameters": {
+        "Key": {
+          "id": {
+            "S.$": "$.idempotencyConfig.idempotencyKey"
+          }
+        },
+        "TableName": "IdempotentStepfunctionsWorkflowStack-IdempotentStepfunctionsWorkflowIdempotencyTable276F57BD-VXO568YJ8PJ7",
+        "ExpressionAttributeNames": {
+          "#s": "executionstatus",
+          "#r": "executionresult"
+        },
+        "ExpressionAttributeValues": {
+          ":s": {
+            "S": "FAILED"
+          },
+          ":r": {
+            "S.$": "States.JsonToString($.errors.childworkflow)"
+          }
+        },
+        "UpdateExpression": "SET #s = :s, #r = :r"
+      }
+    },
+    "Failure": {
+      "Type": "Fail",
+      "Error": "ChildWorkflowException",
+      "Cause": "The child workflow failed. The full exception is available in DynamoDB"
+    }
+  }
+}

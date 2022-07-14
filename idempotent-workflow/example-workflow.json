@@ -1,0 +1,78 @@
+{
+    "title": "Idempotent Workflow",
+    "description": "A workflow that uses DynamoDB to implement idempotency ",
+    "language": "",
+    "simplicity": "2 - Pattern",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "100",
+    "framework": "CDK",
+    "services": ["lambda","dynamodb"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "The workflow tracks the workflow execution and status in a DynamoDB table. When the workflow starts, an idempotency key is calculated based on the input event (customizable) and stored in the database as a semaphore together with a status of `IN_PROGRESS`.",
+        "If storing the key was successful, the workflow runs the actual workflow steps and records the result in the database with a status of `SUCCESS` (or `FAILED` in case of an error).",
+        "If acquiring the semaphore was not successful (i.e. the workflow successfully executed previously or another execution is running concurrently and thus the status is `IN_PROGRESS`) the workflow retrieves the idempotency record from the database. When the status is `SUCCESS` and there is a result the result is returned as output of the workflow. If the status is `IN_PROGRESS` the workflow continues to query the database every 10 seconds until the status changes to either `SUCCESS` and it continues as described above, or `FAILED`, in which case the workflow tries to acquire the semaphore again."
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>npx cdk destroy</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "npx cdk deploy"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/stepfunctions-workflows-collection/tree/main/idempotent-workflow/",
+        "templateDir":"idempotent-workflow/lib",
+        "templateFile": "idempotent-stepfunctions-workflow-stack.ts",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        },
+        {
+          "text": "Idempotent Lambda Functions with AWS Lambda Powertools (Python)",
+          "link": "https://awslabs.github.io/aws-lambda-powertools-python/latest/utilities/idempotency/"
+        },
+        {
+          "text": "Idempotent Lambda Functions with AWS Lambda Powertools (Java)",
+          "link": "https://awslabs.github.io/aws-lambda-powertools-java/utilities/idempotency/"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Daniel Moser",
+          "image": "https://avatars.githubusercontent.com/u/32679309",
+          "bio": "Daniel Moser is an Solutions Architect at Amazon Web Services (AWS).",
+          "linkedin": "moserd"
+        }
+      ]
+  }
+  
