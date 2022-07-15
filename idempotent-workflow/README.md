@@ -163,11 +163,21 @@ export interface IdempotentWorkflowProps {
 }
 ```
 
-If you pass in a custom Lambda function, the function must return a JSON with the following structure
+If you pass in a custom Lambda function, the function must return a JSON with the following structure where the original
+payload is wrapped under an attribute `payload` and the idempotency config under `idempotencyConfig`.
 ```json
 {
-   "idempotencyKey": "6f0fe801ccb08276382f09e4eab91ec8ac8ca5bfe4542952c9d9c9bc77793183",
-   "ttl": "1657720121"
+   "payload": {
+      "top": "level",
+      "nested": {
+         "key1": "value1",
+         "key2": "value2"
+      }
+   },
+   "idempotencyConfig": {
+      "idempotencyKey": "6f0fe801ccb08276382f09e4eab91ec8ac8ca5bfe4542952c9d9c9bc77793183",
+      "ttl": "1657720121"
+   }
 }
 ```
 
