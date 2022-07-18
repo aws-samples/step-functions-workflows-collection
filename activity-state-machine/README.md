@@ -36,6 +36,10 @@ The example workflow runs an activity task state which waits for activity worker
 
 ## How it works
 
+1. When the task state "Step Functions Run Activity" runs the Activity "TestActivity", the workflow execution pauses for activity worker to poll the task using "GetActivityTask" API call.
+2. Once the activity worker(Lambda function) polls for the task, then the workflow waits for "Timeout" seconds, thus allowing worker to return it's success/failure/heartbeat.
+3. The workflow execution succeeds only if the activity worker has completed it's execution succesfully.
+
 ![image](./resources/StateMachine.png)
 
 
