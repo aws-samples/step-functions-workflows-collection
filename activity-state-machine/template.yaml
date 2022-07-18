@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Sample SAM Template for parallel-state
+
+Resources:
+  MyActivity:
+    Type: AWS::StepFunctions::Activity
+    Properties:
+      Name: TestActivity
+  ActivityStateMachine:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      DefinitionUri: statemachine/activity_state.asl.json
+      DefinitionSubstitutions:
+        ActivityArn: !Ref MyActivity
+      Policies:
+      - Statement :
+        - Sid: StateMachineXRayPolicy
+          Effect: Allow
+          Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+          - xray:GetSamplingRules
+          - xray:GetSamplingTargets
+          Resource: '*'
+
+  WorkerFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: worker_function/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Architectures:
+        - x86_64
+      Policies:
+      - Statement :
+        - Sid : GetActivityPolicy
+          Effect: Allow
+          Action:
+          - states:GetActivityTask
+          Resource: !Ref MyActivity
+        - Sid: SendTaskPolicy
+          Effect: Allow
+          Action:
+          - states:ListActivities
+          - states:SendTaskSuccess
+          - states:SendTaskFailure
+          - states:SendTaskHeartbeat
+          Resource: '*'
+
+Outputs:
+  ActivityStateMachineArn:
+    Description: "Activity State machine ARN"
+    Value: !Ref ActivityStateMachine
+  ActivityStateMachineRoleArn:
+    Description: "IAM Role created for Activity State machine based on the specified SAM Policy Templates"
+    Value: !GetAtt ActivityStateMachineRole.Arn
