@@ -1,25 +1,24 @@
-AWSTemplateFormatVersion: "2010-09-09"
+AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: >
-  emit-and-wait
+Description: 'emit-and-wait
 
   Sample SAM Template for emit-and-wait
 
-
+  '
 Resources:
   StateMachineArn:
-    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Type: AWS::Serverless::StateMachine
     Properties:
-      DefinitionUri: statemachine/statemachine.asl.json
-      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
-        - EventBridgePutEventsPolicy:
-            EventBusName: "Default"
-
+      DefinitionUri:
+        Bucket: da-public-assets
+        Key: workflows/a62dc885ef785bd544e7a614a6d9fceb
+      Policies:
+      - EventBridgePutEventsPolicy:
+          EventBusName: Default
+    Metadata:
+      SamResourceId: StateMachineArn
 Outputs:
-  # StockTradingStateMachineHourlyTradingSchedule is an implicit Schedule event rule created out of Events key under Serverless::StateMachine
-  # Find out more about other implicit resources you can reference within SAM
-  # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-specification-generated-resources.html
   StateMachineArn:
-    Description: "state machine ARN"
-    Value: !Ref StateMachineArn
-
+    Description: state machine ARN
+    Value:
+      Ref: StateMachineArn

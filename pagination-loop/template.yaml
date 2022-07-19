@@ -1,0 +1,50 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  pagination loop
+
+  Sample SAM Template for pagination loop
+
+
+Resources:
+  StateMachineArn:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      DefinitionUri: statemachine/statemachine.asl.json
+      Role: !GetAtt WorkflowExecutionRole.Arn
+
+  WorkflowExecutionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "states.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+  RolePolicies:
+    Type: "AWS::IAM::Policy"
+    Properties:
+      PolicyName: "listExecutions"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action: "states:ListExecutions"
+            Resource: !Join [ "", [ "arn:aws:states:", !Ref "AWS::Region", ":", !Ref "AWS::AccountId", ":stateMachine:", "*"] ]
+      Roles:
+        - Ref: "WorkflowExecutionRole"   
+
+Outputs:
+  # StockTradingStateMachineHourlyTradingSchedule is an implicit Schedule event rule created out of Events key under Serverless::StateMachine
+  # Find out more about other implicit resources you can reference within SAM
+  # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-specification-generated-resources.html
+  StateMachineArn:
+    Description: "state machine ARN"
+    Value: !Ref StateMachineArn
+
