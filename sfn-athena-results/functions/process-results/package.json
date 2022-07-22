@@ -1,0 +1,6 @@
+{
+  "name": "process_athena_results",
+  "main": "app.js",
+  "dependencies": {},
+  "devDependencies": {}
+}

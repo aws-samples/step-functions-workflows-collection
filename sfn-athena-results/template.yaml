@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  This workflow demonstrates how to ue AWS Step Functions to process results from 
+  Amazon Athena Queries written to Amazon S3.
+
+Resources:
+  ProcessAthenaQueryResults:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/query-athena.asl.json
+      DefinitionSubstitutions:
+        ProcessResultsFunctionArn: !GetAtt ProcessResultsFunctionArn.Arn
+      Policies: 
+        - LambdaInvokePolicy:
+            FunctionName: !Ref ProcessResultsFunctionArn
+        - AthenaQueryPolicy:
+            WorkGroupName: "*"
+        - S3ReadPolicy:
+            BucketName: "*"
+        - S3WritePolicy: 
+            BucketName: "*"
+        - Statement:
+          - Sid: GlueReadAccess
+            Effect: Allow
+            Action:
+            - glue:GetTable
+            - glue:GetTables
+            - glue:GetPartition
+            - glue:GetPartitions
+            Resource:
+            - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog
+            - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/*
+            - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/*
+
+  ProcessResultsFunctionArn:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/process-results/
+      Handler: app.lambdaHandler
+      Runtime: nodejs16.x
+      Architectures:
+        - x86_64
+      Policies:
+        - S3ReadPolicy:
+            BucketName: "*"
+
+Outputs: 
+  ProcessAthenaQueryResultsArn:
+    Description: "Process athena results state machine ARN"
+    Value: !Ref ProcessAthenaQueryResults
+  ProcessAthenaQueryResultsRole:
+    Description: "IAM Role created for Stock Trading state machine based on the specified SAM Policy Templates"
+    Value: !GetAtt ProcessAthenaQueryResults.Arn
