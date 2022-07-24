@@ -1,15 +1,13 @@
 # "Script Generator" Application
 
-In this application, you can generate script file in video file.
+In this application, you can generate **Script file** in Video file.
 
-When you upload video file to S3 bucket, State machine will start processing video to text.
-The script content is extracted from the video and stored as script.txt in S3.
+When you upload video file to S3 bucket, state machine will start processing **video to text**.
+The script content is extracted from the video and stored as `script.txt` in S3.
 
 Learn more about this workflow at Step Functions workflows collection: *To be Added...*
 
-## Image
 ![image](./resources/statemachine.png)
-
 
 ## How to Deploy
 
@@ -31,10 +29,10 @@ Learn more about this workflow at Step Functions workflows collection: *To be Ad
     Note the outputs from the SAM deployment process. These contain the resource names and/or ARNs which are used for testing.
 
 3. When all resources are provisioned, Upload your video file to `transcript-media` bucket in S3.
-
+[picture]()
 
 4. After that, state machine will be deployed. When deployments are done, you can see `script.txt` file in `transcript-results` S3 bucket.
-
+[picture]()
 
 ### Requirements
 
