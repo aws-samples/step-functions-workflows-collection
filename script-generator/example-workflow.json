@@ -1,0 +1,70 @@
+{
+    "title": "Script Generator",
+    "description": "Auto Generate Script from Video file",
+    "language": "English",
+    "simplicity": "3 - Application",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "100",
+    "framework": "SAM",
+    "services": ["transcribe","s3", "eventbridge"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "", ""
+
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/stepfunctions-workflows-collection/tree/main/synchronous-job/",
+        "templateDir":"script-generator",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Yoonseo Kim",
+          "image": "step-functions-workflows-collection/script-generator/resources/yoonseokim.jpeg",
+          "bio": "Solutions Architect in Korea",
+          "linkedin": "https://www.linkedin.com/in/yoonseo-kim-573780208/",
+          "twitter": ""
+        }
+      ]
+  }
+  

@@ -1,0 +1,82 @@
+{
+  "Comment": "Auto Generate Script from Video file",
+  "StartAt": "StartTranscriptionJob",
+  "States": {
+      "Failed": {
+          "Cause": "transcription job failed",
+          "Error": "FAILED",
+          "Type": "Fail"
+      },
+      "GetObject": {
+          "Comment": "Get Transcribed json file",
+          "Next": "PutObject",
+          "Parameters": {
+              "Bucket": "bucket-776177632559-us-east-1-transcript-results",
+              "Key": "temp.json"
+          },
+          "Resource": "arn:aws:states:us-east-1:776177632559:aws-sdk:s3:getObject",
+          "ResultPath": "$.transcription",
+          "ResultSelector": {
+              "filecontent.$": "States.StringToJson($.Body)"
+          },
+          "Type": "Task"
+      },
+      "GetTranscriptionJob": {
+          "Comment": "Retrieve the status of an Amazon Transcribe job",
+          "Next": "TranscriptionJobStatus",
+          "Parameters": {
+              "TranscriptionJobName.$": "$.TranscriptionJob.TranscriptionJobName"
+          },
+          "Resource": "arn:aws:states:us-east-1:776177632559:aws-sdk:transcribe:getTranscriptionJob",
+          "Type": "Task"
+      },
+      "PutObject": {
+          "Comment": "extract transcription text in json file",
+          "End": true,
+          "Parameters": {
+              "Body.$": "$.transcription.filecontent.results.transcripts[0].transcript",
+              "Bucket": "bucket-776177632559-us-east-1-transcript-results",
+              "Key": "script.txt"
+          },
+          "Resource": "arn:aws:states:us-east-1:776177632559:aws-sdk:s3:putObject",
+          "Type": "Task"
+      },
+      "StartTranscriptionJob": {
+          "Comment": "Start a transcribe job on the provided media file",
+          "Next": "Wait",
+          "Parameters": {
+              "IdentifyLanguage": true,
+              "Media": {
+                  "MediaFileUri.$": "States.Format('s3://{}/{}', $.detail.bucket.name, $.detail.object.key)"
+              },
+              "OutputBucketName": "bucket-776177632559-us-east-1-transcript-results",
+              "OutputKey": "temp.json",
+              "TranscriptionJobName.$": "$$.Execution.Name"
+          },
+          "Resource": "arn:aws:states:us-east-1:776177632559:aws-sdk:transcribe:startTranscriptionJob",
+          "Type": "Task"
+      },
+      "TranscriptionJobStatus": {
+          "Choices": [
+              {
+                  "Next": "GetObject",
+                  "StringEquals": "COMPLETED",
+                  "Variable": "$.TranscriptionJob.TranscriptionJobStatus"
+              },
+              {
+                  "Next": "Failed",
+                  "StringEquals": "FAILED",
+                  "Variable": "$.TranscriptionJob.TranscriptionJobStatus"
+              }
+          ],
+          "Default": "Wait",
+          "Type": "Choice"
+      },
+      "Wait": {
+          "Next": "GetTranscriptionJob",
+          "Seconds": 10,
+          "Type": "Wait"
+      }
+  },
+  "TimeoutSeconds": 900
+}
