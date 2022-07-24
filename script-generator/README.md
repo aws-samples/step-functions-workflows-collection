@@ -10,11 +10,13 @@ Learn more about this workflow at Step Functions workflows collection: *To be Ad
 ![image](./resources/statemachine.png)
 
 ## How to Deploy
+0. First, you should install [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) (Serverless Application Model)
 
 1. Create a new directory, navigate to that directory in a terminal and clone the GitHub repository:
     ``` 
     git clone https://github.com/aws-samples/step-functions-workflows-collection
-    cd script-generator
+    
+    cd step-functions-workflows-collection/script-generator 
     ```
 2. From the command line, use AWS SAM to deploy the AWS resources for the workflow as specified in the template.yaml file:
     ```
@@ -23,16 +25,37 @@ Learn more about this workflow at Step Functions workflows collection: *To be Ad
 - During the prompts:
     * Enter a stack name
     * Enter the desired AWS Region
-    * Allow SAM CLI to create IAM roles with the required permissions.
+    * Allow SAM CLI to create IAM roles with the required permissions.  
+    
+You can set the default value by pressing the enter key continuously. Below is example commands.
 
-    Once you have run `sam deploy --guided` mode once and saved arguments to a configuration file (samconfig.toml), you can use `sam deploy` in future to use these defaults.
-    Note the outputs from the SAM deployment process. These contain the resource names and/or ARNs which are used for testing.
+```bash
+    Configuring SAM deploy
+    ======================
+
+        Looking for config file [samconfig.toml] :  Not found
+
+        Setting default arguments for 'sam deploy'
+        =========================================
+        Stack Name [sam-app]: 
+        AWS Region [ap-northeast-2]: 
+        #Shows you resources changes to be deployed and require a 'Y' to initiate deploy
+        Confirm changes before deploy [y/N]: y
+        #SAM needs permission to be able to create roles to connect to the resources in your template
+        Allow SAM CLI IAM role creation [Y/n]: 
+        Save arguments to configuration file [Y/n]: 
+        SAM configuration file [samconfig.toml]: 
+        SAM configuration environment [default]: 
+
+        Looking for resources needed for deployment:
+        Creating the required resources...
+```
 
 3. When all resources are provisioned, Upload your video file to `transcript-media` bucket in S3.
-[picture]()
+<img width="964" alt="image" src="https://user-images.githubusercontent.com/61778930/180661643-af55375b-54ce-4ddb-8956-c7fc81e0c3db.png">
 
 4. After that, state machine will be deployed. When deployments are done, you can see `script.txt` file in `transcript-results` S3 bucket.
-[picture]()
+
 
 ### Requirements
 
