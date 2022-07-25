@@ -1,0 +1,79 @@
+{
+    "StartAt": "Start Athena Query",
+    "States": {
+      "Start Athena Query": {
+        "Next": "Get query result",
+        "Type": "Task",
+        "Resource": "arn:aws:states:::athena:startQueryExecution",
+        "Parameters": {
+          "QueryString.$": "States.Format('SELECT * FROM \"{}\" LIMIT 10', $.Table)",
+          "QueryExecutionContext": {
+            "Database.$": "$.Database"
+          },
+          "ResultConfiguration": {},
+          "WorkGroup.$": "$.Workgroup"
+        }
+      },
+      "Get query result": {
+        "Next": "Has query finished?",
+        "Type": "Task",
+        "Resource": "arn:aws:states:::athena:getQueryExecution",
+        "Parameters": {
+          "QueryExecutionId.$": "$.QueryExecutionId"
+        }
+      },
+      "Has query finished?": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "Variable": "$.QueryExecution.Status.State",
+            "StringEquals": "SUCCEEDED",
+            "Next": "Process results"
+          },
+          {
+            "Variable": "$.QueryExecution.Status.State",
+            "StringEquals": "FAILED",
+            "Next": "Fail"
+          },
+          {
+            "Variable": "$.QueryExecution.Status.State",
+            "StringEquals": "CANCELLED",
+            "Next": "Fail"
+          }
+        ],
+        "Default": "Wait"
+      },
+      "Process results": {
+        "Retry": [
+          {
+            "ErrorEquals": [
+              "Lambda.ServiceException",
+              "Lambda.AWSLambdaException",
+              "Lambda.SdkClientException"
+            ],
+            "IntervalSeconds": 2,
+            "MaxAttempts": 6,
+            "BackoffRate": 2
+          }
+        ],
+        "Type": "Task",
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "Parameters": {
+          "FunctionName": "${ProcessResultsFunctionArn}",
+          "Payload": {
+            "resultLocation.$": "$.QueryExecution.ResultConfiguration.OutputLocation"
+          }
+        },
+        "End": true
+      },
+      "Wait": {
+        "Type": "Wait",
+        "Seconds": 5,
+        "Next": "Get query result",
+        "OutputPath": "$.QueryExecution"
+      },
+      "Fail": {
+        "Type": "Fail"
+      }
+    }
+  }
