@@ -1,0 +1,238 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: 'AWS::Serverless-2016-10-31'
+Description: >
+  Create resources for a project that generate transcript of video file. 
+  Uses Step Functions, S3, EventBridge, Transcribe.
+Resources:
+  TranscriptMediaBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Sub 'bucket-${AWS::AccountId}-${AWS::Region}-transcript-media'
+      NotificationConfiguration:
+        EventBridgeConfiguration:
+          EventBridgeEnabled: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+    Metadata:
+      SamResourceId: TranscriptMediaBucket
+  TranscriptMediaBucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      PolicyDocument:
+        Id: MyPolicy
+        Statement:
+          - Sid: TranscriptMediaReadPolicy
+            Effect: Allow
+            Principal:
+              Service: transcribe.amazonaws.com
+            Action:
+              - 's3:GetObject'
+            Resource: !Join 
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref TranscriptMediaBucket
+                - /*
+          - Sid: TranscriptMediaReadPolicy
+            Effect: Allow
+            Principal:
+              Service: states.amazonaws.com
+            Action:
+              - 's3:GetObject'
+            Resource: !Join 
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref TranscriptMediaBucket
+                - /*
+          - Sid: HttpsOnly
+            Action: 's3:*'
+            Effect: Deny
+            Principal: '*'
+            Resource:
+              - !Join 
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref TranscriptMediaBucket
+                  - /*
+              - !Join 
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref TranscriptMediaBucket
+            Condition:
+              Bool:
+                'aws:SecureTransport': false
+      Bucket: !Ref TranscriptMediaBucket
+    Metadata:
+      SamResourceId: TranscriptMediaBucketPolicy
+  TranscriptResultsBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Sub 'bucket-${AWS::AccountId}-${AWS::Region}-transcript-results'
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+    Metadata:
+      SamResourceId: TranscriptResultsBucket
+  TranscriptResultsBucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      PolicyDocument:
+        Id: MyPolicy
+        Version: 2012-10-17
+        Statement:
+          - Sid: TranscriptMediaWritePolicy
+            Effect: Allow
+            Principal:
+              Service: transcribe.amazonaws.com
+            Action:
+              - 's3:PutObject'
+            Resource: !Join 
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref TranscriptResultsBucket
+                - /*
+          - Sid: HttpsOnly
+            Action: 's3:*'
+            Effect: Deny
+            Principal: '*'
+            Resource:
+              - !Join 
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref TranscriptResultsBucket
+                  - /*
+              - !Join 
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref TranscriptResultsBucket
+            Condition:
+              Bool:
+                'aws:SecureTransport': false
+      Bucket: !Ref TranscriptResultsBucket
+    Metadata:
+      SamResourceId: TranscriptResultsBucketPolicy
+      
+  
+  ##########################################################################
+  #   STEP FUNCTION                                                        #
+  ##########################################################################  
+    
+  ScriptGeneratorStateMachine:
+    Type: 'AWS::Serverless::StateMachine'
+    Properties:
+      Tracing:
+        Enabled: true
+      Events:
+        S3MediaTrigger:
+          Type: EventBridgeRule
+          Properties:
+            EventBusName: default
+            Pattern:
+              source:
+                - aws.s3
+              detail-type:
+                - Object Created
+              detail:
+                bucket:
+                  name:
+                    - !Ref TranscriptMediaBucket
+      Definition:
+        Comment: >-
+          Invoke Transcribe on a media file, when complete execute the results
+          query Step Function and output the results
+        StartAt: StartTranscriptionJob
+        TimeoutSeconds: 900
+        States:
+          StartTranscriptionJob:
+            Type: Task
+            Comment: Start a transcribe job on the provided media file
+            Parameters:
+              Media:
+                MediaFileUri.$: States.Format('s3://{}/{}', $.detail.bucket.name, $.detail.object.key)
+              TranscriptionJobName.$: "$$.Execution.Name"
+              IdentifyLanguage: true
+              OutputBucketName: !Ref TranscriptResultsBucket
+              OutputKey: temp.json
+            Resource: !Sub >-
+              arn:${AWS::Partition}:states:${AWS::Region}:${AWS::AccountId}:aws-sdk:transcribe:startTranscriptionJob
+            Next: Wait
+          Wait:
+            Type: Wait
+            Seconds: 10
+            Next: GetTranscriptionJob
+          GetTranscriptionJob:
+            Type: Task
+            Comment: Retrieve the status of an Amazon Transcribe job
+            Parameters:
+              TranscriptionJobName.$: $.TranscriptionJob.TranscriptionJobName
+            Resource: !Sub >-
+              arn:${AWS::Partition}:states:${AWS::Region}:${AWS::AccountId}:aws-sdk:transcribe:getTranscriptionJob
+            Next: TranscriptionJobStatus
+          TranscriptionJobStatus:
+            Type: Choice
+            Choices:
+              - Variable: $.TranscriptionJob.TranscriptionJobStatus
+                StringEquals: COMPLETED
+                Next: GetObject
+              - Variable: $.TranscriptionJob.TranscriptionJobStatus
+                StringEquals: FAILED
+                Next: Failed
+            Default: Wait
+          Failed:
+            Type: Fail
+            Cause: transcription job failed
+            Error: FAILED
+          GetObject:
+            Type: Task
+            Comment: >-
+              Get Transcribed json file
+            Resource: !Sub >-
+              arn:${AWS::Partition}:states:${AWS::Region}:${AWS::AccountId}:aws-sdk:s3:getObject
+            Parameters:
+              Bucket: !Sub 'bucket-${AWS::AccountId}-${AWS::Region}-transcript-results'
+              Key: temp.json
+            Next: PutObject
+            ResultSelector: 
+              filecontent.$: >-
+                States.StringToJson($.Body)
+            ResultPath: $.transcription
+          PutObject:
+            Type: Task
+            Comment: extract transcription text in json file
+            Resource: !Sub >-
+              arn:${AWS::Partition}:states:${AWS::Region}:${AWS::AccountId}:aws-sdk:s3:putObject
+            Parameters:
+              Body.$: $.transcription.filecontent.results.transcripts[0].transcript
+              Bucket: !Sub 'bucket-${AWS::AccountId}-${AWS::Region}-transcript-results'
+              Key: script.txt
+            End: true
+
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref TranscriptMediaBucket
+        - S3ReadPolicy:
+            BucketName: !Ref TranscriptResultsBucket
+        - S3WritePolicy:
+            BucketName: !Ref TranscriptResultsBucket
+        - CloudWatchPutMetricPolicy: {}
+        - Version: 2012-10-17
+          Statement:
+            - Sid: XrayAccessPolicy
+              Effect: Allow
+              Action:
+                - 'xray:PutTraceSegments'
+                - 'xray:PutTelemetryRecords'
+                - 'xray:GetSamplingRules'
+                - 'xray:GetSamplingTargets'
+                - 'xray:GetSamplingStatisticSummaries'
+              Resource: '*'
+            - Sid: TranscriptJobPolicy
+              Effect: Allow
+              Action:
+                - 'transcribe:GetTranscriptionJob'
+                - 'transcribe:StartTranscriptionJob'
+              Resource: '*'
+    Metadata:
+      SamResourceId: ScriptGeneratorStateMachine
