@@ -44,7 +44,7 @@
 2. Retrieves object metadata and uses [Rekognition](https://docs.aws.amazon.com/rekognition/latest/dg/what-is.html) to obtain image labels in parallel using the [Parallel state](https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-parallel-state.html)
 3. Data from previous parallel states is merged and stored as one DynamoDB entry
 
-![image](./resources/StateMachine.png)
+![image](./resources/statemachine.png)
 
 
 ## Testing
