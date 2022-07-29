@@ -48,7 +48,7 @@ class CdkStack(cdk.Stack):
         
     # Reads state machine ASL definition from local file
     def read_statemachine_definition(self):
-        input_file_name = "../shared/statemachine/statemachine.asl.json"
+        input_file_name = "statemachine/statemachine.asl.json"
         read_file = open(input_file_name, "rt")
         file_contents = read_file.read()
         read_file.close()

@@ -27,8 +27,8 @@ def get_bucket_name(client):
 # updates the bucket name parameter in the input file for the state machine for testing
 def update_bucket_name_input(bucket_name):
     # update parameter input file with correct bucket name
-    input_file_name = "statemachine/input.json"
-    output_file_name = "statemachine/" + bucket_name + "-input.json"
+    input_file_name = "../sam/statemachine/input.json"
+    output_file_name = "output/" + bucket_name + "-input.json"
 
     read_file = open(input_file_name, "rt")
     file_contents = read_file.read()

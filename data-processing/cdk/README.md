@@ -16,23 +16,22 @@
     ```
 1. Change directory to the pattern directory:
     ```
-    cd data-processing
+    cd data-processing/cdk
     ```
-1. From the command line, deploy the stack with CDK
+1. From the command line, deploy the stack with CDK and accept changes.  If you would like to see CloudFormation output before deploying, you can run 'cdk synth'
     ```
     cdk deploy
     ```
-1. During the prompts:
-    * 
+   While the stack is deploying, you can check out the "How it works" section or grab some coffee or tea
 
-    *Note the outputs from the SAM deployment process. These contain the resource names and/or ARNs which are used for testing.  Copy the S3 bucket value and store it in a text editor.  We'll use this later during cleanup*
-
-1. Run the following Python script to load test images into S3 
+1. Navigate to the shared directory and run the following Python script to load test images into S3.  This will obtain the S3 bucket name, create a new input JSON file with the correct bucket name for our objects and upload images under shared/images to the S3 bucket. 
    ```
+   cd ../shared/
+
    python scripts/uploadImagesToS3.py
    ```
 
-   You can upload your own test images, but will need to modify the statemachine input JSON in order for them to be processed.  This is covered in the Testing section
+   You can upload your own test images, but will need to modify the statemachine input JSON in the shared/output folder in order for them to be processed.  This is covered in the Testing section
 
 ## How it works
 
@@ -45,7 +44,7 @@
 
 ## Testing
 
-1. After completion of Deployment Instructions, navigate to Step Functions in the AWS console and select the workflow that starts with ProcessingImageDataPatternStateMachine.  Make sure you are in the correct region
+1. After completion of Deployment Instructions, navigate to Step Functions in the AWS console and select the workflow that starts with ProcessingImageDataPatternStateMachine.  If you don't see it, make sure you are in the correct region
 2. Select 'Start Execution' and copy the contents of statemachine/data-workflow-pattern-*.json and replace the existing comment in the input text area with it, then Start Execution.  *If you uploaded your own custom images, you will need to modify the input accordingly*
 3. Observe the State Machine workflow execution.  It may take several seconds for the workflow to complete
 4. Navigate to DynamoDB in the AWS console, select Tables, then select the images-data-workflow-pattern-sl table and click "Explore table items" and then perform a scan by clicking the Run button.  You should have several records with metadata and labels from the Rekognition service
@@ -60,12 +59,12 @@ To delete the resources created by this template, use the following command belo
 You can find your bucket name in the output from the sam deploy command run earlier or by navigating to S3 in th console and finding a bucket name that starts with *data-workflow-pattern-*
 
 ```
-aws s3 rm s3://<your_bucket_name_here> --recursive
+cd ../cdk
 
-sam delete
+cdk destroy
 ```
 
-The first command deletes all existing objects in the bucket.  This ensures SAM is able to successfully delete the bucket when issued the delete command.  
+The second command deletes all existing objects in the bucket.  This ensures the CDK is able to successfully delete the bucket when issued the delete command.  
 
 ----
 Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
