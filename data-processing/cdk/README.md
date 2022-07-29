@@ -1,4 +1,4 @@
-# Data Processing & Pattern CDK
+# Data Processing & Storage Pattern CDK
 
 ## Requirements
 
