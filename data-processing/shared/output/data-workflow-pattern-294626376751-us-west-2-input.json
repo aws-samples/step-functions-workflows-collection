@@ -1,0 +1,24 @@
+{
+    "Objects": [
+        {
+            "Key": "building.jpg",
+            "Bucket": "data-workflow-pattern-294626376751-us-west-2"
+        },
+        {
+            "Key": "desk.jpg",
+            "Bucket": "data-workflow-pattern-294626376751-us-west-2"
+        },
+        {
+            "Key": "dinos.jpg",
+            "Bucket": "data-workflow-pattern-294626376751-us-west-2"
+        },
+        {
+            "Key": "office.jpg",
+            "Bucket": "data-workflow-pattern-294626376751-us-west-2"
+        },
+        {
+            "Key": "stage.jpg",
+            "Bucket": "data-workflow-pattern-294626376751-us-west-2"
+        }
+    ]
+}

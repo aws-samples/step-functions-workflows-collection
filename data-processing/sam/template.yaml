@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  step-function-dynamodb-integration-pattern
+
+Resources:
+###########################################
+# S3 Bucket to store images              #
+###########################################
+  imagebucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Sub data-workflow-pattern-${AWS::AccountId}-${AWS::Region} # uses account number and region to ensure we provide a unique bucket name
+##############################################
+# DynamoDB table to store our image metadata #
+##############################################
+  ImageTable:
+    Type: AWS::DynamoDB::Table
+    Properties: 
+      TableName: images-data-workflow-pattern-sl
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions: 
+        - AttributeName: id
+          AttributeType: S
+      KeySchema: 
+        - AttributeName: id
+          KeyType: HASH
+
+##########################################################################
+#  Step function state machine                                           #
+##########################################################################
+  ProcessImageDataPatternStateMachine:
+    Type: AWS::Serverless::StateMachine 
+    Properties:
+      Type: STANDARD
+      DefinitionUri: statemachine/statemachine.asl.json
+      Policies:
+        - AmazonRekognitionReadOnlyAccess
+        - AmazonS3ReadOnlyAccess
+        - DynamoDBWritePolicy:
+            TableName: !Ref ImageTable
+
+
+Outputs:
+  ActivityStateMachineArn:
+    Description: "Activity State machine ARN"
+    Value: !Ref ProcessImageDataPatternStateMachine
+  DynamoDbTable:
+    Description: "Name of DynamoDB Table"
+    Value: !Ref ImageTable
+  ImageS3Bucket: 
+    Description: "S3 Bucket for Images"
+    Value: !Ref imagebucket
+

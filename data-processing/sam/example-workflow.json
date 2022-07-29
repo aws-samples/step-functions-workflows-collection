@@ -1,0 +1,72 @@
+{
+    "title": "Data Processing Pattern State Machine",
+    "description": "Processes images from S3 and extracts metadata and labels, storing them in DynamoDB",
+    "language": "",
+    "simplicity": "2 - Pattern",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "200",
+    "framework": "SAM",
+    "services": ["s3", "dynamodb", "rekognition"],
+    "introBox": {
+      "headline": "Data Processing Pattern",
+      "text": [
+        "This application creates a DynamoDB table, S3 bucket and State Machine.  The State Machine processes a list of images and retrieves objects metadata and image labels using machine learning in parallel, ultimately storing the result as one entry in the DynamoDB table.  This pattern demonstrates how step functions can work with multiple data stores, manipulate, merge and store data for later prcessing."
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete objects in S3 <code> aws s3 rm s3://<your_bucket_name_here> --recursive </code>  You can find your bucket name in the output from the sam deploy command or by navigating to S3 in th console and finding a bucket name that starts with data-workflow-pattern-",
+        "2. Delete the stack: <code>sam delete</code>. "
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided",
+        "cd ../shared/",
+        "upload test images to S3 <code> python scripts/uploadImagesToS3.py </code>"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/stepfunctions-workflows-collection/tree/main/data-processing/sam/",
+        "templateDir":"data-processing",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Kurt Tometich",
+          "image": "https://drive.google.com/file/d/1ny7F-OwtRCmozvJCVPwCPGecM70xgdlF/view?usp=sharing",
+          "bio": "Kurt is a Sr. Solutions Architect based in Colorado who enjoys building lean, mean serverless solutions.",
+          "linkedin": "kurt-tometich",
+          "twitter": ""
+        }
+      ]
+  }
+  
