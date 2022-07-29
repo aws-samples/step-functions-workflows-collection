@@ -5,11 +5,8 @@
 * [Create an AWS account](https://portal.aws.amazon.com/gp/aws/developer/registration/index.html) if you do not already have one and log in. The IAM user that you use must have sufficient permissions to make necessary AWS service calls and manage AWS resources.
 * [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html) installed and configured
 * [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) installed
-* [AWS Cloud Development Kit](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html) (AWS CDK >= 2.2.0) installed
+* [AWS Cloud Development Kit](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html) (CDK >= 2.2.0) installed
 * [Python 3](https://www.python.org/downloads/) installed
-
-## Language
-Python
 
 ## Deployment Instructions
 
