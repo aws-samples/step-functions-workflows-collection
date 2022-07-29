@@ -16,7 +16,7 @@
     ```
 1. Change directory to the pattern directory:
     ```
-    cd data-processing/sam/
+    cd step-functions-workflows-collection/data-processing/sam/
     ```
 1. From the command line, use AWS SAM to deploy the AWS resources for the workflow as specified in the template.yaml file:
     ```
@@ -36,6 +36,9 @@
 1. Navigate to the shared directory and run the following Python script to load test images into S3.  This will obtain the S3 bucket name, create a new input JSON file with the correct bucket name for our objects and upload images under shared/images to the S3 bucket. 
    ```
    cd ../shared
+   ```
+
+   ```
    python scripts/uploadImagesToS3.py
    ```
 
@@ -68,9 +71,13 @@ You can find your bucket name in the output from the sam deploy command run earl
 
 ```
 cd ../sam
+```
 
+```
 aws s3 rm s3://<your_bucket_name_here> --recursive
+```
 
+```
 sam delete
 ```
 

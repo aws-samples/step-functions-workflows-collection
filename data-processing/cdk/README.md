@@ -16,7 +16,7 @@
     ```
 1. Change directory to the pattern directory:
     ```
-    cd data-processing/cdk
+    cd step-functions-workflows-collection/data-processing/cdk
     ```
 1. From the command line, deploy the stack with CDK and accept changes.  If you would like to see CloudFormation output before deploying, you can run 'cdk synth'
     ```
@@ -25,9 +25,12 @@
    While the stack is deploying, you can check out the "How it works" section or grab some coffee or tea
 
 1. Navigate to the shared directory and run the following Python script to load test images into S3.  This will obtain the S3 bucket name, create a new input JSON file with the correct bucket name for our objects and upload images under shared/images to the S3 bucket. 
+   
    ```
    cd ../shared/
+   ```
 
+   ```
    python scripts/uploadImagesToS3.py
    ```
 
@@ -60,7 +63,9 @@ You can find your bucket name in the output from the sam deploy command run earl
 
 ```
 cd ../cdk
+```
 
+```
 cdk destroy
 ```
 
