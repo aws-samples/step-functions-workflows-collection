@@ -26,7 +26,8 @@
     "cleanup": {
       "headline": "Cleanup",
       "text": [
-        "1. Delete the stack: <code>sam delete</code>."
+        "1. Delete the S3 Bucket contents",
+        "2. Delete the stack: <code>sam delete</code>."
       ]
     },
     "deploy": {
@@ -60,8 +61,8 @@
     "authors": [
         {
           "name": "Yoonseo Kim",
-          "image": "step-functions-workflows-collection/script-generator/resources/yoonseokim.jpeg",
-          "bio": "Solutions Architect in Korea",
+          "image": "https://github.com/aws-samples/step-functions-workflows-collection/blob/main/script-generator/resources/yoonseokim.jpeg?raw=true",
+          "bio": "Solutions Architect in Amazon Web Services Korea",
           "linkedin": "https://www.linkedin.com/in/yoonseo-kim-573780208/",
           "twitter": ""
         }

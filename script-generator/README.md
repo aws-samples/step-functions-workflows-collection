@@ -22,14 +22,10 @@ Learn more about this workflow at Step Functions workflows collection: *To be Ad
     ```
     sam deploy --guided
     ```
-- During the prompts:
-    * Enter a stack name
-    * Enter the desired AWS Region
-    * Allow SAM CLI to create IAM roles with the required permissions.  
-    
-You can set the default value by pressing the enter key continuously. Below is example commands.
 
-```bash
+    *You can set the default value by pressing the enter key continuously. Below is example commands.
+
+    ```bash
     Configuring SAM deploy
     ======================
 
@@ -49,20 +45,13 @@ You can set the default value by pressing the enter key continuously. Below is e
 
         Looking for resources needed for deployment:
         Creating the required resources...
-```
+    ```
 
 3. When all resources are provisioned, Upload your video file to `transcript-media` bucket in S3.
 <img width="964" alt="image" src="https://user-images.githubusercontent.com/61778930/180661643-af55375b-54ce-4ddb-8956-c7fc81e0c3db.png">
 
 4. After that, state machine will be deployed. When deployments are done, you can see `script.txt` file in `transcript-results` S3 bucket.
-
-
-### Requirements
-
-* [Create an AWS account](https://portal.aws.amazon.com/gp/aws/developer/registration/index.html) if you do not already have one and log in. The IAM user that you use must have sufficient permissions to make necessary AWS service calls and manage AWS resources.
-* [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html) installed and configured
-* [Git Installed](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
-* [AWS Serverless Application Model](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) (AWS SAM) installed
+<img width="892" alt="image" src="https://user-images.githubusercontent.com/61778930/181208277-8c33d6b1-f1c8-42cc-9f06-da3ace305476.png">
 
 
 ## Cleanup
@@ -75,6 +64,15 @@ You can set the default value by pressing the enter key continuously. Below is e
     ```bash
     aws cloudformation list-stacks --query "StackSummaries[?contains(StackName,'STACK_NAME')].StackStatus"
     ```
+
+
+### Requirements
+
+* [Create an AWS account](https://portal.aws.amazon.com/gp/aws/developer/registration/index.html) if you do not already have one and log in. The IAM user that you use must have sufficient permissions to make necessary AWS service calls and manage AWS resources.
+* [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html) installed and configured
+* [Git Installed](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+* [AWS Serverless Application Model](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) (AWS SAM) installed
+
 ----
 Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
