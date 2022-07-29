@@ -1,4 +1,4 @@
-# Data Processing Pattern
+# Data Processing & Storage Pattern
 
 ## What's here?
 Choose your own path: [CDK](https://aws.amazon.com/cdk/) or [SAM](https://aws.amazon.com/serverless/sam/) 

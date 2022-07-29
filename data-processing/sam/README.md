@@ -1,4 +1,4 @@
-# Data Processing Pattern
+# Data Processing & Storage Pattern SAM
 
 ## Requirements
 
