@@ -25,7 +25,7 @@
 1. During the prompts:
     * Enter a stack name: you can choose your own name or accept the default
     * Enter the desired AWS Region: select the region you want to deploy this stack to
-    * You can accept the remainder of the defaults
+    * Accept the default value for the remaining prompts
 
     Once you have run `sam deploy --guided` mode once and saved arguments to a configuration file (samconfig.toml), you can use `sam deploy` in future to use these defaults.  Feel free to create your own stack name or use the default.
 
@@ -42,7 +42,7 @@
    python scripts/uploadImagesToS3.py
    ```
 
-   You can upload your own test images, but will need to modify the statemachine input JSON in the shared/output in order for them to be processed.  This is covered in the Testing section
+   You can upload your own test images, but will need to modify the statemachine input JSON in the shared/output folder in order for them to be processed.  This is covered in the Testing section
 
 ## How it works
 
@@ -55,8 +55,11 @@
 
 ## Testing
 
-1. After completion of Deployment Instructions, navigate to Step Functions in the AWS console and select the workflow that starts with ProcessingImageDataPatternStateMachine.  If you don't see it, make sure you are in the correct region
+1. After completion of the Deployment Instructions, navigate to Step Functions in the AWS console and select the workflow that starts with ProcessingImageDataPatternStateMachine.  If you don't see it, make sure you are in the correct region
 2. Select 'Start Execution' and copy the contents of shared/output/data-workflow-pattern-*.json and replace the existing comment in the input text area with it, then Start Execution.  *If you uploaded your own custom images, you will need to modify the input accordingly*
+
+![image](./resources/statemachine-input.png)
+
 3. Observe the State Machine workflow execution.  It may take several seconds for the workflow to complete
 4. Navigate to DynamoDB in the AWS console, select Tables, then select the images-data-workflow-pattern-sl table and click "Explore table items" and then perform a scan by clicking the Run button.  You should have several records with metadata and labels from the Rekognition service
 5. Navigate back to your state machine execution within the AWS console.  View the input and output of each state to see what data is passed and/or altered from one state to the next  
@@ -65,7 +68,7 @@
 
 ## Cleanup
  
-Navigate to the sam directory.  To delete the resources created by this template, use the following command below.  For the prompts that occur after the second command, enter *y* to accept deletion for both prompts.
+Navigate to the sam directory.  To delete the resources created by this template, use the following commands below.  For the prompts that occur after the last  command, enter *y* to accept deletion for both prompts.
 
 You can find your bucket name in the output from the sam deploy command run earlier or by navigating to S3 in the console and finding a bucket name that starts with *data-workflow-pattern-*
 

@@ -8,7 +8,7 @@
     "diagram":"/resources/statemachine.png",
     "videoId": "",
     "level": "200",
-    "framework": "SAM",
+    "framework": "CDK",
     "services": ["s3", "dynamodb", "rekognition"],
     "introBox": {
       "headline": "Data Processing Pattern",
@@ -25,20 +25,18 @@
     "cleanup": {
       "headline": "Cleanup",
       "text": [
-        "1. Delete objects in S3 <code> aws s3 rm s3://<your_bucket_name_here> --recursive </code>  You can find your bucket name in the output from the sam deploy command or by navigating to S3 in th console and finding a bucket name that starts with data-workflow-pattern-",
-        "2. Delete the stack: <code>sam delete</code>. "
+        "1. Navigate to the cdk directory and run <code> cdk destroy </code>"
       ]
     },
     "deploy": {
       "text": [
-        "sam deploy --guided",
-        "cd ../shared/",
-        "upload test images to S3 <code> python scripts/uploadImagesToS3.py </code>"
+        "Navigate to cdk directory and run <code> cdk deploy </code>",
+        "Navigate to the shared directory and run <code> python scripts/uploadImagesToS3.py </code>"
       ]
     },
     "gitHub": {
       "template": {
-        "repoURL": "https://github.com/aws-samples/stepfunctions-workflows-collection/tree/main/data-processing/sam/",
+        "repoURL": "https://github.com/aws-samples/stepfunctions-workflows-collection/tree/main/data-processing/cdk/",
         "templateDir":"data-processing",
         "templateFile": "template.yaml",
         "ASL": "statemachine/statemachine.asl.json"

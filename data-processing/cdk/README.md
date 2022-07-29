@@ -47,8 +47,11 @@
 
 ## Testing
 
-1. After completion of Deployment Instructions, navigate to Step Functions in the AWS console and select the workflow that starts with ProcessingImageDataPatternStateMachine.  If you don't see it, make sure you are in the correct region
-2. Select 'Start Execution' and copy the contents of statemachine/data-workflow-pattern-*.json and replace the existing comment in the input text area with it, then Start Execution.  *If you uploaded your own custom images, you will need to modify the input accordingly*
+1. After completion of the Deployment Instructions, navigate to Step Functions in the AWS console and select the workflow that starts with ProcessingImageDataPatternStateMachine.  If you don't see it, make sure you are in the correct region
+2. Select 'Start Execution' and copy the contents of shared/output/data-workflow-pattern-*.json and replace the existing comment in the input text area with it, then Start Execution.  *If you uploaded your own custom images, you will need to modify the input accordingly*
+
+![image](./resources/statemachine-input.png)
+
 3. Observe the State Machine workflow execution.  It may take several seconds for the workflow to complete
 4. Navigate to DynamoDB in the AWS console, select Tables, then select the images-data-workflow-pattern-sl table and click "Explore table items" and then perform a scan by clicking the Run button.  You should have several records with metadata and labels from the Rekognition service
 5. Navigate back to your state machine execution within the AWS console.  View the input and output of each state to see what data is passed and/or altered from one state to the next  
