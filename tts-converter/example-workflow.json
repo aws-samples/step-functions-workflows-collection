@@ -1,0 +1,78 @@
+{
+    "title": "TTS Converter",
+    "description": "Workflow for reading text files by voice using Amazon polly API.",
+    "language": "English",
+    "simplicity": "3 - Application",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "200",
+    "framework": "SAM",
+    "services": ["polly","s3"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        ""
+
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "1. Deploy stack",
+        "2. Upload sample text file to S3 bucket (bucket-tts-media).",
+        "3. Then, stateMachine is auto-deployed in Step Functions Console.",
+        "4. When StateMachine is end, you can see video file in S3 bucket (bucket-tts-results)."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. First, You should delete objects in two S3 bucket. (bucket-tts-media, bucket-tts-results).",
+        "2. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/stepfunctions-workflows-collection/tree/main/tts-converter/",
+        "templateDir":"tts-converter",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Polly Example",
+          "link": "https://docs.aws.amazon.com/ko_kr/sdk-for-javascript/v3/developer-guide/polly-examples.html"
+        },
+        {
+          "text": "The AWS Step Functions Workflow Studio Workshop",
+          "link": "https://catalog.us-east-1.prod.workshops.aws/workshops/19701223-0bf3-4273-a75a-209aa242f8a8/ko-KR"
+        }
+      ]
+    },
+    "authors": [
+      {
+        "name": "Yoonseo Kim",
+        "image": "https://github.com/aws-samples/step-functions-workflows-collection/blob/main/script-generator/resources/yoonseokim.jpeg?raw=true",
+        "bio": "Solutions Architect in Amazon Web Services Korea",
+        "linkedin": "https://www.linkedin.com/in/yoonseo-kim-573780208/",
+        "twitter": ""
+      }
+    ]
+  }
+  

@@ -124,7 +124,7 @@ Resources:
   #   STEP FUNCTION                                                        #
   ##########################################################################  
     
-  WordFilteringScriptGeneratorStateMachine:
+  FilteringStateMachine:
     Type: 'AWS::Serverless::StateMachine'
     Properties:
       Tracing:
@@ -259,4 +259,4 @@ Resources:
                 - 'transcribe:CreateVocabularyFilter'
               Resource: '*'
     Metadata:
-      SamResourceId: WordFilteringScriptGeneratorStateMachine
+      SamResourceId: FilteringStateMachine
