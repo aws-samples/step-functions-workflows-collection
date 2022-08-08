@@ -1,0 +1,168 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: 'AWS::Serverless-2016-10-31'
+Description: >
+  Create resources for a project that generate speech file of text file. Uses Step Functions, S3, EventBridge, Polly
+Resources:
+  TTSMediaBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Sub 'bucket-${AWS::AccountId}-${AWS::Region}-tts-media'
+      NotificationConfiguration:
+        EventBridgeConfiguration:
+          EventBridgeEnabled: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+    Metadata:
+      SamResourceId: TTSMediaBucket
+  TTSMediaBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+        Bucket: !Ref TTSMediaBucket
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+            - Action: s3:GetObject
+              Effect: Allow
+              Resource: !Join
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref TTSMediaBucket
+                  - /*
+              Principal: '*'
+            - Action: polly:SynthesizeSpeech
+              Effect: Allow
+              Resource: "*"
+    Metadata:
+      SamResourceId: TTSMediaBucketPolicy
+  
+  TTSResultsBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Sub 'bucket-${AWS::AccountId}-${AWS::Region}-tts-results'
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+    Metadata:
+      SamResourceId: TTSResultsBucket
+  TTSResultsBucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: polly:SynthesizeSpeech
+            Effect: Allow
+            Resource: "*"
+      Bucket: !Ref TTSResultsBucket
+    Metadata:
+      SamResourceId: TTSResultsBucketPolicy
+      
+  
+  ##########################################################################
+  #   STEP FUNCTION                                                        #
+  ##########################################################################  
+    
+  TTSStateMachine:
+    Type: 'AWS::Serverless::StateMachine'
+    Properties:
+      Tracing:
+        Enabled: true
+      Events:
+        S3MediaTrigger:
+          Type: EventBridgeRule
+          Properties:
+            EventBusName: default
+            Pattern:
+              source:
+                - aws.s3
+              detail-type:
+                - Object Created
+              detail:
+                bucket:
+                  name:
+                    - !Ref TTSMediaBucket
+      Definition:
+        Comment: >-
+          Invoke Polly on a media file, when complete execute the results
+          query Step Function and output the results
+        StartAt: GetTextFile
+        TimeoutSeconds: 900
+        States:
+          GetTextFile:
+            Type: Task
+            Next: StartSpeechSynthesisTask
+            Parameters:
+              Bucket.$: $.detail.bucket.name
+              Key.$: $.detail.object.key
+            Resource: !Sub >-
+              arn:${AWS::Partition}:states:${AWS::Region}:${AWS::AccountId}:aws-sdk:s3:getObject
+            ResultSelector: 
+                filecontent.$: $.Body
+          StartSpeechSynthesisTask:
+            Type: Task
+            Next: Wait
+            Parameters:
+                OutputFormat: mp3
+                OutputS3BucketName: !Ref TTSResultsBucket
+                Text.$: $.filecontent
+                TextType: text
+                OutputS3KeyPrefix: audio
+                VoiceId: Amy
+            Resource: !Sub >-
+              arn:${AWS::Partition}:states:${AWS::Region}:${AWS::AccountId}:aws-sdk:polly:startSpeechSynthesisTask
+          Failed:
+            Cause: "job failed"
+            Error: FAILED
+            Type: Fail
+          Success:
+            Type: Succeed
+          SpeechSynthesisTaskStatus:
+            Type: Choice
+            Choices:
+              - Variable: $.TaskStatus
+                StringEquals: completed
+                Next: Success
+              - Variable: $.TaskStatus
+                StringEquals: failed
+                Next: Failed
+            Default: Wait
+          Wait:
+            Next: GetSpeechSynthesisTask
+            Seconds: 10
+            Type: Wait
+          GetSpeechSynthesisTask:
+            Type: Task
+            Next: SpeechSynthesisTaskStatus
+            Parameters:
+                TaskId.$: $.SynthesisTask.TaskId
+            Resource: !Sub >-
+              arn:${AWS::Partition}:states:${AWS::Region}:${AWS::AccountId}:aws-sdk:polly:getSpeechSynthesisTask
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref TTSMediaBucket
+        - S3ReadPolicy:
+            BucketName: !Ref TTSResultsBucket
+        - S3WritePolicy:
+            BucketName: !Ref TTSResultsBucket
+        - CloudWatchPutMetricPolicy: {}
+        - Version: 2012-10-17
+          Statement:
+            - Sid: XrayAccessPolicy
+              Effect: Allow
+              Action:
+                - 'xray:PutTraceSegments'
+                - 'xray:PutTelemetryRecords'
+                - 'xray:GetSamplingRules'
+                - 'xray:GetSamplingTargets'
+                - 'xray:GetSamplingStatisticSummaries'
+              Resource: '*'
+            - Sid: TTSJobPolicy
+              Effect: Allow
+              Action:
+                - 'polly:startSpeechSynthesisTask'
+                - 'polly:getSpeechSynthesisTask'
+              Resource: '*'
+    Metadata:
+      SamResourceId: TTSStateMachine
