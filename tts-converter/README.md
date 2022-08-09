@@ -2,7 +2,12 @@
 
 This workflow is for reading text files by voice using Amazon Polly.
 
-Learn more about this workflow at Step Functions workflows collection: https://serverlessland.com/workflows/tts-converter
+Learn more about this workflow at Step Functions workflows collection: https://serverlessland.com/workflows/text-to-speech-convertor
+
+## Architecture
+
+![yoonseo](https://user-images.githubusercontent.com/61778930/183707915-12770755-261c-40f4-9641-7207bb731f7d.jpg)
+
 
 ## Deployment Instructions
 
