@@ -1,4 +1,4 @@
-# TTS Converter
+# Text to Speech Converter
 
 This workflow is for reading text files by voice using Amazon Polly.
 
