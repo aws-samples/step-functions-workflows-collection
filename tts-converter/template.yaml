@@ -23,7 +23,8 @@ Resources:
         PolicyDocument:
           Version: 2012-10-17
           Statement:
-            - Action: s3:GetObject
+            - Sid: TTSMediaReadPolicy
+              Action: s3:GetObject
               Effect: Allow
               Resource: !Join
                 - ''
@@ -31,9 +32,23 @@ Resources:
                   - !Ref TTSMediaBucket
                   - /*
               Principal: '*'
-            - Action: polly:SynthesizeSpeech
-              Effect: Allow
-              Resource: "*"
+            - Sid: HttpsOnly
+              Action: 's3:*'
+              Effect: Deny
+              Principal: '*'
+              Resource:
+                - !Join 
+                  - ''
+                  - - 'arn:aws:s3:::'
+                    - !Ref TTSMediaBucket
+                    - /*
+                - !Join 
+                  - ''
+                  - - 'arn:aws:s3:::'
+                    - !Ref TTSMediaBucket
+              Condition:
+                Bool:
+                  'aws:SecureTransport': false
     Metadata:
       SamResourceId: TTSMediaBucketPolicy
   
@@ -52,9 +67,29 @@ Resources:
     Properties:
       PolicyDocument:
         Statement:
-          - Action: polly:SynthesizeSpeech
+          - Sid: TTSMediaWritePolicy
+            Action:
+              - 's3:PutObject'
             Effect: Allow
             Resource: "*"
+            Principal: '*'
+          - Sid: HttpsOnly
+            Action: 's3:*'
+            Effect: Deny
+            Principal: '*'
+            Resource:
+              - !Join 
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref TTSResultsBucket
+                  - /*
+              - !Join 
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref TTSResultsBucket
+            Condition:
+              Bool:
+                  aws:SecureTransport': false
       Bucket: !Ref TTSResultsBucket
     Metadata:
       SamResourceId: TTSResultsBucketPolicy

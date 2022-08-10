@@ -4,9 +4,13 @@ This workflow generates scripts that erase certain words from video or audio.
 When you type the word you want to filter when you create the stack, the video recognizes the word and marks it as `***` in the script.    
 This feature is useful when you want to erase swear words or slang when creating movie subtitles, or when you want to hide certain words.   
 
-Learn more about this workflow at Step Functions workflows collection: https://serverlessland.com/workflows/word-filtering-script-generator
+Learn more about this workflow at Step Functions workflows collection: https://serverlessland.com/workflows/script-generator
 
 Important: this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the [AWS Pricing page](https://aws.amazon.com/pricing/) for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
+
+## Architecture
+
+![yoonseo](https://user-images.githubusercontent.com/61778930/183705013-4409c29a-92ad-4c56-af48-8b030b25c1e0.jpg)
 
 ## Deployment Instructions
 
