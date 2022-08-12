@@ -1,0 +1,17 @@
+#set($inputRoot = $input.path('$'))
+#set($inputBookId = $input.params('book_id'))
+#if($input.path('$.error').toString().equals("DynamoDB.ConditionalCheckFailedException"))
+#set($context.responseOverride.status = 404)
+{
+"error": "$input.path('$.error')",
+"cause": "The item "$inputBookId" does not exist in database to delete"
+}
+#elseif($input.path('$.status').toString().equals("FAILED"))
+#set($context.responseOverride.status = 500)
+{
+"error": "$input.path('$.error')",
+"cause": "$input.path('$.cause')"
+}
+#else
+$input.path('$.output')
+#end

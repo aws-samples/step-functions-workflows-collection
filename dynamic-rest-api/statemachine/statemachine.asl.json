@@ -1,0 +1,69 @@
+{
+    "StartAt": "Choice based on API Call Method",
+    "States": {
+      "Choice based on API Call Method": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "Variable": "$.httpMethod",
+            "StringEquals": "GET",
+            "Next": "DynamoDB Get Item Task"
+          },
+          {
+            "Variable": "$.httpMethod",
+            "StringEquals": "POST",
+            "Next": "DynamoDB Put Item Task"
+          },
+          {
+            "Variable": "$.httpMethod",
+            "StringEquals": "DELETE",
+            "Next": "DynamoDB Delete Item Tasktem"
+          }
+        ]
+      },
+      "DynamoDB Get Item Task": {
+        "End": true,
+        "Type": "Task",
+        "Resource": "arn:aws:states:::dynamodb:getItem",
+        "Parameters": {
+          "Key": {
+            "book_id": {
+              "S.$": "$.querystring.book_id"
+            }
+          },
+          "TableName": "Books",
+          "ConsistentRead": false
+        }
+      },
+      "DynamoDB Put Item Task": {
+        "End": true,
+        "Type": "Task",
+        "Resource": "arn:aws:states:::dynamodb:putItem",
+        "Parameters": {
+          "Item": {
+            "book_id": {
+              "S.$": "$.body.book_id"
+            },
+            "Author": {
+              "S.$": "$.body.author"
+            }
+          },
+          "TableName": "Books"
+        }
+      },
+      "DynamoDB Delete Item Tasktem": {
+        "End": true,
+        "Type": "Task",
+        "Resource": "arn:aws:states:::dynamodb:deleteItem",
+        "Parameters": {
+          "Key": {
+            "book_id": {
+              "S.$": "$.path.book_id"
+            }
+          },
+          "TableName": "Books",
+          "ConditionExpression": "attribute_exists(book_id)"
+        }
+      }
+    }
+  }
