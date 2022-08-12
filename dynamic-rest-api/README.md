@@ -22,6 +22,8 @@ HTTP POST request with “book_id” and “author” in request body to https:/
 HTTP GET request with query string “book_id” to https://{{URL-ENDPOINT}}/books/ => DynamoDB GetItem api\
 HTTP DELETE with “book_id” as a URL path to https://{{URL-ENDPOINT}}/books/  => DynamoDB DeleteItem api
 
+![image](./resources/dynamic_rest_api.png)
+
 Following VTL code snippet has been added to the request template mapping for adding HTTP method to the input that the Step function receives:\
 #set($inputRoot='"httpMethod" :"'+ $context.httpMethod+'"')\
 
