@@ -21,7 +21,8 @@ Following DynamoDB APIs are called during state machine execution upon invoking 
 HTTP POST request with “book_id” and “author” in request body to https://{{URL-ENDPOINT}}/books => DynamoDB PutItem api\
 HTTP GET request with query string “book_id” to https://{{URL-ENDPOINT}}/books/ => DynamoDB GetItem api\
 HTTP DELETE with “book_id” as a URL path to https://{{URL-ENDPOINT}}/books/  => DynamoDB DeleteItem api
-
+\
+\
 
 
 ![image](./resources/dynamic_rest_api.png)
