@@ -1,0 +1,24 @@
+{
+    "Objects": [
+        {
+            "Key": "building.jpg",
+            "Bucket": "mybucketname"
+        },
+        {
+            "Key": "desk.jpg",
+            "Bucket": "mybucketname"
+        },
+        {
+            "Key": "dinos.jpg",
+            "Bucket": "mybucketname"
+        },
+        {
+            "Key": "office.jpg",
+            "Bucket": "mybucketname"
+        },
+        {
+            "Key": "stage.jpg",
+            "Bucket": "mybucketname"
+        }
+    ]
+}
