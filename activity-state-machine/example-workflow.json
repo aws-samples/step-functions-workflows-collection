@@ -36,7 +36,7 @@
     },
     "gitHub": {
       "template": {
-        "repoURL": "https://github.com/aws-samples/stepfunctions-workflows-collection/tree/main/activity-state-machine/",
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/activity-state-machine/",
         "templateDir":"activity-state-machine",
         "templateFile": "template.yaml",
         "ASL": "statemachine/activity_state.asl.json"
