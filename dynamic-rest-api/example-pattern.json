@@ -1,0 +1,73 @@
+{
+    "title": "Dynamic REST API",
+    "description": "REST API Gateway asynchronously integrates with Express Step Function and put/get/delete items from a DynamoDB table",
+    "language": "",
+    "simplicity": "2 - Pattern",
+    "usecase": "",
+    "type": "Express",
+    "diagram":"/resources/state_machine.png",
+    "videoId": "",
+    "level": "100",
+    "framework": "CDK",
+    "services": ["Step functions","API gateway","dynamodb"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "Amazon API Gateway integrate with AWS Step Functions as the backend, specifically Synchronous Express Workflows. Synchronous Express Workflows start a workflow and wait until it completes, then return the result.This workflow implements integrating a REST API with a Synchronous Express State machine that calls DynamoDB APIs to either store, retrieve or delete an Item from a table."
+        "Invoking the endpoint with GET, POST, DELETE HTTP methods (any HTTP method can be set), will send the request to the state machine as a new execution. State machine make a choice based on input`’s “http Method” and calls one of DynamoDB PutItem, GetItem or DeleteItem APIs accordingly."
+        "On success, an HTTP code 200 is returned with the execution output as the Response Body. The response from the invocation contains only the output field from the StartSyncExecution API. In case of failures, the fields error and cause are returned as part of the response."
+        ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>cdk destroy</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "cdk deploy"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/stepfunctions-workflows-collection/tree/main/dynamic-rest-api/",
+        "templateDir":"dynamic-rest-api/dynamic_rest_api",
+        "templateFile": "dynamic_rest_api.py",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        },
+        {
+          "text": "Try the new interractive Step Functions workshop.",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US/"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Asma Hemmati",
+          "image": "https://media-exp1.licdn.com/dms/image/C4E03AQH_7LjThsxIkg/profile-displayphoto-shrink_200_200/0/1646951137922?e=1665619200&v=beta&t=ZQHopPGQ-rtqE6FBdt8nl9KYeqqwA5UmzNqEoW_tqfE",
+          "bio": "Asma is a Cloud Infrasturcture Architect at Amazon Web Services (AWS) based in Munich, Germany.",
+          "linkedin": "asma-hemmati"
+        }
+    ]
+}

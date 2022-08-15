@@ -1,0 +1,15 @@
+#set($inputRoot = $input.path('$'))
+#set($inputBookId = $input.params('book_id'))
+#set($integration_output = $input.path('$.output'))
+#if($input.path('$.status').toString().equals("FAILED"))
+#set($context.responseOverride.status = 500)
+{
+"error": "$input.path('$.error')",
+"cause": "$input.path('$.cause')"
+}
+#elseif(!$integration_output.contains("Item"))
+#set($context.responseOverride.status = 404)
+{ "Book ID "$inputBookId" not found in Books database" }
+#else
+$input.path('$.output')
+#end
