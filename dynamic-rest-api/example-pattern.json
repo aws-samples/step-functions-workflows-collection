@@ -37,8 +37,8 @@
     },
     "gitHub": {
       "template": {
-        "repoURL": "https://github.com/aws-samples/stepfunctions-workflows-collection/tree/main/dynamic-rest-api/",
-        "templateDir":"dynamic-rest-api/dynamic_rest_api",
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/dynamic-rest-api",
+        "templateDir":"dynamic_rest_api",
         "templateFile": "dynamic_rest_api.py",
         "ASL": "statemachine/statemachine.asl.json"
       },
