@@ -1,0 +1,69 @@
+{
+  "Comment": "Text to Speech using AWS Polly",
+  "StartAt": "GetTextFile",
+  "States": {
+    "GetTextFile": {
+      "Type": "Task",
+      "Next": "StartSpeechSynthesisTask",
+      "Parameters": {
+        "Bucket.$": "$.detail.bucket.name",
+        "Key.$": "$.detail.object.key"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:s3:getObject",
+      "ResultSelector": {
+        "filecontent.$": "$.Body"
+      }
+    },
+    "StartSpeechSynthesisTask": {
+      "Type": "Task",
+      "Next": "Wait",
+      "Parameters": {
+        "OutputFormat": "mp3",
+        "OutputS3BucketName": "bucket-776177632559-us-east-1-transcript-results",
+        "Text.$": "$.filecontent",
+        "TextType": "text",
+        "OutputS3KeyPrefix": "audio",
+        "VoiceId": "Amy"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:polly:startSpeechSynthesisTask"
+    },
+    "Failed": {
+      "Cause": "transcription job failed",
+      "Error": "FAILED",
+      "Type": "Fail"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "SpeechSynthesisTaskStatus": {
+      "Choices": [
+        {
+          "Variable": "$.TaskStatus",
+          "StringEquals": "completed",
+          "Next": "Success"
+        },
+        {
+          "Variable": "$.TaskStatus",
+          "StringEquals": "failed",
+          "Next": "Failed"
+        }
+      ],
+      "Default": "Wait",
+      "Type": "Choice"
+    },
+    "Wait": {
+      "Next": "GetSpeechSynthesisTask",
+      "Seconds": 10,
+      "Type": "Wait"
+    },
+    "GetSpeechSynthesisTask": {
+      "Type": "Task",
+      "Next": "SpeechSynthesisTaskStatus",
+      "Parameters": {
+        "TaskId.$": "$.SynthesisTask.TaskId"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:polly:getSpeechSynthesisTask"
+    }
+  },
+  "TimeoutSeconds": 900
+}

@@ -38,7 +38,7 @@
     },
     "gitHub": {
       "template": {
-        "repoURL": "https://github.com/aws-samples/stepfunctions-workflows-collection/tree/main/human-in-the-loop/",
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/human-in-the-loop/",
         "templateDir":"human-in-the-loop",
         "templateFile": "template.yaml",
         "ASL": "statemachine/statemachine.asl.json"

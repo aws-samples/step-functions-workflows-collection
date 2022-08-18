@@ -13,8 +13,8 @@
     "introBox": {
       "headline": "How it works",
       "text": [
-        "Amazon API Gateway integrate with AWS Step Functions as the backend, specifically Synchronous Express Workflows. Synchronous Express Workflows start a workflow and wait until it completes, then return the result.This workflow implements integrating a REST API with a Synchronous Express State machine that calls DynamoDB APIs to either store, retrieve or delete an Item from a table."
-        "Invoking the endpoint with GET, POST, DELETE HTTP methods (any HTTP method can be set), will send the request to the state machine as a new execution. State machine make a choice based on input`’s “http Method” and calls one of DynamoDB PutItem, GetItem or DeleteItem APIs accordingly."
+        "Amazon API Gateway integrate with AWS Step Functions as the backend, specifically Synchronous Express Workflows. Synchronous Express Workflows start a workflow and wait until it completes, then return the result.This workflow implements integrating a REST API with a Synchronous Express State machine that calls DynamoDB APIs to either store, retrieve or delete an Item from a table.",
+        "Invoking the endpoint with GET, POST, DELETE HTTP methods (any HTTP method can be set), will send the request to the state machine as a new execution. State machine make a choice based on input`’s “http Method” and calls one of DynamoDB PutItem, GetItem or DeleteItem APIs accordingly.",
         "On success, an HTTP code 200 is returned with the execution output as the Response Body. The response from the invocation contains only the output field from the StartSyncExecution API. In case of failures, the fields error and cause are returned as part of the response."
         ]
     },

@@ -37,7 +37,7 @@
     },
     "gitHub": {
       "template": {
-        "repoURL": "https://github.com/aws-samples/stepfunctions-workflows-collection/tree/main/idempotent-workflow/",
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/idempotent-workflow/",
         "templateDir":"idempotent-workflow/lib",
         "templateFile": "idempotent-stepfunctions-workflow-stack.ts",
         "ASL": "statemachine/statemachine.asl.json"

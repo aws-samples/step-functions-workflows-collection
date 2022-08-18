@@ -29,7 +29,7 @@
   },
   "gitHub": {
     "template": {
-      "repoURL": "https://github.com/aws-samples/stepfunctions-workflows-collection/tree/main/sfn-textract-callback-ts-cdk/",
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/sfn-textract-callback-ts-cdk/",
       "templateDir": "sfn-textract-callback-ts-cdk",
       "templateFile": "template.yaml",
       "ASL": "statemachine/statemachine.asl.json"

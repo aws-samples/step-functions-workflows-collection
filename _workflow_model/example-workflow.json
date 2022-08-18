@@ -37,7 +37,7 @@
     },
     "gitHub": {
       "template": {
-        "repoURL": "https://github.com/aws-samples/stepfunctions-workflows-collection/tree/main/synchronous-job/",
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/synchronous-job/",
         "templateDir":"synchronous-job",
         "templateFile": "template.yaml",
         "ASL": "statemachine/statemachine.asl.json"
