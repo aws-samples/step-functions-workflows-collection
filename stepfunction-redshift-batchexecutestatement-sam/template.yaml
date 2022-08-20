@@ -1,0 +1,346 @@
+# Cloudformation
+# Author - Shivam Rajawat
+# Cloudformation template to deploy NLB VPCE setup in a account
+# Aim - Perform batch execute statements on redshift cluster directly from Step function
+
+Transform: AWS::Serverless-2016-10-31
+AWSTemplateFormatVersion: 2010-09-09
+Description: This cloudformation template is to deploy resources for performing batch execute statements on redshift directly via step function
+Parameters:
+  ClusterName:
+    Type: String
+    Type: String
+    MinLength: 2
+    MaxLength: 60
+  StepFunctionName:
+    Description: Step function name
+    Type: String
+    MinLength: 2
+    MaxLength: 50
+  BucketName:
+    Description: Creates a new bucket where csv file will be uploaded
+    Type: String
+    MinLength: 2
+    MaxLength: 40
+  MasterUsername:
+    Description: Redshift cluster master username
+    Type: String
+    MinLength: 2
+    MaxLength: 40
+  MasterUserPassword:
+    Description: Redshift cluster master username
+    Type: String
+    MinLength: 8
+    MaxLength: 40
+    AllowedPattern: ^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$
+    ConstraintDescription: Malformed input-Parameter MyParameter must only contain uppercase and lowercase letters and numbers
+    NoEcho: true
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties: 
+      BucketName: !Sub 
+        - "${AWS::StackName}-${BucketName}-${AWS::AccountId}"
+        - BucketName: !Ref BucketName
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  S3BucketPolicy:
+    DependsOn: OnStackDeletion
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement: 
+          - Sid: abcd
+            Effect: Allow
+            Principal: 
+              Service: redshift.amazonaws.com
+            Action:
+              - s3:GetBucketAcl
+              - s3:PutObject
+            Resource:
+              - !Sub arn:aws:s3:::${S3Bucket}
+              - !Sub arn:aws:s3:::${S3Bucket}/*
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Sub ${AWS::AccountId}
+      Bucket: !Ref S3Bucket
+
+  RedshiftRole:
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - redshift.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns: 
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+      RoleName: !Sub ${AWS::StackName}-RedshiftReadOnlyRole
+
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+      - Key: Name
+        Value: !Sub ${AWS::StackName}-VPC1
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+      - Key: Name
+        Value: VPC Internet Gateway
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: us-east-1a
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: Public Subnet 1
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.2.0/24
+      MapPublicIpOnLaunch: false
+      AvailabilityZone: us-east-1a
+      Tags:
+        - Key: Name
+          Value: Private Subnet 1
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.3.0/24
+      AvailabilityZone: us-east-1b
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: Public Subnet 2
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.4.0/24
+      AvailabilityZone: us-east-1b
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: Private Subnet 2
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: Public Route Table
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnetRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnetRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: Private Route Table
+
+  PrivateSubnetRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet1
+      RouteTableId: !Ref PrivateRouteTable
+
+  PrivateSubnetRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet2
+      RouteTableId: !Ref PrivateRouteTable
+  
+  RedshiftSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: !Join [ " ", [ !Ref 'AWS::StackName', " - Redshift Security Group" ] ]
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5439
+          ToPort: 5439
+          CidrIp: 0.0.0.0/0
+          Description: 'Redshift Access to VPC CIDR'
+  
+  RedshiftClusterSubnetGroup:
+    Type: AWS::Redshift::ClusterSubnetGroup
+    Properties:
+      Description: Cluster subnet group
+      SubnetIds:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+
+  MyDeletionLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/lambda.zip
+      Handler: index.lambda_handler
+      Runtime: python3.9
+      FunctionName: !Sub ${AWS::StackName}-S3FilesDeletion
+      Role: !GetAtt CustomLambdaRole.Arn
+  
+  CustomLambdaRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-custom-lambda-function-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: !Sub ${AWS::StackName}-custom-lambda-function-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: 
+                - "s3:DeleteObjectVersion"
+                - "s3:DeleteObject"
+                - "s3:Get*"
+                - "s3:List*"
+                - "s3:PutObject"
+                Resource: 
+                - !GetAtt S3Bucket.Arn
+                - !Sub '${S3Bucket.Arn}/*'
+        - PolicyName: BasicExecutionRole
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Action: logs:CreateLogGroup
+              Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*'
+            - Effect: Allow
+              Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+              Resource: !Sub 
+                - 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${functionName}:*'
+                - functionName: !Sub ${AWS::StackName}-S3FilesDeletion
+
+  OnStackDeletion:
+    Type: Custom::LambdaDependency
+    Properties:
+      ServiceToken:
+        Fn::GetAtt:
+        - MyDeletionLambda
+        - Arn
+      S3Bucket: !Ref S3Bucket
+  Redshift:
+    Type: AWS::Redshift::Cluster
+    DependsOn: S3BucketPolicy
+    Properties:
+      ClusterIdentifier: !Ref ClusterName
+      ClusterSubnetGroupName:  !Ref RedshiftClusterSubnetGroup
+      ClusterType: single-node
+      DBName: dev
+      IamRoles: 
+        - !GetAtt RedshiftRole.Arn
+      LoggingProperties: 
+        BucketName: !Ref S3Bucket
+        S3KeyPrefix: !Ref ClusterName
+      MasterUsername: !Ref MasterUsername
+      MasterUserPassword: !Ref MasterUserPassword
+      NodeType: dc2.large
+      EnhancedVpcRouting: false
+      PubliclyAccessible: false
+      VpcSecurityGroupIds: 
+        - !Ref RedshiftSecurityGroup
+
+  StepFunctionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: !Sub
+        - "${StepFunction}-Role-${AWS::AccountId}"
+        - StepFunction: !Ref StepFunctionName
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - states.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonRedshiftDataFullAccess
+        - arn:aws:iam::aws:policy/AmazonRedshiftFullAccess
+
+  StepFunction:
+    Type: AWS::Serverless::StateMachine
+    Properties: 
+      DefinitionUri: statemachine/statemachine.asl.json
+      DefinitionSubstitutions:
+        S3BucketName: !Ref S3Bucket
+        RedShiftRole: !GetAtt RedshiftRole.Arn
+        Region: !Sub ${AWS::Region}
+        ClusterName: !Ref ClusterName
+        MasterUsername: !Ref MasterUsername
+      Role: !GetAtt StepFunctionRole.Arn
+      Name: !Ref StepFunctionName
+      Type: STANDARD
+
+Outputs:
+  StepFunctionConsoleUrl:
+    Value: !Sub
+      - 'https://${AWS::Region}.console.aws.amazon.com/states/home?region=${AWS::Region}#/statemachines/view/${StepFunction}'
+      - StepFunction: !Ref StepFunction
+  StepFunctionArn:
+    Value: !Ref StepFunction
+  RedshiftQueryEditorV2:
+    Value: !Sub 'https://${AWS::Region}.console.aws.amazon.com/sqlworkbench/home?region=${AWS::Region}#/client'

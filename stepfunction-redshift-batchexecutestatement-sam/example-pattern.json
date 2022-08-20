@@ -1,0 +1,68 @@
+{
+  "title": "Perform Batch execute statement on redshift directly from step function",
+  "description": "Execute batch statements on redshift",
+  "language": "",
+  "simplicity": "2 - Pattern",
+  "usecase": "",
+  "type": "Standard",
+  "diagram":"/resources/StateMachine.png",
+  "videoId": "",
+  "level": "200",
+  "framework": "SAM",
+  "services": ["Step function", "Redshift"],
+  "introBox": {
+    "headline": "BatchExecuteStatement on Redshift from Sfn",
+    "text": [
+      "This serverless pattern creates a State Machine with BatchExecuteStatement state and allows users to perform one or more SQL statements on a Redshift cluster directly via step function.",
+       "Statemachine will access the CSV file which is present in the S3 bucket and it will then create a table and upload the CSV data to that table directly."
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": [
+      "See the GitHub repo for detailed testing instructions."
+    ]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": [
+      "1. Delete the stack: <code>sam delete</code>."
+    ]
+  },
+  "deploy": {
+    "text": [
+      "sam deploy --guided"
+    ]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/stepfunction-redshift-batchexecutestatement-sam/",
+      "templateDir":"stepfunction-redshift-batchexecutestatement-sam",
+      "templateFile": "template.yaml",
+      "ASL": "statemachine/activity_state.asl.json"
+    },
+    "payloads": [
+      {
+        "headline": "",
+        "payloadURL": ""
+      }
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "The AWS Step Functions Workshop",
+        "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+      }
+    ]
+  },
+  "authors": [
+          {
+            "name": "Shivam Rajawat",
+            "image": "https://drive.google.com/file/d/1q872K5V1RKFHCrkwGSssWNeIwug6ZLxO/view",
+            "bio": "I am a Cloud Support Engineer (Serverless) at AWS and I love to simplify complex stuff.",
+            "linkedin": "shivam-rajawat-a42b68124"
+          }
+    ]
+}

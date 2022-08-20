@@ -1,0 +1,36 @@
+{
+        "Comment": "A Hello World example of the Amazon States Language using Pass states",
+        "StartAt": "BatchExecuteStatement",
+        "States": {
+          "BatchExecuteStatement": {
+            "Type": "Task",
+            "Parameters": {
+              "ClusterIdentifier": "${ClusterName}",
+              "Database.$": "$.Database",
+              "DbUser": "${MasterUsername}",
+              "Sqls": [
+                "drop table if exists public.data;",
+                "create table public.data ( firstname varchar(255), lastname varchar(255), email varchar(255), profession varchar(50) );",
+                "truncate table public.data;",
+                "begin;",
+                "copy public.data from 's3://${S3BucketName}/newdata' credentials 'aws_iam_role=${RedShiftRole}' DELIMITER ',' ignoreheader 1 REGION '${Region}';",
+                "commit;",
+                "close;"
+              ]
+            },
+            "Resource": "arn:aws:states:::aws-sdk:redshiftdata:batchExecuteStatement",
+            "TimeoutSeconds": 15,
+            "End": true,
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "States.ALL"
+                ],
+                "BackoffRate": 1,
+                "IntervalSeconds": 5,
+                "MaxAttempts": 4
+              }
+            ]
+          }
+        }
+      }
