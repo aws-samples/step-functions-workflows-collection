@@ -82,6 +82,10 @@ aws stepfunctions start-execution --state-machine-arn STATE_MACHINE_ARN --input 
 
 You will find the `STATE_MACHINE_ARN` in the outputs of the SAM template.
 
+You can see the execution status via console, you will find the state machine url in the outputs section of the SAM.
+
+Lastly, in order to view the results, you will have to use query the redshift cluster. Redshift query editor v2 link is present in the outputs section too. 
+
 ## Cleanup
 
 1. Delete the stack
