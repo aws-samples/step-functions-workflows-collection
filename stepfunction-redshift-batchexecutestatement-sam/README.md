@@ -70,7 +70,7 @@ Important: this application uses various AWS services and there are costs associ
 
 ## Image
 
-![image](./resources/StatemMchine.png)
+![image](./resources/StateMachine.png)
 
 ## Testing
 
