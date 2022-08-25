@@ -1,0 +1,103 @@
+{
+  "Comment": "An example of combining standard and express workflows to run a mock e-commerce workflow that does selective checkpointing.",
+  "StartAt": "Approve Order Request",
+  "States": {
+      "Approve Order Request": {
+          "Type": "Task",
+          "Resource": "arn:aws:states:::sqs:sendMessage.waitForTaskToken",
+          "Parameters": {
+              "QueueUrl": "${sqsQueueUrl}",
+              "MessageBody": {
+                  "MessageTitle": "Order Request received. Pausing workflow to wait for manual approval. ",
+                  "TaskToken.$": "$$.Task.Token"
+              }
+          },
+          "Next": "Notify Order Success",
+          "Catch": [
+              {
+                  "ErrorEquals": [
+                      "States.ALL"
+                  ],
+                  "Next": "Notify Order Failure"
+              }
+          ]
+      },
+      "Notify Order Success": {
+          "Type": "Task",
+          "Resource": "arn:aws:states:::sns:publish",
+          "Parameters": {
+              "Message": "Order has been approved. Resuming workflow.",
+              "TopicArn": "${sendtoSNSArn}"
+          },
+          "Next": "Process Payment"
+      },
+      "Notify Order Failure": {
+          "Type": "Task",
+          "Resource": "arn:aws:states:::sns:publish",
+          "Parameters": {
+              "Message": "Order not approved. Order failed.",
+              "TopicArn": "${sendtoSNSArn}"
+          },
+          "End": true
+      },
+      "Process Payment": {
+          "Type": "Task",
+          "Resource": "arn:aws:states:::sqs:sendMessage.waitForTaskToken",
+          "Parameters": {
+              "QueueUrl": "${sqsQueueUrl}",
+              "MessageBody": {
+                  "MessageTitle": "Payment sent to third-party for processing. Pausing workflow to wait for response.",
+                  "TaskToken.$": "$$.Task.Token"
+              }
+          },
+          "Next": "Notify Payment Success",
+          "Catch": [
+              {
+                  "ErrorEquals": [
+                      "States.ALL"
+                  ],
+                  "Next": "Notify Payment Failure"
+              }
+          ]
+      },
+      "Notify Payment Success": {
+          "Type": "Task",
+          "Resource": "arn:aws:states:::sns:publish",
+          "Parameters": {
+              "Message": "Payment processing succeeded. Resuming workflow.",
+              "TopicArn": "${sendtoSNSArn}"
+          },
+          "Next": "Workflow to Update Backend Systems"
+      },
+      "Notify Payment Failure": {
+          "Type": "Task",
+          "Resource": "arn:aws:states:::sns:publish",
+          "Parameters": {
+              "Message": "Payment processing failed.",
+              "TopicArn": "${sendtoSNSArn}"
+          },
+          "End": true
+      },
+      "Workflow to Update Backend Systems": {
+          "Comment": "Starting an execution of an Express workflow to handle backend updates. Express workflows are fast and cost-effective for steps where checkpointing isn't required.",
+          "Type": "Task",
+          "Resource": "arn:aws:states:::states:startExecution.sync:2",
+          "Parameters": {
+              "StateMachineArn": "${SelectiveCheckpointingExpressStateMachineArn}",
+              "Input": {
+                  "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+              }
+          },
+          "Next": "Ship the Package"
+      },
+      "Ship the Package": {
+          "Type": "Task",
+          "Resource": "arn:aws:states:::sns:publish",
+          "Parameters": {
+              "Message": "Order and payment received, database is updated and the package is ready to ship.",
+              "TopicArn": "${sendtoSNSArn}"
+          },
+          "End": true
+      }
+  }
+}

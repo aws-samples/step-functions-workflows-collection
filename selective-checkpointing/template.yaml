@@ -1,0 +1,237 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Request response
+
+  Sample SAM Template for selective chekpointing
+
+
+Resources:
+  ParentStateMachine:
+    Type: AWS::Serverless::StateMachine 
+    Properties:
+      DefinitionUri: statemachine/statemachineParent.asl.json
+      DefinitionSubstitutions:
+        sendtoSNSArn: !Ref SNSTopic
+        sqsQueueUrl: !Ref SQSQueue
+        SelectiveCheckpointingExpressStateMachineArn: !GetAtt ChildStateMachine.Arn
+      Role: !GetAtt ParentStateMachineRole.Arn
+
+  ParentStateMachineRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: states.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: SNSPublishPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "sns:Publish"
+                Resource: !Ref SNSTopic
+        - PolicyName: SQSSendMessagePolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "sqs:SendMessage"
+                Resource: !GetAtt [SQSQueue, Arn]
+        - PolicyName: StatesExecutionPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'states:StartExecution'
+                  - 'states:DescribeExecution'
+                  - 'states:StopExecution'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'events:PutTargets'
+                  - 'events:PutRule'
+                  - 'events:DescribeRule'
+                Resource: !Sub >-
+                  arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/StepFunctionsGetEventsForStepFunctionsExecutionRule
+
+  ExpressLogGroup:
+    Type: AWS::Logs::LogGroup
+
+  ChildStateMachine:
+    Type: AWS::Serverless::StateMachine 
+    Properties:
+      Type: "EXPRESS"
+      Logging:
+        Level: ALL
+        IncludeExecutionData: True
+        Destinations:
+          - CloudWatchLogsLogGroup:
+                LogGroupArn: !GetAtt ExpressLogGroup.Arn
+      DefinitionUri: statemachine/statemachineChild.asl.json
+      DefinitionSubstitutions:
+        UpdateDatabaseLambdaFunction: !Ref UpdateDatabaseLambdaFunction
+      Role: !GetAtt ChildStateMachineRole.Arn
+
+  ChildStateMachineRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: states.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: ExpressStatesExecutionPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'lambda:InvokeFunction'
+                Resource:
+                  - !GetAtt UpdateDatabaseLambdaFunction.Arn
+        - PolicyName: CloudWatchLogs
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogDelivery'
+                  - 'logs:GetLogDelivery'
+                  - 'logs:UpdateLogDelivery'
+                  - 'logs:DeleteLogDelivery'
+                  - 'logs:ListLogDeliveries'
+                  - 'logs:PutResourcePolicy'
+                  - 'logs:DescribeResourcePolicies'
+                  - 'logs:DescribeLogGroups'
+                Resource:
+                  - '*'
+
+  SQSQueue:
+    Type: 'AWS::SQS::Queue'
+    Properties:
+      DelaySeconds: 0
+      VisibilityTimeout: 30
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt [SQSQueueDLQ, Arn]
+        maxReceiveCount: 1
+
+  SQSQueueDLQ:
+    Type: 'AWS::SQS::Queue'
+    Properties:
+      DelaySeconds: 0
+      VisibilityTimeout: 30
+
+  SNSTopic:
+    Type: 'AWS::SNS::Topic'
+    Properties:
+      DisplayName: 'ShipPackageLambdaFunction'
+
+  ShipPackageLambdaFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      Role: !GetAtt ShipLambdaExecutionRole.Arn
+      CodeUri: ShipPackageLambdaFunction/function/
+      Handler: app.lambdaHandler
+      Runtime: nodejs16.x
+      Timeout: 8
+      Events: 
+        SQSEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt SQSQueue.Arn
+            BatchSize: 10
+            Enabled: true
+  UpdateDatabaseLambdaFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      Role: !GetAtt UpdateDatabaseLambdaFunctionRole.Arn
+      CodeUri: UpdateDatabaseLambdaFunction/function/
+      Handler: app.lambdaHandler
+      Runtime: nodejs16.x
+      Timeout: 3
+
+  UpdateDatabaseLambdaFunctionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: "sts:AssumeRole"
+      Policies:
+        - PolicyName: CloudWatchLogsPolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: !Sub "arn:${AWS::Partition}:logs:*:*:*"
+
+  ShipLambdaExecutionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: SQSReceiveMessagePolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "sqs:ReceiveMessage"
+                  - "sqs:DeleteMessage"
+                  - "sqs:GetQueueAttributes"
+                  - "sqs:ChangeMessageVisibility"
+                Resource: !GetAtt SQSQueue.Arn
+        - PolicyName: CloudWatchLogsPolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: !Sub 'arn:${AWS::Partition}:logs:*:*:*'
+        - PolicyName: StatesExecutionPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'states:SendTaskSuccess'
+                  - "states:SendTaskFailure"
+                Resource: "*"
+
+
+Outputs:
+  StateMachineArn:
+    Value:
+      Ref: ParentStateMachine
+  ExecutionInput:
+    Description: Sample input to StartExecution.
+    Value: |
+      {}
+
