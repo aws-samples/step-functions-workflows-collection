@@ -1,0 +1,69 @@
+{
+  "Comment": "A round robin based on task exuections and input array",
+  "StartAt": "ListExecutions",
+  "States": {
+    
+    "ListExecutions": {
+      "Type": "Task",
+      "Parameters": {
+          "StateMachineArn.$": "$$.StateMachine.Id",
+          "StatusFilter":"SUCCEEDED"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:sfn:listExecutions",
+      "Next": "Modulo",
+      "ResultPath": "$.executions"
+    },
+
+
+    "Modulo": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+
+      "Parameters": {
+        "FunctionName":"${ModuloFunctionName}",
+        "Payload.$": "$"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath":"$.userId",
+      "Next": "Call out to API"
+    },
+
+    "Call out to API": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+          "FunctionName":"${CallToAPIFunctionName}",
+          "Payload":{
+            "title.$":"States.Format('Sticker request: for {}.', $.body.requestor)",
+            "html_notes.$":"States.Format('<body>------Message:{} ------ Share <a href=\"https://www.stickermule.com/account/reorder\">these stickers</a> with {}</body>',$.body.message,$.body.requestor)",
+            "type":"1202131426886762",
+            "assignee.$":"$.userId.Payload"
+          }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "End": true
+    }    
+  }
+}
