@@ -1,9 +1,41 @@
-# The “Serverless Round-robin” pattern
+# The "Call HTTP API" pattern
 
-Selects the next array item in round robin fashion using the Step Functions execution count modulo of the array length.
+Make an HTTP/HTTPS request to an exteranl API and return the response.
 
-The Step Functions `SDK:ListExecutions` task retrieves the total number of successful executions, and passes this onto a Lambda function that finds the remainder when divided by an array length (the modulo). 
+![Call HTTP API diagram](./images/call-http-api.svg)
 
-This workflow pattern Is used in production to assign new serverlessLand pattern pull requests to the DA team via Asana. 
+The workflow takes an Axios (Node.js-based HTTP client) config as input. For example,
 
-![Stateless roundrobin](https://github.com/aws-samples/step-functions-workflows-collection/blob/main/stateless-roundrobin/images/stateless-roundrobin-image.png?raw=true)
+```
+# Step function input
+{
+	"config": {
+		"url": "www.example.com",
+		"method": "get"
+		// More options can be found in https://axios-http.com/docs/req_config
+	},
+	"enableLog": true # Enable/disable Lambda logging.
+	
+}
+```
+
+You can see the full list of options in the [Axios documentation](https://axios-http.com/docs/req_config)
+
+It returns the HTTP status code, header and response body in the `Payload` object:
+
+```
+# Step function input
+{
+	"Payload": {
+		"status": 200
+		"headers": {
+			"content-type": "application/json"
+			// ...
+		},
+		"response": {
+			// HTTP response body
+		}
+	},
+	// ...
+}
+```

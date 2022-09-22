@@ -1,32 +1,28 @@
-// const axios = require('axios')
-// const url = 'http://checkip.amazonaws.com/';
 const axios = require('axios')
-let response;
-const endpoont = process.env.endPoint
-exports.lambdaHandler = async (event, context) => {
 
-    const nextItem= event.assignee
-    const config = {
-        method: 'post',
-        url: endpoont,
-                headers: { 
-                'Content-Type': 'application/json', 
-                'Cookie': 'TooBusyRedirectCount=0'
-                },
-        data : {nextItem:nextItem}
-        }
-          
+exports.lambdaHandler = async (event, context) => {
+  console.debug(event)
+  if (event.enableLog) {
+    console.log("Making request with config: ", event.config)
+  }
   
-  const t= await axios(config)
-  .then(function (response) {
-    console.log(JSON.stringify(response.data));
-  })
+  if (!event.config) {
+    throw Error("Missing HTTP request config in the input.")
+  }
+  
+  const resp = await axios(event.config)
   .catch(function (error) {
-    console.log(error);
+    console.error(error)
+    throw error
   });
   
-   return {
-       statusCode: 200, 
-       body: JSON.stringify({ message: t })
-    }
+  if (event.enableLog) {
+    console.log(`Received response status ${resp.status}`)
   }
+  
+  return {
+       status: resp.status,
+       headers: resp.headers,
+       response: resp.data
+    }
+}

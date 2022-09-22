@@ -1,0 +1,206 @@
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "https://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg xmlns="http://www.w3.org/2000/svg" class="sc-djvmMF euCbBy graph" data-testid="graph" width="264" height="231"><g transform="translate(12,12)" class="new-look-graph"><g class="nodes"><g class="node-container" transform="translate(120,22)"><g><circle class="sc-fXynhf qdPSx shape" r="22"/><text class="sc-GVOUr gahIia label"><tspan xml:space="preserve" text-anchor="middle" alignment-baseline="central">Start</tspan></text></g></g><g class="node-container" transform="translate(120,103.5)"><g class="sc-lbOyJj dEvhCJ node state Task" data-testid="graph-Call HTTP API" data-state-id="Call HTTP API" data-state-type="Task"><g class="new-look-state-node "><rect x="-120" y="-24.5" width="240" height="49" rx="3" ry="3"/><g class="handle" transform="translate(-120,-24.5)"><path d="M5,16 L5,34 M8,16 L8,34"/></g><g class="icon" transform="translate(-104,-24)"><rect fill="var(--color-background-container-header-g9rg0j, #fafafa)" x="0.0361026108" y="0.0181291967" width="48" height="48"/><line x1="47.5" y1="0.49122807" x2="47.5" y2="47.5" stroke="var(--color-text-home-header-secondary-g5rqe4, #d5dbdb)" stroke-linecap="square"/><line x1="0.5" y1="0.49122807" x2="0.5" y2="47.5" stroke="var(--color-text-home-header-secondary-g5rqe4, #d5dbdb)" stroke-linecap="square"/><use href="#icon-service-lam"/></g><g class="text-lines" transform="translate(-48,-24.5)"><text transform="translate(0,17)" class="line1"><tspan xml:space="preserve" text-anchor="start">Lambda: Invoke</tspan></text><text transform="translate(0,35.5)" class="line2 label"><tspan xml:space="preserve" text-anchor="start">Call HTTP API</tspan></text></g></g></g></g><g class="node-container" transform="translate(120,185)"><g><circle class="sc-fXynhf qdPSx shape" r="22"/><text class="sc-GVOUr gahIia label"><tspan xml:space="preserve" text-anchor="middle" alignment-baseline="central">End</tspan></text></g></g></g><g class="edges"><g class="sc-gFGZVQ iOJAJH edge"><path id="state-Call HTTP API:end:normal" d="M120,128L120,130.91666666666666C120,133.83333333333334,120,139.66666666666666,120,145.5C120,151.33333333333334,120,157.16666666666666,120,160.08333333333334L120,163" marker-end="url(#arrowhead)" fill="none"/></g><g class="sc-gFGZVQ iOJAJH edge"><path id="start:state-Call HTTP API" d="M120,44L120,46.916666666666664C120,49.833333333333336,120,55.666666666666664,120,61.5C120,67.33333333333333,120,73.16666666666667,120,76.08333333333333L120,79" marker-end="url(#arrowhead)" fill="none"/></g></g><defs><marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto" class="sc-fbPSWO iaGlOO"><polygon points="0 0, 8 3, 0 6"/></marker><marker id="highlighted-arrowhead" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto" class="sc-fbPSWO iaGlOO"><polygon points="0 0, 6 2, 0 4"/></marker><marker id="error-arrowhead" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto" class="sc-fbPSWO iaGlOO"><polygon points="0 0, 6 2, 0 4"/></marker><marker id="large-arrowhead" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" class="sc-fbPSWO iaGlOO"><polygon points="0 0, 10 4, 0 8"/></marker><marker id="large-highlighted-arrowhead" markerWidth="5.5" markerHeight="4" refX="4.5" refY="2" orient="auto" class="sc-fbPSWO iaGlOO"><polygon points="0 0, 5.5 2, 0 4"/></marker><marker id="large-error-arrowhead" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" class="sc-fbPSWO iaGlOO"><polygon points="0 0, 10 4, 0 8"/></marker><linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-orange"><stop stop-color="#C8511B" offset="0%"/><stop stop-color="#FF9900" offset="100%"/></linearGradient><linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-turquoise"><stop stop-color="#055F4E" offset="0%"/><stop stop-color="#56C0A7" offset="100%"/></linearGradient><linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-blue"><stop stop-color="#2E27AD" offset="0%"/><stop stop-color="#527FFF" offset="100%"/></linearGradient><linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-pink"><stop stop-color="#B0084D" offset="0%"/><stop stop-color="#FF4F8B" offset="100%"/></linearGradient><linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-red"><stop stop-color="#BD0816" offset="0%"/><stop stop-color="#FF5252" offset="100%"/></linearGradient><linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-green"><stop stop-color="#1B660F" offset="0%"/><stop stop-color="#6CAE3E" offset="100%"/></linearGradient><linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-purple"><stop stop-color="#4D27A8" offset="0%"/><stop stop-color="#A166FF" offset="100%"/></linearGradient><linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-grey"><stop stop-color="#DCDCDC" offset="0%"/><stop stop-color="#F6F5F7" offset="100%"/></linearGradient>,<linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-ag"><stop stop-color="#BC1356" offset="0%"/><stop stop-color="#F34482" offset="100%"/></linearGradient><linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-athena"><stop stop-color="#5930B5" offset="0%"/><stop stop-color="#945DF2" offset="100%"/></linearGradient><linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-emr"><stop stop-color="#5930B5" offset="0%"/><stop stop-color="#945DF2" offset="100%"/></linearGradient><linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-glue"><stop stop-color="#5930B5" offset="0%"/><stop stop-color="#945DF2" offset="100%"/></linearGradient><linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-sns"><stop stop-color="#BC1356" offset="0%"/><stop stop-color="#F34482" offset="100%"/></linearGradient><linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-states"><stop stop-color="#BC1356" offset="0%"/><stop stop-color="#F34482" offset="100%"/></linearGradient><linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="gradient-generic"><stop stop-color="#ccc" offset="0%"/><stop stop-color="#ddd" offset="100%"/></linearGradient><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" id="icon-service-lam"><polygon fill="url(#gradient-orange)" fill-rule="nonzero" points="0 0 48 0 48 48 0 48"/><g transform="translate(11, 10)" fill="#FFFFFF"><path d="M26.5889213,27.8937088 L19.6925948,27.8937088 C19.4772752,27.8931074 19.2813916,27.7706914 19.1888047,27.578869 L9.43766764,7.45673404 L5.31218659,7.45673404 C5.00303594,7.45673404 4.75241983,7.20943823 4.75241983,6.90438337 L4.75241983,0.828526005 C4.75241983,0.523471153 5.00303594,0.276175335 5.31218659,0.276175335 L13.9325948,0.276175335 C14.1479143,0.276776788 14.3437979,0.399192787 14.4363848,0.591015217 L24.1427405,20.7131501 L26.5889213,20.7131501 C26.8980719,20.7131501 27.148688,20.9604459 27.148688,21.2655008 L27.148688,27.3413582 C27.148688,27.646413 26.8980719,27.8937088 26.5889213,27.8937088 Z M20.0452478,26.7890075 L26.0291545,26.7890075 L26.0291545,21.8178515 L23.7900875,21.8178515 C23.5747679,21.81725 23.3788843,21.694834 23.2862974,21.5030116 L13.5799417,1.38087667 L5.87755102,1.38087667 L5.87755102,6.3520327 L9.79591837,6.3520327 C10.0112379,6.35263416 10.2071215,6.47505016 10.2997085,6.66687259 L20.0452478,26.7890075 Z"/><path d="M8.10542274,27.8937099 L0.82845481,27.8937099 C0.635054571,27.8940907 0.455155006,27.7959347 0.352653061,27.634104 C0.243858391,27.4681848 0.233185428,27.2575536 0.324664723,27.0817533 L7.93749271,11.3894708 C8.03007964,11.1976484 8.22596323,11.0752324 8.4412828,11.0746298 L8.4412828,11.0746298 C8.65533487,11.0742082 8.85089022,11.1942751 8.94507289,11.3839473 L12.5891545,18.7799228 C12.6634688,18.931712 12.6634688,19.1086786 12.5891545,19.2604679 L8.6148105,27.5457279 C8.53147526,27.7523199 8.33072312,27.8894609 8.10542274,27.8937099 L8.10542274,27.8937099 Z M1.72408163,26.7890075 L7.75276968,26.7890075 L11.4640233,19.0560981 L8.44688047,12.8973881 L1.72408163,26.7890075 Z"/></g></g></defs></g><style data-styled="true" data-styled-version="5.3.5">.dEvhCJ{cursor:pointer;}/*!sc*/
+data-styled.g65[id="sc-lbOyJj"]{content:"dEvhCJ,"}/*!sc*/
+.iOJAJH{stroke:#555;background-color:#555;stroke-width:1px;}/*!sc*/
+data-styled.g66[id="sc-gFGZVQ"]{content:"iOJAJH,"}/*!sc*/
+.iaGlOO{fill:var(--color-text-form-secondary-1c3szk,#687078);}/*!sc*/
+data-styled.g68[id="sc-fbPSWO"]{content:"iaGlOO,"}/*!sc*/
+.gahIia{font-weight:400;font-size:12px;line-height:16px;font-family:Amazon Ember,Arial,Roboto,Arial,sans-serif;text-shadow:none;fill:var(--color-text-body-default-7m2b3r,#16191f);}/*!sc*/
+data-styled.g69[id="sc-GVOUr"]{content:"gahIia,"}/*!sc*/
+.qdPSx{fill:#fff9cc;stroke:var(--color-text-form-secondary-1c3szk,#687078);stroke-width:0.6px;}/*!sc*/
+data-styled.g70[id="sc-fXynhf"]{content:"qdPSx,"}/*!sc*/
+</style><style>
+.new-look-state-node &gt; rect:first-of-type {
+  stroke: #687078;
+  stroke-width: 1px;
+  fill: #FFFFFF;
+}
+
+.new-look-state-node .error-icon circle {
+ stroke-linejoin: round;
+}
+
+.new-look-state-node .error-icon circle, .new-look-state-node .error-icon path {
+ stroke: var(--color-border-status-error-fybu9w, #d13212);
+ fill: none;
+ stroke-width: 2px;
+}
+
+.new-look-state-node.has-errors &gt; rect:first-of-type {
+ stroke: var(--color-border-status-error-fybu9w, #d13212);
+ fill: var(--color-background-status-error-h1a0iq, #fdf3f1);
+}
+
+.new-look-state-node .handle path {
+  stroke: var(--color-border-dropdown-item-hover-d32f3f, #879596);
+  stroke-width: 1px;
+  fill: none;
+}
+
+.new-look-state-node {
+  font-weight: 400;
+  font-family: Amazon Ember, Arial, Roboto, Arial, sans-serif;
+  text-shadow: none;
+}
+
+.new-look-state-node .line1 {
+  fill: #687078;
+  font-size: 12px;
+}
+
+.selected.node &gt; .new-look-state-node &gt; rect,
+.selected.node &gt; .new-look-state-node &gt; .new-look-state-node &gt; rect,
+.selected.node &gt; .new-look-state-node &gt; .bounding-box &gt; .new-look-state-node-sub &gt; rect
+ {
+  stroke: var(--color-border-status-info-0iedcr, #0073bb);
+  fill: var(--color-background-status-info-yq3r41, #f1faff);
+  stroke-width: 1px;
+}
+
+.new-look-state-node-sub .item-source.not-specified {
+  height: 15px;
+  color: #687078;
+  font-family: "Amazon Ember";
+  font-size: 12px;
+  letter-spacing: 0;
+  line-height: 16px;
+  font-weight: 400;
+}
+.new-look-state-node-sub .item-source .item-source_name{
+  font-weight: 600;
+}
+.new-look-state-node-sub .item-source.not-specified .item-source_name{
+  font-weight: 400;
+}
+
+.new-look-state-node-sub .item-source.not-specified {
+  font-style: italic;
+}
+
+
+
+.new-look-state-node-sub .item-source
+.selected.node &gt; .new-look-state-node.has-errors &gt; rect,
+.selected.node &gt; .new-look-state-node.has-errors &gt; .new-look-state-node &gt; rect,
+{
+ stroke: var(--color-border-status-error-fybu9w, #d13212);
+ fill: #fde0da;
+}
+
+.new-look-graph .drag-source {
+  opacity: 0.2;
+}
+
+.new-look-graph .edge, .new-look-graph path.starting-connection {
+  stroke-width: 1px;
+  stroke: var(--color-text-form-secondary-1c3szk, #687078);
+  marker-end: url(#large-arrowhead);
+}
+
+.new-look-graph .edge-label {
+  cursor: pointer;
+}
+
+.new-look-graph .edge-label rect {
+  stroke-width: 1px;
+  stroke: var(--color-border-control-default-jt0hca, #aab7b8);
+  fill: var(--color-background-container-header-g9rg0j, #fafafa);
+}
+
+.new-look-graph .edge-label.selected rect {
+  stroke: var(--color-border-status-info-0iedcr, #0073bb);
+  fill: var(--color-background-status-info-yq3r41, #f1faff);
+  stroke-width: 0.6px;
+}
+
+
+
+.new-look-graph .edge-label .label {
+  fill: var(--color-text-form-secondary-1c3szk, #687078);
+  font-family: Amazon Ember, Arial, Roboto, Arial, sans-serif;
+}
+
+/* centering the shape text */
+@-moz-document url-prefix() {
+  .new-look-graph .shape + text,
+  .new-look-graph .edge-label text {
+    transform: translateY(3.5px);
+  }
+}
+
+.new-look-graph .edge path {
+  marker-end: url(#large-arrowhead) !important;
+}
+
+.new-look-graph .edge.selected path{
+  stroke: var(--color-border-status-info-0iedcr, #0073bb);
+  stroke-width: 1.1px;
+}
+
+.new-look-graph .edge.dragging-over path, .new-look-graph  g.dragging-over .starting-connection {
+  stroke: #5C86FF;
+  stroke-width: 2px;
+}
+
+.new-look-graph .edge.dragging-over path, .new-look-graph .dragging-over path.starting-connection {
+  marker-end: url(#large-highlighted-arrowhead) !important;
+}
+
+.new-look-graph .edge.dragging-over .edge-label text {
+  fill: #5C86FF;
+}
+
+#large-highlighted-arrowhead {
+  fill: #5C86FF;
+}
+
+#large-highlighted-arrowhead path {
+  stroke: none;
+}
+
+.new-look-graph .edge.drop-not-supported path, g.drop-not-supported .starting-connection {
+  stroke: red;
+}
+
+.new-look-graph .edge.drop-not-supported .edge-label text {
+  fill: red;
+}
+
+.new-look-graph .edge.drop-not-supported path {
+  marker-end: url(#large-error-arrowhead) !important;
+}
+
+#large-error-arrowhead {
+  fill: red;
+}
+
+
+.node.Placeholder.dragging-over rect {
+  stroke: var(--color-border-status-info-0iedcr, #0073bb);
+  fill: var(--color-background-status-info-yq3r41, #f1faff);
+  stroke-width: 2px;
+}
+
+.node.Placeholder.dragging-over .label {
+  fill: var(--color-text-status-info-09r23g, #0073bb);
+}
+
+g.Placeholder rect {
+  stroke-dasharray: 5 4;
+  stroke: var(--color-border-dropdown-item-hover-d32f3f, #879596);
+  fill: var(--color-background-control-default-8xmy94, #ffffff);
+  stroke-width: 1px;
+}
+
+g.Placeholder .label {
+  font-style: italic;
+  fill: var(--color-text-input-placeholder-rtvjp5, #687078);
+}
+
+.node.Placeholder.drop-not-supported rect {
+  stroke: red;
+}
+
+.node.Placeholder.drop-not-supported .label {
+  fill: red;
+}
+</style><style>.line2 { font-size: 14px }</style></svg>

@@ -7,12 +7,7 @@
       "Resource": "arn:aws:states:::lambda:invoke",
       "Parameters": {
           "FunctionName":"${CallToAPIFunctionName}",
-          "Payload":{
-            "title.$":"States.Format('Sticker request: for {}.', $.body.requestor)",
-            "html_notes.$":"States.Format('<body>------Message:{} ------ Share <a href=\"https://www.stickermule.com/account/reorder\">these stickers</a> with {}</body>',$.body.message,$.body.requestor)",
-            "type":"1202131426886762",
-            "assignee.$":"$.userId.Payload"
-          }
+          "Payload.$":"$"
       },
       "Retry": [
         {
