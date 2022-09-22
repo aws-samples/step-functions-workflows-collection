@@ -1,0 +1,107 @@
+{
+    "title": "Call HTTP API",
+    "description": "Call and HTTP/HTTPS API and return the API response",
+    "language": "Node.js",
+    "simplicity": "1 - Fundamental",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/images/call-http-api.svg",
+    "videoId": "",
+    "level": "100",
+    "framework": "SAM",
+    "services": ["lambda"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "Make an HTTP/HTTPS request to an exteranl API and return the response.",
+        "The workflow takes an Axios (Node.js-based HTTP client) config as input. For example,",
+        "```",
+        "# Step function input",
+        "{",
+        "	\"config\": {",
+        "		\"url\": \"www.example.com\",
+        "		\"method\": \"get\"
+        "		// More options can be found in https://axios-http.com/docs/req_config",
+        "	},",
+        "	\"enableLog\": true # Enable/disable Lambda logging.",
+        "	",
+        "}",
+        "```",
+        "",
+        "You can see the full list of options in the [Axios documentation](https://axios-http.com/docs/req_config)",
+        "",
+        "It returns the HTTP status code, header and response body in the `Payload` object:",
+        "",
+        "```",
+        "# Step function input",
+        "{",
+        "	\"Payload\": {",
+        "		\"status\": 200",
+        "		\"headers\": {",
+        "			\"content-type\": \"application/json\"",
+        "			// ...",
+        "		},",
+        "		\"response\": {",
+        "			// HTTP response body",
+        "		}",
+        "	},",
+        "	// ...",
+        "}",
+        "```"
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/call-http-api/",
+        "templateDir":"call-http-api",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        },
+        {
+          "text": "Axios Documentation",
+          "link": "https://axios-http.com/docs/api_intro"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Shing Lyu",
+          "image": "https://shinglyu.com/img/head_circle.png",
+          "bio": "Shing Lyu is a software architect, developer and book author. He is passionate about Rust, AWS and open source software.",
+          "linkedin": "@shinglyu",
+          "twitter": "shinglyu"
+        }
+      ]
+  }
+  
