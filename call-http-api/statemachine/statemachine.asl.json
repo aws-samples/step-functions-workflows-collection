@@ -1,0 +1,27 @@
+{
+  "Comment": "A round robin based on task exuections and input array",
+  "StartAt": "Call HTTP API",
+  "States": {
+    "Call HTTP API": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+          "FunctionName":"${CallToAPIFunctionName}",
+          "Payload.$":"$"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "End": true
+    }    
+  }
+}
