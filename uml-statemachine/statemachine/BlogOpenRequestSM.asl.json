@@ -1,0 +1,250 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Choose Start Type",
+  "States": {
+    "Choose Start Type": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "And": [
+            {
+              "Variable": "$.trigger",
+              "IsPresent": true
+            },
+            {
+              "Variable": "$.trigger",
+              "StringMatches": "history"
+            }
+          ],
+          "Next": "Get History State"
+        }
+      ],
+      "Default": "Open Request"
+    },
+    "Get History State": {
+      "Type": "Pass",
+      "Next": "Open Request",
+      "Parameters": {
+        "trigger.$": "$.lastTrigger",
+        "instanceId.$": "$$.Execution.Id",
+        "appData.$": "$.appData",
+        "sourceState": "Open",
+        "activityType": "stateEntry",
+        "activityName": "openRequest"
+      }
+    },
+    "Open Request": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload": {
+          "trigger.$": "$.trigger",
+          "instanceId.$": "$$.Execution.Id",
+          "appData.$": "$.appData",
+          "sourceState": "Open",
+          "activityType": "stateEntry",
+          "activityName": "openRequest"
+        },
+        "FunctionName": "${BlogDummyUMLHandlerLambdaArn}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Choose Next Task"
+    },
+    "Make STP Request (Callback)": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+      "OutputPath": "$",
+      "Parameters": {
+        "Payload": {
+          "trigger.$": "$.trigger",
+          "lastTrigger": "initial",
+          "instanceId.$": "$$.Execution.Id",
+          "sourceState": "Open.Investigating.STPDecisionRequested",
+          "activityType": "stateEntry",
+          "activityName": "makeSTPRequest",
+          "taskToken.$": "$$.Task.Token",
+          "appData.$": "$.appData"
+        },
+        "FunctionName": "${BlogDummyUMLHandlerLambdaArn}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Set History State",
+      "ResultPath": "$.appEvent"
+    },
+    "Set History State": {
+      "Type": "Pass",
+      "Next": "Choose Next Task",
+      "Parameters": {
+        "trigger.$": "$.appEvent.appEvent.trigger",
+        "lastTrigger.$": "$.trigger",
+        "instanceId.$": "$$.Execution.Id",
+        "appData.$": "$.appEvent.appEvent.appData"
+      }
+    },
+    "Choose Next Task": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.trigger",
+          "StringMatches": "invRequested",
+          "Next": "Route To Analyst (Callback)"
+        },
+        {
+          "Variable": "$.trigger",
+          "StringMatches": "needsApproval",
+          "Next": "Route To Manager (Callback)"
+        },
+        {
+          "Or": [
+            {
+              "Variable": "$.trigger",
+              "StringMatches": "requestRejected"
+            },
+            {
+              "Variable": "$.trigger",
+              "StringMatches": "requestApproved"
+            },
+            {
+              "Variable": "$.trigger",
+              "StringMatches": "cancellationRequested"
+            }
+          ],
+          "Next": "Exit Request Opening"
+        },
+        {
+          "Variable": "$.trigger",
+          "StringEquals": "initial",
+          "Next": "Make STP Request (Callback)"
+        }
+      ],
+      "Default": "Bad Choice"
+    },
+    "Bad Choice": {
+      "Type": "Pass",
+      "Parameters": {
+        "trigger.$": "$.lastTrigger",
+        "lastTrigger.$": "$.lastTrigger",
+        "instanceId.$": "$$.Execution.Id",
+        "appData": ""
+      },
+      "Next": "Choose Next Task"
+    },
+    "Route To Analyst (Callback)": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+      "OutputPath": "$",
+      "Parameters": {
+        "Payload": {
+          "trigger.$": "$.trigger",
+          "lastTrigger": "invRequested",
+          "instanceId.$": "$$.Execution.Id",
+          "sourceState": "Open.Investigating.RoutedToAnalyst",
+          "activityType": "stateEntry",
+          "activityName": "routeToAnalyst",
+          "taskToken.$": "$$.Task.Token",
+          "appData.$": "$.appData"
+        },
+        "FunctionName": "${BlogDummyUMLHandlerLambdaArn}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Set History State",
+      "ResultPath": "$.appEvent"
+    },
+    "Route To Manager (Callback)": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+      "OutputPath": "$",
+      "Parameters": {
+        "Payload": {
+          "trigger.$": "$.trigger",
+          "lastTrigger": "needsApproval",
+          "instanceId.$": "$$.Execution.Id",
+          "sourceState": "Open.Approving.RoutedToManager",
+          "activityType": "stateEntry",
+          "activityName": "routeToManager",
+          "taskToken.$": "$$.Task.Token",
+          "appData.$": "$.appData"
+        },
+        "FunctionName": "${BlogDummyUMLHandlerLambdaArn}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Set History State",
+      "ResultPath": "$.appEvent"
+    },
+    "Exit Request Opening": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload": {
+          "trigger.$": "$.trigger",
+          "lastTrigger.$": "$.lastTrigger",
+          "instanceId.$": "$$.Execution.Id",
+          "appData.$": "$.appData",
+          "sourceState": "Open",
+          "activityType": "stateEntry",
+          "activityName": "logLeavingOpenRequest"
+        },
+        "FunctionName": "${BlogDummyUMLHandlerLambdaArn}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "End": true
+    }
+  }
+}
