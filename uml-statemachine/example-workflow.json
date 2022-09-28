@@ -2,10 +2,10 @@
     "title": "UML State Machines as Step Functions",
     "description": "Implementing UML state machine using Step Functions",
     "language": "",
-    "simplicity": "1 - Fundamental",
+    "simplicity": "2 - Pattern",
     "usecase": "",
     "type": "Standard",
-    "diagram":"/resources/statemachine.png",
+    "diagram":"/resources/BlogBuySellSfn.png",
     "videoId": "",
     "level": "100",
     "framework": "SAM",
@@ -13,9 +13,9 @@
     "introBox": {
       "headline": "How it works",
       "text": [
-        "This workflow submits an AWS Batch job. In its normal state the job is asynchronous. The state machine submits the job to the AWS Batch service and waits for the job to complete before sending a Notify Success message to an Amazon SNS topic.",
-        "This is done by making use of Step Functions `.sync` execution pattern"
-
+        "This workflow implements a UML state machine that models the behavior of a buy-sell stock order.",
+        "It demonstrates how a Step Functions workflow implements UML state activities, event dispatch, guards, transition activities, fail states, and completion transitions.",
+        "See the GitHub repo for additional examples showing hierarchical and orthogonal states, cancellation events, internal transitions, transition to history, and using an event loop for complex flow.",
       ]
     },
     "testing": {
@@ -62,7 +62,7 @@
         {
           "name": "Mike Havey",
           "image": "https://media-exp1.licdn.com/dms/image/C5603AQF-HuCLKnuk1A/profile-displayphoto-shrink_400_400/0/1597862871446?e=1669852800&v=beta&t=m8n1vEYZrt0zJrbyjJ9j-ctex6KO6lt_f8DdduqRVYk",
-          "bio": "Mike Havey is a Solutions Architect for AWS with over 25 years of experience building enterprise applications. Mike is the author of two books and numerous articles. Visit his Amazon author page to read more.",
+          "bio": "Mike Havey is a Senior Solutions Architect for AWS. Mike is the author of two books and numerous articles.",
           "linkedin": "michael-havey-a673b11",
           "twitter": ""
         }
