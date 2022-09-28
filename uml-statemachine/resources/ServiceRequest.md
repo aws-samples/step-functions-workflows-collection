@@ -81,12 +81,18 @@ Next check the `BlogServiceRequest` execution. It should be complete too.
 
 ![ServiceRequestTrace5.png](ServiceRequestTrace5.png)
 
-As an exercise, confirm that the Step Functions workflow traces back to the UML model. The best way to check tracing is the **Event View** in **Task Scheduled** events. The complete trace back to UML is the following:
-- "sourceState": "Open", "activityType": "stateEntry","activityName": "openRequest"
-- "sourceState": "Open.Investigating.STPDecisionRequested","activityType": "stateEntry", "activityName": "makeSTPRequest”
-- “sourceState": "Open.Investigating.RoutedToAnalyst", "activityType": "stateEntry", "activityName": "routeToAnalyst"
-- "sourceState": "Open","activityType": "stateEntry","activityName": "logLeavingOpenRequest"
-- "sourceState": "Closed", "activityType": "stateEntry", "activityName": "closeRequest",
+As an exercise, confirm that the Step Functions workflow traces back to the UML model. The best way to check tracing is the **Event View** in **Task Scheduled** events. You will need to check the traces of both `ServiceRequest` and `BlogOpenRequest`. The complete trace back to UML is the following:
+- UML state entry activity `openRequest` in state `Open` can be found in `OpenCheckProcess` step of the `BlogOpenRequest` workflow.
+
+```
+      "sourceState": "Open",
+      "activityType": "stateEntry",
+      "activityName": "openRequest",
+``` 
+- UML state entry activity `makeSTPRequest` in state `Open.Investigating.STPDecisionRequested` can be found in `Make STP Request` step of the `BlogOpenRequest` workflow.
+- UML state exit activity `logLeavingOpenRequest` in state `Open` can be found in `Exit Request Opening` step of the `BlogOpenRequest` workflow.
+- UML state exit activity `closeRequest` in state `Closed` can be found in `Close Request` step of the `ServiceRequest` workflow.
+
 
 ## Patterns Demonstrated
 - Hierarchical or composite states
