@@ -2,7 +2,7 @@
 
 This repo demonstrates how to implement UML state machines using AWS Step Functions workflows. It features three Step Functions workflows demonstrating different UML state machine patterns:
 
-**BuySell** - A flat, one-level state machine showing completion transitions and how to manage event triggers in Step Functions. This is the feature workflow, which is discussed in detail in the AWS blog post <URL to be provided>.
+**BuySell** - A flat, one-level state machine showing completion transitions and how to manage event triggers in Step Functions. This is the feature workflow, which is discussed in detail in the AWS blog post -URL to be provided-.
 
 **ServiceRequest** - A hierarchical state machine featuring composite states, internal transitions, cancellation, transition to history. See [resources/ServiceRequest.md](resources/ServiceRequest.md)
 
@@ -45,7 +45,7 @@ Important: this application uses various AWS services and there are costs associ
 
 ## How it works
 
-`BlogBuySell` implements a UML state machine that models the behavior of a buy-sell stock order. It demonstrates how a Step Functions workflow implements UML state activities, event dispatch, guards, transition activities, fail states, and completion transitions. Its design, and how it traces back to its UML model, is discussed in depth in the blog post <URL to be included>.
+`BlogBuySell` implements a UML state machine that models the behavior of a buy-sell stock order. It demonstrates how a Step Functions workflow implements UML state activities, event dispatch, guards, transition activities, fail states, and completion transitions. Its design, and how it traces back to its UML model, is discussed in depth in the blog post -URL to be included-.
 
 For a description of `ServiceRequest`, see [resources/ServiceRequest.md](resources/ServiceRequest.md). 
 
@@ -57,7 +57,7 @@ For a description of `BackgroundChecks`, see [resources/BackgroundChecks.md](res
 
 ## Testing
 
-The AWS blog post <URL to be included> walks through how to test the `BlogBuySell` workflow.
+The AWS blog post -URL to be included- walks through how to test the `BlogBuySell` workflow.
 
 To test `ServiceRequest`, see [resources/ServiceRequest.md](resources/ServiceRequest.md). 
 
