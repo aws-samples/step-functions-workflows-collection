@@ -56,6 +56,21 @@ Choose **Test** to call the Lambda function with that input. It triggers the wor
 
 ![BackgroundChecksTrace4.png](BackgroundChecksTrace4.png)
 
+As an exercise, confirm that the Step Functions workflow traces back to the UML model. The best way to check tracing is the **Event View** in **Task Scheduled** events.
+- UML state entry activity `openCheckProcess` in state `RunningChecks` can be found in `OpenCheckProcess` step of the workflow.
+
+```
+     "sourceState": "RunningChecks",
+      "activityType": "stateEntry",
+      "activityName": "openCheckProcess",
+ ``` 
+
+- UML state entry activity `startCriminalCheck` in state `PendingCompletion` of state `CheckingCriminal` can be found in `Run Criminal Check` step of the workflow.
+- UML state entry activity `startFinancialCheck` in state `PendingCompletion` of state `CheckingFinancial` can be found in `Run Financial Check` step of the workflow.
+- UML transition activity `criminalCheckDone` can be found in `Log Criminal Outcome` step of the workflow.
+- UML transition activity `financialCheckDone` can be found in `Log Financial Outcome` step of the workflow.
+- UML transition activity `consolidateResults` can be found in `Consolidate Results` step of the workflow.
+
 Here are some design notes on the Step Functions implementation:
 - The orthogonal regions are represented using a parallel state, the left side handling criminal checks, the right side financial.  In general, if the logic of a region is sufficiently complex, it can be moved into its own Step Function state machine and invoked such that the parent machine waits for it to complete.
 - We have two callbacks at once: one for `Run Criminal Check`, another for `Run Financial Check`.  Each has its own token.
