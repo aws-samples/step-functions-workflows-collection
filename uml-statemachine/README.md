@@ -55,6 +55,10 @@ For a description of `BackgroundChecks`, see [resources/BackgroundChecks.md](res
 ## Image
 ![image](./resources/BlogBuySellSfn.png)
 
+It implements this UML state machine
+
+![image](./uml/BuySell.png)
+
 ## Testing
 
 The AWS blog post -URL to be included- walks through how to test the `BlogBuySell` workflow.
