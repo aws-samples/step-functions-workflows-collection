@@ -42,9 +42,12 @@ In a separate browser tab, find the most recent execution of the `BlogOpenReques
 
 ![ServiceRequestTrace2.png](ServiceRequestTrace2.png)
  
-In the execute trace, find the **task token** associated with `Make STP Request`.
 
-In the Lambda console, fire a `invRequested` transition with the following input:
+In the **Event View**, find the **Task Input** for `Make STP Request`. Copy the `taskToken` value, excluding the double quotes. Your value will be different from that shown in the diagram.
+
+![ServiceRequestTrace2a.png](ServiceRequestTrace2a.png)
+
+In the Lambda console, find the function whose name contains `BlogDummyUMLEventDispatcher`. In the **Test** tab, create an event whose **Event JSON** resembles the following; paste your task token where indicated.
 ```
 {
   "taskToken": "<paste token here>",
@@ -54,12 +57,11 @@ In the Lambda console, fire a `invRequested` transition with the following input
   }
 }
 ```
-
-The graphical view shows that `BlogOpenRequest` is now stopped at `Routed To Analyst`. 
+Choose **Test** to call the Lambda function with that input. It triggers the workflow. When it completes, return to the **Graph View** of the Step Functions workflow. The graphical view shows that `BlogOpenRequest` is now stopped at `Routed To Analyst`. 
 
 ![ServiceRequestTrace3.png](ServiceRequestTrace3.png)
 
-Find the task token for `Route To Analyst`. In the Lambda console, fire a `requestApproved`. 
+Find the task token for `Route To Analyst`. In the Lambda console, send another test event, this time with trigger `requestApproved` and the task token from `Routed To Analyst`, which will be different from the previous task token.
 
 ```
 {
@@ -79,8 +81,7 @@ Next check the `BlogServiceRequest` execution. It should be complete too.
 
 ![ServiceRequestTrace5.png](ServiceRequestTrace5.png)
 
- 
-The complete trace back to UML is the following:
+As an exercise, confirm that the Step Functions workflow traces back to the UML model. The best way to check tracing is the **Event View** in **Task Scheduled** events. The complete trace back to UML is the following:
 - "sourceState": "Open", "activityType": "stateEntry","activityName": "openRequest"
 - "sourceState": "Open.Investigating.STPDecisionRequested","activityType": "stateEntry", "activityName": "makeSTPRequest”
 - “sourceState": "Open.Investigating.RoutedToAnalyst", "activityType": "stateEntry", "activityName": "routeToAnalyst"
