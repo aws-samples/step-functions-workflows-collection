@@ -1,0 +1,239 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: AWS Step Functions for UML blog post 
+
+Resources:
+  BlogDummyUMLHandler:
+    Type: AWS::Serverless::Function 
+    Properties:
+      CodeUri: functions/dummy_uml_handler/
+      Handler: app.lambda_handler
+      Runtime: python3.7
+      Architectures:
+        - x86_64
+
+
+  BlogDummyUMLEventDispatcher:
+    Type: AWS::Serverless::Function 
+    Properties:
+      CodeUri: functions/dummy_uml_event_dispatcher/
+      Handler: app.lambda_handler
+      Runtime: python3.7
+      Architectures:
+        - x86_64
+      Role: !GetAtt 
+        - BlogDummyUMLEventDispatcherRole
+        - Arn
+
+  BlogDummyUMLEventDispatcherRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies:
+        - PolicyName: StatesExecutionPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action:
+                  - 'states:SendTaskSuccess'
+                  - 'states:SendTaskFailure'
+                Resource: 
+                  - !GetAtt 
+                    - BlogOpenRequestStateMachine
+                    - Arn
+                  - !GetAtt 
+                    - BlogBuySellStateMachine
+                    - Arn
+                  - !GetAtt 
+                    - BlogBackgroundChecksStateMachine
+                    - Arn
+                  - !GetAtt 
+                    - BlogServiceRequestStateMachine
+                    - Arn
+                Effect: Allow      
+
+  ServiceRequestUMLStateMachineRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - states.amazonaws.com
+      Path: "/"
+      Policies:
+        - PolicyName: UMLRolePolicyLambda
+          PolicyDocument:
+            Statement:
+              - Action:
+                  - 'lambda:InvokeFunction'
+                Resource: !GetAtt 
+                  - BlogDummyUMLHandler
+                  - Arn
+                Effect: Allow
+        - PolicyName: UMLRolePolicyXray
+          PolicyDocument:
+            Statement:
+              - Action:
+                  - "xray:PutTraceSegments"
+                  - "xray:PutTelemetryRecords"
+                  - "xray:GetSamplingRules"
+                  - "xray:GetSamplingTargets"
+                Effect: Allow
+                Resource: "*"
+        - PolicyName: CloudWatchLogsPolicy
+          PolicyDocument:
+            Statement:
+              - Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: !Sub 'arn:${AWS::Partition}:logs:*:*:*'
+                Effect: Allow
+        - PolicyName: StatesExecutionPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "states:StartExecution"
+                Resource: !GetAtt
+                - BlogOpenRequestStateMachine
+                - Arn
+              - Effect: Allow
+                Action:
+                  - "states:DescribeExecution"
+                  - "states:StopExecution"
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - "events:PutTargets"
+                  - "events:PutRule"
+                  - "events:DescribeRule"
+                Resource: "*"
+
+  UMLStateMachineRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - states.amazonaws.com
+      ManagedPolicyArns: []
+      Policies:
+        - PolicyName: UMLRolePolicyLambda
+          PolicyDocument:
+            Statement:
+              - Action:
+                  - 'lambda:InvokeFunction'
+                Resource: !GetAtt 
+                  - BlogDummyUMLHandler
+                  - Arn
+                Effect: Allow
+        - PolicyName: UMLRolePolicyXray
+          PolicyDocument:
+            Statement:
+              - Action:
+                  - "xray:PutTraceSegments"
+                  - "xray:PutTelemetryRecords"
+                  - "xray:GetSamplingRules"
+                  - "xray:GetSamplingTargets"
+                Effect: Allow
+                Resource: "*"
+        - PolicyName: CloudWatchLogsPolicy
+          PolicyDocument:
+            Statement:
+              - Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: !Sub 'arn:${AWS::Partition}:logs:*:*:*'
+                Effect: Allow
+
+  BlogOpenRequestStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/BlogOpenRequestSM.asl.json
+      DefinitionSubstitutions:
+        BlogDummyUMLHandlerLambdaArn: !GetAtt 
+          - BlogDummyUMLHandler
+          - Arn
+      Tracing:
+        Enabled: true
+      Role: !GetAtt UMLStateMachineRole.Arn
+
+  BlogBackgroundChecksStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/BlogBackgroundChecksSM.asl.json
+      DefinitionSubstitutions:
+        BlogDummyUMLHandlerLambdaArn: !GetAtt 
+          - BlogDummyUMLHandler
+          - Arn
+      Tracing:
+        Enabled: true
+      Role: !GetAtt UMLStateMachineRole.Arn
+
+  BlogBuySellStateMachine:
+    Type: 'AWS::Serverless::StateMachine'
+    Properties:
+      DefinitionUri: statemachine/BlogBuySellSM.asl.json
+      DefinitionSubstitutions:
+        BlogDummyUMLHandlerLambdaArn: !GetAtt 
+          - BlogDummyUMLHandler
+          - Arn
+      Tracing:
+        Enabled: true
+      Role: !GetAtt UMLStateMachineRole.Arn
+
+  BlogServiceRequestStateMachine:
+    Type: 'AWS::Serverless::StateMachine'
+    Properties:
+      DefinitionUri: statemachine/BlogServiceRequestSM.asl.json
+      DefinitionSubstitutions:
+        BlogDummyUMLHandlerLambdaArn: !GetAtt 
+          - BlogDummyUMLHandler
+          - Arn
+        OpenRequestArn: !GetAtt 
+          - BlogOpenRequestStateMachine
+          - Arn
+      Tracing:
+        Enabled: true
+      Role: !GetAtt ServiceRequestUMLStateMachineRole.Arn
+
+Outputs:
+  BlogDummyUMLHandler:
+    Value: !Ref BlogDummyUMLHandler
+  BlogDummyUMLEventDispatcherRole:
+    Value: !Ref BlogDummyUMLEventDispatcherRole
+  BlogOpenRequestArn:
+    Value: !Ref BlogOpenRequestStateMachine
+  BlogBuySellArn:
+    Value: !Ref BlogBuySellStateMachine
+  BlogBackgroundChecksArn:
+    Value: !Ref BlogBackgroundChecksStateMachine
+  BlogServiceRequestArn:
+    Value: !Ref BlogServiceRequestStateMachine
+
+

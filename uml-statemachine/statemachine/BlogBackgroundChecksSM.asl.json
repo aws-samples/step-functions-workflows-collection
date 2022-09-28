@@ -1,0 +1,215 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Open Check Process",
+  "States": {
+    "Open Check Process": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload": {
+          "instanceId.$": "$$.Execution.Id",
+          "appData.$": "$.appData",
+          "sourceState": "RunningChecks",
+          "activityType": "stateEntry",
+          "activityName": "openCheckProcess"
+        },
+        "FunctionName": "${BlogDummyUMLHandlerLambdaArn}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Parallel"
+    },
+    "Parallel": {
+      "Type": "Parallel",
+      "Branches": [
+        {
+          "StartAt": "Run Criminal Check",
+          "States": {
+            "Run Criminal Check": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+              "OutputPath": "$.appEvent",
+              "Parameters": {
+                "Payload": {
+                  "instanceId.$": "$$.Execution.Id",
+                  "sourceState": "RunningChecks.CheckingCriminal.PendingCompletion",
+                  "activityType": "stateEntry",
+                  "activityName": "stateCriminalChceck",
+                  "taskToken.$": "$$.Task.Token",
+                  "appData.$": "$.appData"
+                },
+                "FunctionName": "${BlogDummyUMLHandlerLambdaArn}"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 6,
+                  "BackoffRate": 2
+                }
+              ],
+              "Next": "Choose Criminal Result"
+            },
+            "Choose Criminal Result": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.trigger",
+                  "StringEquals": "criminalCheckDone",
+                  "Next": "Log Criminal Outomce"
+                }
+              ],
+              "Default": "Run Criminal Check"
+            },
+            "Log Criminal Outomce": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "OutputPath": "$.Payload",
+              "Parameters": {
+                "Payload": {
+                                    "instanceId.$": "$$.Execution.Id",
+                  "sourceState": "RunningChecks.CheckingCrimimal.PendingCompletion",
+                  "activityType": "transitionActivity",
+                  "trigger": "criminalCheckDone",
+        
+                  "activityName": "logCriminalOutcome"
+                },
+                "FunctionName": "${BlogDummyUMLHandlerLambdaArn}"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 6,
+                  "BackoffRate": 2
+                }
+              ],
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Run Financial Check",
+          "States": {
+            "Run Financial Check": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+              "OutputPath": "$.appEvent",
+              "Parameters": {
+                "Payload": {
+                  "instanceId.$": "$$.Execution.Id",
+                  "sourceState": "RunningChecks.CheckingFinancial.PendingCompletion",
+                  "activityType": "stateEntry",
+                  "activityName": "stateFinancialChceck",
+                  "taskToken.$": "$$.Task.Token",
+                  "appData.$": "$.appData"
+                },
+                "FunctionName": "${BlogDummyUMLHandlerLambdaArn}"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 6,
+                  "BackoffRate": 2
+                }
+              ],
+              "Next": "Choose Financial Result"
+            },
+            "Choose Financial Result": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.trigger",
+                  "StringEquals": "financialCheckDone",
+                  "Next": "Log Financial Done"
+                }
+              ],
+              "Default": "Run Financial Check"
+            },
+            "Log Financial Done": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "OutputPath": "$.Payload",
+              "Parameters": {
+                "Payload":                  {
+                                    "instanceId.$": "$$.Execution.Id",
+                  "sourceState": "RunningChecks.CheckingFinancial.PendingCompletion",
+                  "activityType": "transitionActivity",
+                  "trigger": "financialCheckDone",
+        
+                  "activityName": "logFinancialOutcome"
+                },
+                "FunctionName": "${BlogDummyUMLHandlerLambdaArn}"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 6,
+                  "BackoffRate": 2
+                }
+              ],
+              "End": true
+            }
+          }
+        }
+      ],
+      "Next": "Consolidate Results"
+    },
+    "Consolidate Results": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload": {
+          "instanceId.$": "$$.Execution.Id",
+          "sourceState": "RunningChecks",
+          "activityType": "transitionActivity",
+          "activityName": "consolidateResults"
+        },
+        "FunctionName": "${BlogDummyUMLHandlerLambdaArn}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "End": true
+    }
+  }
+}

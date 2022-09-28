@@ -1,0 +1,252 @@
+{
+  "StartAt": "Check Stock Price",
+  "States": {
+    "Check Stock Price": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "FunctionName": "${BlogDummyUMLHandlerLambdaArn}",
+        "Payload": {
+          "instanceId.$": "$$.Execution.Id",
+          "appData.$": "$.appData",
+          "sourceState": "CheckingStockPrice",
+          "activityType": "stateDo",
+          "activityName": "checkStockPrice"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Generate Buy/Sell recommendation"
+    },
+    "Generate Buy/Sell recommendation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "FunctionName": "${BlogDummyUMLHandlerLambdaArn}",
+        "Payload": {
+          "instanceId.$": "$$.Execution.Id",
+          "appData.$": "$.appData",
+          "sourceState": "GeneratingBuySellRecommendation",
+          "activityType": "stateDo",
+          "activityName": "generateBuySellRecommendation"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Route For Approval (Callback)"
+    },
+    "Route For Approval (Callback)": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+      "OutputPath": "$.appEvent",
+      "Parameters": {
+        "FunctionName": "${BlogDummyUMLHandlerLambdaArn}",
+        "Payload": {
+          "instanceId.$": "$$.Execution.Id",
+          "sourceState": "Approving",
+          "activityType": "stateEntry",
+          "activityName": "routeForApproval",
+          "appData.$": "$.appData",
+          "taskToken.$": "$$.Task.Token"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Buy or Sell?"
+    },
+    "Buy or Sell?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "And": [
+            {
+              "Variable": "$.trigger",
+              "StringEquals": "approvalComplete"
+            },
+            {
+              "Variable": "$.guard",
+              "StringEquals": "buy"
+            }
+          ],
+          "Next": "Buy Stock"
+        },
+        {
+          "And": [
+            {
+              "Variable": "$.trigger",
+              "StringEquals": "approvalComplete"
+            },
+            {
+              "Variable": "$.guard",
+              "StringEquals": "sell"
+            }
+          ],
+          "Next": "Sell Stock"
+        },
+        {
+          "And": [
+            {
+              "Variable": "$.trigger",
+              "StringEquals": "approvalComplete"
+            },
+            {
+              "Variable": "$.guard",
+              "StringEquals": "reject"
+            }
+          ],
+          "Next": "Log Reject"
+        }
+      ],
+      "Default": "Route For Approval (Callback)"
+    },
+    "Buy Stock": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "FunctionName": "${BlogDummyUMLHandlerLambdaArn}",
+        "Payload": {
+          "instanceId.$": "$$.Execution.Id",
+          "appData.$": "$.appData",
+          "sourceState": "BuyingStock",
+          "activityType": "stateDo",
+          "activityName": "buyStock"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Report Result"
+    },
+    "Sell Stock": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "FunctionName": "${BlogDummyUMLHandlerLambdaArn}",
+        "Payload": {
+          "instanceId.$": "$$.Execution.Id",
+          "appData.$": "$.appData",
+          "sourceState": "SellingStock",
+          "activityType": "stateDo",
+          "activityName": "sellStock"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Report Result"
+    },
+    "Report Result": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "FunctionName": "${BlogDummyUMLHandlerLambdaArn}",
+        "Payload": {
+          "instanceId.$": "$$.Execution.Id",
+          "appData.$": "$.appData",
+          "sourceState": "ReportingResult",
+          "activityType": "stateDo",
+          "activityName": "reportResult"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "End": true
+    },
+    "Log Reject": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "FunctionName": "${BlogDummyUMLHandlerLambdaArn}",
+        "Payload": {
+          "instanceId.$": "$$.Execution.Id",
+          "appData.$": "$.appData",
+          "sourceState": "Approving",
+          "activityType": "transitionActivity",
+          "activityName": "logReject",
+          "trigger": "approvalComplete",
+          "guard": "reject"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Fail"
+    },
+    "Fail": {
+      "Type": "Fail"
+    }
+  }
+}

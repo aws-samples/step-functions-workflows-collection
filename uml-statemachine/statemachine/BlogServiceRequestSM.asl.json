@@ -1,0 +1,176 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Prep Open Request",
+  "States": {
+    "Prep Open Request": {
+      "Type": "Pass",
+      "Next": "Start Open Request (Wait to Complete)",
+      "Parameters": {
+        "trigger": "initial",
+        "lastTrigger": "",
+        "appData.$": "$.appData"
+      }
+    },
+    "Start Open Request (Wait to Complete)": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters": {
+        "StateMachineArn": "${OpenRequestArn}",
+        "Input": {
+          "appData.$": "$.appData",
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id",
+          "trigger.$": "$.trigger",
+          "lastTrigger.$": "$.lastTrigger"
+        }
+      },
+      "Next": "Choice After Open",
+      "OutputPath": "$.Output"
+    },
+    "Choice After Open": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Or": [
+            {
+              "Variable": "$.trigger",
+              "StringMatches": "requestRejected"
+            },
+            {
+              "Variable": "$.trigger",
+              "StringMatches": "requestApproved"
+            }
+          ],
+          "Next": "Close Request"
+        },
+        {
+          "Variable": "$.trigger",
+          "StringMatches": "cancellationRequested",
+          "Next": "Cancel Request (Callback)"
+        }
+      ]
+    },
+    "Close Request": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "FunctionName": "${BlogDummyUMLHandlerLambdaArn}",
+        "Payload": {
+          "instanceId.$": "$$.Execution.Id",
+          "appData.$": "$.appData",
+          "sourceState": "Closed",
+          "activityType": "stateEntry",
+          "activityName": "closeRequest"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "End": true
+    },
+    "Cancel Request (Callback)": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+      "OutputPath": "$",
+      "Parameters": {
+        "Payload": {
+          "instanceId.$": "$$.Execution.Id",
+          "sourceState": "Cancelling",
+          "activityType": "stateEntry",
+          "activityName": "cancelRequest",
+          "taskToken.$": "$$.Task.Token",
+          "appData.$": "$.appData"
+        },
+        "FunctionName": "${BlogDummyUMLHandlerLambdaArn}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Combine Result",
+      "ResultPath": "$.appEvent"
+    },
+    "Combine Result": {
+      "Type": "Pass",
+      "Next": "Choice After Cancel",
+      "Parameters": {
+        "trigger.$": "$.appEvent.appEvent.trigger",
+        "lastTrigger.$": "$.lastTrigger",
+        "instanceId.$": "$$.Execution.Id",
+        "appData.$": "$.appEvent.appEvent.appData"
+      }
+    },
+    "Choice After Cancel": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.trigger",
+          "StringMatches": "requestCancelled",
+          "Next": "Close Request"
+        },
+        {
+          "Variable": "$.trigger",
+          "StringMatches": "cancellationRejected",
+          "Next": "Alert Oddity"
+        }
+      ],
+      "Default": "Cancel Request (Callback)"
+    },
+    "Alert Oddity": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload": {
+          "instanceId.$": "$$.Execution.Id",
+          "appData.$": "$.appData",
+          "sourceState": "Cancelling",
+          "activityType": "transitionActivity",
+          "activityName": "alertOddity",
+          "trigger": "cancellationRejected",
+          "lastTrigger.$": "$.lastTrigger"
+        },
+        "FunctionName": "${BlogDummyUMLHandlerLambdaArn}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Prep Open Request History"
+    },
+    "Prep Open Request History": {
+      "Type": "Pass",
+      "Next": "Start Open Request (Wait to Complete)",
+      "Parameters": {
+        "trigger": "history",
+        "lastTrigger.$": "$.lastTrigger",
+        "appData.$": "$.appData"
+      }
+    }
+  }
+}
