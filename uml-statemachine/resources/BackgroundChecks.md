@@ -38,6 +38,8 @@ In the Lambda console, find the function whose name contains `BlogDummyUMLEventD
 
 Choose **Test** to call the Lambda function with that input. It triggers the workflow. When it completes, return to the **Graph View** of the Step Functions workflow. It has now completed the `Run Criminal Check` path of the flow, but it is still paused at `Run Financial Check`.
 
+![BackgroundChecksTrace3.png](BackgroundChecksTrace3.png)
+
 Find the task token for `Run Financial Check` -- it will be different from the token for `Run Criminal Check` -- and in the Lambda console create a test event of the following form using the task token.
 
 ```
