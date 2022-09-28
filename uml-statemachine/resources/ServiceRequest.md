@@ -90,6 +90,7 @@ As an exercise, confirm that the Step Functions workflow traces back to the UML 
       "activityName": "openRequest",
 ``` 
 - UML state entry activity `makeSTPRequest` in state `Open.Investigating.STPDecisionRequested` can be found in `Make STP Request` step of the `BlogOpenRequest` workflow.
+- UML state entry activity `routeToAnalyst` in state `Open.Investigating.RoutedToAnalyst` can be found in `Route To Analyst` step of the `BlogOpenRequest` workflow.
 - UML state exit activity `logLeavingOpenRequest` in state `Open` can be found in `Exit Request Opening` step of the `BlogOpenRequest` workflow.
 - UML state exit activity `closeRequest` in state `Closed` can be found in `Close Request` step of the `ServiceRequest` workflow.
 
