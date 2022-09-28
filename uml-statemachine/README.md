@@ -2,20 +2,13 @@
 
 This repo demonstrates how to implement UML state machines using AWS Step Functions workflows. It features three Step Functions workflows demonstrating different UML state machine patterns:
 
-**BuySell** - A flat, one-level state machine showing completion transitions and how to manage event triggers in Step Functions. This model is discussed at length in the blog post.
+**BuySell** - A flat, one-level state machine showing completion transitions and how to manage event triggers in Step Functions. This is the feature workflow, which is discussed in detail in the AWS blog post <URL to be provided>.
 
-**ServiceRequest** - A hierarchical state machine featuring composite states, internal transitions, cancellation, transition to history. See [doc/ServiceRequest.md](doc/ServiceRequest.md)
+**ServiceRequest** - A hierarchical state machine featuring composite states, internal transitions, cancellation, transition to history. See [resources/ServiceRequest.md](resources/ServiceRequest.md)
 
-**BackgroundChecks** - A state machine featuring orthogonal states and cancellation. See [doc/BackgroundChecks.md](doc/BackgroundChecks.md)
+**BackgroundChecks** - A state machine featuring orthogonal states and cancellation. See [resources/BackgroundChecks.md](resources/BackgroundChecks.md)
 
-The UML models are in the uml folder. The png files are screenshots of the state machines. The XML file has the models in XMI format, which should be operarable with any UML modeling tool that supports XMI. I used MagicDraw. The file contains MagicDraw extensions. Those might need to be removed before loading into a different tool.
-
-This toolkit features the following examples. 
-
-
-This workflow demonstrates the implementation of UML state machines using AWS Step Functions. It manages the handling of a stock order, resulting in a buy or a sell. The a flat, one-level state machine showing completion transitions and how to manage event triggers in Step Functions. 
-
-Learn more about this workflow at Step Functions workflows collection: << Add the live URL here >>
+The UML models are in the [uml](uml) folder. The png files are screenshots of the state machines. The XML file has the models in XMI format, which should be operarable with any UML modeling tool that supports XMI. I used MagicDraw. The file contains MagicDraw extensions. Those might need to be removed before loading into a different tool.
 
 Important: this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the [AWS Pricing page](https://aws.amazon.com/pricing/) for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
 
@@ -52,15 +45,23 @@ Important: this application uses various AWS services and there are costs associ
 
 ## How it works
 
-Explain how the workflow works.
+`BlogBuySell` implements a UML state machine that models the behavior of a buy-sell stock order. It demonstrates how a Step Functions workflow implements UML state activities, event dispatch, guards, transition activities, fail states, and completion transitions. Its design, and how it traces back to its UML model, is discussed in depth in the blog post <URL to be included>.
+
+For a description of `ServiceRequest`, see [resources/ServiceRequest.md](resources/ServiceRequest.md). 
+
+For a description of `BackgroundChecks`, see [resources/BackgroundChecks.md](resources/BackgroundChecks.md).
+
 
 ## Image
-Provide an exported .png of the workflow in the `/resources` directory from [Workflow stuio](https://docs.aws.amazon.com/step-functions/latest/dg/workflow-studio.html) and add here.
-![image](./resources/statemachine.png)
+![image](./resources/BlogBuySellSfn.png)
 
 ## Testing
 
-Provide steps to trigger the workflow and show what should be observed if successful.
+The AWS blog post <URL to be included> walks through how to test the `BlogBuySell` workflow.
+
+To test `ServiceRequest`, see [resources/ServiceRequest.md](resources/ServiceRequest.md). 
+
+To test `BackgroundChecks`, see [resources/BackgroundChecks.md](resources/BackgroundChecks.md).
 
 ## Cleanup
  
