@@ -42,7 +42,9 @@ In a separate browser tab, find the most recent execution of the `BlogOpenReques
 
 ![ServiceRequestTrace2.png](ServiceRequestTrace2.png)
  
-In the execute trace, find the task token associated with `Make STP Request`, and in the Lambda console, fire a `invRequested` transition with the following input:
+In the execute trace, find the **task token** associated with `Make STP Request`.
+
+In the Lambda console, fire a `invRequested` transition with the following input:
 ```
 {
   "taskToken": "<paste token here>",
