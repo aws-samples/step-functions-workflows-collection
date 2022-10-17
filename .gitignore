@@ -133,3 +133,7 @@ response.json
 default
 env.json
 
+#Terraform
+**/.terraform/**
+*terraform.* 
+*.tfstate
