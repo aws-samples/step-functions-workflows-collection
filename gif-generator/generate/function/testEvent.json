@@ -1,0 +1,17 @@
+{
+    "version": "0",
+    "id": "4c7c87f2-416e-96b5-4724-a35ed595b9b8",
+    "detail-type": "newVideoCreated",
+    "source": "custom.gifGenerator",
+    "account": "123456789012",
+    "time": "2021-06-16T11:33:45Z",
+    "region": "us-east-1",
+    "resources": [],
+    "detail": {
+        "Key": "test.mp4",
+        "start": 450,
+        "end": 479,
+        "length": 517.024,
+        "tsCreated": 1623843225331
+    }
+}

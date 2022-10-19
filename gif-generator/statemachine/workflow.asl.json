@@ -1,0 +1,100 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Triggered by Event Bridge or manual test?",
+  "States": {
+    "Triggered by Event Bridge or manual test?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Not": {
+            "Variable": "$.detail",
+            "IsPresent": true
+          },
+          "Next": "Tidy paload for manual run"
+        }
+      ],
+      "Default": "Tidy paload from Event Bridge"
+    },
+    "Tidy paload for manual run": {
+      "Type": "Pass",
+      "Parameters": {
+        "key.$": "$.key",
+        "bucket.$": "$.bucket"
+      },
+      "Next": "calculate how many gif chunks"
+    },
+    "Tidy paload from Event Bridge": {
+      "Type": "Pass",
+      "Next": "calculate how many gif chunks",
+      "Parameters": {
+        "key.$": "$.key",
+        "bucket.$": "$.bucketName"
+      },
+      "InputPath": "$.detail.requestParameters"
+    },
+    "calculate how many gif chunks": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "${snippets}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "For each chunk",
+      "ResultPath": "$.Payload"
+    },
+    "For each chunk": {
+      "Type": "Map",
+      "Iterator": {
+        "StartAt": "Generate gif and save to S3",
+        "States": {
+          "Generate gif and save to S3": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+              "Payload.$": "$",
+              "FunctionName": "${generate}"
+            },
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "Lambda.ServiceException",
+                  "Lambda.AWSLambdaException",
+                  "Lambda.SdkClientException"
+                ],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 6,
+                "BackoffRate": 2
+              }
+            ],
+            "End": true
+          }
+        }
+      },
+      "ItemsPath": "$.Payload.Payload",
+      "ResultPath": null,
+      "Next": "Gather Results"
+    },
+    "Gather Results": {
+      "Type": "Pass",
+      "End": true,
+      "Parameters": {
+        "SourceBucket.$": "$.bucket",
+        "key.$": "$.key",
+        "gifs.$": "States.ArrayLength($.Payload.Payload)",
+        "destinationBucket": "gif-destination-bucket"
+      }
+    }
+  }
+}
