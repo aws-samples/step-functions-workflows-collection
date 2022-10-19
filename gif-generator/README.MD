@@ -26,10 +26,10 @@ This triggers the workflow to start generating .gif images.
 .gif images are saved into the S3 destination bucket.
 
 ## The front end
-1. Either deploy the VUE application from the *frontend* folder or go to [s12d.com/fig](https://s12d.com/gif)
-2. Enter the source file location e.g. "https://gif-source-bucket.s3.amazonaws.com/demo.mov"
-3. enter thw destination bucket.
-4. Scrub through the timeline to see the generated .gifs
+1. Either deploy the VUE application from the *frontend* folder or go to [s12d.com/gif](https://s12d.com/gif)
+3. Enter the source file location e.g. "https://gif-source-bucket.s3.amazonaws.com/demo.mov"
+4. enter thw destination bucket.
+5. Scrub through the timeline to see the generated .gifs
 
 Check out more workflows on [ServerlessLand](https://serverlessland.com/workflows)
 
