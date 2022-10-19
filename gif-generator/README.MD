@@ -1,6 +1,6 @@
 # gif-generator
 
-[!Workflow](https://github.com/aws-samples/step-functions-workflows-collection/blob/main/gif-generator/gif-generator.png)
+![Workflow](./gif-generator.png)
 
 ## What does this workflow do?
 
