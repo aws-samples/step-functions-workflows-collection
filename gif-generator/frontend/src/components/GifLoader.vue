@@ -101,7 +101,7 @@
           playbackRates: [0.7, 1.0, 1.5, 2.0],
           sources: [{
             type: "video/mp4",
-            src: "https://gif-source-bucket.s3.amazonaws.com/SdaysWawsawJumpstartingsdw.mp4",
+            src: "https://gif-source-bucket.s3.amazonaws.com/{REPLACE}",
           }],
           // poster: "https://surmon-china.github.io/vue-quill-editor/static/images/surmon-1.jpg",
         },
