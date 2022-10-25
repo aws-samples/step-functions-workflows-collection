@@ -20,7 +20,7 @@
     "testing": {
       "headline": "Testing",
       "text": [
-        "1. Run AWS CLI Command: <code>aws stepfunctions start-execution --state-machine-arn arn:aws:states:<YOU REGION>:<YOUR AWS ACCOUNT>:stateMachine:TranslateText --input file://data.json</code>"
+        "1. Run AWS CLI Command: <code>aws stepfunctions start-execution --state-machine-arn arn:aws:states:<YOUR REGION>:<YOUR AWS ACCOUNT>:stateMachine:TranslateText --input file://test-data.json</code>"
       ]
     },
     "cleanup": {
@@ -61,7 +61,7 @@
         {
           "name": "Jacob Cravinho",
           "image": "https://drive.google.com/file/d/1ZY-5R7iA33Y7tUDCyLNgb95a9_ciW7WM/view?usp=sharing",
-          "bio": "Jacob is a Sr. Solutions Architect who loves a challenge & is always in search of the next great meal to eat.",
+          "bio": "Jacob is a Sr. Solutions Architect who loves a challenge & is always in search of the next great meal!",
           "linkedin": "jacob-cravinho",
           "twitter": ""
         }
