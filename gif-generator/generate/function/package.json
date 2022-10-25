@@ -1,0 +1,19 @@
+{
+  "name": "gifs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "James Beswick",
+  "license": "MIT-0",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.0.20",
+    "@ffprobe-installer/ffprobe": "^1.1.0",
+    "aws-sdk": "latest"
+  }
+}
