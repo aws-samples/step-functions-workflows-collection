@@ -1,0 +1,65 @@
+Comment: >-
+  State machine that takes in any language and does parallel process to
+  translate text.
+StartAt: Parallel
+States:
+  Parallel:
+    Type: Parallel
+    Branches:
+      - StartAt: inputData
+        States:
+          inputData:
+            Type: Pass
+            End: true
+      - StartAt: toSpanish
+        States:
+          toSpanish:
+            Type: Task
+            Parameters:
+              SourceLanguageCode: auto
+              TargetLanguageCode: es
+              Text.$: $.data
+            Resource: arn:aws:states:::aws-sdk:translate:translateText
+            End: true
+      - StartAt: toFrench
+        States:
+          toFrench:
+            Type: Task
+            Parameters:
+              SourceLanguageCode: auto
+              TargetLanguageCode: fr
+              Text.$: $.data
+            Resource: arn:aws:states:::aws-sdk:translate:translateText
+            End: true
+      - StartAt: toJapanese
+        States:
+          toJapanese:
+            Type: Task
+            Parameters:
+              SourceLanguageCode: auto
+              TargetLanguageCode: ja
+              Text.$: $.data
+            Resource: arn:aws:states:::aws-sdk:translate:translateText
+            End: true
+    Next: Parse to Put Obj
+  Parse to Put Obj:
+    Type: Pass
+    Parameters:
+      uuid.$: States.UUID()
+      originalText.$: $[0].data
+      toSpanish.$: $[?(@.TargetLanguageCode==es)].TranslatedText
+      toFrench.$: $[?(@.TargetLanguageCode==fr)].TranslatedText
+      toJapanese.$: $[?(@.TargetLanguageCode==ja)].TranslatedText
+    Next: Put Translated Text
+  Put Translated Text:
+    Type: Task
+    Resource: arn:aws:states:::dynamodb:putItem
+    Parameters:
+      TableName: TranslatedTextTable
+      Item:
+        id.$: $.uuid
+        inputText.$: $.originalText
+        toSpanish.$: $.toSpanish[0]
+        toFrench.$: $.toFrench[0]
+        toJapanese.$: $.toJapanese[0]
+    End: true
