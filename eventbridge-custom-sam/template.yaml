@@ -1,0 +1,215 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Step Functions Workflow - Publish Custom Event Bridge event
+
+
+# Comment each resource section to explain usage
+Resources:
+
+  EventBridgeWorkflowExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: states.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: EventBridgePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - events:PutEvents
+                Resource:
+                  - !GetAtt [ EventBridgeEventBus, Arn ]
+
+  EventBridgeEventBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: stepfunctions-sampleproject-eventbus
+
+  EventBridgeRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Step Functions Sample Project Event Bus Rule
+      Name: stepfunctions-sampleproject-rule
+      EventBusName: !GetAtt [ EventBridgeEventBus, Name ]
+      EventPattern:
+        source:
+          - my.statemachine
+        detail-type:
+          - MessageFromStepFunctions
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt [ lambdaFunction, Arn ]
+          Id: stepfunctions-sampleproject-lambda-target
+        - Arn: !Ref SNSTopic
+          Id: stepfunctions-sampleproject-sns-target
+        - Arn: !GetAtt [ SQSQueue, Arn ]
+          Id: stepfunctions-sampleproject-sqs-target
+
+
+  stateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/statemachine.asl.json
+      Policies:
+        - EventBridgePutEventsPolicy:
+            EventBusName: !Ref EventBridgeEventBus
+
+  lambdaFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: handler.handler
+      Description: "Lambda function invoked by custom event"
+      FunctionName: "stepfunctions-sample-lambda"
+      PackageType: Zip
+      #Role: !GetAtt [LambdaFunctionRole,Arn]
+      
+      Runtime: python3.9
+    DependsOn: [lambdaLog]
+  LambdaFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CloudWatchLogsPolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:*"
+
+  lambdaLog:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: "/aws/lambda/stepfunctions-sample-lambda"
+      RetentionInDays: 1
+  PermissionForEventsToInvokeLambda:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref lambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt [ EventBridgeRule, Arn ]
+
+  SQSQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        Name: stepfunctions-sample-queue
+  SQSQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: events.amazonaws.com
+            Action:
+              - "sqs:SendMessage"
+            Resource: !GetAtt [SQSQueue, Arn]
+            Condition:
+              ArnEquals:
+                "aws:SourceArn": !GetAtt [EventBridgeRule, Arn]
+          - Effect: "Allow"
+            Principal:
+              Service: sns.amazonaws.com
+            Action:
+              - "sqs:SendMessage"
+            Resource: !GetAtt [SQSQueue, Arn]
+            Condition:
+              ArnEquals:
+                "aws:SourceArn": !Ref SNSTopic
+      Queues:
+        - !Ref SQSQueue
+  SNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Name: stepfunctions-sample-topic
+      Subscription:
+        - Endpoint: !GetAtt [ SQSQueue, Arn ]
+          Protocol: sqs
+      KmsMasterKeyId: !Ref SNSKeyAlias
+  SNSTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: 'sns:Publish'
+            Resource: !Ref SNSTopic
+      Topics:
+        - !Ref SNSTopic
+  SNSKey:
+    DeletionPolicy : Retain
+    Type: AWS::KMS::Key
+    Properties: 
+      Enabled: true
+      KeyPolicy: {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Sid": "Allow access through SNS for all principals in the account that are authorized to use SNS",
+                "Effect": "Allow",
+                "Principal": {
+                    "AWS": "*"
+                },
+                "Action": [
+                    "kms:Encrypt",
+                    "kms:Decrypt",
+                    "kms:ReEncrypt*",
+                    "kms:GenerateDataKey*",
+                    "kms:CreateGrant",
+                    "kms:DescribeKey"
+                ],
+                "Resource": "*",
+                "Condition": {
+                    "StringEquals": {
+                        "kms:ViaService":  { "Fn::Join": [".",["sns","Ref" : "AWS::Region","amazonaws.com"]]},
+                        "kms:CallerAccount": { "Ref" : "AWS::AccountId" }
+                    }
+                }
+            },
+            {
+                "Sid": "Allow direct access to key metadata to the account",
+                "Effect": "Allow",
+                "Principal": {
+                    "AWS": {"Fn::Join": [":",["arn:aws:iam:","Ref" : "AWS::AccountId","root"]]}
+                },
+                "Action": [
+                    "kms:*"                  
+                ],
+                "Resource": "*"
+            }
+        ]
+    }
+
+  SNSKeyAlias:
+    DependsOn: 
+      - SNSKey
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Join ["", ['alias/Stack-',!Ref AWS::StackName,'/sns-key']]
+      TargetKeyId: 
+        Ref: SNSKey
+
+
+# List all common outputs for usage
+#Outputs:
