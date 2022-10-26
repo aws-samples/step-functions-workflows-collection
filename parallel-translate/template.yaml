@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  translate-text
+
+  Sample SAM Template for translate-text
+
+Resources:
+# STATE MACHINE #
+  TranslationStateMachine:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      Name: TranslateText
+      DefinitionUri: statemachine/statemachine.asl.yaml
+      DefinitionSubstitutions:
+        DDBTable: !Ref DDBTable
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - DynamoDBWritePolicy:
+            TableName: !Ref DDBTable
+        - Statement: # Needed to use the translate service
+          - Sid: Translate
+            Effect: Allow
+            Action:
+            - translate:TranslateText
+            - comprehend:DetectDominantLanguage
+            Resource: '*'
+
+# DYNAMODB TABLE #
+# This is used to store translated text for later use 
+  DDBTable:
+    Type: AWS::Serverless::SimpleTable # More info about SimpleTable Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-simpletable.html
+    Properties:
+      TableName: TranslatedTextTable
+      PrimaryKey:
+        Name: id
+        Type: String
