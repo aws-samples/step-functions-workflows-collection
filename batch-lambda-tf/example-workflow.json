@@ -16,8 +16,7 @@
   "introBox": {
     "headline": "How it works",
     "text": [
-      "In this project, Step Functions uses a state machine to invoke a Lambda function to do simple pre-processing before an AWS Batch job is submitted. Multiple jobs may be invoked depending on the result/success of the previous one.",
-      "The Step Function waits for the Batch job to complete before executing."
+      "In this project, Step Functions uses a state machine to invoke a Lambda function to do simple pre-processing before an AWS Batch job is submitted. Multiple jobs may be invoked depending on the result/success of the previous one."
     ]
   },
   "testing": {

@@ -9,7 +9,7 @@ Important: this application uses various AWS services and there are costs associ
 * [Create an AWS account](https://portal.aws.amazon.com/gp/aws/developer/registration/index.html) if you do not already have one and log in. The IAM user that you use must have sufficient permissions to make necessary AWS service calls and manage AWS resources.
 * [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html) installed and configured
 * [Git Installed](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
-* [AWS Serverless Application Model](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) (AWS SAM) installed
+* [Terraform Installed](https://www.terraform.io/downloads)
 
 ## Deployment Instructions
 
@@ -19,9 +19,9 @@ Important: this application uses various AWS services and there are costs associ
     ```
 1. Change directory to the pattern directory:
     ```
-    cd batch-lambda-sam
+    cd batch-lambda-tf
     ```
-1. From the command line, use AWS SAM to deploy the AWS resources for the workflow as specified in the template.yaml file:
+1. From the command line, use Terraform to deploy the AWS resources for the workflow as specified in the ```main.tf``` file:
     ```
     sam deploy --guided
     ```
@@ -37,7 +37,7 @@ Important: this application uses various AWS services and there are costs associ
 
 ## How it works
 
-The first step of this workflow uses a Lambda function to generate a random number and then passes this number to the next step.  Next, the Submit Batch Job step submits an AWS Batch job with the value passed from the previous step and waits for the job to complete.  The AWS Batch job simply prints the supplied argument.
+The first step of this workflow uses a Lambda function to generate a random number and then passes this number to the next step.  Next, the Submit Batch Job step submits an AWS Batch job with the value passed from the previous step.  The AWS Batch job simply prints the supplied argument.
 
 ## Image
 
@@ -45,7 +45,7 @@ The first step of this workflow uses a Lambda function to generate a random numb
 
 ## Testing
 
-Manually trigger the workflow via the Console or the AWS CLI.  The state machine ARN can be found as the ```StateMachineArn``` output in the stack's Outputs.  The Lambda function will generate a random integer and submit the batch job with this number.  
+Manually trigger the workflow via the Console or the AWS CLI.  The state machine ARN can be found as the ```StateMachineArn``` output in the stack's Outputs.
 
 ## Cleanup
  
