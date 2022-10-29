@@ -2,7 +2,7 @@
     "title": "EventBridge Custom Event",
     "description": "Submit a custom event to EventBridge from a Step Function",
 
-    "language": "python",
+    "language": "Python",
     "simplicity": "1 - Fundamental",
     "usecase": "Publish custom events from a Step Function to be consumed by other services.",
     "type": "Standard",
