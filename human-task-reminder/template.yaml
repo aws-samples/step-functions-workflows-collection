@@ -11,6 +11,11 @@ Parameters:
     Type: String
     Default: moderator@example.com
     Description: Enter the email address that will receive task.
+  # This will set the timeout in the reminder email loop
+  ReminderTimeoutSec:
+    Type: Number
+    Default: 120
+    Description: Enter Reminder Email Timeout in Seconds
 
 Resources:
 # STATE MACHINE #
@@ -22,8 +27,11 @@ Resources:
       DefinitionSubstitutions:
         DDBTable: !Ref DDBTable
         TopicArn: !Ref NotificationTopic
+        ReminderTimeout: !Ref ReminderTimeoutSec
       Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
         - DynamoDBWritePolicy:
+            TableName: !Ref DDBTable
+        - DynamoDBReadPolicy:
             TableName: !Ref DDBTable
         - SNSPublishMessagePolicy:
             TopicName: !GetAtt NotificationTopic.TopicName
@@ -43,7 +51,6 @@ Resources:
   NotificationTopic:
     Type: AWS::SNS::Topic
     Properties:
-      Name: HumanTaskReminderTopic
       Subscription:
         - Endpoint: !Ref EmailAddress
           Protocol: "email"

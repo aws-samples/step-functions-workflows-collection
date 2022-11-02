@@ -1,6 +1,6 @@
-# Parallel Translate Text
+# Human Task w/ Reminder
 
-This workflow will create a State Machine and a DynamoDB table. The State Machine will accept text from any language and will call out to Amazon Translate service API to convert to Spanish, French, and Japanese in parallel.  Once all translated values are returned the output array is parsed into a JSON object and a Put request is sent to DynamoDB for later use. The UUID instrinsic function is used as a key for the DyanmoDB item
+This application will create a State Machine, an SNS topic, and a DynamoDB Table. The State Machine will create a UUID and save to DDB with Task Status as false. It will then send a Task Token to Human via SNS and wait for task to be completed.  At the same a loop will start that will Sleep for X seconds and then check Task Status in DDB.  It will send a Reminder and loop to begining until Task Status is true.
 
 Important: this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the [AWS Pricing page](https://aws.amazon.com/pricing/) for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
 
@@ -19,11 +19,11 @@ Important: this application uses various AWS services and there are costs associ
     ```
 1. Change directory to the pattern directory:
     ```
-    cd ./parallel-translate
+    cd ./human-task-reminder
     ```
 1. From the command line, use AWS SAM to deploy the AWS resources for the workflow as specified in the template.yaml file:
     ```
-    sam build && sam deploy --guided
+    sam deploy --guided
     ```
 1. During the prompts:
     * Enter a stack name
@@ -36,23 +36,26 @@ Important: this application uses various AWS services and there are costs associ
 
 ## How it works
 
-1. State Machine takes input object text and passes to parallel state.
-2. In parallel state calls Amazon Translate API to auto determine input language and request output language of Spanish, French, and Japanese. The input data is also passed onto next state.
-3. Once all translated values are returned the output array is parsed into a JSON object.
-4. A Put request is sent to DynamoDB to save JSON object. The UUID instrinsic function is used as the key for the DyanmoDB item.
+1. The State Machine starts by creating a Parallel flow and passing a UUID by using intrinsic function.
+2. This UUID as key is put into DynamoDB with an attribute of `taskComplete:false` to use as reference.
+3. An email message is sent to Human via SNS topic with a Task Token. The task will wait until Task Token is returned.
+4. At the same time a loop will start that will Sleep for X seconds and then check the Task Status in DyanmoDB using UUID.  
+5. DynamoDB response is passed to Choice state. If `taskComplete === true` the loop will end otherwise it will continue and send a Reminder email to Human via SNS and loop back to beginning. 
+6. When the Task Token is returned to the State Machine it will move to the Update Task Status which will end the loop and complete the State Machine
 
 ![image](./resources/statemachine.png)
 
 ## Testing
 
-1. Determine your AWS Account number and Region stack is deploy to
-2. Navigate to Step Functions in the AWS console and select the TranslateText workflow. If you don't see it, make sure you are in the correct Region.
-3. Send test text to state machine via test-data.json file. Replace your values in code and run AWS CLI command
+1. After deployment you will receive an email titled `AWS Notification - Subscription Confirmation`. Click on the link in the email to confirm your subscription. This will allow SNS to send you emails.
+2. Navigate to the AWS Step Functions console and select the `HumanTaskReminder` workflow. If you don't see it, make sure you are in the correct Region.
+3. Select `Start Execution`, use default input JSON and then click `Start Execution`.
+4. Wait X seconds until you receive the Task email and the Reminder email.
+5. Copy the Task Token from the Task email and use CLI to complete the Task by calling  `SendTaskSuccess` API.
     ```bash
-    aws stepfunctions start-execution --state-machine-arn arn:aws:states:<YOUR REGION>:<YOUR AWS ACCOUNT>:stateMachine:TranslateText --input file://test-data.json
+        aws stepfunctions send-task-success --task-token <YOUR-TASK-TOKEN> --task-output '{"result":true}'
     ```
-4. Observe the State Machine workflow execution. It may take several seconds for the workflow to complete. View the input and output of each state to see what data is passed and/or altered from one state to the next
-5. Navigate to DynamoDB in the AWS console, select Tables, then select the TranslatedTextTable and click "Explore table items" and then perform a scan by clicking the Run button. You should have a record with original and translated versions.
+5. Observe the workflow complete the reminder loop by ending on Succeed State.
 
 ## Cleanup
  

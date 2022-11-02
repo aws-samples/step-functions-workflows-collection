@@ -8,7 +8,7 @@ States:
         States:
           Sleep for Reminder:
             Type: Wait
-            Seconds: 120
+            Seconds: ${ReminderTimeout}
             Next: DDB Get Task Status
           DDB Get Task Status:
             Type: Task

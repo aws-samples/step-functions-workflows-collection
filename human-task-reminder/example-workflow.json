@@ -13,7 +13,7 @@
     "introBox": {
       "headline": "Human Task with Reminder",
       "text": [
-        "This application will create a State Machine, an SNS topic, and a DynamoDB Table. The State Machine will create a UUID and save to DDB with Task Status as false. It will then send a Task Token to Human via SNS and wait for task to be completed.  At the same a loop will start that will Sleep for X seconds and then check Task Status in DDB.  It will send a Reminder and loop to begining until Task Status is true."
+        "This application will create a State Machine, an SNS topic, and a DynamoDB Table. The State Machine will create a UUID and save to DDB with Task Status as false. It will then send a Task Token to Human via SNS and wait for task to be completed.  At the same time a loop will start that will Sleep for X seconds and then check Task Status in DDB.  It will send a Reminder and loop to beginning until Task Status is true."
 
       ]
     },
@@ -31,7 +31,7 @@
     },
     "deploy": {
       "text": [
-        "sam build && sam deploy --guided"
+        "sam deploy --guided"
       ]
     },
     "gitHub": {
