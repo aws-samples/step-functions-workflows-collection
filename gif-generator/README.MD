@@ -10,7 +10,7 @@ Use the timeline scrubber application (link in resources section) to view the gi
 
 ## Before you start
 
-Deploy this <a targer=_blank href='https://serverlessrepo.aws.amazon.com/#!/applications/us-east-1/145266761615/ffmpeg-lambda-layer'>fmpeg Lambda layer</a>.</strong>
+Deploy this <a target=_blank href='https://serverlessrepo.aws.amazon.com/#!/applications/us-east-1/145266761615/ffmpeg-lambda-layer'>fmpeg Lambda layer</a>.</strong>
 
 ## Deploying this workflow
 
