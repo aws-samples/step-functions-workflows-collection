@@ -1,0 +1,24 @@
+{
+    "Comment": "An example of the Amazon States Language for using batch job with pre-processing lambda.",
+    "StartAt": "Generate batch job input",
+    "TimeoutSeconds": 3600,
+    "States": {
+      "Generate batch job input": {
+          "Type": "Task",
+          "Resource": "${GenerateBatchJobArn}",
+          "ResultPath": "$.batch_input",
+          "Next": "Submit Batch Job"
+      },
+      "Submit Batch Job": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::batch:submitJob.sync",
+        "Parameters": {
+          "JobName": "BatchJobWithLambda",
+          "JobQueue": "${jobQueueArn}",
+          "JobDefinition": "${jobDefinitionArn}",
+          "Parameters.$": "$.batch_input"
+        },
+        "End": true
+      }
+    }
+  }
