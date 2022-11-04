@@ -1,8 +1,8 @@
-# Amazon DynamoDB migration workflow
+# Amazon DynamoDB transfer workflow
 
-This workflow scans an Amazon DynamoDB table and migrates each record as needed
+Transfers records from one table to another with transformation options
 
-Learn more about this workflow at Step Functions workflows collection: https://serverlessland.com/workflows/dynamodb-migrations
+Learn more about this workflow at Step Functions workflows collection: https://serverlessland.com/workflows/dynamodb-transfer
 
 Important: this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the [AWS Pricing page](https://aws.amazon.com/pricing/) for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
 
@@ -21,7 +21,7 @@ Important: this application uses various AWS services and there are costs associ
     ```
 1. Change directory to the pattern directory:
     ```
-    cd dynamodb-migrations
+    cd dynamodb-transfer
     ```
 1. From the command line, use AWS SAM to deploy the AWS resources for the workflow as specified in the template.yaml file:
     ```
@@ -29,8 +29,10 @@ Important: this application uses various AWS services and there are costs associ
     ```
 1. During the prompts:
     * Enter a stack name
-    * Enter the DynamoDB table name
-    * Enter the DynamoDB Arn
+    * Enter the source DynamoDB table name
+    * Enter the source DynamoDB Arn
+    * Enter the target DynamoDB table name
+    * Enter the target DynamoDB Arn
     * Enter the desired AWS Region
     * Allow SAM CLI to create IAM roles with the required permissions.
 
@@ -40,7 +42,7 @@ Important: this application uses various AWS services and there are costs associ
 
 ## How it works
 
-This workflow first creates a backup of the database. Then it iterates through each record in the database. The workflow manages the pagination to ensure the entire database is handled. Currently it pulls records in groups of 50. The migration logic is handled in the `src/app.py` Lambda function. Update this function to make any migrations you need.
+This workflow iterates through each record in the source database and transfers it to the target database. The workflow manages the pagination to ensure the entire database is handled. Currently it pulls records in groups of 50. The transfer moficiation logic is handled in the `src/app.py` Lambda function. Update this function to make any modifications you need.
 
 ## Image
 Provide an exported .png of the workflow in the `/resources` directory from [Workflow studio](https://docs.aws.amazon.com/step-functions/latest/dg/workflow-studio.html) and add here.
@@ -48,7 +50,7 @@ Provide an exported .png of the workflow in the `/resources` directory from [Wor
 
 ## Testing
 
-1. Update the Lambda function at src/app.py to update the records during the migration
+1. Update the Lambda function at src/app.py to update the records during the transfer
 1. Deploy the application as listed above.
 1. Open the work flow in the AmWS Step Functions console. Choose **Start execution** ![image](./resources/start1.png)
 1. Leave the event as is and choose **Start execution** again ![image](./resources/start2.png)
