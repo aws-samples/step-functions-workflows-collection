@@ -1,6 +1,6 @@
 # AWS Batch with Lambda
 
-This workflow demonstrates how to use Step Functions to pre-process data with AWS Lambda functions and then orchestrate AWS Batch jobs. Deploying this sample project will create an AWS Step Functions state machine, a Lambda function, and an AWS Batch job.
+This workflow demonstrates how to use Step Functions to pre-process data with AWS Lambda and then orchestrate an AWS Batch job. Deploying this sample project will create an AWS Step Functions state machine, a Lambda function, and an AWS Batch job.
 
 Important: this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the [AWS Pricing page](https://aws.amazon.com/pricing/) for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
 
@@ -37,7 +37,7 @@ Important: this application uses various AWS services and there are costs associ
 
 ## How it works
 
-The first step of this workflow uses a Lambda function to generate a random number and then passes this number to the next step.  Next, the Submit Batch Job step submits an AWS Batch job with the value passed from the previous step and waits for the job to complete.  The AWS Batch job simply prints the supplied argument.
+The first step of this workflow uses a Lambda function to generate a random number and then passes this number to the next step.  Next, the Submit Batch Job step submits an AWS Batch job with the value passed from the previous step.  The AWS Batch job simply prints the supplied argument.
 
 ## Image
 
@@ -45,7 +45,30 @@ The first step of this workflow uses a Lambda function to generate a random numb
 
 ## Testing
 
-Manually trigger the workflow via the Console or the AWS CLI.  The state machine ARN can be found as the ```StateMachineArn``` output in the stack's Outputs.  The Lambda function will generate a random integer and submit the batch job with this number.  
+Manually trigger the workflow via the Console or the AWS CLI.  The state machine ARN can be found as the ```StateMachineArn``` output and the state machine name can be found as ```StateMachineName``` in the output.
+
+To trigger the workflow in the console, navigate to Step Functions and then click the step function name from the list of State Machines.  In the Executions panel, click Start Execution.  Click Start Execution again in the popup.  No additional input is required.
+
+Once the step function completes, inspect the output of the ```Generate batch job input``` state.  The output will look similiar to this, but your ```input``` value may be different.
+    
+
+    {
+        "Comment": "Insert your JSON here",
+        "batch_input": {
+        "input": "8"
+        }
+    }
+    
+Next, inspect the Input of the ```Submit Batch Job``` state. This shows the result of passing the prior state's output to the input of the next state.  Your input will match the output from the prior state:
+    
+    
+    {
+        "Comment": "Insert your JSON here",
+        "batch_input": {
+            "input": "8"
+        }
+    }
+    
 
 ## Cleanup
  
@@ -54,10 +77,10 @@ Manually trigger the workflow via the Console or the AWS CLI.  The state machine
     sam delete
     ```
 1. During the prompts:
-```bash
-    Are you sure you want to delete the stack batch-sample in the region us-east-1 ? [y/N]: y
-    Are you sure you want to delete the folder batch-sample in S3 which contains the artifacts? [y/N]: y
-```
+    ```bash
+        Are you sure you want to delete the stack batch-sample in the region us-east-1 ? [y/N]: y
+        Are you sure you want to delete the folder batch-sample in S3 which contains the artifacts? [y/N]: y
+    ```
 ----
 Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 

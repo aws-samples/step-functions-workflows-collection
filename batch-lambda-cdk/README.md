@@ -1,58 +1,91 @@
+# AWS Batch with Lambda
 
-# Welcome to your CDK Python project!
+This workflow demonstrates how to use Step Functions to pre-process data with AWS Lambda and then orchestrate an AWS Batch job. Deploying this sample project will create an AWS Step Functions state machine, a Lambda function, and an AWS Batch job.
 
-This is a blank project for CDK development with Python.
+Important: this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the [AWS Pricing page](https://aws.amazon.com/pricing/) for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+## Requirements
 
-This project is set up like a standard Python project.  The initialization
-process also creates a virtualenv within this project, stored under the `.venv`
-directory.  To create the virtualenv it assumes that there is a `python3`
-(or `python` for Windows) executable in your path with access to the `venv`
-package. If for any reason the automatic creation of the virtualenv fails,
-you can create the virtualenv manually.
+* [Create an AWS account](https://portal.aws.amazon.com/gp/aws/developer/registration/index.html) if you do not already have one and log in. The IAM user that you use must have sufficient permissions to make necessary AWS service calls and manage AWS resources.
+* [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html) installed and configured
+* [Git Installed](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+* [AWS CDK Installed](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_install)
 
-To manually create a virtualenv on MacOS and Linux:
+## Deployment Instructions
 
-```
-$ python3 -m venv .venv
-```
+1. If this is your first time using AWS CDK, bootstrap your [environment](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_bootstrap).
+    ```
+    cdk bootstrap aws://{your-aws-account-number}/{your-aws-region}
+    ```
+1. Create a new directory, navigate to that directory in a terminal and clone the GitHub repository:
+    ``` 
+    git clone https://github.com/aws-samples/step-functions-workflows-collection
+    ```
+1. Change directory to the pattern directory:
+    ```
+    cd batch-lambda-cdk/batch_lambda_cdk
+    ```
+1. Create a Python virtual environment and install the requirements:
+    ```
+    python3 -m venv .venv
+    source .venv/bin/activate
+    python3 -m pip install -r requirements.txt
+    ```
+1. From the command line, use CDK to deploy the AWS resources for the workflow as specified in the ```app.py``` file:
+    ```
+    cdk deploy
+    ```
+1. During the prompts:
+    * ```Do you wish to deploy these changes (y/n)? Y ```
 
-After the init process completes and the virtualenv is created, you can use the following
-step to activate your virtualenv.
+1. Note the outputs from the cdk deployment process. The State Machine Name and ARN are outputted for testing.
 
-```
-$ source .venv/bin/activate
-```
+## How it works
 
-If you are a Windows platform, you would activate the virtualenv like this:
+The first step of this workflow uses a Lambda function to generate a random number and then passes this number to the next step.  Next, the Submit Batch Job step submits an AWS Batch job with the value passed from the previous step.  The AWS Batch job simply prints the supplied argument.
 
-```
-% .venv\Scripts\activate.bat
-```
+## Image
 
-Once the virtualenv is activated, you can install the required dependencies.
+![image](batch_lambda_cdk/resources/statemachine.png)
 
-```
-$ pip install -r requirements.txt
-```
+## Testing
 
-At this point you can now synthesize the CloudFormation template for this code.
+Manually trigger the workflow via the Console or the AWS CLI.  The state machine ARN can be found as the ```StateMachineArn``` output and the state machine name can be found as ```StateMachineName``` in the output.
 
-```
-$ cdk synth
-```
+To trigger the workflow in the console, navigate to Step Functions and then click the step function name from the list of State Machines.  In the Executions panel, click Start Execution.  Click Start Execution again in the popup.  No additional input is required.
 
-To add additional dependencies, for example other CDK libraries, just add
-them to your `setup.py` file and rerun the `pip install -r requirements.txt`
-command.
+Once the step function completes, inspect the output of the ```Generate batch job input``` state.  The output will look similiar to this, but your ```input``` value may be different.
+    
 
-## Useful commands
+    {
+        "Comment": "Insert your JSON here",
+        "batch_input": {
+        "input": "8"
+        }
+    }
+    
+Next, inspect the Input of the ```Submit Batch Job``` state. This shows the result of passing the prior state's output to the input of the next state.  Your input will match the output from the prior state:
+    
+    
+    {
+        "Comment": "Insert your JSON here",
+        "batch_input": {
+            "input": "8"
+        }
+    }
+    
 
- * `cdk ls`          list all stacks in the app
- * `cdk synth`       emits the synthesized CloudFormation template
- * `cdk deploy`      deploy this stack to your default AWS account/region
- * `cdk diff`        compare deployed stack with current state
- * `cdk docs`        open CDK documentation
+## Cleanup
+ 
+1. Delete the stack
+    ```bash
+    cdk destroy
+    ```
+1. During the prompts:
+    ```bash
+        Are you sure you want to delete: BatchLambdaCdkStack (y/n)? Y
+    ```
+----
+Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
-Enjoy!
+SPDX-License-Identifier: MIT-0

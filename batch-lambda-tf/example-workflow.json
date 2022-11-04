@@ -8,15 +8,17 @@
   "diagram": "/resources/statemachine.png",
   "videoId": "",
   "level": "100",
-  "framework": "SAM",
+  "framework": "Terraform",
   "services": [
     "lambda",
-    "batch"
+    "batch",
+    "stepfunctions"
   ],
   "introBox": {
     "headline": "How it works",
     "text": [
-      "In this project, Step Functions uses a state machine to invoke a Lambda function to do simple pre-processing before an AWS Batch job is submitted. Multiple jobs may be invoked depending on the result/success of the previous one."
+      "In this project, Step Functions uses a state machine to invoke a Lambda function to do simple pre-processing before an AWS Batch job is submitted. The Lambda function simulates producing variable input for an AWS Batch job by generating a random number and passing it as input to the Batch Job state.",
+      "The batch job state submits an AWS Batch job using the randomly generated number as an input to the job.  The Batch job simply echoes this value."
     ]
   },
   "testing": {
@@ -28,19 +30,20 @@
   "cleanup": {
     "headline": "Cleanup",
     "text": [
-      "1. Delete the stack: <code>sam delete</code>."
+      "1. Delete the stack: <code>terraform destroy</code>."
     ]
   },
   "deploy": {
     "text": [
-      "sam deploy --guided"
+      "terraform init",
+      "terraform apply"
     ]
   },
   "gitHub": {
     "template": {
-      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/batch-lambda-sam/",
-      "templateDir": "batch-lambda-sam",
-      "templateFile": "template.yaml",
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/batch-lambda-tf/",
+      "templateDir": "batch-lambda-tf",
+      "templateFile": "main.tf",
       "ASL": "statemachine/statemachine.asl.json"
     },
     "payloads": [

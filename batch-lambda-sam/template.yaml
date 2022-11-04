@@ -249,5 +249,7 @@ Resources:
 Outputs:
   StateMachineArn:
     Value: !Ref BatchJobWithLambdaStateMachine
+  StateMachineName:
+    Value: !GetAtt [BatchJobWithLambdaStateMachine,Name]
 
 
