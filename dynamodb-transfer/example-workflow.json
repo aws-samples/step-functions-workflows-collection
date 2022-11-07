@@ -1,0 +1,69 @@
+{
+    "title": "DynamoDB Transfer workflow",
+    "description": "Transfers records from one table to another with transformation options",
+    "language": "Python",
+    "simplicity": "2 - Pattern",
+    "usecase": "",
+    "type": "Express",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "200",
+    "framework": "SAM",
+    "services": ["dynamodb","lambda"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "This workflow iterates through each record in the source database and transfers it to the target database. The workflow manages the pagination to ensure the entire database is handled. Currently it pulls records in groups of 50. The transfer moficiation logic is handled in the `src/app.py` Lambda function. Update this function to make any modifications you need."
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/dynamodb-transfer/",
+        "templateDir":"dynamodb-transfer",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Eric Johnson",
+          "image": "https://s12d.com/ej-icon",
+          "bio": "Eric Johnson is a Principal Developer Advocate for Serverless Applications at Amazon Web Services and is based in Northern Colorado. Eric is a fanatic about serverless and enjoys helping developers understand how serverless technologies introduces a major paradigm shift in how they approach building and running applications at massive scale with minimal administration overhead. Prior to this, Eric has worked as a developer, solutions architect and AWS Evangelist for an AWS partner company.",
+          "linkedin": "singledigit",
+          "twitter": "edjgeek"
+        }
+      ]
+  }
+  
