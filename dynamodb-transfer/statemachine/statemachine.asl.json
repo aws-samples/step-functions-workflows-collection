@@ -1,0 +1,81 @@
+{
+  "Comment": "Simple state machine",
+  "StartAt": "Initial Scan",
+  "States": {
+    "Initial Scan": {
+      "Type": "Task",
+      "Parameters": {
+        "TableName": "${SourceTableName}",
+        "Limit": 50
+      },
+      "Resource": "arn:aws:states:::aws-sdk:dynamodb:scan",
+      "Next": "Iterate through items"
+    },
+    "Iterate through items": {
+      "Type": "Map",
+      "Iterator": {
+        "StartAt": "Update record",
+        "States": {
+          "Update record": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "OutputPath": "$.Payload",
+            "Parameters": {
+              "Payload.$": "$",
+              "FunctionName": "${TransferFunctionArn}"
+            },
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "Lambda.ServiceException",
+                  "Lambda.AWSLambdaException",
+                  "Lambda.SdkClientException"
+                ],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 6,
+                "BackoffRate": 2
+              }
+            ],
+            "Next": "Add record to target DDB table"
+          },
+          "Add record to target DDB table": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::dynamodb:putItem",
+            "Parameters": {
+              "TableName": "${TargetTableName}",
+              "Item.$": "$"
+            },
+            "End": true
+          }
+        }
+      },
+      "ItemsPath": "$.Items",
+      "ResultPath": null,
+      "Next": "Look for a pagination token"
+    },
+    "Look for a pagination token": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.LastEvaluatedKey",
+          "IsPresent": true,
+          "Next": "Get the next set of records"
+        }
+      ],
+      "Default": "Success"
+    },
+    "Get the next set of records": {
+      "Type": "Task",
+      "Parameters": {
+        "TableName": "${SourceTableName}",
+        "Limit": 3,
+        "ExclusiveStartKey.$": "$.LastEvaluatedKey"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:dynamodb:scan",
+      "Next": "Iterate through items"
+    },
+    "Success": {
+      "Type": "Succeed"
+    }
+  }
+}

@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Migrator
+
+Parameters:
+  TableName:
+    Type: String
+    Description: Name of the DynamoDB table to be migrated
+  TableARN:
+    Type: String
+    Description: ARN of the DynamoDB table to be migrated
+
+Resources:
+  MigratorMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/statemachine.asl.json
+      DefinitionSubstitutions:
+        MigrateTableName: !Ref TableName
+        MigrateFunctionArn: !GetAtt MigrateFunction.Arn
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref MigrateFunction
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:CreateBackup
+                - dynamodb:Scan
+                - dynamodb:PutItem
+              Resource: !Ref TableARN
+
+  MigrateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Architectures:
+        - arm64
