@@ -1,0 +1,56 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  human-task-reminder
+
+  Sample SAM Template for human-task-reminder
+
+Parameters:
+  # During deployment, this paramter will prompt for the email address of a reviewer.
+  EmailAddress:
+    Type: String
+    Default: moderator@example.com
+    Description: Enter the email address that will receive task.
+  # This will set the timeout in the reminder email loop
+  ReminderTimeoutSec:
+    Type: Number
+    Default: 120
+    Description: Enter Reminder Email Timeout in Seconds
+
+Resources:
+# STATE MACHINE #
+  ReminderStateMachine:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      Name: HumanTaskReminder
+      DefinitionUri: statemachine/statemachine.asl.yaml
+      DefinitionSubstitutions:
+        DDBTable: !Ref DDBTable
+        TopicArn: !Ref NotificationTopic
+        ReminderTimeout: !Ref ReminderTimeoutSec
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - DynamoDBWritePolicy:
+            TableName: !Ref DDBTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref DDBTable
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt NotificationTopic.TopicName
+        
+
+# DYNAMODB TABLE #
+# This is used to store translated text for later use 
+  DDBTable:
+    Type: AWS::Serverless::SimpleTable # More info about SimpleTable Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-simpletable.html
+    Properties:
+      TableName: HumanTaskReminderTable
+      PrimaryKey:
+        Name: id
+        Type: String
+
+  # Amazon SNS topic and subscription, triggers notification email when content needs to be reviewed.
+  NotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Endpoint: !Ref EmailAddress
+          Protocol: "email"
