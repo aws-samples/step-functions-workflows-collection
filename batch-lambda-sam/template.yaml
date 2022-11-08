@@ -1,0 +1,255 @@
+
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: AWS Step Functions sample project for using batch job with pre-processing lambda
+
+Parameters:
+  resourcePrefix:
+    Type: String 
+    Default: "sfn-batch-sample"
+  vpcCidr:
+    Type: String
+    Default: "10.0.0.0/16"
+  subnetCidr:
+    Type: String
+    Default: "10.0.0.0/24"
+# Comment each resource section to explain usage
+Resources:
+
+  LambdaFunctionRole:
+      Type: 'AWS::IAM::Role'
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Action:
+                - 'sts:AssumeRole'
+              Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+        ManagedPolicyArns:
+          - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+  #Lambda Function
+  GenerateBatchJobMap:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      CodeUri: src/
+      Description: "Function simulating batch job fan out checks."
+      FunctionName: !Sub "${resourcePrefix}-function"
+      Handler: function.handler
+      PackageType: "Zip"
+      Runtime: "python3.9"
+      Role: !GetAtt LambdaFunctionRole.Arn
+
+  # Explicitly create function log group to set retention and delete during cleanup.
+  FunctionLogGroup:
+    Type: 'AWS::Logs::LogGroup'
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${resourcePrefix}-function"
+      RetentionInDays: 1
+
+
+  # Create the state machine's execution role
+  BatchJobWithLambdaExecutionRole:
+      Type: "AWS::IAM::Role"
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: states.amazonaws.com
+              Action: "sts:AssumeRole"
+        Path: "/"
+        Policies:
+          - PolicyName: BatchJobWithLambdaAccessPolicy
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - "batch:SubmitJob"
+                    - "batch:DescribeJobs"
+                    - "batch:TerminateJob"
+                  Resource: "*"
+                - Effect: Allow
+                  Action:
+                    - "events:PutTargets"
+                    - "events:PutRule"
+                    - "events:DescribeRule"
+                  Resource:
+                    - !Sub "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/StepFunctionsGetEventsForBatchJobsRule"
+          - PolicyName: InvokeGenerateBatchJobMapLambdaPolicy
+            PolicyDocument:
+              Statement:
+                - Action:
+                    - 'lambda:InvokeFunction'
+                  Resource: !GetAtt 
+                    - GenerateBatchJobMap
+                    - Arn
+                  Effect: Allow 
+  
+  #Create the state machine to submit the batch job
+  BatchJobWithLambdaStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name: !Sub "${resourcePrefix}-sfn"
+      Role: !GetAtt [ BatchJobWithLambdaExecutionRole, Arn ]
+      DefinitionUri: ./statemachine/statemachine.asl.json
+      DefinitionSubstitutions:
+        GenerateBatchJobArn: !GetAtt GenerateBatchJobMap.Arn
+        partition: !Ref AWS::Partition
+        jobQueueArn: !Ref BatchJobQueue
+        jobDefinitionArn: !Ref BatchJobDefinition
+  
+  
+
+  # This section creates a VPC and related resources for the batch job
+  BatchVPC:
+      Type: AWS::EC2::VPC
+      Properties:
+        CidrBlock: !Ref vpcCidr
+  BatchInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    DependsOn: BatchVPC
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    DependsOn:
+    - BatchVPC
+    - BatchVPCGatewayAttachment
+    Properties:
+      VpcId:
+        Ref: BatchVPC
+  BatchVPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    DependsOn:
+    - BatchVPC
+    - BatchInternetGateway
+    Properties:
+      VpcId:
+        Ref: BatchVPC
+      InternetGatewayId:
+        Ref: BatchInternetGateway
+  BatchSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: A security group for region-agnostic Batch resources
+      VpcId:
+        Ref: BatchVPC
+      GroupName: !Sub "${resourcePrefix}-sg"
+  BatchSubnet:
+    Type: AWS::EC2::Subnet
+    DependsOn: BatchVPCGatewayAttachment
+    Properties:
+      CidrBlock: !Ref subnetCidr
+      VpcId:
+        Ref: BatchVPC
+      MapPublicIpOnLaunch: 'True'
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn:
+    - PublicRouteTable
+    - BatchVPCGatewayAttachment
+    Properties:
+      RouteTableId:
+        Ref: PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+        Ref: BatchInternetGateway
+  BatchSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: PublicRouteTable
+      SubnetId:
+        Ref: BatchSubnet
+  BatchAWSBatchServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: batch.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole
+  BatchIamInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+      - Ref: BatchEcsInstanceRole
+  BatchEcsInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2008-10-17'
+        Statement:
+        - Sid: ''
+          Effect: Allow
+          Principal:
+            Service: ec2.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role
+  BatchJobDefinition:
+    Type: AWS::Batch::JobDefinition
+    Properties:
+      Type: container
+      ContainerProperties:
+        Image:
+          Fn::Join:
+          - ''
+          - - 137112412989.dkr.ecr.
+            - Ref: AWS::Region
+            - ".amazonaws.com/amazonlinux:latest"
+        Vcpus: 2
+        Memory: 2000
+        Command:
+        - echo
+        - Ref::input
+      RetryStrategy:
+        Attempts: 1
+  BatchJobQueue:
+    Type: AWS::Batch::JobQueue
+    DependsOn:
+    - BatchComputeEnvironment
+    Properties:
+      Priority: 1
+      ComputeEnvironmentOrder:
+      - Order: 1
+        ComputeEnvironment:
+          Ref: BatchComputeEnvironment
+  BatchComputeEnvironment:
+    Type: AWS::Batch::ComputeEnvironment
+    DependsOn:
+    - BatchSubnet
+    - BatchSecurityGroup
+    - BatchIamInstanceProfile
+    - BatchAWSBatchServiceRole
+    Properties:
+      Type: MANAGED
+      ComputeResources:
+        Type: EC2
+        MinvCpus: 0
+        DesiredvCpus: 0
+        MaxvCpus: 64
+        InstanceTypes:
+        - optimal
+        Subnets:
+        - Ref: BatchSubnet
+        SecurityGroupIds:
+        - Ref: BatchSecurityGroup
+        InstanceRole:
+          Ref: BatchIamInstanceProfile
+      ServiceRole:
+        Ref: BatchAWSBatchServiceRole
+Outputs:
+  StateMachineArn:
+    Value: !Ref BatchJobWithLambdaStateMachine
+  StateMachineName:
+    Value: !GetAtt [BatchJobWithLambdaStateMachine,Name]
+
+
