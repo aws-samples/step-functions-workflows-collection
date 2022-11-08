@@ -1,0 +1,264 @@
+
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Step Functions Workflow - Lambda Orchestration
+
+
+Globals:
+  Function:
+    #Common function options
+    Runtime: python3.9
+    MemorySize: 128
+    CodeUri: "src/"
+    Timeout: 30
+
+Parameters:
+  ResourcePrefix:
+    Type: String
+    Default: "sample-sfn-orchestrate-lambda"
+
+
+Resources:
+
+  # Lambda Role - used for all lambda functions in this project since
+  # they only generate data within a step.
+  FunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Action:
+            - 'sts:AssumeRole'
+            Effect:  Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      
+  # Explicitly create all Lambda function log groups in order to:
+  #  * Set custom retention
+  #  * Allow automatic cleanup
+
+  CheckPriceFunctionLog:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 1
+      LogGroupName: !Sub "/aws/lambda/${ResourcePrefix}-check-stock-fn"
+  
+    BuySellRecommendLog:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 1
+      LogGroupName: !Sub "/aws/lambda/${ResourcePrefix}-buy-sell-recommend"
+
+  BuySellFunctionLog:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 1
+      LogGroupName: !Sub "/aws/lambda/${ResourcePrefix}-buy-sell-fn"
+
+
+  BuyFunctionLog:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 1
+      LogGroupName: !Sub "/aws/lambda/${ResourcePrefix}-buy-fn"
+
+
+  SellFunctionLog:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 1
+      LogGroupName: !Sub "/aws/lambda/${ResourcePrefix}-sell-fn"
+
+  
+  # Create all Lambda functions 
+  ## Check stock price Lambda
+  CheckPriceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: checkprice.handler
+      Role: !GetAtt ["FunctionRole",'Arn']
+      
+      Description: "Simulates stock price check."
+      FunctionName: !Sub "${ResourcePrefix}-check-stock-fn"
+
+  ##Buy/Sell Function to simulate a buy/sell recommendation
+  BuySellRecommend:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: buy-sell-recommend.handler
+      Role: !GetAtt ["FunctionRole",'Arn']
+
+      Description: "Simulates buy/sell recommendation."
+      FunctionName: !Sub "${ResourcePrefix}-buy-sell-recommend"
+    DependsOn: [BuySellRecommendLog]
+
+  ## Function to simulate the buy/sell approval process
+  BuySellFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      Handler: buy-sell.handler
+      Policies:
+        - SQSPollerPolicy:
+            QueueName: !GetAtt [RequestApprovalQueue,'QueueName']
+        - AWSLambdaBasicExecutionRole
+        - Statement:
+          - Action:
+              - 'states:SendTaskSuccess'
+              - 'states:SendTaskFailure'
+            Resource: !Ref SampleStateMachine
+            Effect: Allow
+
+      Description: "Simulates buy/sell approval by a trader."
+      FunctionName: !Sub "${ResourcePrefix}-buy-sell"
+      Events:
+        BuySellQueue:
+          Type: SQS
+          Properties:
+            Enabled: True
+            Queue: !GetAtt [RequestApprovalQueue,'Arn']
+    DependsOn: [BuySellFunctionLog]
+  
+  ## Function simulating a buy transaction 
+  BuyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: buy.handler
+      Role: !GetAtt ["FunctionRole",'Arn']
+
+      Description: "Simulates buying stock."
+      FunctionName: !Sub "${ResourcePrefix}-buy"
+    DependsOn: [BuyFunctionLog]
+
+  ## Function simulating a sell transaction
+  SellFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: sell.handler
+      Role: !GetAtt ["FunctionRole",'Arn']
+
+      Description: "Simulates selling stock."
+      FunctionName: !Sub "${ResourcePrefix}-sell"
+    DependsOn: [SellFunctionLog]
+
+  # SQS Queue for requesting human approval
+  RequestApprovalQueue:
+    Type:  AWS::SQS::Queue
+    Properties:
+      KmsMasterKeyId: "alias/aws/sqs"
+      QueueName: !Sub "${ResourcePrefix}-Approvals"
+      VisibilityTimeout: 180
+
+  # State machine to orchestrate all the lambda functions
+  SampleStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/statemachine.asl.json
+      DefinitionSubstitutions:
+        checkPriceFnArn: !GetAtt [CheckPriceFunction,'Arn']
+        BuySellFnArn: !GetAtt [BuySellRecommend, 'Arn']
+        queueUrl: !Ref RequestApprovalQueue
+        buyFnArn: !GetAtt [BuyFunction , 'Arn']
+        sellFnArn: !GetAtt [SellFunction , 'Arn']
+        topic: !Ref AlertTopic 
+      Name: !Sub "${ResourcePrefix}-sfn"
+      Role: !GetAtt  [StateMachineExecRole,'Arn']
+
+  #SNS topic for final result.
+  AlertTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: "Buy-Sell-Results"
+      KmsMasterKeyId: "alias/aws/sns"
+      TopicName: !Sub "${ResourcePrefix}-Results"
+
+  # Create the state machine's execution role
+  StateMachineExecRole:
+      Type: "AWS::IAM::Role"
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: states.amazonaws.com
+              Action: "sts:AssumeRole"
+
+
+  # Use the new SAM connectors to allow Step Functions to execute Lambda, publish to SNS, and add items to SQS
+  CheckPriceConnector:
+    Type: AWS::Serverless::Connector
+    Properties:
+      Destination: 
+        Id:  CheckPriceFunction
+      Source: 
+        Id:  SampleStateMachine
+      Permissions:
+        - Write
+
+  BuySellConnector:
+    Type: AWS::Serverless::Connector
+    Properties:
+      Destination: 
+        Id:  BuySellRecommend
+      Source: 
+        Id:  SampleStateMachine
+      Permissions:
+        - Write     
+
+  SqsConnector:
+    Type:  AWS::Serverless::Connector
+    Properties:
+      Destination:
+        Id:    RequestApprovalQueue
+      Source:
+        Id: SampleStateMachine
+      Permissions:
+        - Write
+
+  BuyConnector:
+    Type:  AWS::Serverless::Connector
+    Properties:
+      Destination:
+        Id:    BuyFunction
+      Source:
+        Id: SampleStateMachine
+      Permissions:
+        - Write
+  
+  SellConnector:
+    Type:  AWS::Serverless::Connector
+    Properties:
+      Destination:
+        Id:    SellFunction
+      Source:
+        Id: SampleStateMachine
+      Permissions:
+        - Write
+
+  SNSConnector:
+    Type:  AWS::Serverless::Connector
+    Properties:
+      Destination:
+        Id:    AlertTopic
+      Source:
+        Id: SampleStateMachine
+      Permissions:
+        - Write
+
+
+# List all common outputs for usage
+Outputs:
+  StateMachineArn:
+    Value: !Ref SampleStateMachine
+    Description: "Orchestration state machine ARN"
+  StateMachineName:
+    Value: !GetAtt [SampleStateMachine,'Name']
+    Description: "Orchestration state machine name"
+
+  TopicName:
+    Value: !GetAtt [AlertTopic,'TopicName']
+    Description: "Results topic"
