@@ -13,8 +13,8 @@
     "introBox": {
       "headline": "How it works",
       "text": [
-        "This workflow simulates a stock trading process.  The first state simulates checking a stock price by generating a random number representing the price of a stock.  The stage passes this price to the Generate Buy/Sell recommendation state which determines if the trader should buy or sell the stock.  This recommendation is passed to an SQS queue simulating a trader verifying the recommendation and approving it.",
-        "This decision is passed to the Buy or Sell choice state which directs the flow to the proper buy or sell Lambda function.  The final stage reports the result to an SNS Topic."
+        "This workflow simulates a stock trading process.  The first state simulates checking a stock price by generating a random number representing the price of a stock.  The stage passes this price to the Generate Buy/Sell recommendation state which determines if the trader should buy or sell the stock.  The recommendation is passed to an SQS queue simulating a trader verifying the recommendation and approving it.",
+        "This decision is passed to the Buy or Sell choice state which directs the flow to the proper buy or sell Lambda function.  The result of the trade is sent to an SNS Topic."
 
       ]
     },
