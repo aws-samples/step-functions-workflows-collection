@@ -1,0 +1,11 @@
+{
+    "name": "lambda_mysql_secretsmanager_dynamodb",
+    "type": "module",
+    "version": "1.0.0",
+    "description": "Lambda ES Module Secrets Manager, MySQL2, DynamoDB",
+    "dependencies": {
+        "@aws-sdk/client-secrets-manager": "^3.199.0",
+        "@aws-sdk/util-dynamodb": "^3.199.0",
+        "mysql2": "^2.3.3"
+    }
+}

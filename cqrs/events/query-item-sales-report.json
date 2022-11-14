@@ -1,0 +1,9 @@
+[
+  {
+    "EventBusName" : "<EventBridge Event Bus ARN>",
+    "Time" : "2022-11-14T19:00:00Z",    
+    "DetailType": "orderQuery",
+    "Source": "orderPipeline",
+    "Detail": "{\"query\": \"itemsSalesReport\"}"
+  }
+]

@@ -1,0 +1,215 @@
+{
+  "Comment": "An example of the Amazon States Language for CQRS Design Pattern implementation",
+  "StartAt": "Command Query Router",
+  "States": {
+    "Command Query Router": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.detail-type",
+          "StringEquals": "orderCommand",
+          "Next": "Loop Order Items"
+        },
+        {
+          "Variable": "$.detail-type",
+          "StringEquals": "orderQuery",
+          "Next": "Query Router"
+        }
+      ],
+      "Default": "Fail",
+      "Comment": "Based on detail-type property of the event, routes the message to Command or Query branch"
+    },
+    "Query Router": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.detail.query",
+          "StringEquals": "itemsSalesReport",
+          "Next": "Invoke ItemSalesReport Query"
+        },
+        {
+          "Variable": "$.detail.query",
+          "StringEquals": "monthlySalesByItem",
+          "Next": "Invoke MonthlySalesByItem Query"
+        }
+      ],
+      "Default": "Fail",
+      "Comment": "Based on the query attribute of event details, routes the Query to respective Lambda"
+    },
+    "Invoke ItemSalesReport Query": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${QueryItemSalesReportFunctionArn}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Send ItemSalesReport Query Results",
+      "ResultPath": "$.QueryResponse",
+      "ResultSelector": {
+        "statusCode.$": "$.Payload.statusCode",
+        "body.$": "$.Payload.body"
+      },
+      "Comment": "Invokes Lambda for ItemSalesReport Query, no parameters needed"
+    },
+    "Send ItemSalesReport Query Results": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::events:putEvents",
+      "Parameters": {
+        "Entries": [
+          {
+            "Detail": {
+              "query.$": "$.detail.query",
+              "queryMessageId.$": "$.id",
+              "queryStatus.$": "$.QueryResponse.statusCode",
+              "queryResult.$": "$.QueryResponse.body"
+            },
+            "DetailType": "orderQueryResponse",
+            "EventBusName": "${EventBridgeBusName}",
+            "Source": "orderPipeline"
+          }
+        ]
+      },
+      "End": true,
+      "Comment": "Sends results of ItemSalesReport Query to EventBridge"
+    },
+    "Loop Order Items": {
+      "Type": "Map",
+      "Iterator": {
+        "StartAt": "Marshall Item Object",
+        "States": {
+          "Marshall Item Object": {
+            "Type": "Pass",
+            "End": true,
+            "Parameters": {
+              "M": {
+                "itemid": {
+                  "S.$": "$.itemid"
+                },
+                "quantity": {
+                  "N.$": "States.JsonToString($.quantity)"
+                }
+              }
+            },
+            "Comment": "Transforms Order Item data to DynamoDB AttributeValues "
+          }
+        }
+      },
+      "ItemsPath": "$.detail.items",
+      "ResultPath": "$.detail.itemsMarshalled",
+      "Next": "Put Order to DynamoDB",
+      "Comment": "Loops over order items"
+    },
+    "Put Order to DynamoDB": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:putItem",
+      "Parameters": {
+        "TableName": "${DynamoDBTableName}",
+        "Item": {
+          "orderid": {
+            "S.$": "$.detail.orderId"
+          },
+          "items": {
+            "L.$": "$.detail.itemsMarshalled"
+          },
+          "status": {
+            "S.$": "$.detail.command"
+          },
+          "lastUpdateDate": {
+            "S.$": "$.time"
+          }
+        }
+      },
+      "Next": "Send Response to EventBridge",
+      "ResultPath": "$.DDBCommandResponse",
+      "ResultSelector": {
+        "responseCode.$": "$.SdkHttpMetadata.HttpStatusCode"
+      },
+      "Comment": "Puts Order data to DynamoDB"
+    },
+    "Send Response to EventBridge": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::events:putEvents",
+      "Parameters": {
+        "Entries": [
+          {
+            "Detail": {
+              "orderid.$": "$.detail.orderId",
+              "commandStatus": "orderCreated"
+            },
+            "DetailType": "orderCommandResponse",
+            "EventBusName": "${EventBridgeBusName}",
+            "Source": "orderPipeline"
+          }
+        ]
+      },
+      "End": true,
+      "Comment": "Sends a confirmation message to EventBridge on successful execution of orderCommand"
+    },
+    "Fail": {
+      "Type": "Fail",
+      "Error": "unsupportedType",
+      "Comment": "Step Functions cannot make a decision based on the received event"
+    },
+    "Invoke MonthlySalesByItem Query": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${QueryMonthlySalesByItemFunctionArn}",
+        "Payload": {
+          "itemid.$": "$.detail.itemid"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.QueryResponse",
+      "ResultSelector": {
+        "statusCode.$": "$.Payload.statusCode",
+        "body.$": "$.Payload.body"
+      },
+      "Next": "Send MonthlySalesByItem Query Results",
+      "Comment": "Invokes Lambda for MonthlySalesByItem Query with itemid as paramenetr"
+    },
+    "Send MonthlySalesByItem Query Results": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::events:putEvents",
+      "Parameters": {
+        "Entries": [
+          {
+            "Detail": {
+              "query.$": "$.detail.query",
+              "queryItemId.$": "$.detail.itemid",
+              "queryStatus.$": "$.QueryResponse.statusCode",
+              "queryResult.$": "$.QueryResponse.body"
+            },
+            "DetailType": "orderQueryResponse",
+            "EventBusName": "${EventBridgeBusName}",
+            "Source": "orderPipeline"
+          }
+        ]
+      },
+      "End": true,
+      "Comment": "Sends results of MonthlySalesByItem Query to EventBridge"
+    }
+  }
+}

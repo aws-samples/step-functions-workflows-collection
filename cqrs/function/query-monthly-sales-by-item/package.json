@@ -1,0 +1,10 @@
+{
+    "name": "lambda_mysql_secretsmanager",
+    "type": "module",
+    "version": "1.0.0",
+    "description": "Lambda ES Module Secrets Manager, MySQL2",
+    "dependencies": {
+        "@aws-sdk/client-secrets-manager": "^3.199.0",
+        "mysql2": "^2.3.3"
+    }
+}

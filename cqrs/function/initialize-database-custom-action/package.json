@@ -1,0 +1,9 @@
+{
+    "name": "lambda_eventbridge",
+    "type": "module",
+    "version": "1.0.0",
+    "description": "Lambda ES Module EventBridge",
+    "dependencies": {
+        "@aws-sdk/client-eventbridge": "^3.199.0"
+    }
+}
