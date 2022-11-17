@@ -1,0 +1,9 @@
+[
+	{
+		"EventBusName" : "<EventBridge Event Bus ARN>",
+		"Time" : "2022-10-13T19:00:00Z",
+	  "DetailType": "orderCommand",
+	  "Source": "orderPipeline",
+	  "Detail": "{\"command\": \"createOrder\",\"orderId\": \"6101\",\"items\" : [{\"itemid\": \"z3333\",\"quantity\": 6},{\"itemid\": \"z4444\",\"quantity\": 3}]}"
+	}
+]
