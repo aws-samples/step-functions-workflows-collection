@@ -1,0 +1,87 @@
+Comment: State Machine that send human a task and sends a reminder every X seconds until task is complete.
+StartAt: Parallel w/ UUID
+States:
+  Parallel w/ UUID:
+    Type: Parallel
+    Branches:
+      - StartAt: Sleep for Reminder
+        States:
+          Sleep for Reminder:
+            Type: Wait
+            Seconds: ${ReminderTimeout}
+            Next: DDB Get Task Status
+          DDB Get Task Status:
+            Type: Task
+            Resource: arn:aws:states:::dynamodb:getItem
+            Parameters:
+              TableName: ${DDBTable}
+              Key:
+                id.$: $.uuid
+            Next: Is Task Complete?
+            ResultPath: $.DDB
+          Is Task Complete?:
+            Type: Choice
+            Choices:
+              - And:
+                  - Variable: $.DDB.Item.taskComplete
+                    IsPresent: true
+                  - Variable: $.DDB.Item.taskComplete.S
+                    StringMatches: 'true'
+                Next: Success
+            Default: Reset JSON
+          Reset JSON:
+            Type: Pass
+            Next: SNS Send Reminder
+            Parameters:
+              uuid.$: $.uuid
+          SNS Send Reminder:
+            Type: Task
+            Resource: arn:aws:states:::sns:publish
+            Parameters:
+              TopicArn: ${TopicArn}
+              Message:
+                Title: Reminder !!!
+                Msg: Please complete task that was sent earlier
+            Next: Sleep for Reminder
+            ResultPath: null
+          Success:
+            Type: Succeed
+      - StartAt: DDB Put Task Status
+        States:
+          DDB Put Task Status:
+            Type: Task
+            Resource: arn:aws:states:::dynamodb:putItem
+            Parameters:
+              TableName: ${DDBTable}
+              Item:
+                id.$: $.uuid
+                taskComplete: 'false'
+            Next: SNS Send Task Token to Human
+            ResultPath: null
+          SNS Send Task Token to Human:
+            Type: Task
+            Resource: arn:aws:states:::sns:publish.waitForTaskToken
+            Parameters:
+              TopicArn: ${TopicArn}
+              Message:
+                Title: Please Complete Task
+                Msg: >-
+                  You have a task that needs to be completed. When task is
+                  completed send back StepFunction Token to complete state
+                token.$: $$.Task.Token
+            Next: DDB Update Task Status
+            ResultPath: null
+          DDB Update Task Status:
+            Type: Task
+            Resource: arn:aws:states:::dynamodb:updateItem
+            Parameters:
+              TableName: ${DDBTable}
+              Key:
+                id.$: $.uuid
+              UpdateExpression: SET taskComplete = :myValueRef
+              ExpressionAttributeValues:
+                ':myValueRef': 'true'
+            End: true
+    End: true
+    Parameters:
+      uuid.$: States.UUID()
