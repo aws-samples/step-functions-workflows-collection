@@ -13,7 +13,7 @@
     "introBox": {
       "headline": "Curbside Pickup App",
       "text": [
-        "This application will create a State Machine, an SNS topic, an SQS Queue, ApiGateway, Lambda, and a DynamoDB Table. The Frontend web app will submit order to Statemachine via ApiGateway as proxy to Lambda. This will create the order in DynamoDB and place pick order in SQS for employee. After order is picked the TaskToken callback is sent with a success. The customer is sent a message via SNS that their order is ready for pickup. When the customer arrives they send a TaskToken back with success and their current parking location. Employees are alerted the customer has arrived via SNS message. The employee will grab the delivery from the SQS queue and send TaskToken success on completion of order delivery."
+        "This application will create a State Machine, an SNS topic, an SQS Queue, ApiGateway, Lambda, and a DynamoDB Table. The Frontend web app will submit order to State Machine via ApiGateway as proxy to Lambda. This will create the order in DynamoDB and place pick order in SQS for employee. After order is picked the TaskToken callback is sent with a success. The customer is sent a message via SNS that their order is ready for pickup. When the customer arrives they send a TaskToken back with success and their current parking location. Employees are alerted the customer has arrived via SNS message. The employee will send TaskToken success on completion of order delivery."
       ]
     },
     "testing": {
