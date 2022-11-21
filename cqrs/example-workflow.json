@@ -2,7 +2,7 @@
     "title": "CQRS Design Pattern",
     "description": "A sample implementation of the command query responsibility segregation (CQRS) design pattern using AWS Step Functions",
     "language": "node.js",
-    "simplicity": "2 -  Pattern",
+    "simplicity": "2 - Pattern",
     "usecase": "",
     "type": "Express",
     "diagram":"/resources/statemachine.png",
