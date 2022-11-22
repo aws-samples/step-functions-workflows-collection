@@ -9,7 +9,7 @@
     "videoId": "",
     "level": "200",
     "framework": "SAM",
-    "services": ["sns","sqs","dynamodb"],
+    "services": ["sns","sqs","dynamodb", "apigateway", "lambda"],
     "introBox": {
       "headline": "Curbside Pickup App",
       "text": [
@@ -30,13 +30,13 @@
     },
     "deploy": {
       "text": [
-        "sam deploy --guided"
+        "sam build && sam deploy --guided"
       ]
     },
     "gitHub": {
       "template": {
         "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/curbside-pickup/",
-        "templateDir":"curbside-delivery",
+        "templateDir":"curbside-pickup",
         "templateFile": "template.yaml",
         "ASL": "statemachine/statemachine.asl.yaml"
       },
