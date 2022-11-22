@@ -29,7 +29,9 @@ Globals:
         STATEMACHINE_ARN: !Ref CurbsideStateMachine
 
 Resources:
-# STATE MACHINE #
+##########################################################################
+#   State Machine                                                        #
+##########################################################################
   CurbsideStateMachine:
     Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
     Properties:

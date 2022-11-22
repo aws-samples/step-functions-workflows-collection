@@ -1,6 +1,6 @@
-# Human Task w/ Reminder
+# Curbside Pick-Up App
 
-This application will create a State Machine, an SNS topic, and a DynamoDB Table. The State Machine will create a UUID and save to DDB with Task Status as false. It will then send a Task Token to Human via SNS and wait for task to be completed.  At the same a loop will start that will Sleep for X seconds and then check Task Status in DDB.  It will send a Reminder and loop to begining until Task Status is true.
+This application will create a State Machine, an SNS topic, an SQS Queue, ApiGateway, Lambda, and a DynamoDB Table. The Frontend web app will submit order to State Machine via ApiGateway as proxy to Lambda. This will create the order in DynamoDB and place pick order in SQS for employee. After order is picked the TaskToken callback is sent with a success. The customer is sent a message via SNS that their order is ready for pickup. When the customer arrives they send a TaskToken back with success and their current parking location. Employees are alerted the customer has arrived via SNS message. The employee will send TaskToken success on completion of order delivery.
 
 Important: this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the [AWS Pricing page](https://aws.amazon.com/pricing/) for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
 
@@ -19,16 +19,18 @@ Important: this application uses various AWS services and there are costs associ
     ```
 1. Change directory to the pattern directory:
     ```
-    cd ./human-task-reminder
+    cd ./curbside-pickup
     ```
 1. From the command line, use AWS SAM to deploy the AWS resources for the workflow as specified in the template.yaml file:
     ```
-    sam deploy --guided
+    sam build && sam deploy --guided
     ```
 1. During the prompts:
     * Enter a stack name
     * Enter the desired AWS Region
+    * Enter Email for SNS Notification delivery
     * Allow SAM CLI to create IAM roles with the required permissions.
+    * APIProxy may not have authorization defined, Is this okay? Enter `YES`
 
     Once you have run `sam deploy --guided` mode once and saved arguments to a configuration file (samconfig.toml), you can use `sam deploy` in future to use these defaults.
 
@@ -36,26 +38,42 @@ Important: this application uses various AWS services and there are costs associ
 
 ## How it works
 
-1. The State Machine starts by creating a Parallel flow and passing a UUID by using intrinsic function.
-2. This UUID as key is put into DynamoDB with an attribute of `taskComplete:false` to use as reference.
-3. An email message is sent to Human via SNS topic with a Task Token. The task will wait until Task Token is returned.
-4. At the same time a loop will start that will Sleep for X seconds and then check the Task Status in DyanmoDB using UUID.  
-5. DynamoDB response is passed to Choice state. If `taskComplete === true` the loop will end otherwise it will continue and send a Reminder email to Human via SNS and loop back to beginning. 
-6. When the Task Token is returned to the State Machine it will move to the Update Task Status which will end the loop and complete the State Machine
+1. This App starts by submitting a JSON order payload (Frontend) to ApiGateway via Lambda proxy and starts a State Machine execution.
+2. The State Machine creates the order in DynamoDB and then sends a pick order message to SQS with a Task Token callback.
+3. A process pulls the pick order message from SQS (Lambda) and displays to employee (frontend). 
+4. The employee will pick the order and send back Task Token `complete:true` to State Machine via ApiGateway Lambda proxy (Frontend).
+5. The State Machine will then Update Order Status in DynamoDB and send the Customer a `ready-pickup` notification message via SNS with Task Token Callback.
+6. The customer will click URL in message that will direct them to Frontend where they can enter their parking location and send back Task Token `complete:true, location:STRING` to State Machine via ApiGateway Lambda proxy
+6. The State Machine will then update Status in DynamoDB and send store employees `customer-arrived` notification message via SNS with Task Token Callback.
+7. Employee will check the frontend for order details and deliver order to customer location.
+8. Employee will send back Task Token `complete:true` to State Machine via ApiGateway Lambda proxy (Frontend) when transaction is complete.
+9. State Machine will update the Status of order to `complete`
 
 ![image](./resources/statemachine.png)
 
 ## Testing
 
 1. After deployment you will receive an email titled `AWS Notification - Subscription Confirmation`. Click on the link in the email to confirm your subscription. This will allow SNS to send you emails.
-2. Navigate to the AWS Step Functions console and select the `HumanTaskReminder` workflow. If you don't see it, make sure you are in the correct Region.
-3. Select `Start Execution`, use default input JSON and then click `Start Execution`.
-4. Wait X seconds until you receive the Task email and the Reminder email.
-5. Copy the Task Token from the Task email and use CLI to complete the Task by calling  `SendTaskSuccess` API.
-    ```bash
-        aws stepfunctions send-task-success --task-token <YOUR-TASK-TOKEN> --task-output '{"result":true}'
+2. All interaction will happen through frontend React Application. Change directory to:
     ```
-5. Observe the workflow complete the reminder loop by ending on Succeed State.
+    cd ./curbside-pickup/frontend
+    ```
+3. Update React Environmental Variable file `.env.local` with ApiGateway URL Endpoint from sam deploy Outputs `ApiEndpointURL`. Example below:
+    ```
+    REACT_APP_BASE_API_URI="https://YOUR-URI.execute-api.us-west-2.amazonaws.com/Prod/"
+    ```
+4. Install package dependencies and start application
+    ```
+    npm i
+    npm start
+    ```
+5. Create your first test order from React App at http://localhost:3000/
+6. Navigate to the AWS Step Functions console and select the `CurbsidePickup` workflow then click on you first execution. If you don't see it, make sure you are in the correct Region. This is where you can see the State Machine move from task to task as you interact with the frontend app.
+7. Navigate to http://localhost:3000/pick-order/ and select a record to act on. Submit desired Status change and observe State Machine Console changes.
+8. The customer will now receive a message from SNS with a link `http://localhost:3000/arrival/?SOMTHING-HERE` that contains the order ID and Task Token. Navigate to the link and input Parking Location and Submit
+9. The State Machine will send a notification to store employees that the customer has arrived via SNS.
+10. Navigate to http://localhost:3000/deliver to select the record and complete the order by submitting back the Task Token.
+11. Congratulations! You have completed the entire happy path.  Go ahead and repeat the process but try canceling an order or not being able to locate an item.
 
 ## Cleanup
  
