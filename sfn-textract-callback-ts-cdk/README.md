@@ -36,16 +36,24 @@ This integration pattern can be reused with other services and tasks with Step F
 
 ## Image
 Provide an exported .png of the workflow in the `/resources` directory from [Workflow stuio](https://docs.aws.amazon.com/step-functions/latest/dg/workflow-studio.html) and add here.
-![image](./resources/statemachine.png)
+
+![image](./resources/stepfunctions_graph.png)
 
 ## Testing
 
-Start the workflow with some test event, e.g.
+There are two ways to test the Step Functions Workflow.
+
+1. Uploading an S3 Object with text onto the Source Bucket deployed by the CDK deployment
+2. Start the workflow with a test event as in the example by below. You must replace the BUCKET_NAME with the source bucket deployed through CDK.
 ```json
 {
-  "Input": {
-    "Bucket": "BUCKET_NAME",
-    "Name": "cat.pdf"
+  "detail": {
+    "bucket": {
+        "name": "BUCKET_NAME"
+    },
+    "object": {
+        "key": "cat.pdf"
+    }
   }
 }
 ```
@@ -58,6 +66,21 @@ From the pattern directory, run
     ```bash
     npx cdk destroy
     ```
+## Architecture
+
+Some components from the workflow are not rendered through Workflow Studio as they are not Workflow components. They are still required for the solution and the schematic is as follows. 
+
+1. When an object is placed onto the Source Bucket an S3 Object Created Event is sent out to Event Bridge
+2. Event Bridge then initiates the Step Function
+3. The first step is to initiate the Asynchronous StartDocumentDetection API 
+4. The Step Function records the JobID and a CallBack Token on DynamoDB 
+5. The Step Functions pauses until Textract completes the Text extraction and it receives a Call Back Token to continue
+6. Once Textract has completed it emits an SNS event which notifies the Step Function Callback Handler Lambda Function
+7. The Step Function Callback Handler Lambda Function retrieves the Callback Token from DynamoDB by matching the JobID
+8. Once retrieved it signals the Step Function to continue 
+9. The Step Function emits an SNS signal that it has completed which can be used for further integration
+
+![image](./resources/TextractOverview.drawio.png)
 
 ----
 Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
