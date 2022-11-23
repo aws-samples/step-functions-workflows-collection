@@ -39,28 +39,51 @@ Important: this application uses various AWS services and there are costs associ
 
 ## How it works
 
-The scenario includes a basic order creation and reporting application. Orders are received as events, including line items and persisted on a data store. Queries are also received as events and queried from the data source and results are emitted as events. For the purpose of CQRS pattern, queries has data access patterns different than the order structure.
+The scenario includes a basic order creation and reporting application. Orders are received as events, including line items and persisted on a data store. Queries are also received as events and queried from the data source and results are emitted as events. For the purpose of CQRS pattern, queries have data access patterns different than the order structure.
 
 A sample order data would look like below:
 
 ```json
 {
-	"orderId": "6002",
-	"items" : [
-		{
-		 "itemid": "z3333",
-		 "quantity": 6
-		},
-		{
-		 "itemid": "z4444",
-		 "quantity": 3
-		}
-    ]
+  "lastUpdateDate": "2022-11-01T16:26:03Z",
+  "status": "orderCreated"
+  "orderId": "6002",
+  "items" : [
+    {
+      "itemid": "z3333",
+      "quantity": 6
+    },
+    {
+      "itemid": "z4444",
+      "quantity": 3
+    }
+  ]
 }
+```
+As example queries has data access requirements using order items as primary entity and requires aggregation, data will be copied to a relational database for easier processing. After normalizing the order data, the resulting database schema on the relational database would look like below:
+
+![image](./resources/erd.png)
+
+On the query side, there are two queries defined. *Item Sales Report* is just a simplified query that lists all the `itemid`’s and the total quantities ordered:
+
+```sql
+SELECT a.itemid, SUM(a.quantity) as totalordered, DATE_FORMAT(MAX(b.orderdate),'%Y-%m-%d') as lastorderdate
+FROM orderitems a LEFT JOIN orders b ON a.orderid = b.orderid
+GROUP BY a.itemid;
 
 ```
 
-On the query side, there are two queries defined. *Item Sales Report* is just a simplified query that lists all the `itemid`’s and the total quantities ordered. A second query includes the parameter of `itemid`, and gets all the item sales per month.
+A second query includes the parameter of `itemid`, and gets all the item sales per month:
+
+```sql
+SELECT DATE_FORMAT(b.orderdate,'%M %Y') as monthyear, SUM(a.quantity) as monthlyordered
+FROM orderitems a LEFT JOIN orders b ON a.orderid = b.orderid
+WHERE itemid = <itemid parameter>
+GROUP BY year(b.orderdate),month(b.orderdate)
+ORDER BY b.orderdate DESC;
+
+```
+The overall architecture of the solution is explained below:
 
 ![image](./resources/architecture.png)
 
