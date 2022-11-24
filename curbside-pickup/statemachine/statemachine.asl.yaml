@@ -1,0 +1,160 @@
+Comment: Curbside Pickup State Machine
+StartAt: DDB CreateOrder
+States:
+  DDB CreateOrder:
+    Type: Task
+    Resource: arn:aws:states:::dynamodb:putItem
+    Parameters:
+      TableName: ${DDBTable}
+      Item:
+        Item:
+        id.$: $.id
+        name.$: $.name
+        email.$: $.email
+        customer_id.$: $.customer_id
+        store_id.$: $.store_id
+        products.$: States.JsonToString($.products)
+        order_status: pick-order
+    Next: SQS PickItem
+    ResultPath: null
+  SQS PickItem:
+    Type: Task
+    Resource: arn:aws:states:::sqs:sendMessage.waitForTaskToken
+    Parameters:
+      QueueUrl: ${SQSPick}
+      MessageBody:
+        id.$: $.id
+        taskToken.$: $$.Task.Token
+    Next: ItemFound?
+  ItemFound?:
+    Type: Choice
+    Choices:
+      - Variable: $.taskComplete
+        BooleanEquals: false
+        Next: DDB UpdateStatus Error
+    Default: DDB UpdateStatus
+  DDB UpdateStatus:
+    Type: Task
+    Resource: arn:aws:states:::dynamodb:updateItem
+    Parameters:
+      TableName: ${DDBTable}
+      Key:
+        id.$: $.id
+      UpdateExpression: SET order_status = :stat, taskToken = :tk
+      ExpressionAttributeValues:
+        ':stat': 'pick-complete'
+        ':tk': ''
+    Next: SNS ReadyPickup
+    ResultPath: null
+  SNS ReadyPickup:
+    Type: Task
+    Resource: arn:aws:states:::sns:publish.waitForTaskToken
+    Parameters:
+      Message:
+        status: ready-pickup
+        url.$: States.Format('http://localhost:3000/arrival?order={}&token={}', $.id, $$.Task.Token)
+      TopicArn: ${SNSCustomer}
+    Next: CustomerArrived?
+    TimeoutSeconds: 86400
+  CustomerArrived?:
+    Type: Choice
+    Choices:
+      - Variable: $.taskComplete
+        BooleanEquals: false
+        Next: DDB CancelOrder
+    Default: DDB Update Customer Status
+  DDB Update Customer Status:
+    Type: Task
+    Resource: arn:aws:states:::dynamodb:updateItem
+    Parameters:
+      TableName: ${DDBTable}
+      Key:
+        id.$: $.id
+      UpdateExpression: SET order_status = :stat, cust_location = :loc
+      ExpressionAttributeValues:
+        ':stat': customer-arrived
+        ':loc.$': $.location
+    Next: SNS DeliverToCurb
+    ResultPath: null
+  SNS DeliverToCurb:
+    Type: Task
+    Resource: arn:aws:states:::sns:publish.waitForTaskToken
+    Parameters:
+      Message:
+        id.$: $.id
+        status: customer-arrived
+        location.$: $.location
+        taskToken.$: $$.Task.Token
+      TopicArn: ${SNSBackend}
+    Next: DDB CompleteOrder
+    ResultPath: null
+  DDB CancelOrder:
+    Type: Task
+    Resource: arn:aws:states:::dynamodb:updateItem
+    Parameters:
+      TableName: ${DDBTable}
+      Key:
+        id.$: $.id
+      UpdateExpression: SET order_status = :stat, taskToken = :tk
+      ExpressionAttributeValues:
+        ':stat': 'cancel-restock'
+        ':tk': ''
+    Next: SNS OrderCancel
+    ResultPath: null
+  SNS OrderCancel:
+    Type: Task
+    Resource: arn:aws:states:::sns:publish
+    Parameters:
+      Message:
+        id.$: $.id
+        status: order-cancel
+        msg: >-
+          Sorry to hear you no longer want your order. This is a confirmation
+          your order has been canceled.
+      TopicArn: ${SNSCustomer}
+    Next: SQS RestockItem
+    ResultPath: null
+  SQS RestockItem:
+    Type: Task
+    Resource: arn:aws:states:::sqs:sendMessage
+    Parameters:
+      MessageBody.$: $
+      QueueUrl: ${SQSRestock}
+    End: true
+  DDB CompleteOrder:
+    Type: Task
+    Resource: arn:aws:states:::dynamodb:updateItem
+    Parameters:
+      TableName: ${DDBTable}
+      Key:
+        id.$: $.id
+      UpdateExpression: SET order_status = :stat, taskToken = :tk
+      ExpressionAttributeValues:
+        ':stat': 'curbside-complete'
+        ':tk': ''
+    End: true
+  DDB UpdateStatus Error:
+    Type: Task
+    Resource: arn:aws:states:::dynamodb:updateItem
+    Parameters:
+      TableName: ${DDBTable}
+      Key:
+        id.$: $.id
+      UpdateExpression: SET order_status = :stat, taskToken = :tk
+      ExpressionAttributeValues:
+        ':stat': 'pick-error'
+        ':tk': ''
+    Next: SNS OrderIssue
+    ResultPath: null
+  SNS OrderIssue:
+    Type: Task
+    Resource: arn:aws:states:::sns:publish
+    Parameters:
+      TopicArn: ${SNSCustomer}
+      Message:
+        id.$: $.id
+        msg: >-
+          One of your items is out of stock and your order cannot be fullfiled.
+          Please contact customer support for next steps
+        status: out-of-stock
+    End: true

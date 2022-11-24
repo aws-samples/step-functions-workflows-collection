@@ -1,0 +1,206 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  curbside-pickup
+
+  Sample SAM Template for curbside-pickup
+
+Parameters:
+  # During deployment, this paramter will prompt for the email address of a reviewer.
+  CustomerEmail:
+    Type: String
+    Default: your-email-here@az.com
+    Description: Enter email for notification
+
+Globals:
+  Api:
+    Cors:
+      AllowMethods: "'GET,POST,OPTIONS'"
+      AllowHeaders: "'content-type'"
+      AllowOrigin: "'*'"
+  Function:
+    MemorySize: 512
+    Architectures: ["arm64"]
+    Runtime: nodejs16.x
+    Timeout: 30
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref OrderTable
+        STATEMACHINE_ARN: !Ref CurbsideStateMachine
+
+Resources:
+##########################################################################
+#   State Machine                                                        #
+##########################################################################
+  CurbsideStateMachine:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      Name: CurbsidePickup
+      DefinitionUri: statemachine/statemachine.asl.yaml
+      DefinitionSubstitutions:
+        DDBTable: !Ref OrderTable
+        SNSCustomer: !Ref CustomerNotificationTopic
+        SNSBackend: !Ref BackendNotificationTopic
+        SQSPick: !Ref PickQueue
+        SQSRestock: !Ref RestockQueue
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - DynamoDBWritePolicy:
+            TableName: !Ref OrderTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref OrderTable
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt CustomerNotificationTopic.TopicName
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt BackendNotificationTopic.TopicName
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt PickQueue.QueueName
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt RestockQueue.QueueName
+        
+##########################################################################
+#   DynamoDB                                                             #
+##########################################################################
+  OrderTable:
+    Type: AWS::Serverless::SimpleTable # More info about SimpleTable Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-simpletable.html
+    Properties:
+      TableName: CurbsideOrderTable
+      PrimaryKey:
+        Name: id
+        Type: String
+
+##########################################################################
+#   SNS topics                                                           #
+##########################################################################
+  CustomerNotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Endpoint: !Ref CustomerEmail
+          Protocol: email
+  BackendNotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Endpoint: !Ref CustomerEmail
+          Protocol: email
+##########################################################################
+#   SQS Queues                                                           #
+##########################################################################
+  PickQueue:
+    Type: AWS::SQS::Queue
+  RestockQueue:
+    Type: AWS::SQS::Queue
+
+##########################################################################
+#   Lambda Function                                                      #
+##########################################################################
+  PickItem:
+    Type: AWS::Serverless::Function
+    Description: Listen to Pick SQS and update DDB with callback token
+    Properties:
+      CodeUri: functions/
+      Handler: pick-queue.handler
+      Events:
+        PickTrigger:
+          Type: SQS
+          Properties: 
+            Queue: !GetAtt PickQueue.Arn
+            BatchSize: 1
+      Policies:
+        - Statement: # Needed for SendTask
+          - Sid: SendTaskToken
+            Effect: Allow
+            Action:
+            - states:SendTaskSuccess
+            Resource: '*'
+  RestockItem:
+    Type: AWS::Serverless::Function
+    Description: Listen to Restock SQS
+    Properties:
+      CodeUri: functions/
+      Handler: restock-order.handler
+      Events:
+        RestockTrigger:
+          Type: SQS
+          Properties: 
+            Queue: !GetAtt RestockQueue.Arn
+            BatchSize: 1
+  BackendNotification:
+    Type: AWS::Serverless::Function
+    Description: Listen to ReadyPickup SNS and sends webhook to refetch
+    Properties:
+      CodeUri: functions/
+      Handler: backend-notification.handler
+      Events:
+        ReadyTrigger:
+          Type: SNS
+          Properties: 
+            Topic: !Ref BackendNotificationTopic 
+##########################################################################
+#   SAM Policy Connectors                                                #
+##########################################################################
+  PickToOrderTable:
+    Type: AWS::Serverless::Connector
+    Properties:
+      Source:
+        Id: PickItem
+      Destination:
+        Id: OrderTable
+      Permissions:
+        - Read
+        - Write
+  BackendAddTaskToken:
+    Type: AWS::Serverless::Connector
+    Properties:
+      Source:
+        Id: BackendNotification
+      Destination:
+        Id: OrderTable
+      Permissions:
+        - Read
+        - Write
+
+##########################################################################
+#   Frontend APIs                                                        #
+##########################################################################
+  APIProxy:
+    Type: AWS::Serverless::Function
+    Description: Get data from DDB && Post Data to DDB & Token to Statemachine
+    Properties:
+      CodeUri: functions/
+      Handler: api.handler
+      Events:
+        ApiGet:
+          Type: Api
+          Properties:
+            Path: /ddb
+            Method: get
+        ApiCurbside:
+          Type: Api
+          Properties:
+            Path: /task-complete
+            Method: post
+        ApiOrder:
+          Type: Api
+          Properties:
+            Path: /order
+            Method: post
+      Policies: 
+        - DynamoDBWritePolicy:
+            TableName: !Ref OrderTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref OrderTable
+        - Statement: # Needed for SendTask
+          - Sid: SendTaskToken
+            Effect: Allow
+            Action:
+            - states:SendTaskSuccess
+            - states:StartExecution
+            Resource: '*'
+##########################################################################
+#   Outputs                                                             #
+##########################################################################
+Outputs:
+  ApiEndpointURL:
+      Description: "API Gateway Endpoint URL"
+      Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
