@@ -1,0 +1,73 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Chain Of Responsibility
+
+  Sample SAM Template for ATM Dispenser (Chain Of Responsibility Pattern)
+
+Resources:
+  ChainedStateMachine:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      DefinitionUri: statemachine/atm_dispenser_chained.asl.json
+      DefinitionSubstitutions:
+        Handler1FunctionArn: !GetAtt Dispense50Function.Arn
+        Handler2FunctionArn: !GetAtt Dispense20Function.Arn
+        Handler3FunctionArn: !GetAtt Dispense10Function.Arn
+        Handler4FunctionArn: !GetAtt Dispense1Function.Arn
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - LambdaInvokePolicy:
+            FunctionName: !Ref Dispense50Function
+        - LambdaInvokePolicy:
+            FunctionName: !Ref Dispense20Function
+        - LambdaInvokePolicy:
+            FunctionName: !Ref Dispense10Function
+        - LambdaInvokePolicy:
+            FunctionName: !Ref Dispense1Function
+
+  Dispense50Function:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: functions/handler1/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Architectures:
+        - x86_64
+
+  Dispense20Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handler2/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Architectures:
+        - x86_64
+
+  Dispense10Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handler3/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Architectures:
+        - x86_64
+
+  Dispense1Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handler4/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Architectures:
+        - x86_64
+
+
+Outputs:
+  # Find out more about other implicit resources you can reference within SAM
+  # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-specification-generated-resources.html
+  ChainedStateMachineArn:
+    Description: "ATM Dispenser (chain of responsibility pattern) machine ARN"
+    Value: !Ref ChainedStateMachine
+  ChainedStateMachineRoleArn:
+    Description: "IAM Role created for ATM Dispenser (chain of responsibility pattern) machine based on the specified SAM Policy Templates"
+    Value: !GetAtt ChainedStateMachineRole.Arn
