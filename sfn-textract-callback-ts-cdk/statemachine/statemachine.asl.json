@@ -2,36 +2,46 @@
   "StartAt": "textract",
   "States": {
     "textract": {
-      "Next": "Wait for Textract Callback",
+      "Next": "Wait for Textract Callback Token",
       "Type": "Task",
       "ResultPath": "$.Result",
       "Resource": "arn:aws:states:::aws-sdk:textract:startDocumentTextDetection",
       "Parameters": {
         "DocumentLocation": {
-          "S3Object.$": "$.Input"
+          "S3Object": {
+            "Bucket.$": "$.detail.bucket.name",
+            "Name.$": "$.detail.object.key"
+          }
         },
         "NotificationChannel": {
-          "RoleArn": "${ROLE_ARN}",
-          "SnsTopicArn": "${SNS_ARN}"
+          "RoleArn": "TEXTRACT_SNS_NOTIFICATION_ROLE",
+          "SnsTopicArn": "TEXTRACT_SNS_NOTIFICATION_TOPIC"
         },
         "OutputConfig": {
-          "S3Bucket": "${S3_BUCKET}",
+          "S3Bucket": "DESTINATION_BUCKET",
           "S3Prefix": "output"
         }
       }
     },
-    "Wait for Textract Callback": {
+    "Wait for Textract Callback Token": {
       "Next": "Notify Success",
       "Type": "Task",
-      "Resource": "arn:aws:states:::sqs:sendMessage.waitForTaskToken",
+      "Resource": "arn:aws:states:::aws-sdk:dynamodb:putItem.waitForTaskToken",
       "Parameters": {
-        "QueueUrl": "${QUEUE_URL}",
-        "MessageGroupId.$": "$.Result.JobId",
-        "MessageBody": {
-          "MessageTitle": "Task started by Step Functions. Waiting for callback with task token.",
-          "TaskToken.$": "$$.Task.Token"
+        "TableName": "DYNAMODB_CHECKPOINT_TABLE",
+        "Item": {
+          "PK1": {
+            "S.$": "$.Result.JobId"
+          },
+          "TT": {
+            "S.$": "$$.Task.Token"
+          },
+          "STATUS": {
+            "S": "PROCESSING"
+          }
         }
-      }
+      },
+      "TimeoutSeconds": 1800
     },
     "Notify Success": {
       "End": true,
@@ -40,7 +50,7 @@
       "Resource": "arn:aws:states:::aws-sdk:sns:publish",
       "Parameters": {
         "Message": "Success",
-        "TopicArn": "${SUCCESS_TOPIC_ARN}"
+        "TopicArn": "TOPIC_ARN"
       }
     }
   }
