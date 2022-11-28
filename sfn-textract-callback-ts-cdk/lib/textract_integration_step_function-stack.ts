@@ -100,10 +100,6 @@ export class TextractIntegrationStepFunctionStack extends cdk.Stack {
   ) {
     const topic = new cdk.aws_sns.Topic(this, 'FlowTopic');
     const successTopic = new cdk.aws_sns.Topic(this, 'SuccessTopic');
-    const queue = new cdk.aws_sqs.Queue(this, 'Queue', {
-      fifo: true,
-      contentBasedDeduplication: true,
-    });
     const table = new cdk.aws_dynamodb.Table(this, 'CheckPointTable', {
       partitionKey: {
         name: 'PK1',
@@ -216,7 +212,6 @@ export class TextractIntegrationStepFunctionStack extends cdk.Stack {
         },
       },
     );
-    queue.grantSendMessages(stateMachine);
     table.grantReadWriteData(stateMachine);
 
     this.createCallBackFunction(table, topic, stateMachine);
