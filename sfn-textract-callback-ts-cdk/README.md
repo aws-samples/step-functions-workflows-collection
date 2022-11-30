@@ -1,4 +1,4 @@
-# Workflow title
+# sfn-textract-callback
 
 This workflow shows how the Callback pattern can be applied to the asynchronous Textract StartDocumentTextDetection API call.
 
@@ -28,12 +28,13 @@ Important: this application uses various AWS services and there are costs associ
 
 ## How it works
 
-The example demonstrates the integration of the StartDocumentDetection Textract API into Step Functions. The Workflow input is an  S3 bucket and object key. It will begin by processing the object with Textract and then use the Callback method by inserting a Token onto SQS with a GroupID.
+The example demonstrates the integration of the StartDocumentDetection Textract API into Step Functions. The Workflow input is an  S3 bucket and object key. The Step Function will begin by processing the object with Textract and then use the Callback method by creating the Textract JobID with its Callback Token onto DynamoDB.
 
 While waiting for a Callback, the pre-configured SNS notification on the StartDocumentDetection Task will notify a Lambda Function once the Textract JobID has completed. The Lambda Function will then resume the Step Function by returning the callback Token. Once this executes succesfully a message will be sent out through SNS. 
 
 This integration pattern can be reused with other services and tasks with Step Functions.
 
+ 
 ## Image
 Provide an exported .png of the workflow in the `/resources` directory from [Workflow stuio](https://docs.aws.amazon.com/step-functions/latest/dg/workflow-studio.html) and add here.
 
@@ -57,6 +58,15 @@ There are two ways to test the Step Functions Workflow.
   }
 }
 ```
+
+Notes: 
+1. When implementing this workflow in production take care that you change the CDK S3 removalPolicy to your desired settings by removing the below blocks.
+
+```
+removalPolicy: cdk.RemovalPolicy.DESTROY,
+autoDeleteObjects: true,
+```
+2. The 'Wait for Textract Callback Token' state implements a 1800 second timeout for processing of Documents
 
 ## Cleanup
 

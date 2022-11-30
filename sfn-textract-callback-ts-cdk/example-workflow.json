@@ -9,7 +9,7 @@
   "videoId": "",
   "level": "200",
   "framework": "CDK",
-  "services": ["textract", "sns", "sqs", "lambda"],
+  "services": ["textract", "sns", "dynamodb", "lambda"],
   "introBox": {
     "headline": "How it works",
     "text": [

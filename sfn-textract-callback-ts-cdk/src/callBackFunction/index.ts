@@ -9,11 +9,6 @@ import {
   SendTaskSuccessCommandInput,
 } from '@aws-sdk/client-sfn';
 import {
-  DeleteMessageCommand,
-  ReceiveMessageCommand,
-  SQSClient,
-} from '@aws-sdk/client-sqs';
-import {
   DynamoDBDocumentClient,
   PutCommand,
   GetCommand,
@@ -25,8 +20,6 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 
 const sfnClient = new SFNClient({ region: process.env.AWS_REGION });
-const sqsClient = new SQSClient({ region: process.env.AWS_REGION });
-const SQS_QUEUE_URL = process.env.SQS_QUEUE_URL;
 const DDB_TABLE = process.env.DDB_TABLE;
 const ddbClient = new DynamoDBClient({ region: process.env.AWS_REGION });
 const ddbDocClient = DynamoDBDocumentClient.from(ddbClient);
@@ -42,20 +35,12 @@ export const handler = async (
     const jobId = message['JobId'];
     console.log(jobId);
 
-    // const taskTokens = await getSqsTaskToken(jobId);
-
-    // const response = await executeSfnCallBack(taskTokens);
-    // console.log(response);
-
     const taskToken = await getItem({
       TableName: DDB_TABLE,
       Key: {
         PK1: jobId,
       },
     });
-    console.log(taskToken);
-    console.log('taskToken IS:');
-    console.log(taskToken.Item.TT);
     const response = await executeSfnCallBack(taskToken.Item.TT);
     console.log(response);
     await updateItem({
@@ -92,37 +77,6 @@ async function executeSfnCallBack(taskToken: string) {
   }
   return { response: 200, message: 'Callback Executed Succesfully' };
 }
-
-// async function getSqsTaskToken(sqsGroupId: any) {
-//   const params = {
-//     QueueUrl: SQS_QUEUE_URL,
-//     WaitTimeSeconds: 15,
-//     MessageGroupId: sqsGroupId,
-//   };
-//   const command = new ReceiveMessageCommand(params);
-//   const { Messages } = await sqsClient.send(command);
-
-//   const taskTokens: string[] = [];
-
-//   if (Messages?.length) {
-//     await Promise.all(
-//       Messages.map(async (message) => {
-//         if (message.Body?.length) {
-//           const sqsMessage = JSON.parse(message.Body);
-//           taskTokens.push(sqsMessage['TaskToken']);
-//         }
-
-//         const command = new DeleteMessageCommand({
-//           QueueUrl: SQS_QUEUE_URL,
-//           ReceiptHandle: message.ReceiptHandle,
-//         });
-//         await sqsClient.send(command);
-//       }),
-//     );
-//   }
-
-//   return taskTokens;
-// }
 
 async function getItem(queryInput: GetItemCommandInput) {
   try {
