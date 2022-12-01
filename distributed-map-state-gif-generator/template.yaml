@@ -1,0 +1,131 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Gif generator v2
+
+Parameters:
+  SourceBucketName:
+    Type: String
+    Default: 'gif-source-bucket'
+  GifsBucketName:
+    Type: String
+    Default: 'gif-destination-bucket'
+  FmpegLayerARN:
+    Description: "The Arn of a Lambda layer containing ffmpeg. This must be in the same region. You can deploy from serverlessrepo: https://serverlessrepo.aws.amazon.com/#!/applications/us-east-1/145266761615/ffmpeg-lambda-layer "
+    Type: String
+
+Resources:
+  ## S3 buckets
+  SourceBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref SourceBucketName
+      NotificationConfiguration:
+        EventBridgeConfiguration:
+          EventBridgeEnabled: True     
+
+
+  GifsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref GifsBucketName
+
+  StateMachine:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      Name: generateGifDistributed
+      DefinitionUri: statemachine/workflow.asl.json
+      DefinitionSubstitutions:
+        snippets: !Ref LambdaFunctionsnippet
+        generate: !Ref LambdaFunctiongenerate
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - LambdaInvokePolicy:
+            FunctionName: !Ref LambdaFunctionsnippet
+        - LambdaInvokePolicy:
+            FunctionName: !Ref LambdaFunctiongenerate
+        - S3CrudPolicy:
+              BucketName: !Ref SourceBucketName
+        - S3CrudPolicy:
+              BucketName: !Ref GifsBucketName
+        - StepFunctionsExecutionPolicy:
+              StateMachineName: 'generateGifDistributed'
+      Events:
+        EBRule:
+          Type: EventBridgeRule
+          Properties:
+            Pattern:
+              source:
+                - "aws.s3"
+              detail:
+                requestParameters:
+                  bucketName:
+                    - !Ref SourceBucketName
+                  key:
+                    - suffix : ".mov"
+                    - suffix : ".mp4"
+                eventName:
+                  - "PutObject"
+                  - "CompleteMultipartUpload"
+                  
+
+
+
+
+  # Enforce HTTPS only access to S3 bucket #
+  BucketForImagePolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref SourceBucket
+      PolicyDocument:
+        Statement:
+        - Action: s3:*
+          Effect: Deny
+          Principal: "*"
+          Resource:
+          - !Sub "arn:aws:s3:::${SourceBucket}/*"
+          - !Sub "arn:aws:s3:::${SourceBucket}"
+          Condition:
+            Bool:
+              aws:SecureTransport: false
+
+  # Enforce HTTPS only access to S3 bucket #
+  ## Lambda functions
+  LambdaFunctionsnippet:
+      Type: AWS::Serverless::Function 
+      Properties:
+        CodeUri: snippet/function/
+        Handler: app.lambdaHandler
+        Runtime: nodejs16.x
+        Timeout: 30
+        MemorySize: 10240
+        Layers:
+          - !Ref FmpegLayerARN
+        Environment:
+          Variables:
+            SnippetSize: 5
+        Policies:
+          - EventBridgePutEventsPolicy:
+              EventBusName: "default"
+          - S3ReadPolicy:
+              BucketName: !Ref SourceBucketName
+
+
+  LambdaFunctiongenerate:
+      Type: AWS::Serverless::Function 
+      Properties:
+        CodeUri: generate/function/
+        Handler: app.lambdaHandler
+        Runtime: nodejs16.x
+        Timeout: 30
+        MemorySize: 4096
+        Layers:
+          - !Ref FmpegLayerARN
+        Environment:
+          Variables:
+            GenerateFrames: true
+            GifsBucketName: !Ref GifsBucketName
+            SourceBucketName: !Ref SourceBucketName
+        Policies:
+          - S3CrudPolicy:
+              BucketName: !Ref SourceBucketName
+          - S3CrudPolicy:
+              BucketName: !Ref GifsBucketName

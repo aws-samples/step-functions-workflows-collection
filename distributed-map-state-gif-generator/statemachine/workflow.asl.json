@@ -1,0 +1,105 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Tidy paload for manual run",
+  "States": {
+    "Tidy paload for manual run": {
+      "Type": "Pass",
+      "Parameters": {
+        "key.$": "$.detail.requestParameters.key",
+        "bucket.$": "$.detail.requestParameters.bucketName",
+        "chunksFile.$": "States.Format('Chunks-{}.json', $.detail.requestParameters.key)"
+      },
+      "Next": "calculate how many gif chunks"
+    },
+    "calculate how many gif chunks": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "${snippets}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.Payload",
+      "Next": "Save Chunks JSON to S3"
+    },
+    "Save Chunks JSON to S3": {
+      "Type": "Task",
+      "Next": "File Analysis",
+      "Parameters": {
+        "Body.$": "$.Payload.Payload",
+        "Bucket.$": "$.bucket",
+        "Key.$": "$.chunksFile"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:s3:putObject",
+      "ResultPath": "$.chunks"
+    },
+    "File Analysis": {
+      "Type": "Map",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "DISTRIBUTED",
+          "ExecutionType": "STANDARD"
+        },
+        "StartAt": "Generate gif and save to S3",
+        "States": {
+          "Generate gif and save to S3": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+              "Payload.$": "$",
+              "FunctionName": "${generate}"
+            },
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "Lambda.ServiceException",
+                  "Lambda.AWSLambdaException",
+                  "Lambda.SdkClientException"
+                ],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 6,
+                "BackoffRate": 2
+              }
+            ],
+            "End": true,
+            "OutputPath": "$.Payload"
+          }
+        }
+      },
+      "ItemReader": {
+        "Resource": "arn:aws:states:::s3:getObject",
+        "ReaderConfig": {
+          "InputType": "JSON"
+        },
+        "Parameters": {
+          "Bucket.$": "$.bucket",
+          "Key.$": "$.chunksFile"
+        }
+      },
+      "MaxConcurrency": 1000,
+      "Label": "FileAnalysis",
+      "ResultPath": null,
+      "Next": "Gather Results"
+    },
+    "Gather Results": {
+      "Type": "Pass",
+      "Parameters": {
+        "SourceBucket.$": "$.bucket",
+        "key.$": "$.key",
+        "destinationBucket": "gif-destination-bucket"
+      },
+      "End": true
+    }
+  }
+}
