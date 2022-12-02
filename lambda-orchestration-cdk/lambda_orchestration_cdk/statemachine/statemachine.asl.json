@@ -1,0 +1,65 @@
+{
+  "StartAt": "Check Stock Price",
+  "States": {
+    "Check Stock Price": {
+      "Type": "Task",
+      "Resource": "${checkPriceFnArn}",
+      "Next": "Generate Buy/Sell recommendation"
+    },
+    "Generate Buy/Sell recommendation": {
+      "Type": "Task",
+      "Resource": "${BuySellFnArn}",
+      "ResultPath": "$.recommended_type",
+      "Next": "Request Human Approval"
+    },
+    "Request Human Approval": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sqs:sendMessage.waitForTaskToken",
+      "Parameters": {
+        "QueueUrl": "${queueUrl}",
+        "MessageBody": {
+          "Input.$": "$",
+          "TaskToken.$": "$$.Task.Token"
+        }
+      },
+      "ResultPath": null,
+      "Next": "Buy or Sell?"
+    },
+    "Buy or Sell?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.recommended_type",
+          "StringEquals": "buy",
+          "Next": "Buy Stock"
+        },
+        {
+          "Variable": "$.recommended_type",
+          "StringEquals": "sell",
+          "Next": "Sell Stock"
+        }
+      ]
+    },
+    "Buy Stock": {
+      "Type": "Task",
+      "Resource": "${buyFnArn}",
+      "Next": "Report Result"
+    },
+    "Sell Stock": {
+      "Type": "Task",
+      "Resource": "${sellFnArn}",
+      "Next": "Report Result"
+    },
+    "Report Result": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "${topic}",
+        "Message": {
+          "Input.$": "$"
+        }
+      },
+      "End": true
+    }
+}
+}
