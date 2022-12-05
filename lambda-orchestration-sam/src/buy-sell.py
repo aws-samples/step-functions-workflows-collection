@@ -1,26 +1,22 @@
-from boto3 import client 
-import json 
-'''
+from boto3 import client
+import json
+
+"""
 This function simulates a human approving/rejecting a buy/sell recommendation
 
-'''
+"""
 
-sfn_client = client('stepfunctions')
+sfn_client = client("stepfunctions")
 
 
-def handler(event,context):
+def handler(event, context):
 
-    for rec in event['Records']:
+    for rec in event["Records"]:
 
-        msg = json.loads(rec['body'])
+        msg = json.loads(rec["body"])
 
-        _token = msg['TaskToken']
+        _token = msg["TaskToken"]
 
         print(f"Sending Step Functions Success for: ${_token}")
         # send status to state
-        sfn_client.send_task_success(
-            taskToken = _token ,
-            output = "\"approved\""
-        ) 
-
-
+        sfn_client.send_task_success(taskToken=_token, output='"approved"')
