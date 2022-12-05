@@ -3,7 +3,6 @@ import datetime
 import math
 import random
 import uuid
-
 """
 Sample Lambda function simulates selling a random number of shares of a stock.
 For demonstration purposes, this function does not actually perform any transactions but simulates returning transaction details.

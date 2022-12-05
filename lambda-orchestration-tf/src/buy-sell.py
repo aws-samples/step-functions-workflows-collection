@@ -1,6 +1,5 @@
 from boto3 import client
 import json
-
 """
 This function simulates a human approving/rejecting a buy/sell recommendation
 

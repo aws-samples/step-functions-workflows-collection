@@ -1,6 +1,5 @@
 import math
 import random
-
 """ 
 Sample Lambda function which mocks checking the price of a stock.
 For demonstration purposes, this function simply generates a random integer and
