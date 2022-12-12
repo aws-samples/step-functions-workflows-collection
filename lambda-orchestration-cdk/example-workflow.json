@@ -1,0 +1,72 @@
+{
+    "title": "Lambda Orchestration",
+    "description": "Orchestrate a series of Lambda Functions",
+    "language": "",
+    "simplicity": "1 - Fundamental",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "100",
+    "framework": "CDK",
+    "services": ["sns","lambda","sqs"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "This workflow simulates a stock trading process.  The first state simulates checking a stock price by generating a random number representing the price of a stock.  The stage passes this price to the Generate Buy/Sell recommendation state which determines if the trader should buy or sell the stock.  The recommendation is passed to an SQS queue simulating a trader verifying the recommendation and approving it.",
+        "This decision is passed to the Buy or Sell choice state which directs the flow to the proper buy or sell Lambda function.  The result of the trade is sent to an SNS Topic."
+
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        
+        "1. Delete the stack: <code>cdk destroy</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "1. Bootstrap CDK, if needed: <code>cdk bootstrap aws://{your-aws-account-number}/{your-aws-region}</code>",
+        "2. Deploy the stack: <code>cdk deploy</code>"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/lambda-orchestration-cdk/",
+        "templateDir":"lambda-orchestration-cdk",
+        "templateFile": "app.py",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+      {
+        "name": "Mike Ellis",
+        "image": "https://drive.google.com/file/d/1LqP0KSS1rEhhN-0ycQnYwpy6dHwasjeZ/view?usp=drivesdk◊",
+        "bio": "Mike is a Technical Account Manager at AWS who is passionate about serverless and event-driven architectures.",
+        "linkedin": "mike-ellis-3a1589b7"
+      }
+    ]
+  }
+  
