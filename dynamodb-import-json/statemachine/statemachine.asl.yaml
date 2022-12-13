@@ -1,0 +1,61 @@
+Comment: A description of my state machine
+StartAt: Build Params
+States:
+  Build Params:
+    Type: Pass
+    Next: S3 object keys
+    Parameters:
+      BucketName.$: $.detail.bucket.name
+      BucketPrefix.$: >-
+        States.Format('{}/', States.ArrayGetItem(
+        States.StringSplit($.detail.object.key , '/'), 0))
+  S3 object keys:
+    Type: Map
+    ItemProcessor:
+      ProcessorConfig:
+        Mode: DISTRIBUTED
+        ExecutionType: EXPRESS
+      StartAt: Distributed Map - Marshall JSON Data
+      States:
+        Distributed Map - Marshall JSON Data:
+          Type: Task
+          Resource: arn:aws:states:::lambda:invoke
+          OutputPath: $.Payload
+          Parameters:
+            Payload.$: $
+            FunctionName: ${MarshallLambda}
+          Retry:
+            - ErrorEquals:
+                - Lambda.ServiceException
+                - Lambda.AWSLambdaException
+                - Lambda.SdkClientException
+                - Lambda.TooManyRequestsException
+              IntervalSeconds: 2
+              MaxAttempts: 6
+              BackoffRate: 2
+          End: true
+    ItemReader:
+      Resource: arn:aws:states:::s3:listObjectsV2
+      Parameters:
+        Bucket.$: $.BucketName
+        Prefix.$: $.BucketPrefix
+    Label: S3objectkeys
+    MaxConcurrency: 1000
+    Next: DDB API Import-Table
+  DDB API Import-Table:
+    Type: Task
+    Resource: arn:aws:states:::lambda:invoke
+    OutputPath: $.Payload
+    Parameters:
+      Payload.$: $
+      FunctionName: ${ImportTableLambda}
+    Retry:
+      - ErrorEquals:
+          - Lambda.ServiceException
+          - Lambda.AWSLambdaException
+          - Lambda.SdkClientException
+          - Lambda.TooManyRequestsException
+        IntervalSeconds: 2
+        MaxAttempts: 6
+        BackoffRate: 2
+    End: true

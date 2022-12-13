@@ -1,0 +1,70 @@
+{
+    "title": "Human Task with Reminder",
+    "description": "Give Human a Task and send Reminder until complete",
+    "language": "",
+    "simplicity": "2 - Pattern",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "200",
+    "framework": "SAM",
+    "services": ["sns","dynamodb"],
+    "introBox": {
+      "headline": "Human Task with Reminder",
+      "text": [
+        "This application will create a State Machine, an SNS topic, and a DynamoDB Table. The State Machine will create a UUID and save to DDB with Task Status as false. It will then send a Task Token to Human via SNS and wait for task to be completed.  At the same time a loop will start that will Sleep for X seconds and then check Task Status in DDB.  It will send a Reminder and loop to beginning until Task Status is true."
+
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/human-task-reminder/",
+        "templateDir":"human-task-reminder",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/statemachine.asl.yaml"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Jacob Cravinho",
+          "image": "https://drive.google.com/file/d/1ZY-5R7iA33Y7tUDCyLNgb95a9_ciW7WM/view?usp=sharing",
+          "bio": "Jacob is a Sr. Solutions Architect who loves a challenge & is always in search of the next great meal!",
+          "linkedin": "jacob-cravinho",
+          "twitter": ""
+        }
+      ]
+  }
+  
