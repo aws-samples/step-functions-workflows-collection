@@ -1,0 +1,24 @@
+{
+    "TableName": "dist-map-marshall-json",
+    "KeySchema": [
+        {
+            "AttributeName": "UserId",
+            "KeyType": "HASH"
+        },
+        {
+            "AttributeName": "FavoriteProductId",
+            "KeyType": "RANGE"
+        }
+    ],
+    "AttributeDefinitions": [
+        {
+            "AttributeName": "UserId",
+            "AttributeType": "S"
+        },
+        {
+            "AttributeName": "FavoriteProductId",
+            "AttributeType": "S"
+        }
+    ],
+    "BillingMode": "PAY_PER_REQUEST"
+}

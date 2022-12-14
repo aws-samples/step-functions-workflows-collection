@@ -1,23 +1,23 @@
-Comment: A description of my state machine
-StartAt: Build Params
+Comment: Use distributed map to marshall JSON to DDB JSON and import into DDB
+StartAt: Parse S3 Params
 States:
-  Build Params:
+  Parse S3 Params:
     Type: Pass
-    Next: S3 object keys
+    Next: Distributed Map
     Parameters:
       BucketName.$: $.detail.bucket.name
       BucketPrefix.$: >-
         States.Format('{}/', States.ArrayGetItem(
         States.StringSplit($.detail.object.key , '/'), 0))
-  S3 object keys:
+  Distributed Map:
     Type: Map
     ItemProcessor:
       ProcessorConfig:
         Mode: DISTRIBUTED
         ExecutionType: EXPRESS
-      StartAt: Distributed Map - Marshall JSON Data
+      StartAt: Marshall JSON Data
       States:
-        Distributed Map - Marshall JSON Data:
+        Marshall JSON Data:
           Type: Task
           Resource: arn:aws:states:::lambda:invoke
           OutputPath: $.Payload
@@ -39,7 +39,7 @@ States:
       Parameters:
         Bucket.$: $.BucketName
         Prefix.$: $.BucketPrefix
-    Label: S3objectkeys
+    Label: DistributedMap
     MaxConcurrency: 1000
     Next: DDB API Import-Table
   DDB API Import-Table:

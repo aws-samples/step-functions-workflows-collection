@@ -3,23 +3,11 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   dynamodb-import-json
 
-  Sample SAM Template for importing JSON data into 
-
-# Parameters:
-#   # During deployment, this paramter will prompt for the email address of a reviewer.
-#   EmailAddress:
-#     Type: String
-#     Default: moderator@example.com
-#     Description: Enter the email address that will receive task.
-#   # This will set the timeout in the reminder email loop
-#   ReminderTimeoutSec:
-#     Type: Number
-#     Default: 120
-#     Description: Enter Reminder Email Timeout in Seconds
+  Sample SAM Template for importing JSON data into DynamoDb
 
 Globals:
   Function:
-    MemorySize: 2560
+    MemorySize: 2560 #Change to 1.5x end file size
     Architectures: ["arm64"]
     Runtime: nodejs16.x
     Timeout: 300
@@ -28,6 +16,9 @@ Globals:
         S3_BUCKET: !Ref JSONInputBucket
 
 Resources:
+##########################################################################
+#   State Machine Role                                                   #
+##########################################################################
   ApplicationRole:
       Type: AWS::IAM::Role
       Properties:
@@ -81,16 +72,6 @@ Resources:
         MarshallLambda: !Ref MarshallJSON
         ImportTableLambda: !Ref StartDDBImportTable
       Role: !GetAtt ApplicationRole.Arn
-      # Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
-      #   - StepFunctionsExecutionPolicy:
-      #       StateMachineName: "*"
-      #   - S3ReadPolicy:
-      #       BucketName: !Ref JSONInputBucket
-      #   - LambdaInvokePolicy:
-      #       FunctionName: !GetAtt MarshallJSON.Arn
-      #   - LambdaInvokePolicy:
-      #       FunctionName: !GetAtt StartDDBImportTable.Arn
-      # The Step Functions workflow is triggered each time an object is created in our S3 bucket.
       Events:
         StateChange:
           Type: EventBridgeRule

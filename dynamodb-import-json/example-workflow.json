@@ -1,6 +1,6 @@
 {
-    "title": "Human Task with Reminder",
-    "description": "Give Human a Task and send Reminder until complete",
+    "title": "Distributed Map - DynamoDB Import JSON",
+    "description": "Fastest way to marshall JSON data and import to DynamoDB",
     "language": "",
     "simplicity": "2 - Pattern",
     "usecase": "",
@@ -9,11 +9,11 @@
     "videoId": "",
     "level": "200",
     "framework": "SAM",
-    "services": ["sns","dynamodb"],
+    "services": ["eventbridge","lambda","dynamodb","s3"],
     "introBox": {
-      "headline": "Human Task with Reminder",
+      "headline": "Distributed Map - DynamoDB Import JSON",
       "text": [
-        "This application will create a State Machine, an SNS topic, and a DynamoDB Table. The State Machine will create a UUID and save to DDB with Task Status as false. It will then send a Task Token to Human via SNS and wait for task to be completed.  At the same time a loop will start that will Sleep for X seconds and then check Task Status in DDB.  It will send a Reminder and loop to beginning until Task Status is true."
+        "Currently the fastest (and least expensive) way to get data into DynamoDB is to use the ImportTable API call. The problem is that it only accepts CSV, DynamoDB JSON, or ION formats. What if you have a different data format? You would have to build an entire orchestrated process to transform and handle errors. This workflow uses the newly released Distributed Map feature to fix this gap by automating the transformation of JSON to DynamoDB JSON and importing into DynamoDB. The best part is that this workflow can be easily adapted to convert any type of data needed."
 
       ]
     },
@@ -31,13 +31,13 @@
     },
     "deploy": {
       "text": [
-        "sam deploy --guided"
+        "sam build && sam deploy --guided"
       ]
     },
     "gitHub": {
       "template": {
-        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/human-task-reminder/",
-        "templateDir":"human-task-reminder",
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/dynamodb-import-json/",
+        "templateDir":"dynamodb-import-json",
         "templateFile": "template.yaml",
         "ASL": "statemachine/statemachine.asl.yaml"
       },
@@ -51,6 +51,10 @@
     "resources": {
       "headline": "Additional resources",
       "bullets": [
+        {
+          "text": "DynamoDB can now import Amazon S3 data",
+          "link": "https://aws.amazon.com/blogs/database/amazon-dynamodb-can-now-import-amazon-s3-data-into-a-new-table/"
+        },
         {
           "text": "The AWS Step Functions Workshop",
           "link": "https://catalog.workshops.aws/stepfunctions/en-US"
