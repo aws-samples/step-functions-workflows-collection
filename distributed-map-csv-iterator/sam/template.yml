@@ -1,0 +1,159 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  ChildStepFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Service:
+                - 'states.amazonaws.com'
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: AppPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - xray:PutTraceSegments
+                  - xray:PutTelemetryRecords
+                  - xray:GetSamplingRules
+                  - xray:GetSamplingTargets
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:PutItem
+                Resource:
+                  - !GetAtt MetadataTable.Arn
+              - Effect: Allow
+                Action:
+                  - logs:PutLogEvents
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:DescribeLogStreams
+                  - logs:CreateLogDelivery
+                  - logs:GetLogDelivery
+                  - logs:UpdateLogDelivery
+                  - logs:DeleteLogDelivery
+                  - logs:ListLogDeliveries
+                  - logs:PutResourcePolicy
+                  - logs:DescribeResourcePolicies
+                  - logs:DescribeLogGroups
+                Resource:
+                  - '*'
+
+  CSVBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        !Join [
+          '',
+          [!Ref 'AWS::AccountId', '-', !Ref 'AWS::Region', '-metrics-csv'],
+        ]
+
+  MetadataTable:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: 'id'
+          AttributeType: 'S'
+      KeySchema:
+        - AttributeName: 'id'
+          KeyType: 'HASH'
+      BillingMode: 'PAY_PER_REQUEST'
+
+  ChildLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName:
+        !Join [
+          '',
+          [
+            !Ref 'AWS::AccountId',
+            '-',
+            !Ref 'AWS::Region',
+            '-log-group-process-metrics-child',
+          ],
+        ]
+
+  MapStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Type: 'STANDARD'
+      Name:
+        !Join [
+          '',
+          [
+            !Ref 'AWS::AccountId',
+            '-',
+            !Ref 'AWS::Region',
+            '-process-metrics-parent',
+          ],
+        ]
+      DefinitionUri: statemachine.asl.json
+      DefinitionSubstitutions:
+        CSVBucket: !Ref CSVBucket
+        ChildStateMachine: !GetAtt ChildStateMachine.Arn
+        ChildExecutionRole: !GetAtt ChildStepFunctionRole.Arn
+      Tracing:
+        Enabled: true
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref CSVBucket
+        - StepFunctionsExecutionPolicy:
+            StateMachineName:
+              !Join [
+                '',
+                [
+                  !Ref 'AWS::AccountId',
+                  '-',
+                  !Ref 'AWS::Region',
+                  '-process-metrics-parent',
+                ],
+              ]
+        - StepFunctionsExecutionPolicy:
+            StateMachineName:
+              !Join [
+                '',
+                [
+                  !Ref 'AWS::AccountId',
+                  '-',
+                  !Ref 'AWS::Region',
+                  '-process-metrics-child',
+                ],
+              ]
+
+  ChildStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Role: !GetAtt ChildStepFunctionRole.Arn
+      Type: 'EXPRESS'
+      Name:
+        !Join [
+          '',
+          [
+            !Ref 'AWS::AccountId',
+            '-',
+            !Ref 'AWS::Region',
+            '-process-metrics-child',
+          ],
+        ]
+      DefinitionUri: child-statemachine.asl.json
+      DefinitionSubstitutions:
+        MetadataTable: !Ref MetadataTable
+      Tracing:
+        Enabled: true
+      Logging:
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt ChildLogGroup.Arn
+        IncludeExecutionData: true
+        Level: ALL
