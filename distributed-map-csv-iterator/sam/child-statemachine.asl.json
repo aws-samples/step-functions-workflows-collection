@@ -1,0 +1,28 @@
+{
+	"StartAt": "Add Item",
+	"States": {
+		"Add Item": {
+			"Type": "Task",
+			"Resource": "arn:aws:states:::dynamodb:putItem",
+			"Parameters": {
+				"TableName": "${MetadataTable}",
+				"Item": {
+					"id": {
+						"S.$": "$.StatePayload.Content"
+					},
+					"VideoPublishTime": {
+						"S.$": "$.StatePayload.VideoPublishTime"
+					},
+					"VideoTitle": {
+						"S.$": "$.StatePayload.VideoTitle"
+					},
+					"Views": {
+						"N.$": "$.StatePayload.Views"
+					}
+				}
+			},
+			"ResultPath": "$.result",
+			"End": true
+		}
+	}
+}

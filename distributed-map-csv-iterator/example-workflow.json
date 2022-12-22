@@ -1,0 +1,59 @@
+{
+	"title": "Distributed Map with CSV file",
+	"description": "This workflow is an example application of a step function using distributed map. This distributed map iterates over an CSV file that is stored in an S3 bucket.",
+	"language": "",
+	"simplicity": "3 - Application",
+	"usecase": "",
+	"type": "Standard",
+	"diagram": "/resources/statemachine.png",
+	"videoId": "",
+	"level": "100",
+	"framework": "SAM",
+	"services": ["dynamodb", "stepfunctions"],
+	"introBox": {
+		"headline": "How it works",
+		"text": [
+			"This workflow is an example application of a step function using distributed map. This distributed map iterates over an CSV file that is stored in an S3 bucket.",
+			"For processing each item of the file the Step Function will call async another child state machine."
+		]
+	},
+	"testing": {
+		"headline": "Testing",
+		"text": ["See the GitHub repo for detailed testing instructions."]
+	},
+	"cleanup": {
+		"headline": "Cleanup",
+		"text": ["1. Delete the stack: <code>sam delete</code>."]
+	},
+	"deploy": {
+		"text": ["sam deploy --guided"]
+	},
+	"gitHub": {
+		"template": {
+			"repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/distributed-map-csv-iterator/",
+			"templateDir": "sam/",
+			"templateFile": "template.yaml",
+			"ASL": "statemachine/statemachine.asl.json"
+		},
+		"payloads": [
+			{
+				"headline": "",
+				"payloadURL": ""
+			}
+		]
+	},
+	"resources": {
+		"headline": "Additional resources",
+		"bullets": [
+			{
+				"text": "The AWS Step Functions Workshop",
+				"link": "https://catalog.workshops.aws/stepfunctions/en-US"
+			}
+		]
+	},
+	"authors": [
+		{
+			"name": "Marcia Villalba"
+		}
+	]
+}

@@ -1,0 +1,42 @@
+{
+	"StartAt": "Map",
+	"States": {
+		"Map": {
+			"Type": "Map",
+			"ItemProcessor": {
+				"ProcessorConfig": {
+					"Mode": "DISTRIBUTED",
+					"ExecutionType": "EXPRESS"
+				},
+				"StartAt": "Start Child Step Function",
+				"States": {
+					"Start Child Step Function": {
+						"Type": "Task",
+						"Resource": "arn:aws:states:::states:startExecution",
+						"Parameters": {
+							"StateMachineArn": "${ChildStateMachine}",
+							"Input": {
+								"StatePayload.$": "$",
+								"AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+							}
+						},
+						"End": true
+					}
+				}
+			},
+			"End": true,
+			"MaxConcurrency": 100,
+			"ItemReader": {
+				"Resource": "arn:aws:states:::s3:getObject",
+				"ReaderConfig": {
+					"InputType": "CSV",
+					"CSVHeaderLocation": "FIRST_ROW"
+				},
+				"Parameters": {
+					"Bucket": "${CSVBucket}",
+					"Key": "metrics.csv"
+				}
+			}
+		}
+	}
+}
