@@ -1,0 +1,252 @@
+{
+    "Comment": "A state machine to demonstrate using DynamoDB to implement a semaphore",
+    "StartAt": "Get Lock",
+    "States": {
+      "Get Lock": {
+        "Comment": "This parallel state contains the logic to acquire a lock and to handle the cases where a lock cannot be Acquired. Containing this in a parallel allows for visual separation when viewing the state machine and makes it easier to reuse this same logic elsewhere if desired. Because this state sets ResultPath: null, it will not manipulate the execution input that is passed on to the subsequent part of your statemachine that is responsible for doing the work.",
+        "Type": "Parallel",
+        "Branches": [
+          {
+            "StartAt": "Acquire Lock",
+            "States": {
+              "Acquire Lock": {
+                "Comment": "acquire a lock using a conditional update to DynamoDB. This update will do two things: 1) increment a counter for the number of held locks and 2) add an attribute to the DynamoDB Item with a unique key for this execution and with a value of the time when the lock was Acquired. The Update includes a conditional expression that will fail under two circumstances: 1) if the maximum number of locks have already been distributed or 2) if the current execution already owns a lock. The latter check is important to ensure the same execution doesn't increase the counter more than once. If either of these conditions are not met, then the task will fail with a DynamoDB.ConditionalCheckFailedException error, retry a few times, then if it is still not successful, it will move off to another branch of the workflow. If this is the first time that a given lockname has been used, there will not be a row in DynamoDB, so the update will fail with DynamoDB.AmazonDynamoDBException. In that case, this state sends the workflow to state that will create that row to initialize.",
+                "Type": "Task",
+                "Resource": "arn:aws:states:::dynamodb:updateItem",
+                "Parameters": {
+                  "TableName": "${SF_TableSemaphore}",
+                  "Key": {
+                    "LockName": {
+                      "S": "${SF_LockName}"
+                    }
+                  },
+                  "ExpressionAttributeNames":  {
+                    "#currentlockcount": "currentlockcount",
+                    "#lockownerid.$": "$$.Execution.Id"
+                  },
+                  "ExpressionAttributeValues": {
+                    ":increase": {
+                      "N": "1"
+                    },
+                    ":limit": {
+                      "N": "${SF_ConcurrentAccessLimit}"
+                    },
+                    ":lockacquiredtime": {
+                      "S.$": "$$.State.EnteredTime"
+                    }
+                  },
+                  "UpdateExpression": "SET #currentlockcount = #currentlockcount + :increase, #lockownerid = :lockacquiredtime",
+                  "ConditionExpression": "currentlockcount <> :limit and attribute_not_exists(#lockownerid)",
+                  "ReturnValues": "UPDATED_NEW"
+                },
+                "Retry": [ 
+                    {
+                      "ErrorEquals": ["DynamoDB.AmazonDynamoDBException"],
+                      "MaxAttempts": 0
+                    },
+                    {
+                      "ErrorEquals": [ "States.ALL" ],
+                      "MaxAttempts": 6,
+                      "BackoffRate": 2
+                    } 
+                  ], 
+                "Catch": [
+                  {
+                    "ErrorEquals": ["DynamoDB.AmazonDynamoDBException"],
+                    "Next": "Initialize Lock Item",
+                    "ResultPath": "$.lockinfo.acquisitionerror"
+                  },
+                  {
+                    "ErrorEquals": [
+                      "DynamoDB.ConditionalCheckFailedException"
+                    ],
+                    "Next": "Get Current Lock Record",
+                    "ResultPath": "$.lockinfo.acquisitionerror"
+                  }
+                ],
+                "End": true
+              },
+              "Initialize Lock Item": {
+                "Comment": "This state handles the case where an item hasn't been created for this lock yet. In that case, it will insert an initial item that includes the lock name as the key and currentlockcount of 0. The Put to DynamoDB includes a conditonal expression to fail if the an item with that key already exists, which avoids a race condition if multiple executions start at the same time. There are other reasons that the previous state could fail and end up here, so this is safe in those cases too.",
+                "Type": "Task",
+                "Resource": "arn:aws:states:::dynamodb:putItem",
+                "Parameters": {
+                  "TableName": "${SF_TableSemaphore}",
+                  "Item": {
+                    "LockName": {
+                      "S": "${SF_LockName}"
+                    },
+                    "currentlockcount": {
+                        "N": "0"
+                    }
+                  },
+                  "ConditionExpression": "LockName <> :lockname",
+                  "ExpressionAttributeValues": {
+                      ":lockname": {"S": "${SF_LockName}"}
+                  }
+                },
+                "Catch": [
+                  {
+                    "ErrorEquals": [ "States.ALL" ],
+                    "Next": "Acquire Lock",
+                    "ResultPath": null
+                  }
+                ],
+                "Next": "Acquire Lock",
+                "ResultPath": null
+              },
+              "Get Current Lock Record": {
+                "Comment": "This state is called when the execution is unable to acquire a lock because there limit has either been exceeded or because this execution already holds a lock. I that case, this task loads info from DDB for the current lock item so that the right decision can be made in subsequent states.",
+                "Type": "Task",
+                "Resource": "arn:aws:states:::dynamodb:getItem",
+                "Parameters": {
+                  "TableName": "${SF_TableSemaphore}",
+                  "ExpressionAttributeNames":  {
+                    "#lockownerid.$": "$$.Execution.Id"
+                  },
+                  "Key": {
+                    "LockName": {
+                      "S": "${SF_LockName}"
+                    }
+                  },
+                  "ProjectionExpression": "#lockownerid"
+                },
+                "ResultSelector": {
+                  "Item.$": "$.Item",
+                  "ItemString.$": "States.JsonToString($.Item)"
+                },
+                "ResultPath": "$.lockinfo.currentlockitem",
+                "Next": "Check If Lock Already Acquired"
+              },
+              "Check If Lock Already Acquired": {
+                "Comment": "This state checks to see if the current execution already holds a lock. It can tell that by looking for Z, which will be indicative of the timestamp value. That will only be there in the stringified version of the data returned from DDB if this execution holds a lock.",
+                "Type": "Choice",
+                "Choices": [
+                  {
+                    "And": [
+                      {
+                        "Variable": "$.lockinfo.currentlockitem.ItemString",
+                        "IsPresent": true
+                      },
+                      {
+                        "Variable": "$.lockinfo.currentlockitem.ItemString",
+                        "StringMatches": "*Z*"
+                      }
+                     ],
+                     "Next": "Continue Because Lock Was Already Acquired"
+                  }
+                ],
+                "Default": "Wait to Get Lock"
+              },
+              "Continue Because Lock Was Already Acquired": {
+                "Comment": "In this state, we have confimed that lock is already held, so we pass the original execution input into the the function that does the work.",
+                "Type": "Pass",
+                "End": true
+              },
+              "Wait to Get Lock": {
+                "Comment": "If the lock indeed not been succesfully Acquired, then wait for a bit before trying again.",
+                "Type": "Wait",
+                "Seconds": 3,
+                "Next": "Acquire Lock"
+              }
+            
+
+
+            }
+          }
+        ],
+        "ResultPath": null,
+        "Next": "Do Work"
+      },     
+      "Do Work": {
+        "Comment": "This is a placeholder for the actual logic of your workflow. By wrapping this in a parallel state, you should be able to paste in any statemachine defined elsewhere. In this case, to illustrate the behavior, this one will run through some pass states and then call a Lambda function that will sleep for a period before it returns.",
+        "Type": "Parallel",
+        "Branches": [
+          {
+            "StartAt": "Here",
+            "States": {
+              "Here": {
+                "Type": "Pass",
+                "Next": "You"
+              },
+              "You": {
+                "Type": "Pass",
+                "Next": "Do"
+              },
+              "Do": {
+                "Type": "Pass",
+                "Next": "Work"
+              },
+              "Work": {
+                "Type": "Pass",
+                "Next": "Run Lambda Function With Controlled Concurrency"
+              },
+              "Run Lambda Function With Controlled Concurrency": {
+                "Type": "Task",
+                "Resource": "arn:aws:states:::lambda:invoke",
+                "Parameters": {
+                  "FunctionName": "${SF_LambdaARN}",
+                  "Payload": {
+                    "Input.$": "$"
+                  }
+                },
+                "ResultSelector": {
+                  "payload.$": "$.Payload"
+                },
+                "End": true
+              }
+            }
+          }
+        ],
+        "Next": "Release Lock"
+      },
+      "Release Lock": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::dynamodb:updateItem",
+        "Parameters": {
+          "TableName": "${SF_TableSemaphore}",
+          "Key": {
+            "LockName": {
+              "S": "${SF_LockName}"
+            }
+          },
+          "ExpressionAttributeNames":  {
+            "#currentlockcount": "currentlockcount",
+            "#lockownerid.$": "$$.Execution.Id"
+          },
+          "ExpressionAttributeValues": {
+            ":decrease": {
+              "N": "1"
+            }
+          },
+          "UpdateExpression": "SET #currentlockcount = #currentlockcount - :decrease REMOVE #lockownerid",
+          "ConditionExpression": "attribute_exists(#lockownerid)",
+          "ReturnValues": "UPDATED_NEW"
+        },
+        "Retry": [ 
+          {
+            "ErrorEquals": [ "DynamoDB.ConditionalCheckFailedException" ],
+            "MaxAttempts": 0
+          },
+          {
+            "ErrorEquals": [ "States.ALL" ],
+            "MaxAttempts": 5,
+            "BackoffRate": 1.5
+          } ], 
+        "Catch": [
+          {
+            "ErrorEquals": [
+              "DynamoDB.ConditionalCheckFailedException"
+            ],
+            "Next": "Success State",
+            "ResultPath": null
+          }
+        ],
+        "ResultPath": null,
+        "Next": "Success State"
+      },
+      "Success State": {
+        "Type": "Succeed"
+      }
+    }
+  }
