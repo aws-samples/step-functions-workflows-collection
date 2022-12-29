@@ -1,0 +1,94 @@
+{
+    "Comment": "A serverless form processor with a number of useful reference components",
+    "StartAt": "Detect Sentiment",
+    "States": {
+      "Detect Sentiment": {
+      "Type": "Task",
+      "Next": "Generate Ticket ID",
+      "Parameters": {
+        "LanguageCode": "en",
+        "Text.$": "$.message"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:comprehend:detectSentiment",
+      "ResultPath": "$.SentimentResults"
+    },
+      "Generate Ticket ID": {
+      "Type": "Pass",
+      "Next": "Record Transaction",
+      "ResultPath": "$.uuid",
+      "Parameters": {
+        "ticketId.$": "States.UUID()"
+      }
+    },
+      "Record Transaction": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::dynamodb:putItem",
+        "Parameters": {
+          "TableName": "${DDBTable}",
+          "Item": {
+            "formId": {
+              "S.$": "$.uuid.ticketId"
+            },
+            "formData": {
+              "S.$": "States.JsonToString($.message)"
+            },
+            "sentiment": {
+              "S.$": "States.JsonToString($.SentimentResults.Sentiment)"
+            }
+          }
+        },
+        "Retry": [
+          {
+            "ErrorEquals": [
+              "States.TaskFailed"
+            ],
+            "IntervalSeconds": 20,
+            "MaxAttempts": 5,
+            "BackoffRate": 10
+          }
+        ],
+        "ResultPath": "$.ddbPutResult",
+        "Next": "Good Or Bad?"
+      },
+      "Good Or Bad?": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "Variable": "$.SentimentResults.Sentiment",
+            "StringEquals": "NEGATIVE",
+            "Next": "Bad"
+          },
+          {
+            "Variable": "$.SentimentResults.Sentiment",
+            "StringEquals": "POSITIVE",
+            "Next": "Not Bad"
+          }
+        ],
+        "Default": "Not Bad"
+      },
+      "Not Bad": {
+        "Type": "Succeed",
+        "Comment": "not a negative message"
+      },
+      "Bad": {
+        "Type": "Pass",
+        "Comment": "Negative sentiment",
+        "Next": "SNS Publish"
+    },
+    "SNS Publish": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "${TopicName}",
+        "Message": {
+          "message.$": "$.message",
+          "SentimentResults.$": "$.SentimentResults",
+          "ticketId.$": "$.uuid.ticketId"
+        },
+        "Subject": "New Form Submission"
+      },
+      "ResultPath": "$.SNSOutput",
+      "End": true
+    }
+  }
+}
