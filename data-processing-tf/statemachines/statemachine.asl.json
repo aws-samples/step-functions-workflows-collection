@@ -1,0 +1,89 @@
+{
+    "StartAt": "IterateS3Objects",
+    "States": {
+      "IterateS3Objects": {
+        "Type": "Map",
+        "End": true,
+        "Iterator": {
+          "StartAt": "Parallel",
+          "States": {
+            "Parallel": {
+              "Type": "Parallel",
+              "Next": "DynamoDB PutItem",
+              "Branches": [
+                {
+                  "StartAt": "GetObjectAttributes",
+                  "States": {
+                    "GetObjectAttributes": {
+                      "Type": "Task",
+                      "Parameters": {
+                        "Bucket.$": "$.ObjectDetails.Bucket",
+                        "Key.$": "$.ObjectDetails.Key",
+                        "ObjectAttributes": [
+                          "StorageClass",
+                          "ObjectSize"
+                        ]
+                      },
+                      "Resource": "arn:aws:states:::aws-sdk:s3:getObjectAttributes",
+                      "ResultPath": "$.ObjectMetadata",
+                      "End": true
+                    }
+                  }
+                },
+                {
+                  "StartAt": "DetectLabels",
+                  "States": {
+                    "DetectLabels": {
+                      "Type": "Task",
+                      "Parameters": {
+                        "Image": {
+                          "S3Object": {
+                            "Bucket.$": "$.ObjectDetails.Bucket",
+                            "Name.$": "$.ObjectDetails.Key"
+                          }
+                        }
+                      },
+                      "Resource": "arn:aws:states:::aws-sdk:rekognition:detectLabels",
+                      "ResultPath": "$.Labels",
+                      "End": true
+                    }
+                  }
+                }
+              ]
+            },
+            "DynamoDB PutItem": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::dynamodb:putItem",
+              "Parameters": {
+                "TableName": "${SF_TableName}",
+                "Item": {
+                  "id": {
+                    "S.$": "$[0].ObjectDetails.Key"
+                  },
+                  "size": {
+                    "N.$": "States.JsonToString($[0].ObjectMetadata.ObjectSize)"
+                  },
+                  "lastModified": {
+                    "S.$": "$[0].ObjectMetadata.LastModified"
+                  },
+                  "storageClass": {
+                    "S.$": "$[0].ObjectMetadata.StorageClass"
+                  },
+                  "labels": {
+                    "S.$": "States.JsonToString($[1].Labels)"
+                  }
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        "ItemsPath": "$.Objects",
+        "Parameters": {
+          "ObjectIndex.$": "$$.Map.Item.Index",
+          "ObjectDetails.$": "$$.Map.Item.Value"
+        }
+      }
+    },
+    "Comment": "Retrieves objects from S3, processes and stores metadata in DynamoDB"
+  }
