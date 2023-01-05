@@ -1,0 +1,29 @@
+openapi: "3.0.1"
+info:
+  title: "processFormExample"
+  version: "2020-11-06 15:32:29UTC"
+paths:
+  /:
+    post:
+      responses:
+        default:
+          description: "Default response for POST /"
+      x-amazon-apigateway-integration:
+        integrationSubtype: "StepFunctions-StartSyncExecution"
+        credentials: "${APIGWRole}"
+        requestParameters:
+          Input: "$request.body"
+          StateMachineArn: "${StateMachineArn}"
+        payloadFormatVersion: "1.0"
+        type: "aws_proxy"
+        connectionType: "INTERNET"
+x-amazon-apigateway-cors:
+  allowMethods:
+  - "POST"
+  allowHeaders:
+  - "content-type"
+  maxAge: 0
+  allowCredentials: false
+  allowOrigins:
+  - "*"
+x-amazon-apigateway-importexport-version: "1.0"
