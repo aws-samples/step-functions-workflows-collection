@@ -3,7 +3,7 @@
   "description": "Submit a custom event to EventBridge from a Step Function",
   "language": "python",
   "simplicity": "1 - Fundamental",
-  "usecase": "Publish custom events from a Step Function to be consumed by other services.",
+  "usecase": "Publish custom events from a Step Function to be consumed by other services.  This can be useful in a process where orchestration(Step Functions) is required for core processing, but at a certain point, choreography(EventBridge) can notify external processes of a state change.",
   "type": "Standard",
   "diagram": "/resources/statemachine.png",
   "videoId": "",
