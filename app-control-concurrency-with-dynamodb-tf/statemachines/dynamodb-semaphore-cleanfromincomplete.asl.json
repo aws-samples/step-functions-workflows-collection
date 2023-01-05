@@ -1,0 +1,107 @@
+{
+    "Comment": "A state machine that will react to completion events and clean up orphaned locks",
+    "StartAt": "Get Current Lock Item",
+    "States": {
+      "Get Current Lock Item": {
+        "Comment": "Get info from DDB for the lock item to look and see if this specific owner is still holding a lock",
+        "Type": "Task",
+        "Resource": "arn:aws:states:::dynamodb:getItem",
+        "Parameters": {
+          "TableName": "${SF_TableSemaphore}",
+          "ExpressionAttributeNames":  {
+            "#lockownerid.$": "$.detail.executionArn"
+          },
+          "Key": {
+            "LockName": {
+              "S": "${SF_LockName}"
+            }
+          },
+          "ProjectionExpression": "#lockownerid"
+        },
+        "Retry": [ 
+          {
+            "ErrorEquals": [ "States.ALL" ],
+            "IntervalSeconds": 5,
+            "MaxAttempts": 20,
+            "BackoffRate": 1.4
+          } ], 
+        "ResultSelector": {
+          "Item.$": "$.Item",
+          "ItemString.$": "States.JsonToString($.Item)"
+        },
+        "ResultPath": "$.lockinfo.currentlockitem",
+        "Next": "Check If Lock Is Held"
+      },
+      "Check If Lock Is Held": {
+        "Comment": "This state checks to see if the execution in question holds a lock. It can tell that by looking for Z, which will be indicative of the timestamp value. That will only be there in the stringified version of the data returned from DDB if this execution holds a lock",
+        "Type": "Choice",
+        "Choices": [
+          {
+            "And": [
+              {
+                "Variable": "$.lockinfo.currentlockitem.ItemString",
+                "IsPresent": true
+              },
+              {
+                "Variable": "$.lockinfo.currentlockitem.ItemString",
+                "StringMatches": "*Z*"
+              }
+             ],
+             "Next": "Clean Up Lock"
+          }
+        ],
+        "Default": "Success State"
+    },
+    "Clean Up Lock": {
+      "Comment": "If this lockownerid is still there, then clean it up and release the lock",
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:updateItem",
+      "Parameters": {
+        "TableName": "${SF_TableSemaphore}",
+        "Key": {
+          "LockName": {
+            "S": "${SF_LockName}"
+          }
+        },
+        "ExpressionAttributeNames":  {
+          "#currentlockcount": "currentlockcount",
+          "#lockownerid.$": "$.detail.executionArn"
+        },
+        "ExpressionAttributeValues": {
+          ":decrease": {
+            "N": "1"
+          }
+        },
+        "UpdateExpression": "SET #currentlockcount = #currentlockcount - :decrease REMOVE #lockownerid",
+        "ConditionExpression": "attribute_exists(#lockownerid)",
+        "ReturnValues": "UPDATED_NEW"
+      },
+      "Retry": [ 
+        {
+          "ErrorEquals": [ "DynamoDB.ConditionalCheckFailedException" ],
+          "MaxAttempts": 0
+        },
+        {
+          "ErrorEquals": [ "States.ALL" ],
+          "IntervalSeconds": 5,
+          "MaxAttempts": 20,
+          "BackoffRate": 1.4
+        } ], 
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "DynamoDB.ConditionalCheckFailedException"
+          ],
+          "Next": "Success State",
+          "ResultPath": null
+        }
+      ],
+      "ResultPath": null,
+      "Next": "Success State"
+    },
+    "Success State": {
+      "Type": "Succeed"
+    }
+    }
+
+  }
