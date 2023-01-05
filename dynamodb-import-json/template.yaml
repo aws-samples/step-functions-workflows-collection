@@ -1,0 +1,142 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  dynamodb-import-json
+
+  Sample SAM Template for importing JSON data into DynamoDb
+
+Globals:
+  Function:
+    MemorySize: 2560 #Change to 1.5x end file size
+    Architectures: ["arm64"]
+    Runtime: nodejs16.x
+    Timeout: 300
+    Environment:
+      Variables:
+        S3_BUCKET: !Ref JSONInputBucket
+
+Resources:
+##########################################################################
+#   State Machine Role                                                   #
+##########################################################################
+  ApplicationRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Principal:
+                AWS: !Ref "AWS::AccountId"
+                Service:
+                  - states.amazonaws.com
+              Action:
+                - "sts:AssumeRole"
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/AmazonS3FullAccess
+          - arn:aws:iam::aws:policy/CloudWatchFullAccess
+          - arn:aws:iam::aws:policy/AWSXrayFullAccess
+          - arn:aws:iam::aws:policy/AWSStepFunctionsFullAccess
+        Policies:
+          - PolicyName: AppPolicy
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - lambda:InvokeFunction
+                  Resource:
+                    - !GetAtt MarshallJSON.Arn
+                    - !GetAtt StartDDBImportTable.Arn
+
+##########################################################################
+#   S3 Bucket                                                            #
+##########################################################################
+  JSONInputBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      # Amazon EventBridge receives notifications for all events in the bucket.
+      NotificationConfiguration:
+        EventBridgeConfiguration:
+          EventBridgeEnabled: true
+
+##########################################################################
+#   State Machine                                                        #
+##########################################################################
+  ImportJSONStateMachine:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      Name: ImportJSONtoDynamoDb
+      DefinitionUri: statemachine/statemachine.asl.yaml
+      DefinitionSubstitutions:
+        MarshallLambda: !Ref MarshallJSON
+        ImportTableLambda: !Ref StartDDBImportTable
+      Role: !GetAtt ApplicationRole.Arn
+      Events:
+        StateChange:
+          Type: EventBridgeRule
+          Properties:
+            EventBusName: default
+            Pattern:
+              source:
+                - aws.s3
+              detail-type:
+                - Object Created
+              detail:
+                bucket:
+                  name:
+                    - !Ref JSONInputBucket
+                object:
+                  key:
+                    - { "suffix": "start-workflow.json"}
+
+##########################################################################
+#   Lambda Function                                                      #
+##########################################################################
+  MarshallJSON:
+    Type: AWS::Serverless::Function
+    Description: Listen to Pick SQS and update DDB with callback token
+    Properties:
+      CodeUri: functions/
+      Handler: marshall-json-dynamodb.handler
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref JSONInputBucket
+        - S3WritePolicy: 
+            BucketName: !Ref JSONInputBucket
+  StartDDBImportTable:
+    Type: AWS::Serverless::Function
+    Description: Listen to Pick SQS and update DDB with callback token
+    Properties:
+      CodeUri: functions/
+      Handler: start-ddb-importTable.handler
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref JSONInputBucket
+        - Statement: # Needed to start import-table DDB call
+          - Sid: AllowDynamoDBImportAction
+            Effect: Allow
+            Action:
+            - dynamodb:ImportTable
+            - dynamodb:DescribeImport
+            - dynamodb:ListImports
+            Resource: '*'
+        - Statement:
+          - Sid: AllowCloudwatchAccess
+            Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:DescribeLogGroups
+            - logs:DescribeLogStreams
+            - logs:PutLogEvents
+            - logs:PutRetentionPolicy
+            Resource: '*'
+
+##########################################################################
+#   Outputs                                                             #
+##########################################################################
+Outputs:
+  JSONInputBucket:
+    Description: "S3 bucket name"
+    Value: !Ref JSONInputBucket

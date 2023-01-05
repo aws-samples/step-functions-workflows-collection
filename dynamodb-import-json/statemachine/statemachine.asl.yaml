@@ -1,0 +1,61 @@
+Comment: Use distributed map to marshall JSON to DDB JSON and import into DDB
+StartAt: Parse S3 Params
+States:
+  Parse S3 Params:
+    Type: Pass
+    Next: Distributed Map
+    Parameters:
+      BucketName.$: $.detail.bucket.name
+      BucketPrefix.$: >-
+        States.Format('{}/', States.ArrayGetItem(
+        States.StringSplit($.detail.object.key , '/'), 0))
+  Distributed Map:
+    Type: Map
+    ItemProcessor:
+      ProcessorConfig:
+        Mode: DISTRIBUTED
+        ExecutionType: EXPRESS
+      StartAt: Marshall JSON Data
+      States:
+        Marshall JSON Data:
+          Type: Task
+          Resource: arn:aws:states:::lambda:invoke
+          OutputPath: $.Payload
+          Parameters:
+            Payload.$: $
+            FunctionName: ${MarshallLambda}
+          Retry:
+            - ErrorEquals:
+                - Lambda.ServiceException
+                - Lambda.AWSLambdaException
+                - Lambda.SdkClientException
+                - Lambda.TooManyRequestsException
+              IntervalSeconds: 2
+              MaxAttempts: 6
+              BackoffRate: 2
+          End: true
+    ItemReader:
+      Resource: arn:aws:states:::s3:listObjectsV2
+      Parameters:
+        Bucket.$: $.BucketName
+        Prefix.$: $.BucketPrefix
+    Label: DistributedMap
+    MaxConcurrency: 1000
+    Next: DDB API Import-Table
+  DDB API Import-Table:
+    Type: Task
+    Resource: arn:aws:states:::lambda:invoke
+    OutputPath: $.Payload
+    Parameters:
+      Payload.$: $
+      FunctionName: ${ImportTableLambda}
+    Retry:
+      - ErrorEquals:
+          - Lambda.ServiceException
+          - Lambda.AWSLambdaException
+          - Lambda.SdkClientException
+          - Lambda.TooManyRequestsException
+        IntervalSeconds: 2
+        MaxAttempts: 6
+        BackoffRate: 2
+    End: true

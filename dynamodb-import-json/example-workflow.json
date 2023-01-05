@@ -1,0 +1,74 @@
+{
+    "title": "Distributed Map - DynamoDB Import JSON",
+    "description": "Fastest way to marshall JSON data and import to DynamoDB",
+    "language": "",
+    "simplicity": "2 - Pattern",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "200",
+    "framework": "SAM",
+    "services": ["eventbridge","lambda","dynamodb","s3"],
+    "introBox": {
+      "headline": "Distributed Map - DynamoDB Import JSON",
+      "text": [
+        "Currently the fastest (and least expensive) way to get data into DynamoDB is to use the ImportTable API call. The problem is that it only accepts CSV, DynamoDB JSON, or ION formats. What if you have a different data format? You would have to build an entire orchestrated process to transform and handle errors. This workflow uses the newly released Distributed Map feature to fix this gap by automating the transformation of JSON to DynamoDB JSON and importing into DynamoDB. The best part is that this workflow can be easily adapted to convert any type of data needed."
+
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam build && sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/dynamodb-import-json/",
+        "templateDir":"dynamodb-import-json",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/statemachine.asl.yaml"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "DynamoDB can now import Amazon S3 data",
+          "link": "https://aws.amazon.com/blogs/database/amazon-dynamodb-can-now-import-amazon-s3-data-into-a-new-table/"
+        },
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Jacob Cravinho",
+          "image": "https://drive.google.com/file/d/1ZY-5R7iA33Y7tUDCyLNgb95a9_ciW7WM/view?usp=sharing",
+          "bio": "Jacob is a Sr. Solutions Architect who loves a challenge & is always in search of the next great meal!",
+          "linkedin": "jacob-cravinho",
+          "twitter": ""
+        }
+      ]
+  }
+  
