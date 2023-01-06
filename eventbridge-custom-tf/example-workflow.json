@@ -1,72 +1,75 @@
 {
-    "title": "EventBridge Custom Event",
-    "description": "Submit a custom event to EventBridge from a Step Function",
-    "language": "Python",
-    "simplicity": "1 - Fundamental",
-    "usecase": "Publish custom events from a Step Function to be consumed by other services.",
-    "type": "Standard",
-    "diagram":"/resources/statemachine.png",
-    "videoId": "",
-    "level": "100",
-    "framework": "Terraform",
-    "services": ["sns","eventbridge","sqs","stepfunctions"],
-    "introBox": {
-      "headline": "How it works",
-      "text": [
-        "This workflow demonstrates how to use Step Functions to send a custom event to an Event Bridge bus.  The bus contains a rule which matches the event pattern emitted by the Step Function.",
-        "The targets (SNS, Lambda, and SQS) will subsequently process the emitted event."
-
-      ]
+  "title": "EventBridge Custom Event",
+  "description": "Submit a custom event to EventBridge from a Step Function",
+  "language": "Python",
+  "simplicity": "1 - Fundamental",
+  "usecase": "Publish custom events from a Step Function to be consumed by other services.  This can be useful in a process where orchestration(Step Functions) is required for core processing, but at a certain point, choreography(EventBridge) can notify external processes of a state change.",
+  "type": "Standard",
+  "diagram": "/resources/statemachine.png",
+  "videoId": "",
+  "level": "100",
+  "framework": "Terraform",
+  "services": [
+    "sns",
+    "eventbridge",
+    "sqs",
+    "stepfunctions"
+  ],
+  "introBox": {
+    "headline": "How it works",
+    "text": [
+      "This workflow demonstrates how to use Step Functions to send a custom event to an Event Bridge bus.  The bus contains a rule which matches the event pattern emitted by the Step Function.",
+      "The targets (SNS, Lambda, and SQS) will subsequently process the emitted event."
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": [
+      "See the GitHub repo for detailed testing instructions."
+    ]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": [
+      "1. Delete the stack: <code>terraform destroy</code>."
+    ]
+  },
+  "deploy": {
+    "text": [
+      "Ensure your AWS credentials and profile are in place",
+      "1. <code>terraform init</code>",
+      "2. <code>terraform apply</code>"
+    ]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/eventbridge-custom-tf/",
+      "templateDir": "eventbridge-custom-tf",
+      "templateFile": "main.tf",
+      "ASL": "statemachine/statemachine.asl.json"
     },
-    "testing": {
-      "headline": "Testing",
-      "text": [
-        "See the GitHub repo for detailed testing instructions."
-      ]
-    },
-    "cleanup": {
-      "headline": "Cleanup",
-      "text": [
-        "1. Delete the stack: <code>terraform destroy</code>."
-       
-      ]
-    },
-    "deploy": {
-      "text": [
-        "Ensure your AWS credentials and profile are in place",
-        "1. <code>terraform init</code>",
-        "2. <code>terraform apply</code>"
-      ]
-    },
-    "gitHub": {
-      "template": {
-        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/eventbridge-custom-tf/",
-        "templateDir":"eventbridge-custom-tf",
-        "templateFile": "main.tf",
-        "ASL": "statemachine/statemachine.asl.json"
-      },
-      "payloads": [
-        {
-          "headline": "",
-          "payloadURL": ""
-        }
-      ]
-    },
-    "resources": {
-      "headline": "Additional resources",
-      "bullets": [
-        {
-          "text": "The AWS Step Functions Workshop",
-          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
-        }
-      ]
-    },
-    "authors": [{
+    "payloads": [
+      {
+        "headline": "",
+        "payloadURL": ""
+      }
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "The AWS Step Functions Workshop",
+        "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+      }
+    ]
+  },
+  "authors": [
+    {
       "name": "Mike Ellis",
       "image": "https://drive.google.com/file/d/1LqP0KSS1rEhhN-0ycQnYwpy6dHwasjeZ/view?usp=drivesdk◊",
       "bio": "Mike is a Technical Account Manager at AWS.",
       "linkedin": "mike-ellis-3a1589b7"
     }
-      ]
-  }
-  
+  ]
+}
