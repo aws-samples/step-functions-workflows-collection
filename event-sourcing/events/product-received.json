@@ -1,0 +1,16 @@
+{
+    "version": "0",
+    "id": "cea70530-641d-9b53-1146-44c075c6ff77",
+    "detail": {
+      "ProductEvent": {
+        "eventId": "100",
+        "eventType": "productReceived",
+        "eventCategory": "inventory",
+        "productId": "100",
+        "quantity": "150",
+        "unitPrice": "$4",
+        "color": "blk",
+        "size": "4.3 lbs"
+      }
+    }
+  }
