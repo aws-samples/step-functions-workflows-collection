@@ -39,6 +39,10 @@ class IngestAndAnalyzeHistoricalStormEventsStack(Stack):
 
     def build_data_analytics(self, source_bucket):
         formatted_files_prefix = "formatted"
+        details_prefix = "details"
+        locations_prefix = "locations"
+        fatalities_prefix = "fatalities"
+
         severe_weather_glue_db = \
             glue.CfnDatabase(self, "StormEventsDatabase",
                              catalog_id=os.environ["CDK_DEFAULT_ACCOUNT"],
@@ -79,8 +83,16 @@ class IngestAndAnalyzeHistoricalStormEventsStack(Stack):
                             update_behavior="UPDATE_IN_DATABASE"
                         ),
                         targets=glue.CfnCrawler.TargetsProperty(
-                            s3_targets=[glue.CfnCrawler.S3TargetProperty(
-                                path=f"s3://{source_bucket.bucket_name}/{formatted_files_prefix}/",
-                            )]
+                            s3_targets=[
+                                glue.CfnCrawler.S3TargetProperty(
+                                    path=f"s3://{source_bucket.bucket_name}/{formatted_files_prefix}/{details_prefix}/",
+                                ),
+                                glue.CfnCrawler.S3TargetProperty(
+                                    path=f"s3://{source_bucket.bucket_name}/{formatted_files_prefix}/{locations_prefix}/",
+                                ),
+                                glue.CfnCrawler.S3TargetProperty(
+                                    path=f"s3://{source_bucket.bucket_name}/{formatted_files_prefix}/{fatalities_prefix}/",
+                                ),
+                            ]
                         ),
                         )
