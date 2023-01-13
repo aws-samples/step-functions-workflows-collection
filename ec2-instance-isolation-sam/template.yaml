@@ -1,0 +1,90 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Step Functions Workflow - EC2 instance isolation
+
+Parameters:
+  VPC:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC to deploy forensic instance in
+
+Resources:
+  ##########################################################################
+  #   IAM Role with EC2 acccess                                            #
+  ##########################################################################
+  EC2IsolationSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Forensic Instance - allows ssh egress
+      VpcId: !Ref VPC
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+  ##########################################################################
+  #   IAM Role with EC2 acccess                                            #
+  ##########################################################################
+  EC2IsolationStateMachineRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - "sts:AssumeRole"
+            Effect: Allow
+            Principal:
+              Service:
+                - states.amazonaws.com
+      ManagedPolicyArns: []
+      Policies:
+        - PolicyName: EC2InstanceEditPolicy
+          PolicyDocument:
+            Statement:
+              - Action:
+                  - "ec2:DescribeInstances"
+                  - "ec2:ModifyInstanceAttribute"
+                  - "autoscaling:DescribeAutoScalingGroups"
+                  - "autoscaling:DescribeAutoScalingInstances"
+                  - "autoscaling:DetachInstances"
+                  - "ec2:RunInstances"
+                  - "ec2:CreateSnapshot"
+                  - "ec2:DescribeSnapshots"
+                  - "ec2:CreateVolume"
+                  - "ec2:DescribeVolumes"
+                  - "ec2:AttachVolume"
+                  - "ec2:AuthorizeSecurityGroupIngress"
+                  - "ec2:CreateTags"
+                Resource: "*"
+                Effect: Allow
+        - PolicyName: CloudWatchLogsPolicy
+          PolicyDocument:
+            Statement:
+              - Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: !Sub "arn:${AWS::Partition}:logs:*:*:*"
+                Effect: Allow
+
+  ##########################################################################
+  #   State Machine                                                        #
+  ##########################################################################
+  EC2IsolationStateMachine:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      Name: EC2InstanceIsolationStateMachine
+      DefinitionUri: statemachine/statemachine.asl.json
+      DefinitionSubstitutions:
+        EC2IsolationSecurityGroup: !Ref EC2IsolationSecurityGroup
+      Role: !GetAtt EC2IsolationStateMachineRole.Arn
+
+# List all common outputs for usage
+Outputs:
+  StepFunctionConsoleUrl:
+    Value: !Sub
+      - "https://${AWS::Region}.console.aws.amazon.com/states/home?region=${AWS::Region}#/statemachines/view/${EC2IsolationStateMachine}"
+      - StepFunction: !Ref EC2IsolationStateMachine
+  StepFunctionArn:
+    Value: !Ref EC2IsolationStateMachine
