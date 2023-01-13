@@ -1,9 +1,9 @@
 
 # Distributed Map - Ingest and Analyze Historical Storm Events
 
-This is a blank project for CDK development with Python.
+This application will create a State Machine with AWS Lambda, AWS Glue crawler, Amazon Athena services to ingest and read weather related data files.
+The weather files are in zipped format and can be obtained from the website - https://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/. AWS Lambda function decompresses these zipped files and put them in appropriate S3 folders in a S3 bucket with a success. AWS Glue crawler is used to determine and define the schema of these decompressed files with a success. Athena is used to query this data using standard SQL in a table format with a success and the file is stored in Amazon S3 folder where the query results are stored. The user can view the end results from this Amazon S3 folder.
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
 
 ## Requirements
 
@@ -22,7 +22,7 @@ To manually create a virtualenv on MacOS and Linux:
 $ python3 -m venv .venv
 ```
 
-After the init process completes and the virtualenv is created, you can use the following
+After the init process completes, and the virtualenv is created, you can use the following
 step to activate your virtualenv.
 
 ```

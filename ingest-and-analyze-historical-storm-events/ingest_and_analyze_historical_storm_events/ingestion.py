@@ -93,6 +93,7 @@ class IngestionWorkflow(Construct):
                                    "StormEventsAthenaWorkgroup",
                                    name="storm_events_workgroup",
                                    state="ENABLED",
+                                   recursive_delete_option=True,
                                    work_group_configuration=athena.CfnWorkGroup.WorkGroupConfigurationProperty(
                                        enforce_work_group_configuration=False,
                                        engine_version=athena.CfnWorkGroup.EngineVersionProperty(

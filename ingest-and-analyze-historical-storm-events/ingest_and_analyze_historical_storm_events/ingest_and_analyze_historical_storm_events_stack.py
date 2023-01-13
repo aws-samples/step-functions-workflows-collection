@@ -16,8 +16,8 @@ from aws_cdk import (
 from constructs import Construct
 from ingest_and_analyze_historical_storm_events.ingestion import IngestionWorkflow
 
+STORM_EVENTS_CRAWLER_NAME = "storm_events_data_crawler"
 
-STORM_EVENTS_CRAWLER_NAME ="storm_events_data_crawler"
 
 class IngestAndAnalyzeHistoricalStormEventsStack(Stack):
 
@@ -26,9 +26,9 @@ class IngestAndAnalyzeHistoricalStormEventsStack(Stack):
 
         source_bucket = self.build_source_bucket()
         self.build_data_analytics(source_bucket=source_bucket)
-        ingestion_workflow = IngestionWorkflow(self, "IngestionWorkflowBuilder", source_bucket , crawler_name=STORM_EVENTS_CRAWLER_NAME)
+        ingestion_workflow = IngestionWorkflow(self, "IngestionWorkflowBuilder", source_bucket,
+                                               crawler_name=STORM_EVENTS_CRAWLER_NAME)
         ingestion_workflow.build()
-
 
     def build_source_bucket(self):
         return s3.Bucket(self, 'StormEventsSourceBucket',
