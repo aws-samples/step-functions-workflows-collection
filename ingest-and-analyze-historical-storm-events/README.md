@@ -61,5 +61,7 @@ command.
 
 
 ## How it works
+
+Create raw_source 
 ![image](./resources/stepfunctions_graph.png)
 

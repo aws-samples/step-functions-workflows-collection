@@ -72,11 +72,11 @@ class IngestAndAnalyzeHistoricalStormEventsStack(Stack):
                         name=STORM_EVENTS_CRAWLER_NAME,
                         role=glue_crawler_role.role_arn,
                         recrawl_policy=glue.CfnCrawler.RecrawlPolicyProperty(
-                            recrawl_behavior="CRAWL_NEW_FOLDERS_ONLY"
+                            recrawl_behavior="CRAWL_EVERYTHING"
                         ),
                         schema_change_policy=glue.CfnCrawler.SchemaChangePolicyProperty(
-                            delete_behavior="LOG",
-                            update_behavior="LOG"
+                            delete_behavior="DEPRECATE_IN_DATABASE",
+                            update_behavior="UPDATE_IN_DATABASE"
                         ),
                         targets=glue.CfnCrawler.TargetsProperty(
                             s3_targets=[glue.CfnCrawler.S3TargetProperty(
