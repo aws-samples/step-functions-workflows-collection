@@ -1,9 +1,13 @@
 
-# Welcome to your CDK Python project!
+# Distributed Map - Ingest and Analyze Historical Storm Events
 
 This is a blank project for CDK development with Python.
 
 The `cdk.json` file tells the CDK Toolkit how to execute your app.
+
+## Requirements
+
+## Deployment Instructions
 
 This project is set up like a standard Python project.  The initialization
 process also creates a virtualenv within this project, stored under the `.venv`
@@ -55,4 +59,7 @@ command.
  * `cdk diff`        compare deployed stack with current state
  * `cdk docs`        open CDK documentation
 
-Enjoy!
+
+## How it works
+![image](./resources/stepfunctions_graph.png)
+
