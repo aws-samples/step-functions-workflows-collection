@@ -1,0 +1,87 @@
+{
+    "title": "Synchronous Job",
+    "description": "Wait for an asynchroous Job to finish before moving onto the next state",
+    "language": "",
+    "simplicity": "3 - Application",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/stepfunctions_graph.png",
+    "videoId": "",
+    "level": "300",
+    "framework": "CDK",
+    "services": ["Step function","AWS Glue" , "AWS Athena" , "S3"],
+    "introBox": {
+      "headline": "Ingest and Analyze historical storm events using the Step Functions Distributed Map and Athena",
+      "text": [
+        "In this workflow we will use the distributed map feature of AWS Step functions by iterating over the raw files (.gz) in the S3 bucket and decompressing them at scale. In the same orchestration process we will leverage glue crawler to create/update the schema of the storm events. Once the crawl is process is complete, the step function will invoke the Athena query to retrieve the infomrmation from the decompressed .csv files"
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. cdk destroy"
+      ]
+    },
+    "deploy": {
+      "text": [
+        "cdk deploy"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/ingest-and-analyze-historical-storm-events/",
+        "templateDir":"ingest-and-analyze-historical-storm-events",
+        "templateFile": "app.py",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        },
+        {
+          "text": "CDK Workshop",
+          "link": "https://cdkworkshop.com/"
+        },
+        {
+          "text": "NOAA Storm Events Raw Files",
+          "link": "https://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/"
+        },
+        {
+          "text": "National Centers for Environmental Information",
+          "link": "https://www.ncei.noaa.gov/"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Revanth Anireddy",
+          "image": "https://twitter.com/revanthreddy/photo",
+          "bio": "Prinicpal Cloud Application Architect @ AWS",
+          "linkedin": "https://www.linkedin.com/in/revanth-anireddy-b7676616/",
+          "twitter": "https://twitter.com/revanthreddy"
+        },
+        {
+          "name": "Praveen Marthala",
+          "image": "",
+          "bio": "",
+          "linkedin": "",
+          "twitter": ""
+        }
+      ]
+  }
