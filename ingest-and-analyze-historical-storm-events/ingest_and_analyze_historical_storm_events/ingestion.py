@@ -2,7 +2,7 @@ from aws_cdk import (
     aws_stepfunctions as sfn,
     aws_lambda_python_alpha as python,
     aws_iam as iam,
-    aws_stepfunctions_tasks as sfn_tasks,
+    aws_athena as athena,
     Aws, Duration
 )
 import json
@@ -10,6 +10,10 @@ import json
 from aws_cdk.aws_lambda import Runtime
 from constructs import Construct
 
+RAW_SOURCE_PREFIX = "raw_source"
+ATHENA_RESULTS_PREFIX = "athena_results"
+FORMATTED_RESULTS_PREFIX = "formatted"
+WAIT_TIME_IN_SECS = 25
 
 class IngestionWorkflow(Construct):
     def __init__(
@@ -29,7 +33,11 @@ class IngestionWorkflow(Construct):
                                            )
 
         ingestion_workflow_role.add_to_policy(iam.PolicyStatement(
-            resources=[f"{self.source_bucket.bucket_arn}"],
+            resources=[
+                f"{self.source_bucket.bucket_arn}",
+                f"{self.source_bucket.bucket_arn}/{FORMATTED_RESULTS_PREFIX}/*",
+                f"{self.source_bucket.bucket_arn}/{ATHENA_RESULTS_PREFIX}/*",
+            ],
             actions=["s3:*"]
         ))
 
@@ -45,7 +53,11 @@ class IngestionWorkflow(Construct):
 
         ingestion_workflow_role.add_to_policy(iam.PolicyStatement(
             resources=["*"],
-            actions=["glue:startCrawler", "glue:getCrawler"]
+            actions=["glue:*"]
+        ))
+        ingestion_workflow_role.add_to_policy(iam.PolicyStatement(
+            resources=["*"],
+            actions=["athena:*"]
         ))
 
         return ingestion_workflow_role
@@ -76,9 +88,30 @@ class IngestionWorkflow(Construct):
                                      timeout=Duration.minutes(10)
                                      )
 
+    def build_athena_workgroup(self):
+        return athena.CfnWorkGroup(self,
+                                   "StormEventsAthenaWorkgroup",
+                                   name="storm_events_workgroup",
+                                   state="ENABLED",
+                                   work_group_configuration=athena.CfnWorkGroup.WorkGroupConfigurationProperty(
+                                       enforce_work_group_configuration=False,
+                                       engine_version=athena.CfnWorkGroup.EngineVersionProperty(
+                                           effective_engine_version="Athena engine version 2",
+                                           selected_engine_version="AUTO"
+                                       ),
+                                       publish_cloud_watch_metrics_enabled=False,
+                                       requester_pays_enabled=False,
+                                       result_configuration=athena.CfnWorkGroup.ResultConfigurationProperty(
+                                           output_location=f"s3://{self.source_bucket.bucket_name}/{ATHENA_RESULTS_PREFIX}"
+                                       )
+                                   )
+
+                                   )
+
     def build(self):
         decompress_lambda = self.build_decompress_lambda()
-        asl = self.build_ingestion_workflow_definition(decompress_lambda.function_arn)
+        athena_workgroup = self.build_athena_workgroup()
+        asl = self.build_ingestion_workflow_definition(decompress_lambda.function_arn , athena_workgroup.name)
         role = self.get_ingestion_workflow_role()
 
         role.add_to_policy(iam.PolicyStatement(
@@ -86,12 +119,13 @@ class IngestionWorkflow(Construct):
             actions=["lambda:InvokeFunction"]
         ))
 
+
         sfn.CfnStateMachine(self, "IngestAndAnalyzeStormEvents",
                             definition=asl,
                             role_arn=role.role_arn
                             )
 
-    def build_ingestion_workflow_definition(self, decompress_lambda_arn):
+    def build_ingestion_workflow_definition(self, decompress_lambda_arn, athena_workgroupname):
         asl = {
             "Comment": "A description of my state machine",
             "StartAt": "IngestFromS3",
@@ -140,7 +174,7 @@ class IngestionWorkflow(Construct):
                         "Resource": "arn:aws:states:::s3:listObjectsV2",
                         "Parameters": {
                             "Bucket": self.source_bucket.bucket_name,
-                            "Prefix": "raw_source/"
+                            "Prefix": f"{RAW_SOURCE_PREFIX}/"
                         }
                     },
                     "ItemBatcher": {
@@ -158,7 +192,7 @@ class IngestionWorkflow(Construct):
                 },
                 "Wait": {
                     "Type": "Wait",
-                    "Seconds": 60,
+                    "Seconds": WAIT_TIME_IN_SECS,
                     "Next": "GetCrawler"
                 },
                 "GetCrawler": {
@@ -182,8 +216,21 @@ class IngestionWorkflow(Construct):
                 },
                 "Ingestion Complete": {
                     "Type": "Pass",
-                    "End": True
-                }
+                    "Next": "Athena StartQueryExecution"
+                },
+                "Athena StartQueryExecution": {
+                    "End": True,
+                    "Parameters": {
+                        "QueryString": "SELECT * FROM details limit 10;",
+                        "WorkGroup": athena_workgroupname,
+                        "QueryExecutionContext": {
+                            "Database": "storm_events_db",
+                            "Catalog": "AwsDataCatalog"
+                        }
+                    },
+                    "Resource": "arn:aws:states:::athena:startQueryExecution.sync",
+                    "Type": "Task"
+                },
             }
         }
 
