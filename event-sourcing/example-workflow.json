@@ -9,13 +9,13 @@
     "videoId": "",
     "level": "200",
     "framework": "SAM",
-    "services": ["dynamodb","eventbridge","sfn","lambda"],
+    "services": ["dynamodb","sfn","lambda"],
     "introBox": {
       "headline": "How it works",
       "text": [
-        "An AWS Step Functions workflow is used to route the incoming events and to route the Commands and Queries to respective branches within the workflow. To demonstrate CQRS Design Pattern, Commands and Queries has different data access patterns and uses different data sources. ",
-        "Workflow is triggered by Amazon EventBridge events. Based on event properties, a state routes events to respective handlers. An order creation command is handled directly in the workflow and persisted in the Amazon DynamoDB table. Created orders are captured by an Amazon DynamoDB stream, transformed by an AWS Lambda function and stored in Amazon Aurora Serverless v2 MySQL-Compatible Edition database. Query events received are then routed to respective Lambda functions, which gets the data from Aurora Serverless v2 and sends the results to EventBridge."
-      ]
+        "Event Sourcing pattern ensures that all changes to application state are stored as a sequence of events. Not just can we query these events, we can also use the event log to reconstruct past states, and as a foundation to automatically adjust the state to cope with retroactive changes.",
+        "The example implementation demonstrates implementation of event sourcing pattern to capture product inventory state changes. All product inventory events are sent to a Step Function workflow, which executes series of task and persists the state of product as a sequence of state-changing events. Each task contains mock logic that processes a specific product event (ex: productReceived, ProductShipped etc.). It then passes on the updated product state to the next processing task. The updated product state along with event which caused the state change is stored in the Product Inventory Event log. ",
+       ]
     },
     "testing": {
       "headline": "Testing",
