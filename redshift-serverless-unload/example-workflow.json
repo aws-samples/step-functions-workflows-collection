@@ -1,0 +1,74 @@
+{
+  "title": "Redshift Serverless UNLOAD",
+  "description": "Execute an UNLOAD query on Amazon Redshift Serverless",
+  "language": "",
+  "simplicity": "2 - Pattern",
+  "usecase": "",
+  "type": "Standard",
+  "diagram": "/resources/statemachine.png",
+  "videoId": "",
+  "level": "100",
+  "framework": "CDK",
+  "services": ["redshift", "s3"],
+  "introBox": {
+    "headline": "How it works",
+    "text": [
+      "This workflow executes an UNLOAD query on Amazon Redshift Serverless via the Amazon Redshift Data API and stores the results in an Amazon S3 bucket.",
+      "As input, this workflow expects the name of a Redshift Serverless workgroup, database, and the query to be executed.",
+      "As output, this workflow provides a list of objects in S3 that contain the query results data.",
+      "The Redshift UNLOAD command unloads the result of a query to one or more text, JSON, or Apache Parquet files on Amazon S3, using Amazon S3 server-side encryption (SSE-S3).",
+      "Learn more about the UNLOAD command in the Amazon Redshift Database Developer Guide (see resources)."
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": ["See the GitHub repo for detailed testing instructions."]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": ["1. Delete the stack: <code>npx cdk destroy</code>."]
+  },
+  "deploy": {
+    "text": ["npx cdk deploy"]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/redshift-serverless-unload/",
+      "templateDir": "redshift-serverless-unload/lib",
+      "templateFile": "redshift-serverless-unload-stack.ts",
+      "ASL": "statemachine/statemachine.asl.json"
+    },
+    "payloads": [
+      {
+        "headline": "",
+        "payloadURL": ""
+      }
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "Amazon Redshift UNLOAD command",
+        "link": "https://docs.aws.amazon.com/redshift/latest/dg/r_UNLOAD.html"
+      },
+      {
+        "text": "Amazon Redshift Data API",
+        "link": "https://docs.aws.amazon.com/redshift/latest/mgmt/data-api.html"
+      },
+      {
+        "text": "The AWS Step Functions Workshop",
+        "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Pascal Vogel",
+      "image": "https://avatars.githubusercontent.com/u/100202393?v=4",
+      "bio": "Pascal Vogel is a Solutions Architect at Amazon Web Services (AWS).",
+      "linkedin": "pascal-vogel",
+      "twitter": "pvogel_"
+    }
+  ]
+}
