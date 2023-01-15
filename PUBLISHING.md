@@ -52,7 +52,7 @@ Create a new local branch for each workflow or modification being made. This all
 
 Now is the time to create your new workflow or modify existing code.
 
-1. If you are creating a new workflow, copy the folder named "_workflow-model" to start with a template: `cp -r _workflow-model {new-folder-name}`
+1. If you are creating a new workflow, copy the folder named "_workflow_model" to start with a template: `cp -r _workflow_model {new-folder-name}`
 1. If you are modifying existing code, make your code changes now.
 
    ***
