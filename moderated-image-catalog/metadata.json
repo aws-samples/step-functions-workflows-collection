@@ -1,6 +1,6 @@
 {
   "title": "Moderated Image Catalog",
-  "description": "Wait for an asynchroous Job to finish before moving onto the next state",
+  "description": "Moderated image catalog with tagging and content moderation",
   "language": "",
   "simplicity": "3 - Application",
   "usecase": "Image catalog",
