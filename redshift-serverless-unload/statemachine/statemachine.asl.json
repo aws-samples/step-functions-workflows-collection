@@ -1,0 +1,90 @@
+{
+  "StartAt": "Generate UUID",
+  "States": {
+    "Generate UUID": {
+      "Type": "Pass",
+      "Parameters": {
+        "uuid.$": "States.UUID()"
+      },
+      "Next": "ExecuteStatement"
+    },
+    "ExecuteStatement": {
+      "Next": "Wait",
+      "Type": "Task",
+      "ResultPath": "$.executeStatement",
+      "Resource": "arn:aws:states:::aws-sdk:redshiftdata:executeStatement",
+      "Parameters": {
+        "WorkgroupName.$": "$$.Execution.Input.redshift_workgroup",
+        "Database.$": "$$.Execution.Input.redshift_database",
+        "Sql.$": "States.Format('unload (\\'{}\\') to \\'s3://{}/{}/result_\\' iam_role default manifest', $$.Execution.Input.query_without_unload, $$.Execution.Input.output_bucket, $.uuid)"
+      }
+    },
+    "Wait": {
+      "Type": "Wait",
+      "Seconds": 5,
+      "Next": "DescribeStatement"
+    },
+    "DescribeStatement": {
+      "Next": "Query finished?",
+      "Type": "Task",
+      "ResultPath": "$.describeStatement",
+      "Resource": "arn:aws:states:::aws-sdk:redshiftdata:describeStatement",
+      "Parameters": {
+        "Id.$": "$.executeStatement.Id"
+      }
+    },
+    "Query finished?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.describeStatement.Status",
+          "StringEquals": "FINISHED",
+          "Next": "Get manifest file"
+        },
+        {
+          "Or": [
+            {
+              "Variable": "$.describeStatement.Status",
+              "StringMatches": "ABORTED"
+            },
+            {
+              "Variable": "$.describeStatement.Status",
+              "StringMatches": "FAILED"
+            }
+          ],
+          "Next": "Query aborted or failed"
+        }
+      ],
+      "Default": "Wait"
+    },
+    "Get manifest file": {
+      "End": true,
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "Manifest file not found"
+        }
+      ],
+      "Type": "Task",
+      "ResultPath": "$.getManifest",
+      "ResultSelector": {
+        "result.$": "States.StringToJson($.Body)"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:s3:getObject",
+      "Parameters": {
+        "Bucket": "sfnredshiftworkflowstack-sfnredshiftresultsbucket-udjwa1ue57pt",
+        "Key.$": "States.Format('{}/result_manifest', $.uuid)"
+      }
+    },
+    "Manifest file not found": {
+      "Type": "Fail",
+      "Error": "Manifest file not found",
+      "Cause": "The manifest file could not be found in the output S3 bucket."
+    },
+    "Query aborted or failed": {
+      "Type": "Fail",
+      "Error": "Query aborted or failed",
+      "Cause": "The Redshift query terminated with status ABORTED or FAILED."
+    }
+  }
+}
