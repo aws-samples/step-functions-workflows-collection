@@ -1,0 +1,74 @@
+{
+    "title": "Event Sourcing Design Pattern",
+    "description": "A sample implementation of the event sourcing design pattern using AWS Step Functions",
+    "language": "Python",
+    "simplicity": "2 - Pattern",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/event-sourcing.png",
+    "videoId": "",
+    "level": "200",
+    "framework": "SAM",
+    "services": ["dynamodb","sfn","lambda"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "Event Sourcing pattern ensures that all changes to application state are stored as a sequence of events. Not just can we query these events, we can also use the event log to reconstruct past states, and as a foundation to automatically adjust the state to cope with retroactive changes.",
+        "The example implementation demonstrates implementation of event sourcing pattern to capture product inventory state changes. All product inventory events are sent to a Step Function workflow, which executes series of task and persists the state of product as a sequence of state-changing events. Each task contains mock logic that processes a specific product event (ex: productReceived, ProductShipped etc.). It then passes on the updated product state to the next processing task. The updated product state along with event which caused the state change is stored in the Product Inventory Event log. ",
+       ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam build",
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/event-sourcing/",
+        "templateDir":"event-sourcing",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/event-sourcing.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "Event Sourcing pattern",
+          "link": "https://docs.aws.amazon.com/prescriptive-guidance/latest/modernization-data-persistence/service-per-team.html"
+        },
+        {
+          "text": "Decompose monoliths into microservices by using CQRS and event sourcing",
+          "link": "https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/decompose-monoliths-into-microservices-by-using-cqrs-and-event-sourcing.html"
+        }        
+      ]
+    },
+    "author": [
+        {
+          "name": "Anirudha Joshi",
+          "image": "https://drive.google.com/file/d/1VUtlkOsx4QUsFELPof62LIn_TFU3JoyT/view?usp=sharing",
+          "bio": "Principal Customer Solutions Mmanager at AWS, helping customers to modernize on cloud. I enjoy Serverless and Event Driven Architectures",
+          "linkedin": "anirudha-joshi-829bb11"
+        }
+      ]
+  }
+  

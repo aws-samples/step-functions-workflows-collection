@@ -1,0 +1,130 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+Sample SAM Template for Event Sourcing Pattern
+
+Resources:
+  ESPProductEventStoreTable:
+    Type: AWS::DynamoDB::Table
+    Properties: 
+      AttributeDefinitions: 
+        - AttributeName: Product_Id
+          AttributeType: S
+        - AttributeName: Event_DateTime
+          AttributeType: S
+        #- AttributeName: Event
+        #  AttributeType: S
+        #- AttributeName: Product_Details
+        #  AttributeType: S      
+      KeySchema: 
+        - AttributeName: Product_Id
+          KeyType: HASH
+        - AttributeName: Event_DateTime
+          KeyType: RANGE 
+      ProvisionedThroughput: 
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      TableName : "ESPProductEventStoreTable"  
+  EventSourcingPatternStateMachine:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      DefinitionUri: statemachine/event-sourcing.asl.json
+      Name: "EventSourcingPatternStateMachine"
+      DefinitionSubstitutions:
+        ESPValidateEventArn: !GetAtt ESPValidateEventFunction.Arn
+        ESPProcessProductReceivedArn: !GetAtt ESPProcessProductReceivedFunction.Arn
+        ESPProcessProductShippedArn: !GetAtt ESPProcessProductShippedFunction.Arn
+        ESPProcessProductAdjustedArn: !GetAtt ESPProcessProductAdjustedFunction.Arn
+        ESPDynamoDBTableName: !Ref ESPProductEventStoreTable
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - DynamoDBWritePolicy: 
+            TableName: !Ref ESPProductEventStoreTable
+        - DynamoDBReadPolicy: 
+            TableName: !Ref ESPProductEventStoreTable
+        - LambdaInvokePolicy:
+            FunctionName: !Ref ESPValidateEventFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref ESPProcessProductReceivedFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref ESPProcessProductShippedFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref ESPProcessProductAdjustedFunction
+
+  ESPValidateEventFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: functions/validate-event/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      FunctionName : "ESPValidateEventFunction"
+      Architectures:
+        - x86_64
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - DynamoDBWritePolicy: 
+            TableName: !Ref ESPProductEventStoreTable
+        - DynamoDBReadPolicy: 
+            TableName: !Ref ESPProductEventStoreTable
+  ESPProcessProductReceivedFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/process-product-received/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      FunctionName : "ESPProcessProductReceivedFunction"
+      Architectures:
+        - x86_64
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - DynamoDBWritePolicy: 
+            TableName: !Ref ESPProductEventStoreTable
+        - DynamoDBReadPolicy: 
+            TableName: !Ref ESPProductEventStoreTable
+      Environment:
+          Variables:
+            EVENT_STORE_TABLE: !Ref ESPProductEventStoreTable        
+  ESPProcessProductShippedFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/process-product-shipped/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      FunctionName : "ESPProcessProductShippedFunction"
+      Architectures:
+        - x86_64
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - DynamoDBWritePolicy: 
+            TableName: !Ref ESPProductEventStoreTable
+        - DynamoDBReadPolicy: 
+            TableName: !Ref ESPProductEventStoreTable
+      Environment:
+          Variables:
+            EVENT_STORE_TABLE: !Ref ESPProductEventStoreTable
+  ESPProcessProductAdjustedFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/process-product-adjusted/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      FunctionName : "ESPProcessProductAdjustedFunction"
+      Architectures:
+        - x86_64
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - DynamoDBWritePolicy: 
+            TableName: !Ref ESPProductEventStoreTable
+        - DynamoDBReadPolicy: 
+            TableName: !Ref ESPProductEventStoreTable
+      Environment:
+          Variables:
+            EVENT_STORE_TABLE: !Ref ESPProductEventStoreTable        
+
+Outputs:
+  # Find out more about other implicit resources you can reference within SAM
+  # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-specification-generated-resources.html
+  EventSourcingPatternStateMachine:
+    Description: "Event Sourcing pattern State machine ARN"
+    Value: !Ref EventSourcingPatternStateMachine
+  EventSourcingPatternStateMachineRoleArn:
+    Description: "IAM Role created for Event Sourcing pattern machine based on the specified SAM Policy Templates"
+    Value: !GetAtt EventSourcingPatternStateMachineRole.Arn
+  ESPProductEventStoreTableName:
+    Description: "DynamoDB Table Name for Product Event Store"
+    Value: !Ref ESPProductEventStoreTable  

@@ -1,0 +1,149 @@
+{
+  "Comment": "An example of the Amazon States Language for Event Sourcing Design Pattern implementation",
+  "StartAt": "ValidateEvent",
+  "States": {
+    "ValidateEvent": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload.detail",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "${ESPValidateEventArn}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Event Router"
+    },
+    "Event Router": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.ProductEvent.eventType",
+          "StringEquals": "productReceived",
+          "Next": "Process Product Received"
+        },
+        {
+          "Variable": "$.ProductEvent.eventType",
+          "StringEquals": "productShipped",
+          "Next": "Process Product Shipped"
+        },
+        {
+          "Variable": "$.ProductEvent.eventType",
+          "StringEquals": "productAdjusted",
+          "Next": "Process Product Adjust"
+        }
+      ],
+      "Default": "Fail"
+    },
+    "Process Product Received": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "${ESPProcessProductReceivedArn}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Store Event and Product Entity state changes in the Event Store",
+      "ResultSelector": {
+        "UpdatedProduct.$": "$.Payload.UpdatedProduct",
+        "Event.$": "$.Payload.Event",
+        "Product_Id.$": "$.Payload.Product_Id",
+        "EventDateTime.$": "$.Payload.EventDateTime"
+      }
+    },
+    "Store Event and Product Entity state changes in the Event Store": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:putItem",
+      "Parameters": {
+        "TableName": "${ESPDynamoDBTableName}",
+        "Item": {
+          "Product_Id": {
+            "S.$": "$.Product_Id"
+          },
+          "Event_DateTime": {
+            "S.$": "$.EventDateTime"
+          },
+          "Event": {
+            "S.$": "$.Event"
+          },
+          "Product_Details": {
+            "S.$": "$.UpdatedProduct"
+          }
+        }
+      },
+      "End": true
+    },
+    "Fail": {
+      "Type": "Fail"
+    },
+    "Process Product Shipped": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "${ESPProcessProductShippedArn}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Store Event and Product Entity state changes in the Event Store"
+    },
+    "Process Product Adjust": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "${ESPProcessProductAdjustedArn}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Store Event and Product Entity state changes in the Event Store"
+    }
+  }
+}
