@@ -102,7 +102,7 @@ command.
 - Once the execution is complete, output of the last state is a link to the Athena execution id that you can navigate to on the console.
 <Screen shot here>
 
-- You can [build/modify the SQL query in the code]("https://github.com/revanthreddy/step-functions-workflows-collection/blob/main/ingest-and-analyze-historical-storm-events/ingest_and_analyze_historical_storm_events/ingestion.py#L17") and re-deploying the stack
+- You can [build/modify the SQL query in the code](https://github.com/revanthreddy/step-functions-workflows-collection/blob/main/ingest-and-analyze-historical-storm-events/ingest_and_analyze_historical_storm_events/ingestion.py#L17) and re-deploying the stack
 
 - Output of the Athena query
 
