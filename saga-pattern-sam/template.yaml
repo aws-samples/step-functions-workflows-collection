@@ -1,0 +1,1319 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  serverless-saga-pattern-sam
+
+  Sample SAM Template for serverless-saga-pattern-sam
+  
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+    MemorySize: 128
+
+Resources:
+  StateMachineFlights:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+    Metadata:
+      'aws:sam:path': SamServerlessSagaStack/StateMachine/Flights/Resource
+  StateMachineRentals:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+    Metadata:
+      'aws:sam:path': SamServerlessSagaStack/StateMachine/Rentals/Resource
+  StateMachinePayments:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+    Metadata:
+      'aws:sam:path': SamServerlessSagaStack/StateMachine/Payments/Resource
+
+  StateMachinereserveFlightLambdaHandlerServiceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: '2012-10-17'
+      ManagedPolicyArns:
+        - 'Fn::Join':
+            - ''
+            - - 'arn:'
+              - Ref: 'AWS::Partition'
+              - ':iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+    Metadata:
+      'aws:sam:path': >-
+        SamServerlessSagaStack/StateMachine/reserveFlightLambdaHandler/ServiceRole/Resource
+
+
+  StateMachinereserveFlightLambdaHandlerServiceRoleDefaultPolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - 'dynamodb:BatchGetItem'
+              - 'dynamodb:BatchWriteItem'
+              - 'dynamodb:ConditionCheckItem'
+              - 'dynamodb:DeleteItem'
+              - 'dynamodb:DescribeTable'
+              - 'dynamodb:GetItem'
+              - 'dynamodb:GetRecords'
+              - 'dynamodb:GetShardIterator'
+              - 'dynamodb:PutItem'
+              - 'dynamodb:Query'
+              - 'dynamodb:Scan'
+              - 'dynamodb:UpdateItem'
+            Effect: Allow
+            Resource:
+              - 'Fn::GetAtt':
+                  - StateMachineFlights
+                  - Arn
+              - Ref: 'AWS::NoValue'
+        Version: '2012-10-17'
+      PolicyName: StateMachinereserveFlightLambdaHandlerServiceRoleDefaultPolicy
+      Roles:
+        - Ref: StateMachinereserveFlightLambdaHandlerServiceRole
+    Metadata:
+      'aws:sam:path': >-
+        SamServerlessSagaStack/StateMachine/reserveFlightLambdaHandler/ServiceRole/DefaultPolicy/Resource
+
+  StateMachinereserveFlightLambdaHandler:
+      Type: 'AWS::Serverless::Function'
+      Properties:
+        CodeUri: dist/flights/
+        Role:
+          'Fn::GetAtt':
+            - StateMachinereserveFlightLambdaHandlerServiceRole
+            - Arn
+        Environment:
+          Variables:
+            TABLE_NAME:
+              Ref: StateMachineFlights
+            AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
+        Handler: reserveFlight.handler
+        Runtime: nodejs16.x
+      DependsOn:
+        - StateMachinereserveFlightLambdaHandlerServiceRoleDefaultPolicy
+        - StateMachinereserveFlightLambdaHandlerServiceRole
+      Metadata:
+        'aws:sam:path': SamServerlessSagaStack/StateMachine/reserveFlightLambdaHandler/Resource
+        'aws:asset:property': Code
+
+  StateMachineconfirmFlightLambdaHandlerServiceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: '2012-10-17'
+      ManagedPolicyArns:
+        - 'Fn::Join':
+            - ''
+            - - 'arn:'
+              - Ref: 'AWS::Partition'
+              - ':iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+    Metadata:
+      'aws:sam:path': >-
+        SamServerlessSagaStack/StateMachine/confirmFlightLambdaHandler/ServiceRole/Resource 
+
+  StateMachineconfirmFlightLambdaHandlerServiceRoleDefaultPolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - 'dynamodb:BatchGetItem'
+              - 'dynamodb:BatchWriteItem'
+              - 'dynamodb:ConditionCheckItem'
+              - 'dynamodb:DeleteItem'
+              - 'dynamodb:DescribeTable'
+              - 'dynamodb:GetItem'
+              - 'dynamodb:GetRecords'
+              - 'dynamodb:GetShardIterator'
+              - 'dynamodb:PutItem'
+              - 'dynamodb:Query'
+              - 'dynamodb:Scan'
+              - 'dynamodb:UpdateItem'
+            Effect: Allow
+            Resource:
+              - 'Fn::GetAtt':
+                  - StateMachineFlights
+                  - Arn
+              - Ref: 'AWS::NoValue'
+        Version: '2012-10-17'
+      PolicyName: StateMachineconfirmFlightLambdaHandlerServiceRoleDefaultPolicy
+      Roles:
+        - Ref: StateMachineconfirmFlightLambdaHandlerServiceRole
+    Metadata:
+      'aws:sam:path': >-
+        SamServerlessSagaStack/StateMachine/confirmFlightLambdaHandler/ServiceRole/DefaultPolicy/Resource     
+
+  StateMachineconfirmFlightLambdaHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/flights/
+      Role:
+        'Fn::GetAtt':
+          - StateMachineconfirmFlightLambdaHandlerServiceRole
+          - Arn
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: StateMachineFlights
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
+      Handler: confirmFlight.handler
+      Runtime: nodejs16.x
+    DependsOn:
+      - StateMachineconfirmFlightLambdaHandlerServiceRoleDefaultPolicy
+      - StateMachineconfirmFlightLambdaHandlerServiceRole
+    Metadata:
+      'aws:sam:path': SamServerlessSagaStack/StateMachine/confirmFlightLambdaHandler/Resource
+      'aws:asset:property': Code
+
+  StateMachinecancelFlightLambdaHandlerServiceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: '2012-10-17'
+      ManagedPolicyArns:
+        - 'Fn::Join':
+            - ''
+            - - 'arn:'
+              - Ref: 'AWS::Partition'
+              - ':iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+    Metadata:
+      'aws:sam:path': >-
+        SamServerlessSagaStack/StateMachine/cancelFlightLambdaHandler/ServiceRole/Resource
+
+  StateMachinecancelFlightLambdaHandlerServiceRoleDefaultPolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - 'dynamodb:BatchGetItem'
+              - 'dynamodb:BatchWriteItem'
+              - 'dynamodb:ConditionCheckItem'
+              - 'dynamodb:DeleteItem'
+              - 'dynamodb:DescribeTable'
+              - 'dynamodb:GetItem'
+              - 'dynamodb:GetRecords'
+              - 'dynamodb:GetShardIterator'
+              - 'dynamodb:PutItem'
+              - 'dynamodb:Query'
+              - 'dynamodb:Scan'
+              - 'dynamodb:UpdateItem'
+            Effect: Allow
+            Resource:
+              - 'Fn::GetAtt':
+                  - StateMachineFlights
+                  - Arn
+              - Ref: 'AWS::NoValue'
+        Version: '2012-10-17'
+      PolicyName: StateMachinecancelFlightLambdaHandlerServiceRoleDefaultPolicy
+      Roles:
+        - Ref: StateMachinecancelFlightLambdaHandlerServiceRole
+    Metadata:
+      'aws:sam:path': >-
+        SamServerlessSagaStack/StateMachine/cancelFlightLambdaHandler/ServiceRole/DefaultPolicy/Resource
+
+  StateMachinecancelFlightLambdaHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/flights/
+      Role:
+        'Fn::GetAtt':
+          - StateMachinecancelFlightLambdaHandlerServiceRole
+          - Arn
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: StateMachineFlights
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
+      Handler: cancelFlight.handler
+      Runtime: nodejs16.x
+    DependsOn:
+      - StateMachinecancelFlightLambdaHandlerServiceRoleDefaultPolicy
+      - StateMachinecancelFlightLambdaHandlerServiceRole
+    Metadata:
+      'aws:sam:path': SamServerlessSagaStack/StateMachine/cancelFlightLambdaHandler/Resource
+      'aws:asset:property': Code
+
+  StateMachinereserveRentalLambdaHandlerServiceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: '2012-10-17'
+      ManagedPolicyArns:
+        - 'Fn::Join':
+            - ''
+            - - 'arn:'
+              - Ref: 'AWS::Partition'
+              - ':iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+    Metadata:
+      'aws:sam:path': >-
+        SamServerlessSagaStack/StateMachine/reserveRentalLambdaHandler/ServiceRole/Resource
+
+  StateMachinereserveRentalLambdaHandlerServiceRoleDefaultPolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - 'dynamodb:BatchGetItem'
+              - 'dynamodb:BatchWriteItem'
+              - 'dynamodb:ConditionCheckItem'
+              - 'dynamodb:DeleteItem'
+              - 'dynamodb:DescribeTable'
+              - 'dynamodb:GetItem'
+              - 'dynamodb:GetRecords'
+              - 'dynamodb:GetShardIterator'
+              - 'dynamodb:PutItem'
+              - 'dynamodb:Query'
+              - 'dynamodb:Scan'
+              - 'dynamodb:UpdateItem'
+            Effect: Allow
+            Resource:
+              - 'Fn::GetAtt':
+                  - StateMachineRentals
+                  - Arn
+              - Ref: 'AWS::NoValue'
+        Version: '2012-10-17'
+      PolicyName: StateMachinereserveRentalLambdaHandlerServiceRoleDefaultPolicy
+      Roles:
+        - Ref: StateMachinereserveRentalLambdaHandlerServiceRole
+    Metadata:
+      'aws:sam:path': >-
+        SamServerlessSagaStack/StateMachine/reserveRentalLambdaHandler/ServiceRole/DefaultPolicy/Resource
+
+  StateMachinereserveRentalLambdaHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/rentals
+      Role:
+        'Fn::GetAtt':
+          - StateMachinereserveRentalLambdaHandlerServiceRole
+          - Arn
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: StateMachineRentals
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
+      Handler: reserveRental.handler
+      Runtime: nodejs16.x
+    DependsOn:
+      - StateMachinereserveRentalLambdaHandlerServiceRoleDefaultPolicy
+      - StateMachinereserveRentalLambdaHandlerServiceRole
+    Metadata:
+      'aws:sam:path': SamServerlessSagaStack/StateMachine/reserveRentalLambdaHandler/Resource
+      'aws:asset:property': Code
+
+  StateMachineconfirmRentalLambdaHandlerServiceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: '2012-10-17'
+      ManagedPolicyArns:
+        - 'Fn::Join':
+            - ''
+            - - 'arn:'
+              - Ref: 'AWS::Partition'
+              - ':iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+    Metadata:
+      'aws:sam:path': >-
+        SamServerlessSagaStack/StateMachine/confirmRentalLambdaHandler/ServiceRole/Resource
+
+  StateMachineconfirmRentalLambdaHandlerServiceRoleDefaultPolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - 'dynamodb:BatchGetItem'
+              - 'dynamodb:BatchWriteItem'
+              - 'dynamodb:ConditionCheckItem'
+              - 'dynamodb:DeleteItem'
+              - 'dynamodb:DescribeTable'
+              - 'dynamodb:GetItem'
+              - 'dynamodb:GetRecords'
+              - 'dynamodb:GetShardIterator'
+              - 'dynamodb:PutItem'
+              - 'dynamodb:Query'
+              - 'dynamodb:Scan'
+              - 'dynamodb:UpdateItem'
+            Effect: Allow
+            Resource:
+              - 'Fn::GetAtt':
+                  - StateMachineRentals
+                  - Arn
+              - Ref: 'AWS::NoValue'
+        Version: '2012-10-17'
+      PolicyName: StateMachineconfirmRentalLambdaHandlerServiceRoleDefaultPolicy
+      Roles:
+        - Ref: StateMachineconfirmRentalLambdaHandlerServiceRole
+    Metadata:
+      'aws:cdk:path': >-
+        CdkServerlessSagaStack/StateMachine/confirmRentalLambdaHandler/ServiceRole/DefaultPolicy/Resource
+
+  StateMachineconfirmRentalLambdaHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/rentals/
+      Role:
+        'Fn::GetAtt':
+          - StateMachineconfirmRentalLambdaHandlerServiceRole
+          - Arn
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: StateMachineRentals
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
+      Handler: confirmRental.handler
+      Runtime: nodejs16.x
+    DependsOn:
+      - StateMachineconfirmRentalLambdaHandlerServiceRoleDefaultPolicy
+      - StateMachineconfirmRentalLambdaHandlerServiceRole
+    Metadata:
+      'aws:sam:path': SamServerlessSagaStack/StateMachine/confirmRentalLambdaHandler/Resource
+      'aws:asset:property': Code
+
+  StateMachinecancelRentalLambdaHandlerServiceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: '2012-10-17'
+      ManagedPolicyArns:
+        - 'Fn::Join':
+            - ''
+            - - 'arn:'
+              - Ref: 'AWS::Partition'
+              - ':iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+    Metadata:
+      'aws:sam:path': >-
+        SamServerlessSagaStack/StateMachine/cancelRentalLambdaHandler/ServiceRole/Resource
+
+  StateMachinecancelRentalLambdaHandlerServiceRoleDefaultPolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - 'dynamodb:BatchGetItem'
+              - 'dynamodb:BatchWriteItem'
+              - 'dynamodb:ConditionCheckItem'
+              - 'dynamodb:DeleteItem'
+              - 'dynamodb:DescribeTable'
+              - 'dynamodb:GetItem'
+              - 'dynamodb:GetRecords'
+              - 'dynamodb:GetShardIterator'
+              - 'dynamodb:PutItem'
+              - 'dynamodb:Query'
+              - 'dynamodb:Scan'
+              - 'dynamodb:UpdateItem'
+            Effect: Allow
+            Resource:
+              - 'Fn::GetAtt':
+                  - StateMachineRentals
+                  - Arn
+              - Ref: 'AWS::NoValue'
+        Version: '2012-10-17'
+      PolicyName: StateMachinecancelRentalLambdaHandlerServiceRoleDefaultPolicy
+      Roles:
+        - Ref: StateMachinecancelRentalLambdaHandlerServiceRole
+    Metadata:
+      'aws:sam:path': >-
+        SamServerlessSagaStack/StateMachine/cancelRentalLambdaHandler/ServiceRole/DefaultPolicy/Resource
+        
+
+  StateMachinecancelRentalLambdaHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/rentals/
+      Role:
+        'Fn::GetAtt':
+          - StateMachinecancelRentalLambdaHandlerServiceRole
+          - Arn
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: StateMachineRentals
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
+      Handler: cancelRental.handler
+      Runtime: nodejs16.x
+    DependsOn:
+      - StateMachinecancelRentalLambdaHandlerServiceRoleDefaultPolicy
+      - StateMachinecancelRentalLambdaHandlerServiceRole
+    Metadata:
+      'aws:sam:path': SamServerlessSagaStack/StateMachine/cancelRentalLambdaHandler/Resource
+      'aws:asset:property': Code
+
+  StateMachineprocessPaymentLambdaHandlerServiceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: '2012-10-17'
+      ManagedPolicyArns:
+        - 'Fn::Join':
+            - ''
+            - - 'arn:'
+              - Ref: 'AWS::Partition'
+              - ':iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+    Metadata:
+      'aws:sam:path': >-
+        SamServerlessSagaStack/StateMachine/processPaymentLambdaHandler/ServiceRole/Resource
+  StateMachineprocessPaymentLambdaHandlerServiceRoleDefaultPolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - 'dynamodb:BatchGetItem'
+              - 'dynamodb:BatchWriteItem'
+              - 'dynamodb:ConditionCheckItem'
+              - 'dynamodb:DeleteItem'
+              - 'dynamodb:DescribeTable'
+              - 'dynamodb:GetItem'
+              - 'dynamodb:GetRecords'
+              - 'dynamodb:GetShardIterator'
+              - 'dynamodb:PutItem'
+              - 'dynamodb:Query'
+              - 'dynamodb:Scan'
+              - 'dynamodb:UpdateItem'
+            Effect: Allow
+            Resource:
+              - 'Fn::GetAtt':
+                  - StateMachinePayments
+                  - Arn
+              - Ref: 'AWS::NoValue'
+        Version: '2012-10-17'
+      PolicyName: StateMachineprocessPaymentLambdaHandlerServiceRoleDefaultPolicy
+      Roles:
+        - Ref: StateMachineprocessPaymentLambdaHandlerServiceRole
+    Metadata:
+      'aws:sam:path': >-
+        SamServerlessSagaStack/StateMachine/processPaymentLambdaHandler/ServiceRole/DefaultPolicy/Resource
+
+  StateMachineprocessPaymentLambdaHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/payment/
+      Role:
+        'Fn::GetAtt':
+          - StateMachineprocessPaymentLambdaHandlerServiceRole
+          - Arn
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: StateMachinePayments
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
+      Handler: processPayment.handler
+      Runtime: nodejs16.x
+    DependsOn:
+      - StateMachineprocessPaymentLambdaHandlerServiceRoleDefaultPolicy
+      - StateMachineprocessPaymentLambdaHandlerServiceRole
+    Metadata:
+      'aws:sam:path': SamServerlessSagaStack/StateMachine/processPaymentLambdaHandler/Resource
+      'aws:asset:property': Code
+
+  StateMachinerefundPaymentLambdaHandlerServiceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: '2012-10-17'
+      ManagedPolicyArns:
+        - 'Fn::Join':
+            - ''
+            - - 'arn:'
+              - Ref: 'AWS::Partition'
+              - ':iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+    Metadata:
+      'aws:sam:path': >-
+        SamServerlessSagaStack/StateMachine/refundPaymentLambdaHandler/ServiceRole/Resource
+  StateMachinerefundPaymentLambdaHandlerServiceRoleDefaultPolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - 'dynamodb:BatchGetItem'
+              - 'dynamodb:BatchWriteItem'
+              - 'dynamodb:ConditionCheckItem'
+              - 'dynamodb:DeleteItem'
+              - 'dynamodb:DescribeTable'
+              - 'dynamodb:GetItem'
+              - 'dynamodb:GetRecords'
+              - 'dynamodb:GetShardIterator'
+              - 'dynamodb:PutItem'
+              - 'dynamodb:Query'
+              - 'dynamodb:Scan'
+              - 'dynamodb:UpdateItem'
+            Effect: Allow
+            Resource:
+              - 'Fn::GetAtt':
+                  - StateMachinePayments
+                  - Arn
+              - Ref: 'AWS::NoValue'
+        Version: '2012-10-17'
+      PolicyName: StateMachinerefundPaymentLambdaHandlerServiceRoleDefaultPolicy
+      Roles:
+        - Ref: StateMachinerefundPaymentLambdaHandlerServiceRole
+    Metadata:
+      'aws:sam:path': >-
+        SamServerlessSagaStack/StateMachine/refundPaymentLambdaHandler/ServiceRole/DefaultPolicy/Resource
+  StateMachinerefundPaymentLambdaHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/payment
+      Role:
+        'Fn::GetAtt':
+          - StateMachinerefundPaymentLambdaHandlerServiceRole
+          - Arn
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: StateMachinePayments
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
+      Handler: refundPayment.handler
+      Runtime: nodejs16.x
+    DependsOn:
+      - StateMachinerefundPaymentLambdaHandlerServiceRoleDefaultPolicy
+      - StateMachinerefundPaymentLambdaHandlerServiceRole
+    Metadata:
+      'aws:cdk:path': CdkServerlessSagaStack/StateMachine/refundPaymentLambdaHandler/Resource
+      'aws:asset:property': Code
+
+  StateMachineTopic:
+    Type: 'AWS::SNS::Topic'
+    Metadata:
+      'aws:cdk:path': CdkServerlessSagaStack/StateMachine/Topic/Resource
+
+  StateMachineTopic11111111111:
+    Type: 'AWS::SNS::Subscription'
+    Properties:
+      Protocol: sms
+      TopicArn:
+        Ref: StateMachineTopic
+      Endpoint: '+11111111111'
+    Metadata:
+      'aws:sam:path': SamServerlessSagaStack/StateMachine/Topic/+11111111111/Resource
+
+  StateMachineRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                'Fn::Join':
+                  - ''
+                  - - states.
+                    - Ref: 'AWS::Region'
+                    - .amazonaws.com
+        Version: '2012-10-17'
+    Metadata:
+      'aws:sam:path': SamServerlessSagaStack/StateMachine/StateMachine/Role/Resource
+
+  StateMachineRoleDefaultPolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: 'lambda:InvokeFunction'
+            Effect: Allow
+            Resource:
+              - 'Fn::GetAtt':
+                  - StateMachinecancelFlightLambdaHandler
+                  - Arn
+              - 'Fn::GetAtt':
+                  - StateMachinecancelRentalLambdaHandler
+                  - Arn
+              - 'Fn::GetAtt':
+                  - StateMachineconfirmFlightLambdaHandler
+                  - Arn
+              - 'Fn::GetAtt':
+                  - StateMachineconfirmRentalLambdaHandler
+                  - Arn
+              - 'Fn::GetAtt':
+                  - StateMachineprocessPaymentLambdaHandler
+                  - Arn
+              - 'Fn::GetAtt':
+                  - StateMachinerefundPaymentLambdaHandler
+                  - Arn
+              - 'Fn::GetAtt':
+                  - StateMachinereserveFlightLambdaHandler
+                  - Arn
+              - 'Fn::GetAtt':
+                  - StateMachinereserveRentalLambdaHandler
+                  - Arn
+              - 'Fn::Join':
+                  - ''
+                  - - 'Fn::GetAtt':
+                        - StateMachinecancelFlightLambdaHandler
+                        - Arn
+                    - ':*'
+              - 'Fn::Join':
+                  - ''
+                  - - 'Fn::GetAtt':
+                        - StateMachinecancelRentalLambdaHandler
+                        - Arn
+                    - ':*'
+              - 'Fn::Join':
+                  - ''
+                  - - 'Fn::GetAtt':
+                        - StateMachineconfirmFlightLambdaHandler
+                        - Arn
+                    - ':*'
+              - 'Fn::Join':
+                  - ''
+                  - - 'Fn::GetAtt':
+                        - StateMachineconfirmRentalLambdaHandler
+                        - Arn
+                    - ':*'
+              - 'Fn::Join':
+                  - ''
+                  - - 'Fn::GetAtt':
+                        - StateMachineprocessPaymentLambdaHandler
+                        - Arn
+                    - ':*'
+              - 'Fn::Join':
+                  - ''
+                  - - 'Fn::GetAtt':
+                        - StateMachinerefundPaymentLambdaHandler
+                        - Arn
+                    - ':*'
+              - 'Fn::Join':
+                  - ''
+                  - - 'Fn::GetAtt':
+                        - StateMachinereserveFlightLambdaHandler
+                        - Arn
+                    - ':*'
+              - 'Fn::Join':
+                  - ''
+                  - - 'Fn::GetAtt':
+                        - StateMachinereserveRentalLambdaHandler
+                        - Arn
+                    - ':*'
+          - Action: 'sns:Publish'
+            Effect: Allow
+            Resource:
+              Ref: StateMachineTopic
+        Version: '2012-10-17'
+      PolicyName: StateMachineRoleDefaultPolicy
+      Roles:
+        - Ref: StateMachineRole
+    Metadata:
+      'aws:sam:path': >-
+        SamServerlessSagaStack/StateMachine/StateMachine/Role/DefaultPolicy/Resource
+        
+
+  StateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Role:
+        'Fn::GetAtt':
+          - StateMachineRole
+          - Arn
+      DefinitionSubstitutions:
+        StateMachinereserveFlightLambdaHandlerArn: !GetAtt StateMachinereserveFlightLambdaHandler.Arn
+        StateMachinereserveRentalLambdaHandlerArn: !GetAtt StateMachinereserveRentalLambdaHandler.Arn
+        StateMachineprocessPaymentLambdaHandlerArn: !GetAtt StateMachineprocessPaymentLambdaHandler.Arn
+        StateMachineconfirmFlightLambdaHandlerArn: !GetAtt StateMachineconfirmFlightLambdaHandler.Arn
+        StateMachineconfirmRentalLambdaHandlerArn: !GetAtt StateMachineconfirmRentalLambdaHandler.Arn
+        StateMachinerefundPaymentLambdaHandlerArn: !GetAtt StateMachinerefundPaymentLambdaHandler.Arn
+        StateMachinecancelRentalLambdaHandlerArn: !GetAtt StateMachinecancelRentalLambdaHandler.Arn
+        StateMachinecancelFlightLambdaHandlerArn: !GetAtt StateMachinecancelFlightLambdaHandler.Arn
+        StateMachineTopicArn: !GetAtt StateMachineTopic.TopicArn
+
+
+      Definition:
+        StartAt: ReserveFlight
+        States:
+          ReserveFlight:
+            Next: ReserveCarRental
+            Retry:
+              - ErrorEquals:
+                  - Lambda.ServiceException
+                  - Lambda.AWSLambdaException
+                  - Lambda.SdkClientException
+                IntervalSeconds: 2
+                MaxAttempts: 6
+                BackoffRate: 2
+            Catch:
+              - ErrorEquals:
+                  - States.ALL
+                ResultPath: $.ReserveFlightError
+                Next: CancelFlightReservation
+            Type: Task
+            ResultPath: $.ReserveFlightResult
+            Resource: arn:aws:states:::lambda:invoke
+            Parameters:
+              FunctionName: "${StateMachinereserveFlightLambdaHandlerArn}"
+              Payload.$: $
+          ReserveCarRental:
+            Next: ProcessPayment
+            Retry:
+              - ErrorEquals:
+                  - Lambda.ServiceException
+                  - Lambda.AWSLambdaException
+                  - Lambda.SdkClientException
+                IntervalSeconds: 2
+                MaxAttempts: 6
+                BackoffRate: 2
+            Catch:
+              - ErrorEquals:
+                  - States.ALL
+                ResultPath: $.ReserveCarRentalError
+                Next: CancelRentalReservation
+            Type: Task
+            ResultPath: $.ReserveCarRentalResult
+            Resource: arn:aws:states:::lambda:invoke
+            Parameters:
+              FunctionName: "${StateMachinereserveRentalLambdaHandlerArn}"
+              Payload.$: $
+          ProcessPayment:
+            Next: ConfirmFlight
+            Retry:
+              - ErrorEquals:
+                  - Lambda.ServiceException
+                  - Lambda.AWSLambdaException
+                  - Lambda.SdkClientException
+                IntervalSeconds: 2
+                MaxAttempts: 6
+                BackoffRate: 2
+            Catch:
+              - ErrorEquals:
+                  - States.ALL
+                ResultPath: $.ProcessPaymentError
+                Next: RefundPayment
+            Type: Task
+            ResultPath: $.ProcessPaymentResult
+            Resource: arn:aws:states:::lambda:invoke
+            Parameters:
+              FunctionName: "${StateMachineprocessPaymentLambdaHandlerArn}"
+              Payload.$: $
+          ConfirmFlight:
+            Next: ConfirmCarRental
+            Retry:
+              - ErrorEquals:
+                  - Lambda.ServiceException
+                  - Lambda.AWSLambdaException
+                  - Lambda.SdkClientException
+                IntervalSeconds: 2
+                MaxAttempts: 6
+                BackoffRate: 2
+            Catch:
+              - ErrorEquals:
+                  - States.ALL
+                ResultPath: $.ConfirmFlightError
+                Next: RefundPayment
+            Type: Task
+            ResultPath: $.ConfirmFlightResult
+            Resource: arn:aws:states:::lambda:invoke
+            Parameters:
+              FunctionName: "${StateMachineconfirmFlightLambdaHandlerArn}"
+              Payload.$: $
+          ConfirmCarRental:
+            Next: SendingSMSSuccess
+            Retry:
+              - ErrorEquals:
+                  - Lambda.ServiceException
+                  - Lambda.AWSLambdaException
+                  - Lambda.SdkClientException
+                IntervalSeconds: 2
+                MaxAttempts: 6
+                BackoffRate: 2
+            Catch:
+              - ErrorEquals:
+                  - States.ALL
+                ResultPath: $.ConfirmCarRentalError
+                Next: RefundPayment
+            Type: Task
+            ResultPath: $.ConfirmCarRentalResult
+            Resource: arn:aws:states:::lambda:invoke
+            Parameters:
+              FunctionName: "${StateMachineconfirmRentalLambdaHandlerArn}"
+              Payload.$: $
+          SendingSMSSuccess:
+            Next: Reservation Successful!
+            Type: Task
+            Resource: arn:aws:states:::sns:publish
+            Parameters:
+              TopicArn: "${StateMachineTopicArn}"
+              Message: Your Travel Reservation is Successful
+          Reservation Successful!:
+            Type: Succeed
+          RefundPayment:
+            Next: CancelRentalReservation
+            Retry:
+              - ErrorEquals:
+                  - Lambda.ServiceException
+                  - Lambda.AWSLambdaException
+                  - Lambda.SdkClientException
+                IntervalSeconds: 2
+                MaxAttempts: 6
+                BackoffRate: 2
+              - ErrorEquals:
+                  - States.ALL
+                MaxAttempts: 3
+            Type: Task
+            ResultPath: $.RefundPaymentResult
+            Resource: arn:aws:states:::lambda:invoke
+            Parameters:
+              FunctionName: "${StateMachinerefundPaymentLambdaHandlerArn}"
+              Payload.$: $
+          CancelRentalReservation:
+            Next: CancelFlightReservation
+            Retry:
+              - ErrorEquals:
+                  - Lambda.ServiceException
+                  - Lambda.AWSLambdaException
+                  - Lambda.SdkClientException
+                IntervalSeconds: 2
+                MaxAttempts: 6
+                BackoffRate: 2
+              - ErrorEquals:
+                  - States.ALL
+                MaxAttempts: 3
+            Type: Task
+            ResultPath: $.CancelRentalReservationResult
+            Resource: arn:aws:states:::lambda:invoke
+            Parameters:
+              FunctionName: "${StateMachinecancelRentalLambdaHandlerArn}"
+              Payload.$: $
+          CancelFlightReservation:
+            Next: SendingSMSFailure
+            Retry:
+              - ErrorEquals:
+                  - Lambda.ServiceException
+                  - Lambda.AWSLambdaException
+                  - Lambda.SdkClientException
+                IntervalSeconds: 2
+                MaxAttempts: 6
+                BackoffRate: 2
+              - ErrorEquals:
+                  - States.ALL
+                MaxAttempts: 3
+            Type: Task
+            ResultPath: $.CancelFlightReservationResult
+            Resource: arn:aws:states:::lambda:invoke
+            Parameters:
+              FunctionName: "${StateMachinecancelFlightLambdaHandlerArn}"
+              Payload.$: $
+          SendingSMSFailure:
+            Next: Reservation Failed
+            Type: Task
+            Resource: arn:aws:states:::sns:publish
+            Parameters:
+              TopicArn: "${StateMachineTopicArn}"
+              Message: Your Travel Reservation Failed
+          Reservation Failed:
+            Type: Fail
+            Error: Job Failed
+    DependsOn:
+      - StateMachineRoleDefaultPolicy
+      - StateMachineRole
+    Metadata:
+      'aws:sam:path': SamServerlessSagaStack/StateMachine/StateMachine/Resource
+
+  StateMachinesagaLambdaHandlerServiceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: '2012-10-17'
+      ManagedPolicyArns:
+        - 'Fn::Join':
+            - ''
+            - - 'arn:'
+              - Ref: 'AWS::Partition'
+              - ':iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+    Metadata:
+      'aws:asset:path': >-
+        SamServerlessSagaStack/StateMachine/sagaLambdaHandler/ServiceRole/Resource
+
+  StateMachinesagaLambdaHandlerServiceRoleDefaultPolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: 'states:StartExecution'
+            Effect: Allow
+            Resource:
+              Ref: StateMachine
+        Version: '2012-10-17'
+      PolicyName: StateMachinesagaLambdaHandlerServiceRoleDefaultPolicy
+      Roles:
+        - Ref: StateMachinesagaLambdaHandlerServiceRole
+    Metadata:
+      'aws:sam:path': >-
+        SamServerlessSagaStack/StateMachine/sagaLambdaHandler/ServiceRole/DefaultPolicy/Resource
+
+
+  StateMachinesagaLambdaHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/
+      Role:
+        'Fn::GetAtt':
+          - StateMachinesagaLambdaHandlerServiceRole
+          - Arn
+      Environment:
+        Variables:
+          statemachine_arn:
+            Ref: StateMachine
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
+      Handler: sagaLambda.handler
+      Runtime: nodejs16.x
+    DependsOn:
+      - StateMachinesagaLambdaHandlerServiceRoleDefaultPolicy
+      - StateMachinesagaLambdaHandlerServiceRole
+    Metadata:
+      'aws:sam:path': SamServerlessSagaStack/StateMachine/sagaLambdaHandler/Resource
+      'aws:asset:property': Code
+
+  StateMachineServerlessSagaPattern:
+    Type: 'AWS::ApiGateway::RestApi'
+    Properties:
+      Name: ServerlessSagaPattern
+    Metadata:
+      'aws:sam:path': SamServerlessSagaStack/StateMachine/ServerlessSagaPattern/Resource
+
+  StateMachineServerlessSagaPatternCloudWatchRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+        Version: '2012-10-17'
+      ManagedPolicyArns:
+        - 'Fn::Join':
+            - ''
+            - - 'arn:'
+              - Ref: 'AWS::Partition'
+              - >-
+                :iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+    Metadata:
+      'aws:sam:path': >-
+        SamServerlessSagaStack/StateMachine/ServerlessSagaPattern/CloudWatchRole/Resource  
+
+  StateMachineServerlessSagaPatternAccount:
+    Type: 'AWS::ApiGateway::Account'
+    Properties:
+      CloudWatchRoleArn:
+        'Fn::GetAtt':
+          - StateMachineServerlessSagaPatternCloudWatchRole
+          - Arn
+    DependsOn:
+      - StateMachineServerlessSagaPattern
+    Metadata:
+      'aws:sam:path': SamServerlessSagaStack/StateMachine/ServerlessSagaPattern/Account
+
+  StateMachineServerlessSagaPatternDeployment:
+    Type: 'AWS::ApiGateway::Deployment'
+    Properties:
+      RestApiId:
+        Ref: StateMachineServerlessSagaPattern
+      Description: Automatically created by the RestApi construct
+    DependsOn:
+      - StateMachineServerlessSagaPatternproxyANY
+      - StateMachineServerlessSagaPatternproxy
+      - StateMachineServerlessSagaPatternANY
+    Metadata:
+      'aws:sam:path': >-
+        SamServerlessSagaStack/StateMachine/ServerlessSagaPattern/Deployment/Resource
+
+  StateMachineServerlessSagaPatternDeploymentStageprod:
+    Type: 'AWS::ApiGateway::Stage'
+    Properties:
+      RestApiId:
+        Ref: StateMachineServerlessSagaPattern
+      DeploymentId:
+        Ref: >-
+          StateMachineServerlessSagaPatternDeployment
+      StageName: prod
+    DependsOn:
+      - StateMachineServerlessSagaPatternAccount
+    Metadata:
+      'aws:sam:path': >-
+        SamServerlessSagaStack/StateMachine/ServerlessSagaPattern/DeploymentStage.prod/Resource
+
+  StateMachineServerlessSagaPatternproxy:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      ParentId:
+        'Fn::GetAtt':
+          - StateMachineServerlessSagaPattern
+          - RootResourceId
+      PathPart: '{proxy+}'
+      RestApiId:
+        Ref: StateMachineServerlessSagaPattern
+    Metadata:
+      'aws:sam:path': >-
+        SamServerlessSagaStack/StateMachine/ServerlessSagaPattern/Default/{proxy+}/Resource      
+
+  StateMachineServerlessSagaPatternproxyANYApiPermissionSamServerlessSagaStackStateMachineServerlessSagaPatternANYproxy:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName:
+        'Fn::GetAtt':
+          - StateMachinesagaLambdaHandler
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        'Fn::Join':
+          - ''
+          - - 'arn:'
+            - Ref: 'AWS::Partition'
+            - ':execute-api:'
+            - Ref: 'AWS::Region'
+            - ':'
+            - Ref: 'AWS::AccountId'
+            - ':'
+            - Ref: StateMachineServerlessSagaPattern
+            - /
+            - Ref: StateMachineServerlessSagaPatternDeploymentStageprod
+            - /*/*
+    Metadata:
+      'aws:sam:path': >-
+        SamServerlessSagaStack/StateMachine/ServerlessSagaPattern/Default/{proxy+}/ANY/ApiPermission.SamServerlessSagaStackStateMachineServerlessSagaPattern.ANY..{proxy+}
+
+  StateMachineServerlessSagaPatternproxyANYApiPermissionTestSamServerlessSagaStackStateMachineServerlessSagaPatternANYproxy:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName:
+        'Fn::GetAtt':
+          - StateMachinesagaLambdaHandler
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        'Fn::Join':
+          - ''
+          - - 'arn:'
+            - Ref: 'AWS::Partition'
+            - ':execute-api:'
+            - Ref: 'AWS::Region'
+            - ':'
+            - Ref: 'AWS::AccountId'
+            - ':'
+            - Ref: StateMachineServerlessSagaPattern
+            - /test-invoke-stage/*/*
+    Metadata:
+      'aws:sam:path': >-
+        SamServerlessSagaStack/StateMachine/ServerlessSagaPattern/Default/{proxy+}/ANY/ApiPermission.Test.SamServerlessSagaStackStateMachineServerlessSagaPattern.ANY..{proxy+}
+
+  StateMachineServerlessSagaPatternproxyANY:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      HttpMethod: ANY
+      ResourceId:
+        Ref: StateMachineServerlessSagaPatternproxy
+      RestApiId:
+        Ref: StateMachineServerlessSagaPattern
+      AuthorizationType: NONE
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          'Fn::Join':
+            - ''
+            - - 'arn:'
+              - Ref: 'AWS::Partition'
+              - ':apigateway:'
+              - Ref: 'AWS::Region'
+              - ':lambda:path/2015-03-31/functions/'
+              - 'Fn::GetAtt':
+                  - StateMachinesagaLambdaHandler
+                  - Arn
+              - /invocations
+    Metadata:
+      'aws:sam:path': >-
+        SamServerlessSagaStack/StateMachine/ServerlessSagaPattern/Default/{proxy+}/ANY/Resource
+
+  StateMachineServerlessSagaPatternANYApiPermissionSamServerlessSagaStackStateMachineServerlessSagaPattern:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName:
+        'Fn::GetAtt':
+          - StateMachinesagaLambdaHandler
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        'Fn::Join':
+          - ''
+          - - 'arn:'
+            - Ref: 'AWS::Partition'
+            - ':execute-api:'
+            - Ref: 'AWS::Region'
+            - ':'
+            - Ref: 'AWS::AccountId'
+            - ':'
+            - Ref: StateMachineServerlessSagaPattern
+            - /
+            - Ref: StateMachineServerlessSagaPatternDeploymentStageprod
+            - /*/
+    Metadata:
+      'aws:cdk:path': >-
+        CdkServerlessSagaStack/StateMachine/ServerlessSagaPattern/Default/ANY/ApiPermission.SamServerlessSagaStackStateMachineServerlessSagaPattern.ANY..
+
+  StateMachineServerlessSagaPatternANYApiPermissionTestSamServerlessSagaStackStateMachineServerlessSagaPattern:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName:
+        'Fn::GetAtt':
+          - StateMachinesagaLambdaHandler
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        'Fn::Join':
+          - ''
+          - - 'arn:'
+            - Ref: 'AWS::Partition'
+            - ':execute-api:'
+            - Ref: 'AWS::Region'
+            - ':'
+            - Ref: 'AWS::AccountId'
+            - ':'
+            - Ref: StateMachineServerlessSagaPattern
+            - /test-invoke-stage/*/
+    Metadata:
+      'aws:sam:path': >-
+        SamServerlessSagaStack/StateMachine/ServerlessSagaPattern/Default/ANY/ApiPermission.Test.SamServerlessSagaStackStateMachineServerlessSagaPattern.ANY..
+
+  StateMachineServerlessSagaPatternANY:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      HttpMethod: ANY
+      ResourceId:
+        'Fn::GetAtt':
+          - StateMachineServerlessSagaPattern
+          - RootResourceId
+      RestApiId:
+        Ref: StateMachineServerlessSagaPattern
+      AuthorizationType: NONE
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          'Fn::Join':
+            - ''
+            - - 'arn:'
+              - Ref: 'AWS::Partition'
+              - ':apigateway:'
+              - Ref: 'AWS::Region'
+              - ':lambda:path/2015-03-31/functions/'
+              - 'Fn::GetAtt':
+                  - StateMachinesagaLambdaHandler
+                  - Arn
+              - /invocations
+    Metadata:
+      'aws:sam:path': >-
+        SamServerlessSagaStack/StateMachine/ServerlessSagaPattern/Default/ANY/Resource
+Outputs:
+  StateMachineServerlessSagaPatternEndpoint:
+    Value:
+      'Fn::Join':
+        - ''
+        - - 'https://'
+          - Ref: StateMachineServerlessSagaPattern
+          - .execute-api.
+          - Ref: 'AWS::Region'
+          - .
+          - Ref: 'AWS::URLSuffix'
+          - /
+          - Ref: StateMachineServerlessSagaPatternDeploymentStageprod
+          - /
