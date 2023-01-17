@@ -2,15 +2,9 @@ import uuid
 import os
 from aws_cdk import (
     Stack,
-    Duration,
-    aws_stepfunctions as sfn,
-    aws_stepfunctions_tasks as sfn_tasks,
     aws_s3 as s3,
-    aws_lambda_python_alpha as python,
-    aws_lambda_event_sources as eventsources,
     aws_iam as iam,
     aws_glue as glue
-
 )
 
 from constructs import Construct
