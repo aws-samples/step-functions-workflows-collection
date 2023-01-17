@@ -100,8 +100,7 @@ command.
         ```
 - Once the execution is complete, output of the last state is a link to the Athena execution id that you can navigate to on the console.
 <Screen shot here>
-- You can build your own SQL query by modifying the 
-[Query](https://github.com/revanthreddy/step-functions-workflows-collection/blob/main/ingest-and-analyze-historical-storm-events/ingest_and_analyze_historical_storm_events/ingestion.py#L17) and re-deleoying the code
+- You can build your own SQL query by modifying the [Query](https://github.com/revanthreddy/step-functions-workflows-collection/blob/main/ingest-and-analyze-historical-storm-events/ingest_and_analyze_historical_storm_events/ingestion.py#L17) and re-deleoying the code
 - Output of the Athena query
 
 ![image](./resources/Athena_query_result.png)
