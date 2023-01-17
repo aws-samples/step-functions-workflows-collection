@@ -14,6 +14,10 @@ RAW_SOURCE_PREFIX = "raw_source"
 ATHENA_RESULTS_PREFIX = "athena_results"
 FORMATTED_RESULTS_PREFIX = "formatted"
 WAIT_TIME_IN_SECS = 25
+QUERY_NUMBER_OF_OCCURRENCES_OF_STORM_EVENT_BY_TYPE_AND_STATE = \
+    "SELECT STATE, EVENT_TYPE, COUNT(EVENT_TYPE) as NUMBER_OF_OCCURRENCES FROM storm_events_db.details GROUP BY " \
+    "STATE, EVENT_TYPE ORDER BY STATE "
+
 
 class IngestionWorkflow(Construct):
     def __init__(
@@ -222,7 +226,7 @@ class IngestionWorkflow(Construct):
                 "Athena StartQueryExecution": {
                     "End": True,
                     "Parameters": {
-                        "QueryString": "SELECT * FROM details limit 10;",
+                        "QueryString": QUERY_NUMBER_OF_OCCURRENCES_OF_STORM_EVENT_BY_TYPE_AND_STATE,
                         "WorkGroup": athena_workgroupname,
                         "QueryExecutionContext": {
                             "Database": "storm_events_db",

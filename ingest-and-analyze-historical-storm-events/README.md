@@ -2,7 +2,9 @@
 # Distributed Map - Ingest & Read Historical Storm Data
 Storm Data is an official publication of the National Oceanic and Atmospheric Administration (NOAA) which documents the occurrence of storms and other significant weather phenomena having sufficient intensity to cause loss of life, injuries, 
 significant property damage, and/or disruption to commerce. The workflow uses the distributed map function of Step function to decompress the zipped files at scale and drop them into an S3 bucket with a certain hierarchy. 
-Using AWS's purpose-built services for analytics, we can read & analyze the storm data at scale that have occurred historically in the US.   
+Using AWS's purpose-built services for analytics, we can read & analyze the storm data at scale that have occurred historically in the US. 
+
+The output of the application is to read the number of occurrences of various storm events across the US.
 
 ## Requirements
 
