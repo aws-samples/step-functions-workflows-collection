@@ -9,6 +9,7 @@ Using AWS's purpose-built services for analytics, we can read & analyze the stor
 - [AWS Cloud Development Kit (AWS CDK) v2](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html)
 - Python > 3.10.6
 - [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html)
+- Docker
 
 
 ## Deployment Instructions
