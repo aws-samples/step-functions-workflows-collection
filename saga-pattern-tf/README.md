@@ -1,6 +1,6 @@
 # Workflow title
 
-This workflow uses AWS Step Functions to build a saga pattern to book flights, book car rentals, and process payments for a vacation.
+This workflow uses AWS Step Functions to build a saga pattern to book flights, book car rentals, and process payments for a vacation. The saga pattern is a failure management pattern that coordinates transactions between multiple microservices to maintain data consistency.
 
 Learn more about this workflow at Step Functions workflows collection: << Add the live URL here >>
 
