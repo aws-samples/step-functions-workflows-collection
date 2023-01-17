@@ -55,8 +55,13 @@ Using all native API calls the step function:
 
 ## Testing
 
-Provide steps to trigger the workflow and show what should be observed if successful.
-Add JSON
+The Step Function can be triggered with the with the instance id of the instance to isolate.
+Example:
+    ```
+    {
+        "IsolatedInstanceId": "i-01234567890abc"
+    }
+    ```
 
 ## Cleanup
  
