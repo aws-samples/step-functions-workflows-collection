@@ -75,7 +75,7 @@ command.
     - For the purpose of the example, we have few sample files that we can use for the demo
         ```
         $ cd sample_files
-        $ aws s3 cp . s3://{output_bucket_name}/raw_source/
+        $ aws s3 cp . s3://{output_bucket_name}/raw_source/ --recursive
         ``` 
 
 ## How it works
