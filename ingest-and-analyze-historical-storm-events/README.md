@@ -1,11 +1,15 @@
 
-# Distributed Map - Ingest and Analyze Historical Storm Events
-
-This application will create a State Machine with AWS Lambda, AWS Glue crawler, Amazon Athena services to ingest and read weather related data files.
-The weather files are in zipped format and can be obtained from the website - https://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/. AWS Lambda function decompresses these zipped files and put them in appropriate S3 folders in a S3 bucket with a success. AWS Glue crawler is used to determine and define the schema of these decompressed files with a success. Athena is used to query this data using standard SQL in a table format with a success and the file is stored in Amazon S3 folder where the query results are stored. The user can view the end results from this Amazon S3 folder.
-
+# Distributed Map - Ingest & Read Historical Storm Data
+Storm Data is an official publication of the National Oceanic and Atmospheric Administration (NOAA) which documents the occurrence of storms and other significant weather phenomena having sufficient intensity to cause loss of life, injuries, 
+significant property damage, and/or disruption to commerce. The workflow uses the distributed map function of Step function to decompress the zipped files at scale and drop them into an S3 bucket with a certain hierarchy. 
+Using AWS's purpose-built services for analytics, we can read & analyze the storm data at scale that have occurred historically in the US.   
 
 ## Requirements
+
+- [AWS Cloud Development Kit (AWS CDK) v2](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html)
+- Python > 3.10.6
+- [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html)
+
 
 ## Deployment Instructions
 
@@ -47,21 +51,55 @@ At this point you can now synthesize the CloudFormation template for this code.
 $ cdk synth
 ```
 
+Deploy this stack to your default AWS account/region
+
+```
+$ cdk deploy
+```
+
 To add additional dependencies, for example other CDK libraries, just add
 them to your `setup.py` file and rerun the `pip install -r requirements.txt`
 command.
 
-## Useful commands
-
+### Useful commands
  * `cdk ls`          list all stacks in the app
- * `cdk synth`       emits the synthesized CloudFormation template
- * `cdk deploy`      deploy this stack to your default AWS account/region
  * `cdk diff`        compare deployed stack with current state
  * `cdk docs`        open CDK documentation
 
 
+## Pre-run instructions
+
+- Upload the zip files to a folder in the S3 bucket created by the stack
+    - The storm data files (zipped format) can be obtained from the [NOAA website](https://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/) directly
+    - For the purpose of the example, we have few sample files that we can use for the demo
+        ```
+        $ cd sample_files
+        $ aws s3 cp . s3://{output_bucket_name}/raw_source/
+        ``` 
+
 ## How it works
 
-Create raw_source 
+1. The workflow starts by iterating over all files in the S3 bucket under `/raw_source` folder
+2. For zipped file, lambda function decompresses the file and places it in the right category under the `/formatted` folder
+3. A Glue crawler then kicks off to populate the AWS Glue Data Catalog with tables
+4. Once the crawl process is complete (using `wait`), an Athena query gets kicked off to {read something here}
+
 ![image](./resources/stepfunctions_graph.png)
+
+## How to run the workflow
+
+- Using the console navigate to the Step function created using the stack in the Step function console
+- To run this workflow payload is irrelevant as the Step function directly iterates over the `raw_source/` folder in the S3 bucket created by the stack.
+    - To kick off the step function, you can use the below payload
+        ```
+        {
+            "key1" : "v1"
+        }
+        ```
+- Once the execution is complete, output of the last state is a link to the Athena execution id that you can navigate to on the console.
+<Screen shot here>
+
+
+
+
 
