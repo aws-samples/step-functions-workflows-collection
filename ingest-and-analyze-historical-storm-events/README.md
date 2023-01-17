@@ -99,6 +99,13 @@ command.
 - Once the execution is complete, output of the last state is a link to the Athena execution id that you can navigate to on the console.
 <Screen shot here>
 
+## Cleanup Instructions
+
+- 
+    ```
+    $ cdk destroy
+    ```
+  Note: The S3 bucket will not be deleted as there are files in the bucket
 
 
 
