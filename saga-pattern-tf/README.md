@@ -4,6 +4,8 @@ This workflow uses AWS Step Functions to build a saga pattern to book flights, b
 
 Learn more about this workflow at Step Functions workflows collection: << Add the live URL here >>
 
+For more info about the saga pattern, please read [Implement the serverless saga pattern by using AWS Step Functions](https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/implement-the-serverless-saga-pattern-by-using-aws-step-functions.html)
+
 Important: this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the [AWS Pricing page](https://aws.amazon.com/pricing/) for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
 
 ## Requirements
