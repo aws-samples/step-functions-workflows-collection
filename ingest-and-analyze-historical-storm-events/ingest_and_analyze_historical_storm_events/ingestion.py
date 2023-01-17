@@ -15,8 +15,8 @@ ATHENA_RESULTS_PREFIX = "athena_results"
 FORMATTED_RESULTS_PREFIX = "formatted"
 WAIT_TIME_IN_SECS = 25
 QUERY_NUMBER_OF_OCCURRENCES_OF_STORM_EVENT_BY_TYPE_AND_STATE = \
-    "SELECT STATE, EVENT_TYPE, COUNT(EVENT_TYPE) as NUMBER_OF_OCCURRENCES FROM storm_events_db.details GROUP BY " \
-    "STATE, EVENT_TYPE ORDER BY STATE "
+    "SELECT YEAR, STATE, EVENT_TYPE, COUNT(EVENT_TYPE) as NUMBER_OF_OCCURRENCES FROM storm_events_db.details GROUP BY " \
+    "YEAR, STATE, EVENT_TYPE ORDER BY YEAR, STATE"
 
 
 class IngestionWorkflow(Construct):
@@ -116,14 +116,13 @@ class IngestionWorkflow(Construct):
     def build(self):
         decompress_lambda = self.build_decompress_lambda()
         athena_workgroup = self.build_athena_workgroup()
-        asl = self.build_ingestion_workflow_definition(decompress_lambda.function_arn , athena_workgroup.name)
+        asl = self.build_ingestion_workflow_definition(decompress_lambda.function_arn, athena_workgroup.name)
         role = self.get_ingestion_workflow_role()
 
         role.add_to_policy(iam.PolicyStatement(
             resources=[decompress_lambda.function_arn],
             actions=["lambda:InvokeFunction"]
         ))
-
 
         sfn.CfnStateMachine(self, "IngestAndAnalyzeStormEvents",
                             definition=asl,

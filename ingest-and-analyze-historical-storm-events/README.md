@@ -4,8 +4,7 @@ Storm Data is an official publication of the National Oceanic and Atmospheric Ad
 significant property damage, and/or disruption to commerce. The workflow uses the distributed map function of Step function to decompress the zipped files at scale and drop them into an S3 bucket with a certain hierarchy. 
 Using AWS's purpose-built services for analytics, we can read & analyze the storm data at scale that have occurred historically in the US. 
 
-The output of the application is to read the number of occurrences of various storm events across the US.
-
+The application queries the dataset to find the number of occurrences of various storm events across the US.
 ## Requirements
 
 - [AWS Cloud Development Kit (AWS CDK) v2](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html)
@@ -101,7 +100,10 @@ command.
         ```
 - Once the execution is complete, output of the last state is a link to the Athena execution id that you can navigate to on the console.
 <Screen shot here>
-
+- You can build your own SQL query by modifying the 
+[Query](https://github.com/revanthreddy/step-functions-workflows-collection/blob/main/ingest-and-analyze-historical-storm-events/ingest_and_analyze_historical_storm_events/ingestion.py#L17) and re-deleoying the code
+- Output of the Athena query
+![image](./resources/Athena_query_result.png)
 ## Cleanup Instructions
 
 - 
