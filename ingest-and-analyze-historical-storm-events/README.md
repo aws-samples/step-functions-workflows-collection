@@ -90,7 +90,7 @@ command.
 1. The workflow starts by iterating over all files in the S3 bucket under `/raw_source` folder
 2. For zipped file, lambda function decompresses the file and places it in the right category under the `/formatted` folder
 3. A Glue crawler then kicks off to populate the AWS Glue Data Catalog with tables
-4. Once the crawl process is complete (using `wait`), an Athena query gets kicked off to to find the number of occurrences of various event types across the US.
+4. Once the crawl process is complete (using `wait`), an Athena query gets kicked off to find the number of occurrences of various event types across the US.
 
 ![image](./resources/stepfunctions_graph.png)
 
