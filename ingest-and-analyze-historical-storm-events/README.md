@@ -4,7 +4,9 @@ Storm Data is an official publication of the National Oceanic and Atmospheric Ad
 significant property damage, and/or disruption to commerce. The workflow uses the distributed map function of Step function to decompress the zipped files at scale and drop them into an S3 bucket with a certain hierarchy. 
 Using AWS's purpose-built services for analytics, we can read & analyze the storm data at scale that have occurred historically in the US. 
 
-The application queries the [storm dataset](https://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/) to find the number of occurrences of various event types across the US.
+The application queries the [storm dataset](https://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/) to find the number of occurrences of various storm event types across the US over the years.
+
+_Note: There are three different file types for storm data: details, locations, and fatalities. Each file type contains different information relevant to the storm events_
 
 ## Requirements
 
@@ -78,7 +80,7 @@ command.
 ## Pre-run instructions
 
 - Upload the zip files to a folder in the S3 bucket created by the stack
-    - The storm data files (zipped format) can be obtained from the [NOAA website](https://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/) directly
+    - The zipped storm data files can be obtained direclty from the [NOAA website](https://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/)
     - For the purpose of the example, we have few sample files that we can use for the demo
         ```
         $ cd sample_files
@@ -87,31 +89,29 @@ command.
 
 ## How it works
 
-1. The workflow starts by iterating over all files in the S3 bucket under `/raw_source` folder
-2. For zipped file, lambda function decompresses the file and places it in the right category under the `/formatted` folder
-3. A Glue crawler then kicks off to populate the AWS Glue Data Catalog with tables
-4. Once the crawl process is complete (using `wait`), an Athena query gets kicked off to find the number of occurrences of various event types across the US.
+1. The workflow starts by iterating over all files in the S3 bucket under `raw_source/` folder
+2. For each zipped file, lambda function decompresses it and places the .csv to the appropriate file type prefix under the `formatted/` folder
+3. AWS Glue crawler then kicks off to populate the AWS Glue Data Catalog with tables
+4. Once the crawl process is complete (using `wait`), an Athena query gets kicked off to find the number of occurrences of various storm event types across the US over the years
 
 ![image](./resources/stepfunctions_graph.png)
 
 ## How to run the workflow
 
-- Using the console navigate to the Step function created using the stack in the Step function console
-- To run this workflow payload is irrelevant as the Step function directly iterates over the `raw_source/` folder in the S3 bucket created by the stack.
+- Navigate to the Step function that was created by the stack
+- To run this Step function, the payload is irrelevant as it directly iterates over the `raw_source/` folder in the S3 bucket {output_bucket_name}
     - To kick off the step function, you can use the below payload
         ```
         {
             "key1" : "v1"
         }
         ```
-- Once the execution is complete, output of the last state is a link to the Athena execution id that you can navigate to on the console.
-<Screen shot here>
-
-- You can [build/modify the SQL query in the code](https://github.com/revanthreddy/step-functions-workflows-collection/blob/main/ingest-and-analyze-historical-storm-events/ingest_and_analyze_historical_storm_events/ingestion.py#L17) and re-deploying the stack
-
-- Output of the Athena query
-
+- Once the step function execution is complete, output of the workflow will contain the S3 URI to the results of Athena query and the Athena query execution id itself. <br><br>
+![image](./resources/Athena_query_execution_id.png) <br><br>
 ![image](./resources/Athena_query_result.png)
+
+
+_Note: You can [build/modify the SQL query in the code](https://github.com/revanthreddy/step-functions-workflows-collection/blob/main/ingest-and-analyze-historical-storm-events/ingest_and_analyze_historical_storm_events/ingestion.py#L18) and re-deploying the stack_
 
 ## Cleanup Instructions
 
@@ -119,7 +119,7 @@ command.
     ```
     $ cdk destroy
     ```
-  Note: The S3 bucket will not be deleted as there are files in the bucket
+  _Note: The S3 bucket will not be deleted as there are files in the bucket_
 
 
 
