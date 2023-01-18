@@ -1,5 +1,5 @@
 {
-    "title": "Synchronous Job",
+    "title": "Distributed Map - Ingest & Analyze Historical Storm Data",
     "description": "Wait for an asynchroous Job to finish before moving onto the next state",
     "language": "",
     "simplicity": "3 - Application",
@@ -11,9 +11,9 @@
     "framework": "CDK",
     "services": ["Step function","AWS Glue" , "AWS Athena" , "S3"],
     "introBox": {
-      "headline": "Ingest and Analyze historical storm events using the Step Functions Distributed Map and Athena",
+      "headline": "Distributed Map - Ingest & Analyze Historical Storm Data",
       "text": [
-        "In this workflow we will use the distributed map feature of AWS Step functions by iterating over the raw files (.gz) in the S3 bucket and decompressing them at scale. In the same orchestration process we will leverage glue crawler to create/update the schema of the storm events. Once the crawl is process is complete, the step function will invoke the Athena query to retrieve the infomrmation from the decompressed .csv files"
+        "In this workflow we will use the distributed map feature of AWS Step functions by iterating over the raw compressed files (.gz) in the S3 bucket and decompressing them at scale. In the same orchestration process we will use AWS Glue Crawler to create/update the schema of the storm events. Once the crawl is process is complete, the step function will invoke the Athena query to retrieve the information from the AWS Glue data catalog tables"
       ]
     },
     "testing": {
@@ -30,7 +30,8 @@
     },
     "deploy": {
       "text": [
-        "cdk deploy"
+        "1. Bootstrap CDK, if needed: <code>cdk bootstrap aws://{your-aws-account-number}/{your-aws-region}</code>",
+        "2. Deploy the stack: <code>cdk deploy</code>"
       ]
     },
     "gitHub": {
@@ -72,7 +73,7 @@
         {
           "name": "Revanth Anireddy",
           "image": "https://twitter.com/revanthreddy/photo",
-          "bio": "Prinicpal Cloud Application Architect @ AWS",
+          "bio": "Principal Cloud Application Architect @ AWS",
           "linkedin": "https://www.linkedin.com/in/revanth-anireddy-b7676616/",
           "twitter": "https://twitter.com/revanthreddy"
         },
