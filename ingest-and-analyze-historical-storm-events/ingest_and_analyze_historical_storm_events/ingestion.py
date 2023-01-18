@@ -150,6 +150,12 @@ class IngestionWorkflow(Construct):
             "States": {
                 "Ingest From S3": {
                     "Type": "Map",
+                    "Catch": [
+                        {
+                            "ErrorEquals": ["States.ItemReaderFailed"],
+                            "Next": "Fail"
+                        }
+                    ],
                     "Next": "Ingestion Complete",
                     "ItemProcessor": {
                         "ProcessorConfig": {
@@ -256,6 +262,9 @@ class IngestionWorkflow(Construct):
                     "Resource": "arn:aws:states:::athena:startQueryExecution.sync",
                     "Type": "Task"
                 },
+                "Fail": {
+                    "Type": "Fail"
+                }
             }
         }
 
