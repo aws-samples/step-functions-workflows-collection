@@ -146,18 +146,19 @@ class IngestionWorkflow(Construct):
     def build_ingestion_workflow_definition(self, decompress_lambda_arn, athena_workgroupname):
         asl = {
             "Comment": "A description of my state machine",
-            "StartAt": "IngestFromS3",
+            "StartAt": "Ingest From S3",
             "States": {
-                "IngestFromS3": {
+                "Ingest From S3": {
                     "Type": "Map",
+                    "Next": "Ingestion Complete",
                     "ItemProcessor": {
                         "ProcessorConfig": {
                             "Mode": "DISTRIBUTED",
                             "ExecutionType": "STANDARD"
                         },
-                        "StartAt": "Lambda Invoke",
+                        "StartAt": "Decompress File",
                         "States": {
-                            "Lambda Invoke": {
+                            "Decompress File": {
                                 "Type": "Task",
                                 "Resource": "arn:aws:states:::lambda:invoke",
                                 "OutputPath": "$.Payload",
@@ -178,10 +179,6 @@ class IngestionWorkflow(Construct):
                                         "BackoffRate": 2
                                     }
                                 ],
-                                "Next": "Pass"
-                            },
-                            "Pass": {
-                                "Type": "Pass",
                                 "End": True
                             }
                         }
@@ -197,10 +194,10 @@ class IngestionWorkflow(Construct):
                     },
                     "ItemBatcher": {
                         "MaxItemsPerBatch": 5
-                    },
-                    "Next": "StartStormEventsCrawler"
+                    }
+
                 },
-                "StartStormEventsCrawler": {
+                "Crawl Storm Data": {
                     "Type": "Task",
                     "Next": "Wait",
                     "Parameters": {
@@ -211,32 +208,32 @@ class IngestionWorkflow(Construct):
                 "Wait": {
                     "Type": "Wait",
                     "Seconds": WAIT_TIME_IN_SECS,
-                    "Next": "GetCrawler"
+                    "Next": "Get Crawler Status"
                 },
-                "GetCrawler": {
+                "Get Crawler Status": {
                     "Type": "Task",
                     "Parameters": {
                         "Name": self.crawler_name
                     },
                     "Resource": "arn:aws:states:::aws-sdk:glue:getCrawler",
-                    "Next": "Crawl complete?"
+                    "Next": "Is Crawler READY?"
                 },
-                "Crawl complete?": {
+                "Is Crawler READY?": {
                     "Type": "Choice",
                     "Choices": [
                         {
                             "Variable": "$.Crawler.State",
                             "StringEquals": "READY",
-                            "Next": "Ingestion Complete"
+                            "Next": "Query Storm Data"
                         }
                     ],
                     "Default": "Wait"
                 },
                 "Ingestion Complete": {
                     "Type": "Pass",
-                    "Next": "Athena StartQueryExecution"
+                    "Next": "Crawl Storm Data"
                 },
-                "Athena StartQueryExecution": {
+                "Query Storm Data": {
                     "End": True,
                     "Parameters": {
                         "QueryString": QUERY_NUMBER_OF_OCCURRENCES_OF_STORM_EVENT_BY_TYPE_AND_STATE,
