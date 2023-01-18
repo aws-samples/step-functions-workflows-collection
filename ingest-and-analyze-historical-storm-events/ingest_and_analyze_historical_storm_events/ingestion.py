@@ -203,7 +203,17 @@ class IngestionWorkflow(Construct):
                     "Parameters": {
                         "Name": self.crawler_name
                     },
-                    "Resource": "arn:aws:states:::aws-sdk:glue:startCrawler"
+                    "Resource": "arn:aws:states:::aws-sdk:glue:startCrawler",
+                    "Retry": [
+                        {
+                            "ErrorEquals": [
+                                "Glue.CrawlerRunningException"
+                            ],
+                            "IntervalSeconds": 60,
+                            "MaxAttempts": 6,
+                            "BackoffRate": 1
+                        }
+                    ]
                 },
                 "Wait": {
                     "Type": "Wait",
