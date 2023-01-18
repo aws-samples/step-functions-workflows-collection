@@ -1,5 +1,5 @@
 
-# Distributed Map - Ingest & Read Historical Storm Data
+# Distributed Map - Ingest & Analyze Historical Storm Data
 Storm Data is an official publication of the National Oceanic and Atmospheric Administration (NOAA) which documents the occurrence of storms and other significant weather phenomena having sufficient intensity to cause loss of life, injuries, 
 significant property damage, and/or disruption to commerce. The workflow uses the distributed map function of Step function to decompress the zipped files at scale and drop them into an S3 bucket with a certain hierarchy. 
 Using AWS's purpose-built services for analytics, we can read & analyze the storm data at scale that have occurred historically in the US. 
@@ -11,7 +11,6 @@ The application queries the [storm dataset](https://www1.ncdc.noaa.gov/pub/data/
 - [AWS Cloud Development Kit (AWS CDK) v2](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html)
 - Python > 3.10.6
 - [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html)
-- Docker
 
 
 ## Deployment Instructions
