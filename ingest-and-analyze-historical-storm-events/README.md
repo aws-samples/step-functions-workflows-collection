@@ -17,6 +17,18 @@ _Note: There are three different file types for storm data: details, locations, 
 
 ## Deployment Instructions
 
+Create a new directory, navigate to that directory in a terminal and clone the GitHub repository:
+```
+    git clone https://github.com/aws-samples/step-functions-workflows-collection
+```
+
+Change directory to the workflow directory
+```
+    cd ingest-and-analyze-historical-storm-events
+```
+
+<br>
+
 This project is set up like a standard Python project.  The initialization
 process also creates a virtualenv within this project, stored under the `.venv`
 directory.  To create the virtualenv it assumes that there is a `python3`
@@ -96,7 +108,7 @@ command.
 
 ![image](./resources/stepfunctions_graph.png)
 
-## How to run the workflow
+## Testing: How to run the workflow
 
 - Navigate to the Step function that was created by the stack
 - To run this Step function, the payload is irrelevant as it directly iterates over the `raw_source/` folder in the S3 bucket {output_bucket_name}
@@ -147,14 +159,17 @@ command.
 
 _Note: You can [build/modify the SQL query in the code](https://github.com/revanthreddy/step-functions-workflows-collection/blob/main/ingest-and-analyze-historical-storm-events/ingest_and_analyze_historical_storm_events/ingestion.py#L18) and re-deploying the stack_
 
-## Cleanup Instructions
-
-- 
-    ```
-    $ cdk destroy
-    ```
-  _Note: The S3 bucket will not be deleted as there are files in the bucket_
+## Cleanup
 
 
+```
+$ cdk destroy
+```
+_Note: The S3 bucket will not be deleted as there are files in the bucket_
 
+
+----
+Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+
+SPDX-License-Identifier: MIT-0
 
