@@ -12,7 +12,6 @@ s3client = boto3.client('s3')
 
 output_file = "output.tar.gz"
 
-
 STORM_EVENT_FATALITIES = "fatalities"
 STORM_EVENT_DETAILS = "details"
 STORM_EVENT_LOCATIONS = "locations"
@@ -70,8 +69,6 @@ def get_storm_event_file_type(file_name):
         return STORM_EVENT_OTHERS
 
 
-
-
 def decompress(event, context):
     """
     :param event:
@@ -99,20 +96,37 @@ def decompress(event, context):
     :param context:
     :return:
     """
-    print(event)
-    bucket_name = os.environ["raw_source_bucket"]
-    items = event["Items"]
-    for item in items:
-        clean_temp_folder()
-        key = item["Key"]
-        last_char = key[len(key) - 1]
-        if last_char == "/":
-            continue
-        gz_file_uri = fetch_source(bucket_name=bucket_name, key=key)
-        gz_file_name = parse_naked_file_name(gz_file_uri)
-        gz_output_name = gz_file_name.split(".gz")[0]
-        storm_event_record_type = get_storm_event_file_type(gz_output_name)
-        with gzip.open(f'/tmp/{gz_file_name}', "rb") as f_in, open(f'/tmp/{gz_output_name}', "wb") as f_out:
-            shutil.copyfileobj(f_in, f_out)
-            put_result(f'/tmp/{gz_output_name}', destination_bucket_name=bucket_name,
-                       destination_key=f"formatted/{storm_event_record_type}/{gz_output_name}")
+    try:
+        bucket_name = os.environ["raw_source_bucket"]
+        items = event["Items"]
+        for item in items:
+            clean_temp_folder()
+            key = item["Key"]
+            last_char = key[len(key) - 1]
+            if last_char == "/":
+                continue
+            gz_file_uri = fetch_source(bucket_name=bucket_name, key=key)
+            gz_file_name = parse_naked_file_name(gz_file_uri)
+            gz_output_name = gz_file_name.split(".gz")[0]
+            storm_event_record_type = get_storm_event_file_type(gz_output_name)
+            try:
+                with gzip.open(f'/tmp/{gz_file_name}', "rb") as f_in, open(f'/tmp/{gz_output_name}', "wb") as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+                    put_result(f'/tmp/{gz_output_name}', destination_bucket_name=bucket_name,
+                               destination_key=f"formatted/{storm_event_record_type}/{gz_output_name}")
+            except Exception as e:
+                logger.error(e)
+                logger.error(f"Error decompressing the file /tmp/{gz_file_name}")
+
+        return {
+            "STATUS": "SUCCESS",
+            "MESSAGE": "Files decompressed"
+        }
+
+    except Exception as e:
+        logger.error(e)
+        return {
+            "STATUS": "FAIL",
+            "MESSAGE": "Failed to decompress"
+        }
+

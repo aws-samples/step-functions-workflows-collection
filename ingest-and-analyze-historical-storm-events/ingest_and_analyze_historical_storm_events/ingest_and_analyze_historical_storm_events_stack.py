@@ -4,7 +4,8 @@ from aws_cdk import (
     Stack,
     aws_s3 as s3,
     aws_iam as iam,
-    aws_glue as glue
+    aws_glue as glue,
+    CfnOutput as CfnOutput
 )
 
 from constructs import Construct
@@ -23,6 +24,8 @@ class IngestAndAnalyzeHistoricalStormEventsStack(Stack):
         ingestion_workflow = IngestionWorkflow(self, "IngestionWorkflowBuilder", source_bucket,
                                                crawler_name=STORM_EVENTS_CRAWLER_NAME)
         ingestion_workflow.build()
+
+        # CfnOutput(self, "IngestionBucket", value=source_bucket.bucket_name)
 
     def build_source_bucket(self):
         return s3.Bucket(self, 'StormEventsSourceBucket',

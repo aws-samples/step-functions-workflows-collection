@@ -1,8 +1,9 @@
 from aws_cdk import (
     aws_stepfunctions as sfn,
-    aws_lambda_python_alpha as python,
     aws_iam as iam,
     aws_athena as athena,
+    CfnOutput as CfnOutput,
+    aws_lambda as lambda_,
     Aws, Duration
 )
 import json
@@ -79,18 +80,29 @@ class IngestionWorkflow(Construct):
         decompress_gz_lambda_role.add_managed_policy(
             iam.ManagedPolicy.from_aws_managed_policy_name("service-role/AWSLambdaBasicExecutionRole"))
 
-        return python.PythonFunction(self, "DecompressSevereWeatherDataRecord",
-                                     entry="./ingest_and_analyze_historical_storm_events"
-                                           "/lambda/ingest_and_decompress",
-                                     runtime=Runtime.PYTHON_3_9,  # required
-                                     index="index.py",
-                                     handler="decompress",
-                                     environment={
-                                         "raw_source_bucket": self.source_bucket.bucket_name
-                                     },
-                                     role=decompress_gz_lambda_role,
-                                     timeout=Duration.minutes(10)
-                                     )
+        return lambda_.Function(
+            self, 'DecompressStormData',
+            runtime=lambda_.Runtime.PYTHON_3_9,
+            code=lambda_.Code.from_asset('ingest_and_analyze_historical_storm_events/lambda/ingest_and_decompress'),
+            handler='index.decompress',
+            role=decompress_gz_lambda_role,
+            environment={
+                 "raw_source_bucket": self.source_bucket.bucket_name
+            },
+            timeout=Duration.minutes(10)
+        )
+        # return python.PythonFunction(self, "DecompressSevereWeatherDataRecord",
+        #                              entry="./ingest_and_analyze_historical_storm_events"
+        #                                    "/lambda/ingest_and_decompress",
+        #                              runtime=Runtime.PYTHON_3_9,  # required
+        #                              index="index.py",
+        #                              handler="decompress",
+        #                              environment={
+        #                                  "raw_source_bucket": self.source_bucket.bucket_name
+        #                              },
+        #                              role=decompress_gz_lambda_role,
+        #                              timeout=Duration.minutes(10)
+        #                              )
 
     def build_athena_workgroup(self):
         return athena.CfnWorkGroup(self,
@@ -124,10 +136,12 @@ class IngestionWorkflow(Construct):
             actions=["lambda:InvokeFunction"]
         ))
 
-        sfn.CfnStateMachine(self, "IngestAndAnalyzeStormEvents",
+        state_machine = sfn.CfnStateMachine(self, "IngestAndAnalyzeStormEvents",
                             definition=asl,
                             role_arn=role.role_arn
                             )
+
+        # CfnOutput(self, "IngestionWorkflow", value=state_machine.state_machine_name)
 
     def build_ingestion_workflow_definition(self, decompress_lambda_arn, athena_workgroupname):
         asl = {
