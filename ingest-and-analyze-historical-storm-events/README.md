@@ -107,8 +107,42 @@ command.
         }
         ```
 - Once the step function execution is complete, output of the workflow will contain the S3 URI to the results of Athena query and the Athena query execution id itself. <br><br>
-![image](./resources/Athena_query_execution_id.png) <br><br>
-![image](./resources/Athena_query_result.png)
+    ```
+    {
+      "QueryExecution": {
+        "EngineVersion": {
+          "EffectiveEngineVersion": "Athena engine version 2",
+          "SelectedEngineVersion": "AUTO"
+        },
+        "Query": "SELECT YEAR, STATE, EVENT_TYPE, COUNT(EVENT_TYPE) as NUMBER_OF_OCCURRENCES FROM storm_events_db.details GROUP BY YEAR, STATE, EVENT_TYPE ORDER BY YEAR, STATE",
+        "QueryExecutionContext": {
+          "Catalog": "awsdatacatalog",
+          "Database": "storm_events_db"
+        },
+        "QueryExecutionId": "XXXXXXX-XXXX-XXXX-b76d-c22bcd092985",
+        "ResultConfiguration": {
+          "OutputLocation": "s3://{output_bucket_name}/athena_results/XXXXXXX-XXXX-XXXX-b76d-c22bcd092985.csv"
+        },
+        "StatementType": "DML",
+        "Statistics": {
+          "DataScannedInBytes": 64886,
+          "EngineExecutionTimeInMillis": 610,
+          "QueryPlanningTimeInMillis": 112,
+          "QueryQueueTimeInMillis": 141,
+          "ServiceProcessingTimeInMillis": 22,
+          "TotalExecutionTimeInMillis": 773
+        },
+        "Status": {
+          "CompletionDateTime": 1674054596798,
+          "State": "SUCCEEDED",
+          "SubmissionDateTime": 1674054596025
+        },
+        "WorkGroup": "storm_events_workgroup"
+      }
+    }
+    ```
+    ![image](./resources/Athena_query_execution_id.png) <br><br>
+    ![image](./resources/Athena_query_result.png)
 
 
 _Note: You can [build/modify the SQL query in the code](https://github.com/revanthreddy/step-functions-workflows-collection/blob/main/ingest-and-analyze-historical-storm-events/ingest_and_analyze_historical_storm_events/ingestion.py#L18) and re-deploying the stack_
