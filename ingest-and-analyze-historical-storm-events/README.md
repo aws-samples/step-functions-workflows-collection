@@ -71,8 +71,9 @@ command.
 ### Important resources created by this stack
 
 - AWS Step function
+- Amazon S3
 - AWS Glue Crawler
-- AWS Athena workgroup 
+- Amazon Athena workgroup 
 
 ## Pre-run instructions
 
