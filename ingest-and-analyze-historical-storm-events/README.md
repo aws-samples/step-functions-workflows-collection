@@ -106,7 +106,7 @@ command.
             "key1" : "v1"
         }
         ```
-- Once the step function execution is complete, output of the workflow will contain the S3 URI to the results of Athena query and the Athena query execution id itself. <br><br>
+- Once the step function execution is complete, output of the workflow will contain the S3 URI to the results of Athena query and the Athena query execution id itself. Below is a sample output from the step function<br><br>
     ```
     {
       "QueryExecution": {
