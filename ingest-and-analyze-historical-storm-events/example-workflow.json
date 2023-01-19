@@ -9,7 +9,7 @@
     "videoId": "",
     "level": "300",
     "framework": "CDK",
-    "services": ["Step function","AWS Glue" , "AWS Athena" , "S3"],
+    "services": ["AWS Step Functions","AWS Glue" , "Amazon Athena" , "Amazon S3"],
     "introBox": {
       "headline": "Distributed Map - Ingest & Analyze Historical Storm Data",
       "text": [
