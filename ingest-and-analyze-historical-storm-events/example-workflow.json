@@ -3,7 +3,7 @@
     "description": "Wait for an asynchroous Job to finish before moving onto the next state",
     "language": "",
     "simplicity": "3 - Application",
-    "usecase": "",
+    "usecase": "Data Processing & Analysis",
     "type": "Standard",
     "diagram":"/resources/stepfunctions_graph.png",
     "videoId": "",
