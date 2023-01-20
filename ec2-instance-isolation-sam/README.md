@@ -1,0 +1,79 @@
+# EC2 Instance Isolation
+
+This is an AWS SAM template for automated security reponse to isolate an EC2 instance. Below is an explanation of how to deploy the template containing the step function state machine.
+
+This example is modeled after the potential security anomaly on an EC2 instance section in the `[AWS Security Incident Response guide](https://docs.aws.amazon.com/whitepapers/latest/aws-security-incident-response-guide/welcome.html) under Infrastructure Domain Incidents.
+
+Learn more about this workflow at Step Functions workflows collection: https://serverlessland.com/workflows/ec2-instance-isolation-sam
+
+Important: this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the [AWS Pricing page](https://aws.amazon.com/pricing/) for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
+
+## Requirements
+
+* [Create an AWS account](https://portal.aws.amazon.com/gp/aws/developer/registration/index.html) if you do not already have one and log in. The IAM user that you use must have sufficient permissions to make necessary AWS service calls and manage AWS resources.
+* [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html) installed and configured
+* [Git Installed](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+* [AWS Serverless Application Model](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) (AWS SAM) installed
+
+## Deployment Instructions
+
+1. Create a new directory, navigate to that directory in a terminal and clone the GitHub repository:
+    ``` 
+    git clone https://github.com/aws-samples/step-functions-workflows-collection
+    ```
+1. Change directory to the pattern directory:
+    ```
+    cd ec2-instance-isolation-sam
+    ```
+1. From the command line, use AWS SAM to deploy the AWS resources for the workflow as specified in the template.yaml file:
+    ```
+    sam deploy --guided
+    ```
+1. During the prompts:
+    * Enter a stack name
+    * Enter the desired AWS Region
+    * Allow SAM CLI to create IAM roles with the required permissions.
+
+    Once you have run `sam deploy --guided` mode once and saved arguments to a configuration file (samconfig.toml), you can use `sam deploy` in future to use these defaults.
+
+1. Note the outputs from the SAM deployment process. These contain the resource names and/or ARNs which are used for testing.
+
+## How it works
+
+This step function orchestrates the process of isolating an EC2 instance involved in a potential security anomaly.,
+Using all native API calls the step function: 
+1. Captures the metadata from the Amazon EC2 instance.
+2. Protects the Amazon EC2 instance from accidental termination by enabling termination protection for the instance.
+3. Isolates the Amazon EC2 instance by switching the VPC Security Group.
+4. Detach the Amazon EC2 instance from any AWS Auto Scaling groups. Which will deregister the Amazon EC2 instance from any related Elastic Load Balancing service.
+5. Snapshots the Amazon EBS data volumes that are attached to the EC2 instance for preservation and follow-up investigations.
+6. Tags the Amazon EC2 instance as quarantined for investigation, and add any pertinent metadata, such as the trouble ticket associated with the investigation.
+7. Creates a forensic instance with the EBS volume from the suspected instance and allows ingress to the quarantined instance.
+
+## Image
+![image](./resources/statemachine.png)
+
+## Testing
+
+The Step Function can be triggered with the with the instance id of the instance to isolate.
+Example:
+    ```
+    {
+        "IsolatedInstanceId": "i-01234567890abc"
+    }
+    ```
+
+## Cleanup
+ 
+1. Delete the stack
+    ```bash
+    aws cloudformation delete-stack --stack-name STACK_NAME
+    ```
+1. Confirm the stack has been deleted
+    ```bash
+    aws cloudformation list-stacks --query StackSummaries[?contains(StackName,'STACK_NAME')].StackStatus
+    ```
+----
+Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+
+SPDX-License-Identifier: MIT-0
