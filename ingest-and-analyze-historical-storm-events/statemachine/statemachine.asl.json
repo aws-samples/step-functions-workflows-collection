@@ -1,0 +1,124 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Ingest From S3",
+  "States": {
+    "Crawl Storm Data": {
+      "Next": "Wait",
+      "Parameters": {
+        "Name": "storm_events_data_crawler"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:glue:startCrawler",
+      "Retry": [
+        {
+          "BackoffRate": 1,
+          "ErrorEquals": [
+            "Glue.CrawlerRunningException"
+          ],
+          "IntervalSeconds": 60,
+          "MaxAttempts": 6
+        }
+      ],
+      "Type": "Task"
+    },
+    "Fail": {
+      "Type": "Fail"
+    },
+    "Get Crawler Status": {
+      "Next": "Is Crawler READY?",
+      "Parameters": {
+        "Name": "storm_events_data_crawler"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:glue:getCrawler",
+      "Type": "Task"
+    },
+    "Ingest From S3": {
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ItemReaderFailed"
+          ],
+          "Next": "Fail"
+        }
+      ],
+      "ItemBatcher": {
+        "MaxItemsPerBatch": 5
+      },
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "ExecutionType": "STANDARD",
+          "Mode": "DISTRIBUTED"
+        },
+        "StartAt": "Decompress File",
+        "States": {
+          "Decompress File": {
+            "End": true,
+            "OutputPath": "$.Payload",
+            "Parameters": {
+              "FunctionName": "arn:aws:lambda:us-east-1:<account_number>:function:<function_name>",
+              "Payload.$": "$"
+            },
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Retry": [
+              {
+                "BackoffRate": 2,
+                "ErrorEquals": [
+                  "Lambda.ServiceException",
+                  "Lambda.AWSLambdaException",
+                  "Lambda.SdkClientException",
+                  "Lambda.TooManyRequestsException"
+                ],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 6
+              }
+            ],
+            "Type": "Task"
+          }
+        }
+      },
+      "ItemReader": {
+        "Parameters": {
+          "Bucket": "<bucket_name>",
+          "Prefix": "raw_source/"
+        },
+        "Resource": "arn:aws:states:::s3:listObjectsV2"
+      },
+      "Label": "Map",
+      "MaxConcurrency": 1000,
+      "Next": "Ingestion Complete",
+      "Type": "Map"
+    },
+    "Ingestion Complete": {
+      "Next": "Crawl Storm Data",
+      "Type": "Pass"
+    },
+    "Is Crawler READY?": {
+      "Choices": [
+        {
+          "Next": "Query Storm Data",
+          "StringEquals": "READY",
+          "Variable": "$.Crawler.State"
+        }
+      ],
+      "Default": "Wait",
+      "Type": "Choice"
+    },
+    "Query Storm Data": {
+      "End": true,
+      "Parameters": {
+        "QueryExecutionContext": {
+          "Catalog": "AwsDataCatalog",
+          "Database": "storm_events_db"
+        },
+        "QueryString": "SELECT YEAR, STATE, EVENT_TYPE, COUNT(EVENT_TYPE) as NUMBER_OF_OCCURRENCES FROM storm_events_db.details GROUP BY YEAR, STATE, EVENT_TYPE ORDER BY YEAR, STATE",
+        "WorkGroup": "storm_events_workgroup"
+      },
+      "Resource": "arn:aws:states:::athena:startQueryExecution.sync",
+      "Type": "Task"
+    },
+    "Wait": {
+      "Next": "Get Crawler Status",
+      "Seconds": 25,
+      "Type": "Wait"
+    }
+  }
+}
