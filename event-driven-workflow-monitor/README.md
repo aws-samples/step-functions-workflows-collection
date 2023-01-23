@@ -32,11 +32,11 @@ Important: this application uses various AWS services and there are costs associ
 
 ## How it works
 
-This example implements a so called workflow monitor task which succeeds or fails depending on events send to a custom [Amazon EventBridge](https://aws.amazon.com/eventbridge/) event bus. The infrastructure code deploys the following sample state machine.
+This example implements a so-called workflow monitor task which succeeds or fails depending on events send to a custom [Amazon EventBridge](https://aws.amazon.com/eventbridge/) event bus. The infrastructure code deploys the following sample state machine.
 
 ![image](./resources/statemachine.png)
 
-At the start of a workflow execution, a workflow monitor task is started and runs in parallel to other tasks. This workflow monitor task waits for callbacks triggered by events sent to Amazon EventBridge. For example, an error occuring somewhere in the system - outside of the workflow - might emit an error event and trigger the failure of the workflow monitor task.
+At the start of a workflow execution, a workflow monitor task is started and runs in parallel to other tasks. This workflow monitor task waits for callbacks triggered by events sent to Amazon EventBridge. For example, an error occurring somewhere in the system - outside of the workflow - might emit an error event and trigger the failure of the workflow monitor task.
 
 Events are associated with workflows using a unique identifier. In this example we use the term ```workflowkey``` to refer to such an unique identifier. For example, if your event-driven architecture is processing orders, an *Order ID* might be used as ```workflowkey```. Step Functions workflows might handle one part of the order processing while independent services within the event-driven architecture handle other parts of the order processing. In such scenarios the *Order ID* can be the globally unique identifier and it can be used to associate events with workflows.
 
@@ -46,14 +46,14 @@ We distinguish between two scenarios in this example:
 * **Graceful completion of the workflow monitor task** just before the workflow execution completes. The completion of the workflow monitor task is triggered from within the workflow itself by a [PutEvent](https://docs.aws.amazon.com/step-functions/latest/dg/connect-eventbridge.html) task.
 * **Failure of the workflow monitor task** triggered by an external event. In our example, we fail the entire workflow in case of a failing monitor task. But you can [implement arbitrary application logic within the workflow to handle failing monitor tasks](https://docs.aws.amazon.com/step-functions/latest/dg/concepts-error-handling.html). 
 
-If you are interested in further details about the integration of event-driven architectures with workflows, [this research paper](https://doi.org/10.1016/j.is.2014.04.002) provides furhter information.
+If you are interested in further details about the integration of event-driven architectures with workflows, [this research paper](https://doi.org/10.1016/j.is.2014.04.002) provides further information.
 
 #### Architecture for graceful workflow completion
-The following architecure summarizes the interaction of components in five steps.
+The following architecture summarizes the interaction of components in five steps.
 ![image](./resources/workflow-monitoring-stop.png)
 
 #### Architecture for failure of the workflow monitor task
-The following architecure summarizes the interaction of components in four steps.
+The following architecture summarizes the interaction of components in four steps.
 ![image](./resources/workflow-monitoring-error.png)
 
 
