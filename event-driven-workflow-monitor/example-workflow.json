@@ -1,6 +1,6 @@
 {
     "title": "Event-driven Workflow Monitor",
-    "description": "Wait for an asynchroous Job to finish before moving onto the next state",
+    "description": "Integrate workflows with event-driven architectures",
     "language": "",
     "simplicity": "2 - Pattern",
     "usecase": "",
