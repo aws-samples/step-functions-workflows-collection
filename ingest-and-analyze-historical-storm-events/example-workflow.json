@@ -74,14 +74,14 @@
           "name": "Revanth Anireddy",
           "image": "https://twitter.com/revanthreddy/photo",
           "bio": "Principal Cloud Application Architect @ AWS",
-          "linkedin": "https://www.linkedin.com/in/revanth-anireddy-b7676616/",
+          "linkedin": "revanth-anireddy-b7676616",
           "twitter": "https://twitter.com/revanthreddy"
         },
         {
           "name": "Praveen Marthala",
           "image": "https://www.amazon.com/photos/shared/y2ToD8iaTGGlqxeDMgz91A.n3yKhZdK5vobqKkBL0SK7Q/gallery/ModLrQeXRl2WI8-IzbbBnA",
           "bio": "Senior Database Consultant @ AWS",
-          "linkedin": "https://www.linkedin.com/in/praveen-marthala/"
+          "linkedin": "praveen-marthala"
         }
       ]
   }
