@@ -1,6 +1,6 @@
 {
     "title": "Distributed Map - Ingest & Analyze Historical Storm Data",
-    "description": "Wait for an asynchroous Job to finish before moving onto the next state",
+    "description": "Ingest & Analyze Historical Storm Data at scale using Distributed Map feature of AWS Step Functions",
     "language": "",
     "simplicity": "3 - Application",
     "usecase": "Data Processing & Analysis",
