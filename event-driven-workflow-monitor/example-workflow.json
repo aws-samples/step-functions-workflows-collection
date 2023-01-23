@@ -7,7 +7,7 @@
     "type": "Standard",
     "diagram":"/resources/statemachine.png",
     "videoId": "",
-    "level": "100",
+    "level": "300",
     "framework": "CDK",
     "services": ["events","dynamodb","lambda"],
     "introBox": {
@@ -60,7 +60,7 @@
     "authors": [
         {
           "name": "Stefan Appel",
-          "image": "link-to-your-photo.jpg",
+          "image": "https://github.com/StefanAppel.png",
           "bio": "Stefan is a Senior Solutions Architect at AWS. He supports global companies adopt cloud technologies. Prior to joining AWS, Stefan drove cloud topics in software architecture, product management, and IT operations departments. He began his career in research on event-based systems. In his spare time, he enjoys hiking and has walked the length of New Zealand following Te Araroa.",
           "linkedin": "https://www.linkedin.com/in/appel-stefan/"
         }

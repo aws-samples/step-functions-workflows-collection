@@ -32,7 +32,7 @@ Important: this application uses various AWS services and there are costs associ
 
 ## How it works
 
-This example implements a so called workflow monitor task which succeeds or fails depending on events send to a custom [Amazon EventBridge](https://aws.amazon.com/eventbridge/) event bus. The infrastructure code deploys the follown sample state machine.
+This example implements a so called workflow monitor task which succeeds or fails depending on events send to a custom [Amazon EventBridge](https://aws.amazon.com/eventbridge/) event bus. The infrastructure code deploys the following sample state machine.
 
 ![image](./resources/statemachine.png)
 
@@ -40,10 +40,10 @@ At the start of a workflow execution, a workflow monitor task is started and run
 
 Events are associated with workflows using a unique identifier. In this example we use the term ```workflowkey``` to refer to such an unique identifier. For example, if your event-driven architecture is processing orders, an *Order ID* might be used as ```workflowkey```. Step Functions workflows might handle one part of the order processing while independent services within the event-driven architecture handle other parts of the order processing. In such scenarios the *Order ID* can be the globally unique identifier and it can be used to associate events with workflows.
 
-The code of this example deploys a Step Functions workflow, a DynamoDB table, an EventBridge event bus & rules, and Lambda functions. The ```workflowkey```, which is required to associate events with workflows, is stored in a DynamoDB table by the monitor task at the beginning of a workflow execution. Lambda functions react to EventBridge events and send task success or failure commands to the workflow monitor task. We use a wait task in our sample workflow. You can replace this workflow with arbitrary workflow tasks. Just note that the ```StopWorkflowMonitoring``` task requires the ```workflowkey``` as input.
+The code of this example deploys a Step Functions workflow, a DynamoDB table, an EventBridge event bus & rules, and Lambda functions. The ```workflowkey```, which is required to associate events with workflows, is stored in a DynamoDB table by the monitor task at the beginning of a workflow execution. Lambda functions react to EventBridge events and send task success or failure commands to the workflow monitor task. We use a wait task in our sample workflow. You can replace this task with arbitrary Step Functions tasks. Just note that the ```StopWorkflowMonitoring``` task requires the ```workflowkey``` as input.
 
 We distinguish between two scenarios in this example:
-* **Graceful completion of the workflow monitor task** just before the workflow execution completes. The completion of the workflow monitor task is triggerd from within the workflow itself by a [PutEvent](https://docs.aws.amazon.com/step-functions/latest/dg/connect-eventbridge.html) task.
+* **Graceful completion of the workflow monitor task** just before the workflow execution completes. The completion of the workflow monitor task is triggered from within the workflow itself by a [PutEvent](https://docs.aws.amazon.com/step-functions/latest/dg/connect-eventbridge.html) task.
 * **Failure of the workflow monitor task** triggered by an external event. In our example, we fail the entire workflow in case of a failing monitor task. But you can [implement arbitrary application logic within the workflow to handle failing monitor tasks](https://docs.aws.amazon.com/step-functions/latest/dg/concepts-error-handling.html). 
 
 If you are interested in further details about the integration of event-driven architectures with workflows, [this research paper](https://doi.org/10.1016/j.is.2014.04.002) provides furhter information.
