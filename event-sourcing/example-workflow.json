@@ -14,7 +14,7 @@
       "headline": "How it works",
       "text": [
         "Event Sourcing pattern ensures that all changes to application state are stored as a sequence of events. Not just can we query these events, we can also use the event log to reconstruct past states, and as a foundation to automatically adjust the state to cope with retroactive changes.",
-        "The example implementation demonstrates implementation of event sourcing pattern to capture product inventory state changes. All product inventory events are sent to a Step Function workflow, which executes series of task and persists the state of product as a sequence of state-changing events. Each task contains mock logic that processes a specific product event (ex: productReceived, ProductShipped etc.). It then passes on the updated product state to the next processing task. The updated product state along with event which caused the state change is stored in the Product Inventory Event log. ",
+        "The example implementation demonstrates implementation of event sourcing pattern to capture product inventory state changes. All product inventory events are sent to a Step Function workflow, which executes series of task and persists the state of product as a sequence of state-changing events. Each task contains mock logic that processes a specific product event (ex: productReceived, productShipped etc.). It then passes on the updated product state to the next processing task. The updated product state along with event which caused the state change is stored in the Product Inventory Event log. ",
        ]
     },
     "testing": {
@@ -66,7 +66,7 @@
         {
           "name": "Anirudha Joshi",
           "image": "https://drive.google.com/file/d/1VUtlkOsx4QUsFELPof62LIn_TFU3JoyT/view?usp=sharing",
-          "bio": "Principal Customer Solutions Mmanager at AWS, helping customers to modernize on cloud. I enjoy Serverless and Event Driven Architectures",
+          "bio": "Principal Customer Solutions Manager at AWS, helping customers to modernize on the cloud. I enjoy Serverless and Event Driven Architectures",
           "linkedin": "anirudha-joshi-829bb11"
         }
       ]
