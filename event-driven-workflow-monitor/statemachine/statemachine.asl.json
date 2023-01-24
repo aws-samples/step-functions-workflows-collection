@@ -1,0 +1,61 @@
+{
+  "StartAt": "executeParallel",
+  "States": {
+    "executeParallel": {
+      "Type": "Parallel",
+      "End": true,
+      "Branches": [
+        {
+          "StartAt": "StartWorkflowMonitoring",
+          "States": {
+            "StartWorkflowMonitoring": {
+              "End": true,
+              "Type": "Task",
+              "Resource": "arn:aws:states:::aws-sdk:dynamodb:putItem.waitForTaskToken",
+              "Parameters": {
+                "TableName": "<TableName>",
+                "Item": {
+                  "workflowkey": {
+                    "S.$": "$.workflowkey"
+                  },
+                  "tasktoken": {
+                    "S.$": "$$.Task.Token"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "StartAt": "YourWorkGoesHere",
+          "States": {
+            "YourWorkGoesHere": {
+              "Type": "Wait",
+              "Seconds": 1000,
+              "Next": "StopWorkflowMontoring"
+            },
+            "StopWorkflowMontoring": {
+              "End": true,
+              "Type": "Task",
+              "Resource": "arn:aws:states:::events:putEvents.waitForTaskToken",
+              "Parameters": {
+                "Entries": [
+                  {
+                    "Detail": {
+                      "message": "StopWorkflowMonitoring",
+                      "tasktoken.$": "$$.Task.Token",
+                      "workflowkey.$": "$.workflowkey"
+                    },
+                    "DetailType": "WorkflowMonitoring",
+                    "EventBusName": "<EventBusARN>",
+                    "Source": "workflow.sfn"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

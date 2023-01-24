@@ -1,0 +1,69 @@
+{
+    "title": "Event-driven Workflow Monitor",
+    "description": "Integrate workflows with event-driven architectures",
+    "language": "",
+    "simplicity": "2 - Pattern",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "300",
+    "framework": "CDK",
+    "services": ["events","dynamodb","lambda"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "This example demonstrates how AWS Step Functions workflows can integrate with events in an event-driven architecture. The example implements a workflow monitor task to react to events sent to Amazon EventBridge.",
+        "For that, the monitor task stores workflow metadata in a DynamoDB table. Events sent to EventBridge trigger Lambda functions, which send fail or success commands back to the workflow monitor task."
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "cdk destroy"
+      ]
+    },
+    "deploy": {
+      "text": [
+        "cdk deploy"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/synchronous-job/",
+        "templateDir":"cdk/lib",
+        "templateFile": "workflowmonitor-stack.ts",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "Building event-driven architectures on AWS",
+          "link": "https://catalog.us-east-1.prod.workshops.aws/workshops/63320e83-6abc-493d-83d8-f822584fb3cb/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Stefan Appel",
+          "image": "https://github.com/StefanAppel.png",
+          "bio": "Stefan is a Senior Solutions Architect at AWS. He supports global companies adopt cloud technologies. Prior to joining AWS, Stefan drove cloud topics in software architecture, product management, and IT operations departments. He began his career in research on event-based systems. In his spare time, he enjoys hiking and has walked the length of New Zealand following Te Araroa.",
+          "linkedin": "https://www.linkedin.com/in/appel-stefan/"
+        }
+      ]
+  }
+  
