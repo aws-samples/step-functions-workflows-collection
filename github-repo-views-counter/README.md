@@ -1,3 +1,3 @@
 # GithubRepoCounter
 
-![graph](/resources/gitHubtrafficTracker.png)
+![graph](./resources/gitHubtrafficTracker.png)
