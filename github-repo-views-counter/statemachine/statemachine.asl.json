@@ -1,0 +1,77 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Get reps",
+  "States": {
+    "Get reps": {
+      "Type": "Pass",
+      "Parameters": {
+        "Repos": [
+          "aws-samples/step-functions-workflows-collection"
+        ]
+      },
+      "Next": "Map"
+    },
+    "Map": {
+      "Type": "Map",
+      "InputPath": "$.Repos",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "INLINE"
+        },
+        "StartAt": "Call out to GitHub",
+        "States": {
+          "Call out to GitHub": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+              "FunctionName": "${FunctionNameGitHub}",
+              "Payload": {
+                "repoName.$": "$"
+              }
+            },
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "Lambda.ServiceException",
+                  "Lambda.AWSLambdaException",
+                  "Lambda.SdkClientException"
+                ],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 6,
+                "BackoffRate": 2
+              }
+            ],
+            "Next": "Pass"
+          },
+          "Pass": {
+            "Type": "Pass",
+            "Next": "DynamoDB PutItem",
+            "Parameters": {
+              "item.$": "$.Payload"
+            }
+          },
+          "DynamoDB PutItem": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::dynamodb:putItem",
+            "Parameters": {
+              "TableName": "${table}",
+              "Item": {
+                "PK": {
+                  "S.$": "States.Format('Repos-{}', $.item.repoName)"
+                },
+                "SK": {
+                  "S.$": "$.item.timestamp"
+                },
+                "Views": {
+                  "S.$": "States.Format('{}',$.item.count)"
+                }
+              }
+            },
+            "End": true
+          }
+        }
+      },
+      "End": true
+    }
+  }
+}

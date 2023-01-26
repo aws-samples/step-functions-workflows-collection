@@ -1,0 +1,123 @@
+
+## Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+## SPDX-License-Identifier: MIT-0
+
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Introduction to serverless for developers:part3 GitHub to Slack
+  
+##########################################################################
+#  Parameters & Globals                                                  #
+##########################################################################
+Parameters:
+  
+  GitHubSecret:
+    Type: String
+    Description: your GitHub Secret.
+    Default: ""
+
+Resources:
+
+  gitHubPAT:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Type: String
+      Value: !Ref GitHubSecret
+      Description: SSM Parameter for GitHub API.
+##########################################################################
+#   Lambda Functions                                                      #
+##########################################################################
+
+  GitHubPost:
+    Type: AWS::Serverless::Function
+    Description: A github handler when repo is pr'd
+    Properties:
+      Policies:
+        - SSMParameterReadPolicy:
+            ParameterName: !Ref gitHubPAT
+        - DynamoDBCrudPolicy:
+            TableName: DynamoTable
+      CodeUri: functions/srcGitHub/
+      Handler: app.handler
+      Runtime: nodejs18.x
+      Timeout: 8
+      Environment:
+        Variables:
+          SSM: !Ref gitHubPAT
+          Table: !Ref DynamoTable
+
+    #  Order Manager SFN                                                   #
+  GitHubTrafficTracker:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      DefinitionUri: statemachine/statemachine.asl.json
+      DefinitionSubstitutions:
+        FunctionNameGitHub: !Ref GitHubPost
+        table: !Ref DynamoTable
+      Policies:
+      - LambdaInvokePolicy:
+          FunctionName: !Ref GitHubPost
+      - DynamoDBWritePolicy:
+          TableName: !Ref DynamoTable
+      - DynamoDBReadPolicy:
+          TableName: !Ref DynamoTable
+
+  # Schedule that will run every day at 00:00 to trigger process
+  GitHubTrafficTrackerSchedule:
+    Type: AWS::Scheduler::Schedule
+    Properties:
+      Description: Schedule the runs every day to start teh workflow
+      FlexibleTimeWindow:
+        Mode: 'OFF'
+      ScheduleExpression: 'cron(24 14 * * ? *)'
+      Target:
+        Arn: !GetAtt GitHubTrafficTracker.Arn
+        RoleArn: !GetAtt GitHubTrafficTrackerScheduleRole.Arn
+
+  GitHubTrafficTrackerScheduleRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - scheduler.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: invokeGitHubTrafficTrackerSFN
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'states:startExecution'
+                Resource:
+                  - !GetAtt GitHubTrafficTracker.Arn
+
+
+##############################################
+#   DynamoDB                                                            #
+##########################################################################
+  DynamoTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+
+##########################################################################
+#   Stack outputs                                                        #
+##########################################################################
