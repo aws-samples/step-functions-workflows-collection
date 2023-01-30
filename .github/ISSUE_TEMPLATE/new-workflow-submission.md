@@ -11,10 +11,10 @@ To submit a workflow to the Step Functions Workflows Collection, submit an issue
 
 To learn more about submitting a workflow, read the publishing guidelines page.
 
-1. Use the model template located at https://github.com/aws-samples/step-functions-workflows-collection/tree/main/_workflow-mode to set up a README, template and any associated code.
+1. Use the model template located at https://github.com/aws-samples/step-functions-workflows-collection/tree/main/_workflow_model to set up a README, template and any associated code.
 
 
-2. All the information below must be provided in the "example-workflow.json" file cloned from the [model](https://github.com/aws-samples/step-functions-workflows-collection/tree/main/_workflow-model) **
+2. All the information below must be provided in the "example-workflow.json" file cloned from the [model](https://github.com/aws-samples/step-functions-workflows-collection/tree/main/_workflow_model) **
 
 Note the following information for the model:
 
