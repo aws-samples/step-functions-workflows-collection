@@ -18,7 +18,7 @@ To learn more about submitting a workflow, read the publishing guidelines page.
 
 Note the following information for the model:
 
-- Description (intro.text) should be a 300-500 word explanation of how the pattern works.
+- Description (introBox.text) should be a 300-500 word explanation of how the pattern works.
 - Simplicity: must be 1 of (`1 - Fundamental`, `2 -  Pattern`, `3 - Application` )
 - Diagram: This must link to an Exported PNG of the workflow that shows any service integrations, you can export this from Workflow studio.
 - Type: Must be one of (`Standard`, `Express`)
