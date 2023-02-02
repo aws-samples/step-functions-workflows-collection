@@ -68,7 +68,7 @@
       "Next": "Mock: Move to delivery",
       "OutputPath": "$.Payload",
       "Parameters": {
-        "FunctionName": "${MockGenerateLabelFunctionArn}",
+        "FunctionName": "${ReportProgressFunctionArn}",
         "Payload": {
           "ConnectionId.$": "$.ConnectionId",
           "Message": "🏷 Postage label generated",
