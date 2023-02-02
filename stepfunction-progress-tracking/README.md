@@ -41,10 +41,10 @@ The project contains Backend and Frontend. You can deploy Backend only. The depl
 
 ## How it works
 
-1. The Frontend asks you for Websocket endpoint URI. This is the value of WebSocketURI, that you've got from SAM template.yml deployment. Paste it into `Enter Websocket URI` field and click `Connect` button.
+1. The Frontend asks you for Websocket endpoint URL. This is the value of WebSocketURL, that you've got from SAM template.yml deployment. Paste it into `Enter Websocket URL` field and click `Connect` button.
    The Frontend will connect to your previously deployed Backend. You can open developer tools in the browser and navigate to Networking tab, filter by `WS` (Websocket). You should see `Prod` Websocket connection open.
 1. Click `Send Order` button to invoke the state machine in AWS Step Functions. You will see messages appear below the `Send Order` button coming from different stages of the state machine. Alternatively, you can observe raw messages in developer tools Networking tab of your browser. The messages will appear under `Prod` Websocket.
-1. You can also trigger the state machine execution and observe progress messages by using other Websocket clients, like [Pie Socket](https://www.piesocket.com/websocket-tester). Simply enter your Websocket URI from WebSocketURI value and click connect. To start execution, specify the following message: `{ "action": "onOrder" }` and click `Send` button. The raw progress messages will appear below.
+1. You can also trigger the state machine execution and observe progress messages by using other Websocket clients, like [Pie Socket](https://www.piesocket.com/websocket-tester). Simply enter your Websocket URL from WebSocketURL value and click connect. To start execution, specify the following message: `{ "action": "onOrder" }` and click `Send` button. The raw progress messages will appear below.
 1. Additionally, you can navigate to developer tools in your browser, open `Network` tab and observe raw messages coming to the client.
 
 ## Image
@@ -53,7 +53,7 @@ The project contains Backend and Frontend. You can deploy Backend only. The depl
 
 ## Testing
 
-Navigate to [hosted frontend](https://main.d3l6f007ftpjty.amplifyapp.com/), paste your WebSocket API URI from the SAM deployment output and click `Connect`.
+Navigate to [hosted frontend](https://main.d3l6f007ftpjty.amplifyapp.com/), paste your WebSocket API URL from the SAM deployment output and click `Connect`.
 See the [GitHub repository](https://github.com/aws-samples/aws-step-functions-progress-tracking) for detailed testing instructions.
 
 ## Cleanup
