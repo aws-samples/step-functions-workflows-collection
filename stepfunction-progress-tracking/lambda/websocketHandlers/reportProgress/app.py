@@ -5,15 +5,15 @@ import json
 ddb_client = boto3.client('dynamodb', region_name=os.environ['AWS_REGION'])
 
 table_name = os.environ.get('TABLE_NAME')
-api_uri = os.environ.get('API_URI')
+api_url = os.environ.get('API_URL')
 
 def handler(event, context):
     print(event)
-    print(f'Endpoint URL: {api_uri}')
+    print(f'Endpoint URL: {api_url}')
 
     connection_id = event['ConnectionId']
 
-    apigw_management_api_client = boto3.client('apigatewaymanagementapi', endpoint_url=api_uri)
+    apigw_management_api_client = boto3.client('apigatewaymanagementapi', endpoint_url=api_url)
 
     try:
         apigw_management_api_client.post_to_connection(

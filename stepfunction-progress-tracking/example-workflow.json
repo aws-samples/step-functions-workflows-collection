@@ -20,7 +20,7 @@
     "testing": {
       "headline": "Testing",
       "text": [
-        "Navigate to [hosted frontend](https://main.d3l6f007ftpjty.amplifyapp.com/), paste your WebSocket API URI from the SAM deployment output and click 'Connect'.",
+        "Navigate to [hosted frontend](https://main.d3l6f007ftpjty.amplifyapp.com/), paste your WebSocket API URL from the SAM deployment output and click 'Connect'.",
         "See the GitHub repo for detailed testing instructions."
       ]
     },

@@ -155,7 +155,7 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Ref ConnectionsTable
-          API_URI: !Join [ '', [ 'https://', !Ref ProgressTrackingWebsocket, '.execute-api.',!Ref 'AWS::Region','.amazonaws.com/',!Ref 'ApiStageName'] ]
+          API_URL: !Join [ '', [ 'https://', !Ref ProgressTrackingWebsocket, '.execute-api.',!Ref 'AWS::Region','.amazonaws.com/',!Ref 'ApiStageName'] ]
       Policies:
       - DynamoDBCrudPolicy:
           TableName: !Ref ConnectionsTable
@@ -236,6 +236,6 @@ Resources:
                 - !GetAtt MockGenerateLabelFunction.Arn
               
 Outputs:
-  WebSocketURI:
-    Description: "The WSS Protocol URI to connect to. Copy and paste to the field on the frontend."
+  WebSocketURL:
+    Description: "The WSS Protocol URL to connect to. Copy and paste to the field on the frontend."
     Value: !Join [ '', [ 'wss://', !Ref ProgressTrackingWebsocket, '.execute-api.',!Ref 'AWS::Region','.amazonaws.com/',!Ref 'ApiStageName'] ]
