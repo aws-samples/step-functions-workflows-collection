@@ -1,0 +1,241 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  step-functions-progress-tracking-app
+
+  SAM Template for step-functions-progress-tracking-app to demonstrate progress tracking of AWS Step Functions.
+  It implements Websocket API with management Lambda functions and DynamoDB, mock functions to emulate long
+  running tasks, and a state machine implementation.
+
+Globals:
+  Function:
+    Runtime: python3.9
+    MemorySize: 128
+    Timeout: 15
+
+Parameters:
+  ApiStageName:
+    Type: String
+    Default: Prod
+    Description: REQUIRED The name of Websocket API deployment stage
+    MinLength: 3
+    MaxLength: 10
+    AllowedPattern: ^[A-Za-z]+$
+    ConstraintDescription: Capital or small letters only.
+
+Resources:
+##### Websocket API #####
+  ProgressTrackingWebsocket:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: ProgressTrackingWebsocketApi
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: "$request.body.action"
+  ConnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ProgressTrackingWebsocket
+      RouteKey: $connect
+      AuthorizationType: NONE
+      OperationName: ConnectRoute
+      Target: !Join [ '/', ['integrations', !Ref ConnectInteg] ]
+  ConnectInteg:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref ProgressTrackingWebsocket
+      Description: Connect Integration
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OnConnectFunction.Arn}/invocations
+  DisconnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ProgressTrackingWebsocket
+      RouteKey: $disconnect
+      AuthorizationType: NONE
+      OperationName: DisconnectRoute
+      Target: !Join [ '/', ['integrations', !Ref DisconnectInteg]]
+  DisconnectInteg:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref ProgressTrackingWebsocket
+      Description: Disconnect Integration
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OnDisconnectFunction.Arn}/invocations
+  OrderRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ProgressTrackingWebsocket
+      RouteKey: onOrder
+      AuthorizationType: NONE
+      OperationName: OrderingRoute
+      Target: !Join [ '/', ['integrations', !Ref OrderInteg]]
+  OrderInteg:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref ProgressTrackingWebsocket
+      Description: Ordering Integration
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OnOrderFunction.Arn}/invocations
+  Deployment:
+    Type: AWS::ApiGatewayV2::Deployment
+    DependsOn:
+    - ConnectRoute
+    - DisconnectRoute
+    - OrderRoute
+    Properties:
+      ApiId: !Ref ProgressTrackingWebsocket
+  Stage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      StageName: !Ref ApiStageName
+      Description: Prod Stage
+      DeploymentId: !Ref Deployment
+      ApiId: !Ref ProgressTrackingWebsocket
+
+##### DynamoDB table for managing Websocket connections #####
+  ConnectionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+      - AttributeName: "connectionId"
+        AttributeType: "S"
+      KeySchema:
+      - AttributeName: "connectionId"
+        KeyType: "HASH"
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      SSESpecification:
+        SSEEnabled: True
+
+##### Websocket management Lambda functions #####
+  OnConnectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/websocketHandlers/onConnect/
+      Handler: app.handler
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ConnectionsTable
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: !Ref ConnectionsTable
+  OnConnectPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - ProgressTrackingWebsocket
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref OnConnectFunction
+      Principal: apigateway.amazonaws.com
+  OnDisconnectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/websocketHandlers/onDisconnect/
+      Handler: app.handler
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ConnectionsTable
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: !Ref ConnectionsTable
+  OnDisconnectPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - ProgressTrackingWebsocket
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref OnDisconnectFunction
+      Principal: apigateway.amazonaws.com
+  ReportProgressFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/websocketHandlers/reportProgress/
+      Handler: app.handler
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ConnectionsTable
+          API_URL: !Join [ '', [ 'https://', !Ref ProgressTrackingWebsocket, '.execute-api.',!Ref 'AWS::Region','.amazonaws.com/',!Ref 'ApiStageName'] ]
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: !Ref ConnectionsTable
+      - Statement:
+        - Effect: Allow
+          Action:
+          - 'execute-api:ManageConnections'
+          Resource:
+          - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ProgressTrackingWebsocket}/*'
+  
+  ##### Entry function to trigger the state machine #####
+  OnOrderFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/orderHandlers/onOrder
+      Handler: app.handler
+      Environment:
+        Variables:
+          STEP_FUNCTIONS_ARN: !GetAtt OrderingStateMachine.Arn
+      Policies:
+      - Statement:
+        - Effect: Allow
+          Action:
+            - states:StartExecution
+          Resource: !GetAtt OrderingStateMachine.Arn
+  OnOrderPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref OnOrderFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ProgressTrackingWebsocket}/*'
+      
+##### Mock Lambda functions to emulate long processes #####
+  MockGenerateLabelFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/orderHandlers/mockGenerateLabel
+      Handler: app.handler
+      Policies:
+      - Statement:
+        - Effect: Allow
+          Action:
+          - 'execute-api:ManageConnections'
+          Resource:
+          - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ProgressTrackingWebsocket}/*'
+  MockGenerateLabelPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - ProgressTrackingWebsocket
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref MockGenerateLabelFunction
+      Principal: apigateway.amazonaws.com
+  
+##### Ordering state machine #####
+  OrderingStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/statemachine.asl.json
+      DefinitionSubstitutions:
+        WebSocketApiEndpoint: !Join [ '.',[ !Ref ProgressTrackingWebsocket, execute-api, !Ref 'AWS::Region', amazonaws.com ] ]
+        MockGenerateLabelFunctionArn: !GetAtt MockGenerateLabelFunction.Arn
+        ReportProgressFunctionArn: !GetAtt ReportProgressFunction.Arn
+      Type: STANDARD
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - execute-api:Invoke
+                - execute-api:ManageConnections
+              Resource: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ProgressTrackingWebsocket}/*'
+            - Effect: Allow
+              Action:
+                - lambda:InvokeFunction
+              Resource:
+                - !GetAtt ReportProgressFunction.Arn
+                - !GetAtt MockGenerateLabelFunction.Arn
+              
+Outputs:
+  WebSocketURL:
+    Description: "The WSS Protocol URL to connect to. Copy and paste to the field on the frontend."
+    Value: !Join [ '', [ 'wss://', !Ref ProgressTrackingWebsocket, '.execute-api.',!Ref 'AWS::Region','.amazonaws.com/',!Ref 'ApiStageName'] ]

@@ -1,0 +1,134 @@
+{
+  "Comment": "State machine for mocking waiting times and demonstrating progress reporting",
+  "StartAt": "Report: Workflow started",
+  "States": {
+    "Report: Workflow started": {
+      "Next": "Mock: Inventory check",
+      "Parameters": {
+        "ApiEndpoint": "${WebSocketApiEndpoint}",
+        "AuthType": "IAM_ROLE",
+        "Method": "POST",
+        "Path.$": "States.Format('/@connections/{}', $.ConnectionId)",
+        "RequestBody": {
+          "Message": "🥁 Workflow started",
+          "Progress": 10
+        },
+        "Stage": "Prod"
+      },
+      "Resource": "arn:aws:states:::apigateway:invoke",
+      "ResultPath": "$.Params",
+      "Type": "Task"
+    },
+    "Mock: Inventory check": {
+      "Next": "Report: Inventory check complete",
+      "Seconds": 2,
+      "Type": "Wait"
+    },
+    "Report: Inventory check complete": {
+      "Next": "Mock: Generate electronic label from delivery service",
+      "Parameters": {
+        "ApiEndpoint": "${WebSocketApiEndpoint}",
+        "AuthType": "IAM_ROLE",
+        "Method": "POST",
+        "Path.$": "States.Format('/@connections/{}', $.ConnectionId)",
+        "RequestBody": {
+          "Message": "📋 Inventory check complete",
+          "Progress": 25
+        },
+        "Stage": "Prod"
+      },
+      "Resource": "arn:aws:states:::apigateway:invoke",
+      "ResultPath": "$.Params",
+      "Type": "Task"
+    },
+    "Mock: Generate electronic label from delivery service": {
+      "Next": "Report: Label generation complete",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "FunctionName": "${MockGenerateLabelFunctionArn}",
+        "Payload.$": "$"
+      },
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Retry": [
+        {
+          "BackoffRate": 2,
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6
+        }
+      ],
+      "Type": "Task"
+    },
+    "Report: Label generation complete": {
+      "Next": "Mock: Move to delivery",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "FunctionName": "${ReportProgressFunctionArn}",
+        "Payload": {
+          "ConnectionId.$": "$.ConnectionId",
+          "Message": "🏷 Postage label generated",
+          "Progress": 50
+        }
+      },
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Retry": [
+        {
+          "BackoffRate": 2,
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6
+        }
+      ],
+      "Type": "Task"
+    },
+    "Mock: Move to delivery": {
+      "Next": "Report: Moved to delivery",
+      "Seconds": 2,
+      "Type": "Wait"
+    },
+    "Report: Moved to delivery": {
+      "Next": "Report: Workflow finished",
+      "Parameters": {
+        "ApiEndpoint": "${WebSocketApiEndpoint}",
+        "AuthType": "IAM_ROLE",
+        "Method": "POST",
+        "Path.$": "States.Format('/@connections/{}', $.ConnectionId)",
+        "RequestBody": {
+          "Message": "🚚 Moved to delivery",
+          "Progress": 75
+        },
+        "Stage": "Prod"
+      },
+      "Resource": "arn:aws:states:::apigateway:invoke",
+      "ResultPath": "$.Params",
+      "Type": "Task"
+    },
+    "Report: Workflow finished": {
+      "End": true,
+      "Parameters": {
+        "ApiEndpoint": "${WebSocketApiEndpoint}",
+        "AuthType": "IAM_ROLE",
+        "Method": "POST",
+        "Path.$": "States.Format('/@connections/{}', $.ConnectionId)",
+        "RequestBody": {
+          "Message": "🎯 Finished successfully",
+          "Progress": 100
+        },
+        "Stage": "Prod"
+      },
+      "Resource": "arn:aws:states:::apigateway:invoke",
+      "ResultPath": "$.Params",
+      "Type": "Task"
+    }
+  }
+}

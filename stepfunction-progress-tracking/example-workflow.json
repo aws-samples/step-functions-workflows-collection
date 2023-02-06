@@ -1,0 +1,77 @@
+{
+    "title": "Track AWS Step Functions execution progress via WebSocket API",
+    "description": "Submit progress updates via Amazon API Gateway WebSocket to the client without polling",
+    "language": "",
+    "simplicity": "2 -  Pattern",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/diagram.png",
+    "videoId": "",
+    "level": "300",
+    "framework": "SAM",
+    "services": ["Step function", "API Gateway", "Lambda", "DynamoDB"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "This project creates an AWS Step Functions, which mocks a mutli-step ordering process, and demonstrates how clients can monitor the progress via Amazon API Gateway Websocket.",
+        "The project demonstates how to report the progress via AWS SDK integrations and via AWS Lambda."
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "Navigate to [hosted frontend](https://main.d3l6f007ftpjty.amplifyapp.com/), paste your WebSocket API URL from the SAM deployment output and click 'Connect'.",
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Navigate to the root of the repository.",
+        "2. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/stepfunction-progress-tracking/",
+        "templateDir":"stepfunction-progress-tracking",
+        "templateFile": "template.yml",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "Sample repository with a frontend to test out the pattern.",
+          "link": "https://github.com/aws-samples/aws-step-functions-progress-tracking"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Alex Paramonov",
+          "image": "https://avatars.githubusercontent.com/u/25197861?s=400&u=6b4192dbd9322cf420cf98c16da003b980390804&v=4",
+          "bio": "I'm an AWS Solutions Architect for Independent Software Vendors in Germany passionate about Serverless and how it can solve real world problems.",
+          "linkedin": "https://www.linkedin.com/in/alexey-paramonov/"
+        },
+        {
+          "name": "Maximilian Schellhorn",
+          "image": "https://avatars.githubusercontent.com/u/36627945?v=4",
+          "bio": "AWS Solutions Architect with focus on sustainable Software-Architecture in a Cloud-Native environment.",
+          "linkedin": "https://www.linkedin.com/in/maximilian-schellhorn-46020b162/"
+        }
+      ]
+  }
+  
