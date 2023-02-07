@@ -1,0 +1,70 @@
+{
+    "title": "Saga Pattern",
+    "description": "Saga Pattern for a Lambda and DynamoDB backend application.",
+    "language": "",
+    "simplicity": "3 - Application",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "100",
+    "framework": "CDK",
+    "services": ["lambda","dynamodb", "sns"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "This workflow uses AWS Step Functions to build a saga pattern to book flights, book car rentals, and process payments for a vacation.",
+        "The saga pattern is a failure management pattern that coordinates transactions between multiple microservices to maintain data consistency."
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/synchronous-job/",
+        "templateDir":"synchronous-job",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Your name",
+          "image": "link-to-your-photo.jpg",
+          "bio": "Your bio.",
+          "linkedin": "linked-in-ID",
+          "twitter": "twitter-handle"
+        }
+      ]
+  }
+  
