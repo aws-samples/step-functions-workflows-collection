@@ -64,13 +64,13 @@
           "name": "Alex Paramonov",
           "image": "https://avatars.githubusercontent.com/u/25197861?s=400&u=6b4192dbd9322cf420cf98c16da003b980390804&v=4",
           "bio": "I'm an AWS Solutions Architect for Independent Software Vendors in Germany passionate about Serverless and how it can solve real world problems.",
-          "linkedin": "https://www.linkedin.com/in/alexey-paramonov/"
+          "linkedin": "alexey-paramonov"
         },
         {
           "name": "Maximilian Schellhorn",
           "image": "https://avatars.githubusercontent.com/u/36627945?v=4",
           "bio": "AWS Solutions Architect with focus on sustainable Software-Architecture in a Cloud-Native environment.",
-          "linkedin": "https://www.linkedin.com/in/maximilian-schellhorn-46020b162/"
+          "linkedin": "maximilian-schellhorn-46020b162"
         }
       ]
   }
