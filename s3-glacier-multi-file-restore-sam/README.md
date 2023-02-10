@@ -1,6 +1,6 @@
 # Restore multiple files from S3 Glacier storage classes
 
-This workflow demonstrates how to use Step Functions to orchestrate the restoration of multiple files that are archived in Amazon S3 Glacier Flexible Retrieval (Formerly S3 Glacier) and Amazon S3 Glacier Deep Archive.
+This workflow demonstrates how to use Step Functions to orchestrate the restoration of multiple files that are archived in Amazon S3 Glacier Flexible Retrieval (Formerly S3 Glacier) and Amazon S3 Glacier Deep Archive. Files that are stored in these Glacier storage classes require minutes to hours of restoration time before they can be accessed. When multiple files need to be restored (in the same storage class, or a mix of storage classes), this workflow simplifies the retrieval process by providing a single output success event when all files are restored.
 
 Learn more about this workflow at Step Functions workflows collection: https://github.com/deeppai/step-functions-workflows-collection/tree/main/s3-glacier-multi-file-restore
 
@@ -39,15 +39,15 @@ Important: this application uses various AWS services and there are costs associ
 
 ## How it works
 
-The workflow orchestrates the restoration of multiple files from S3 Glacier storage classes. Files that are stored in Amazon S3 Glacier Flexible Retrieval and Amazon S3 Glacier Deep Archive require minutes to hours of restorating time before they can be accessed. The SAM template deploys the following state machine:
+The SAM template deploys the following state machine:
 
 ![image](./resources/statemachine.png)
 
-The first part of the state machine takes a list of S3 Bucket Names and Keys and gets their metadata using S3:HeadObject task. This metadata contains information about the object, such as the storage class that it is stored in and if it is's archival state, i.e. `archived`, `pending restore` or `restored`.
+The first part of the state machine takes a list of S3 Bucket Names and Keys and gets their metadata using S3:HeadObject task. This metadata contains information about the object, such as the storage class that it is stored in and it's archival state, i.e. `archived`, `pending restore` or `restored`.
 
 The second part of the state machine will then invoke the `Restore Object` AWS Lambda function to request restoration of the S3 object. The task will then pause the workflow and wait for the restoration to be complete.
 
-When restoration is complete, Amazon S3 will emit an `Object Restore Completed` event to Amazon EventBridge which will trigger the `Restore Complete` AWS Lambda function to resume and complete the Step Function workflow. The two Lambda functions exchange the task tokens required to resume the Step Function workflow by storing it in an Amazon DyanmoDB table.
+When restoration is complete, Amazon S3 will emit an `Object Restore Completed` event to Amazon EventBridge which will trigger the `Restore Complete` AWS Lambda function to resume and complete the Step Function workflow. The two Lambda functions exchange the task tokens required to resume the Step Function workflow by storing it in an Amazon DynamoDB table.
 
 At the end of the workflow all requested objects in S3 will be restored and ready for the client to access or download.
 
