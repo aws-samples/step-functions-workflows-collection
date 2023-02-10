@@ -1,0 +1,70 @@
+{
+    "title": "Restore multiple files from S3 Glacier storage classes",
+    "description": "This project demonstrates how to use Step Functions to orchestrate restoration of multiple files from S3 Glacier storage classes.",
+    "language": "",
+    "simplicity": "3 - Applications",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "100",
+    "framework": "SAM",
+    "services": ["s3", "stepfunctions", "lambda", "eventbridge"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "The workflow orchestrates the restoration of multiple files from S3 Glacier storage classes.",
+        "This is done by making use of Step Functions `.waitForTaskToken` execution pattern to invoke a Lambda funciton that requests S3 to restore the object",
+        "On completion of restoration the task is resumed using another Lambda function."
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/deeppai/step-functions-workflows-collection/tree/main/",
+        "templateDir":"s3-glacier-multi-file-restore",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Deep Pai",
+          "image": "https://github.com/deeppai.png",
+          "bio": "Deep is a Sr. Solutions Architect at AWS who is passionate about serverless and event-driven architectures.",
+          "linkedin": "deeppai"
+        }
+      ]
+  }
+  

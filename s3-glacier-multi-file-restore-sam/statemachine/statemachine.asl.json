@@ -1,0 +1,139 @@
+{
+  "Comment": "Restore multiple files from S3 Glacier storage classes.",
+  "StartAt": "Get metadata",
+  "States": {
+    "Get metadata": {
+      "Type": "Map",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "INLINE"
+        },
+        "StartAt": "HeadObject",
+        "States": {
+          "HeadObject": {
+            "Type": "Task",
+            "Parameters": {
+              "Bucket.$": "$.bucket",
+              "Key.$": "$.key"
+            },
+            "Resource": "arn:aws:states:::aws-sdk:s3:headObject",
+            "ResultPath": "$.headResult",
+            "Catch": [
+              {
+                "ErrorEquals": [
+                  "States.ALL"
+                ],
+                "Next": "Fail",
+                "ResultPath": "$.error"
+              }
+            ],
+            "End": true
+          },
+          "Fail": {
+            "Type": "Fail"
+          }
+        }
+      },
+      "ItemsPath": "$.objects",
+      "Next": "Request Restore"
+    },
+    "Request Restore": {
+      "Type": "Map",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "INLINE"
+        },
+        "StartAt": "Check storage class",
+        "States": {
+          "Check storage class": {
+            "Type": "Choice",
+            "Choices": [
+              {
+                "Variable": "$.headResult.StorageClass",
+                "IsPresent": true,
+                "Next": "Check glacier class"
+              }
+            ],
+            "Default": "Pass"
+          },
+          "Check glacier class": {
+            "Type": "Choice",
+            "Choices": [
+              {
+                "Or": [
+                  {
+                    "Variable": "$.headResult.StorageClass",
+                    "StringEquals": "GLACIER"
+                  },
+                  {
+                    "Variable": "$.headResult.StorageClass",
+                    "StringEquals": "DEEP_ARCHIVE"
+                  }
+                ],
+                "Next": "Check if already restored"
+              }
+            ],
+            "Default": "Pass"
+          },
+          "Check if already restored": {
+            "Type": "Choice",
+            "Choices": [
+              {
+                "And": [
+                  {
+                    "Variable": "$.headResult.Restore",
+                    "IsPresent": true
+                  },
+                  {
+                    "Variable": "$.headResult.Restore",
+                    "StringMatches": "ongoing-request=\"false\"*"
+                  }
+                ],
+                "Next": "Pass"
+              }
+            ],
+            "Default": "Restore Object in S3"
+          },
+          "Restore Object in S3": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+            "Parameters": {
+              "FunctionName": "${restoreFunctionArn}",
+              "Payload": {
+                "bucket.$": "$.bucket",
+                "key.$": "$.key",
+                "taskToken.$": "$$.Task.Token"
+              }
+            },
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "Lambda.ServiceException",
+                  "Lambda.AWSLambdaException",
+                  "Lambda.SdkClientException",
+                  "Lambda.TooManyRequestsException"
+                ],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 6,
+                "BackoffRate": 2
+              }
+            ],
+            "Next": "Pass"
+          },
+          "Pass": {
+            "Type": "Pass",
+            "Next": "Success"
+          },
+          "Success": {
+            "Type": "Succeed"
+          }
+        }
+      },
+      "End": true,
+      "ResultSelector": {
+        "result.$": "$.[*].['bucket', 'key']"
+      }
+    }
+  },
+  "TimeoutSeconds": 172800
+}
