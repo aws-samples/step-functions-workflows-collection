@@ -1,0 +1,269 @@
+{
+  "StartAt": "ReserveFlight",
+  "States": {
+    "ReserveFlight": {
+      "Next": "ReserveCarRental",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.ReserveFlightError",
+          "Next": "CancelFlightReservation"
+        }
+      ],
+      "Type": "Task",
+      "ResultPath": "$.ReserveFlightResult",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${reserveFlightFunction}",
+        "Payload.$": "$"
+      }
+    },
+    "ReserveCarRental": {
+      "Next": "ProcessPayment",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.ReserveCarRentalError",
+          "Next": "CancelRentalReservation"
+        }
+      ],
+      "Type": "Task",
+      "ResultPath": "$.ReserveCarRentalResult",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${reserveCarRentalFunction}",
+        "Payload.$": "$"
+      }
+    },
+    "ProcessPayment": {
+      "Next": "ConfirmFlight",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.ProcessPaymentError",
+          "Next": "RefundPayment"
+        }
+      ],
+      "Type": "Task",
+      "ResultPath": "$.ProcessPaymentResult",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${processPaymentFunction}",
+        "Payload.$": "$"
+      }
+    },
+    "ConfirmFlight": {
+      "Next": "ConfirmCarRental",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.ConfirmFlightError",
+          "Next": "RefundPayment"
+        }
+      ],
+      "Type": "Task",
+      "ResultPath": "$.ConfirmFlightResult",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${confirmFlightFunction}",
+        "Payload.$": "$"
+      }
+    },
+    "ConfirmCarRental": {
+      "Next": "SendingSMSSuccess",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.ConfirmCarRentalError",
+          "Next": "RefundPayment"
+        }
+      ],
+      "Type": "Task",
+      "ResultPath": "$.ConfirmCarRentalResult",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${confirmCarRentalFunction}",
+        "Payload.$": "$"
+      }
+    },
+    "SendingSMSSuccess": {
+      "Next": "Reservation Successful!",
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "${snsTopicArn}",
+        "Message": "Your Travel Reservation is Successful"
+      }
+    },
+    "Reservation Successful!": {
+      "Type": "Succeed"
+    },
+    "RefundPayment": {
+      "Next": "CancelRentalReservation",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        },
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "MaxAttempts": 3
+        }
+      ],
+      "Type": "Task",
+      "ResultPath": "$.RefundPaymentResult",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${refundPaymentFunction}",
+        "Payload.$": "$"
+      }
+    },
+    "CancelRentalReservation": {
+      "Next": "CancelFlightReservation",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        },
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "MaxAttempts": 3
+        }
+      ],
+      "Type": "Task",
+      "ResultPath": "$.CancelRentalReservationResult",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${cancelCarRentalFunction}",
+        "Payload.$": "$"
+      }
+    },
+    "CancelFlightReservation": {
+      "Next": "SendingSMSFailure",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        },
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "MaxAttempts": 3
+        }
+      ],
+      "Type": "Task",
+      "ResultPath": "$.CancelFlightReservationResult",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${cancelFlightFunction}",
+        "Payload.$": "$"
+      }
+    },
+    "SendingSMSFailure": {
+      "Next": "Reservation Failed",
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "${snsTopicArn}",
+        "Message": "Your Travel Reservation Failed"
+      }
+    },
+    "Reservation Failed": {
+      "Type": "Fail",
+      "Error": "Job Failed"
+    }
+  }
+}
