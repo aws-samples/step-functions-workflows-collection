@@ -209,6 +209,13 @@ Resources:
         - 
           Arn: !GetAtt RestoreCompleteFunction.Arn
           Id: "TargetFunctionV1"
+  PermissionForEventBridgeToInvokeLambda: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: !Ref RestoreCompleteFunction
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt RestoreObjectRule.Arn
 
   # ---- Step Function ----
   RestoreStateMachine:

@@ -45,7 +45,9 @@ The SAM template deploys the following state machine:
 
 The first part of the state machine takes a list of S3 Bucket Names and Keys and gets their metadata using S3:HeadObject task. This metadata contains information about the object, such as the storage class that it is stored in and it's archival state, i.e. `archived`, `pending restore` or `restored`.
 
-The second part of the state machine will then invoke the `Restore Object` AWS Lambda function to request restoration of the S3 object. The task will then pause the workflow and wait for the restoration to be complete.
+The second part of the state machine will then invoke the `Restore Object` AWS Lambda function to request restoration of the S3 object. The task will then pause the workflow and wait for the restoration to be complete. The components outside the state machine are showed below:
+
+![image](./resources/statemachine-plus.png)
 
 When restoration is complete, Amazon S3 will emit an `Object Restore Completed` event to Amazon EventBridge which will trigger the `Restore Complete` AWS Lambda function to resume and complete the Step Function workflow. The two Lambda functions exchange the task tokens required to resume the Step Function workflow by storing it in an Amazon DynamoDB table.
 
