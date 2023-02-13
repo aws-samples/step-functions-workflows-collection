@@ -24,15 +24,13 @@ Important: this application uses various AWS services and there are costs associ
     cd saga-pattern-sam
     ```
 
-1. If needed, update the variable ```region``` in ```variables.tf``` to the region of your choice.  The default is ```us-east-1```.
-
 2. From the command line, use npm to install dependencies and run the build process for the Lambda functions.
     ```
     npm install
     npm run build
     ```
 
-3. From the command line, use Terraform to deploy the AWS resources for the workflow as specified in the main.tf file:
+3. From the command line, use SAM to deploy the AWS resources for the workflow as specified in the template.yaml file:
     ```
     sam build
     sam deploy --guided
@@ -43,7 +41,7 @@ Important: this application uses various AWS services and there are costs associ
 The following workflow diagram illustrates the typical flow of the travel reservation system. The workflow consists of reserving air travel, reserving a car, processing payments, confirming flight reservations, and confirming car rentals followed by a success notification when these steps are complete. However, if the system encounters any errors in running any of these transactions, it starts to fail backward. For example, an error with payment processing triggers a refund, which then triggers a cancellation of the rental car and flight, which ends the entire transaction with a failure message.
 
 ## Image
-Provide an exported .png of the workflow in the `/resources` directory from [Workflow stuio](https://docs.aws.amazon.com/step-functions/latest/dg/workflow-studio.html) and add here.
+Provide an exported .png of the workflow in the `/resources` directory from [Workflow studio](https://docs.aws.amazon.com/step-functions/latest/dg/workflow-studio.html) and add here.
 ![image](./resources/statemachine.png)
 
 ## Testing
