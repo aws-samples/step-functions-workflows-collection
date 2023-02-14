@@ -8,7 +8,7 @@
     "diagram":"/resources/statemachine.png",
     "videoId": "",
     "level": "200",
-    "framework": "Terraform",
+    "framework": "SAM",
     "services": ["lambda","dynamodb", "sns"],
     "introBox": {
       "headline": "How it works",
@@ -26,20 +26,20 @@
     "cleanup": {
       "headline": "Cleanup",
       "text": [
-        "1. Delete the stack: <code>terraform destroy</code>."
+        "1. Delete the stack: <code>sam delete</code>."
       ]
     },
     "deploy": {
       "text": [
-        "terraform apply"
+        "sam deploy --guided"
       ]
     },
     "gitHub": {
       "template": {
-        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/saga-pattern-tf/",
-        "templateDir":"saga-pattern-tf",
-        "templateFile": "main.tf",
-        "ASL": "statemachine/statemachine.asl.json"
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/saga-pattern-sam/",
+        "templateDir":"saga-pattern-sam",
+        "templateFile": "template.yaml",
+        "ASL": "resources/statemachine.asl.json"
       },
       "payloads": [
         {
@@ -59,11 +59,11 @@
     },
     "authors": [
         {
-          "name": "Rohan Mehta",
-          "image": "https://phonetool.amazon.com/users/merohan",
-          "bio": "Cloud Application Architect",
-          "linkedin": "https://www.linkedin.com/in/rohan-mehta-dev/",
-          "twitter": "https://twitter.com/rohanmehta_dev"
+          "name": "Rimpy Tewani",
+          "image": "https://phonetool.amazon.com/users/rimpt",
+          "bio": "Cloud Application Architect at AWS Professional Services",
+          "linkedin": "https://www.linkedin.com/in/rimpy-tewani/",
+          "twitter": ""
         }
       ]
   }

@@ -638,6 +638,12 @@ resource "aws_sns_topic" "topic" {
   kms_master_key_id = "alias/aws/sns"
 }
 
+resource "aws_sns_topic_subscription" "sms-target" {
+  topic_arn = aws_sns_topic.topic.arn
+  protocol  = "sms"
+  endpoint  = "+11111111111"
+}
+
 resource "aws_iam_role" "state_machine_exec_role" {
   name = "${local.project_name}-sfn-role"
   assume_role_policy = jsonencode({

@@ -418,9 +418,6 @@ Resources:
       PolicyName: StateMachineconfirmRentalLambdaHandlerServiceRoleDefaultPolicy
       Roles:
         - Ref: StateMachineconfirmRentalLambdaHandlerServiceRole
-    Metadata:
-      'aws:cdk:path': >-
-        CdkServerlessSagaStack/StateMachine/confirmRentalLambdaHandler/ServiceRole/DefaultPolicy/Resource
 
   StateMachineconfirmRentalLambdaHandler:
     Type: AWS::Serverless::Function
@@ -660,14 +657,9 @@ Resources:
     DependsOn:
       - StateMachinerefundPaymentLambdaHandlerServiceRoleDefaultPolicy
       - StateMachinerefundPaymentLambdaHandlerServiceRole
-    Metadata:
-      'aws:cdk:path': CdkServerlessSagaStack/StateMachine/refundPaymentLambdaHandler/Resource
-      'aws:asset:property': Code
 
   StateMachineTopic:
     Type: 'AWS::SNS::Topic'
-    Metadata:
-      'aws:cdk:path': CdkServerlessSagaStack/StateMachine/Topic/Resource
 
   StateMachineTopic11111111111:
     Type: 'AWS::SNS::Subscription'
@@ -1245,9 +1237,6 @@ Resources:
             - /
             - Ref: StateMachineServerlessSagaPatternDeploymentStageprod
             - /*/
-    Metadata:
-      'aws:cdk:path': >-
-        CdkServerlessSagaStack/StateMachine/ServerlessSagaPattern/Default/ANY/ApiPermission.SamServerlessSagaStackStateMachineServerlessSagaPattern.ANY..
 
   StateMachineServerlessSagaPatternANYApiPermissionTestSamServerlessSagaStackStateMachineServerlessSagaPattern:
     Type: 'AWS::Lambda::Permission'

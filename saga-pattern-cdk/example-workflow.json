@@ -7,7 +7,7 @@
     "type": "Standard",
     "diagram":"/resources/statemachine.png",
     "videoId": "",
-    "level": "100",
+    "level": "200",
     "framework": "CDK",
     "services": ["lambda","dynamodb", "sns"],
     "introBox": {
@@ -26,20 +26,20 @@
     "cleanup": {
       "headline": "Cleanup",
       "text": [
-        "1. Delete the stack: <code>sam delete</code>."
+        "1. Delete the stack: <code>cdk destroy</code>."
       ]
     },
     "deploy": {
       "text": [
-        "sam deploy --guided"
+        "cdk deploy"
       ]
     },
     "gitHub": {
       "template": {
-        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/synchronous-job/",
-        "templateDir":"synchronous-job",
-        "templateFile": "template.yaml",
-        "ASL": "statemachine/statemachine.asl.json"
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/saga-pattern-cdk/",
+        "templateDir":"saga-pattern-cdk",
+        "templateFile": "lib/cdk-serverless-saga-stack.ts",
+        "ASL": "resources/statemachine.asl.json"
       },
       "payloads": [
         {
@@ -59,11 +59,11 @@
     },
     "authors": [
         {
-          "name": "Your name",
-          "image": "link-to-your-photo.jpg",
-          "bio": "Your bio.",
-          "linkedin": "linked-in-ID",
-          "twitter": "twitter-handle"
+          "name": "Rohan Mehta",
+          "image": "https://phonetool.amazon.com/users/merohan",
+          "bio": "Cloud Application Architect",
+          "linkedin": "https://www.linkedin.com/in/rohan-mehta-dev/",
+          "twitter": "https://twitter.com/rohanmehta_dev"
         }
       ]
   }
