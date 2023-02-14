@@ -1,0 +1,234 @@
+
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: AWS Step Functions Workflow sample project for restoring multiple files from S3 Glacier storage classes
+
+Globals:
+  Function:
+    #Common function options
+    Runtime: nodejs16.x
+    MemorySize: 128
+    CodeUri: "src/"
+    Timeout: 30
+
+Parameters:
+  ResourcePrefix:
+    Type: String
+    Default: "s3-multi-restore"
+
+# Comment each resource section to explain usage
+Resources:
+
+  # ---- IAM Roles ----
+
+  StepFunctionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - states.amazonaws.com
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess'
+      Policies: 
+        - PolicyName: cloudwatch
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement: 
+              - Effect: "Allow"
+                Action: 
+                  - "logs:CreateLogDelivery"
+                  - "logs:GetLogDelivery"
+                  - "logs:UpdateLogDelivery"
+                  - "logs:DeleteLogDelivery"
+                  - "logs:ListLogDeliveries"
+                  - "logs:PutResourcePolicy"
+                  - "logs:DescribeResourcePolicies"
+                  - "logs:DescribeLogGroups"
+                Resource: "*"
+        - PolicyName: lambda
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement: 
+              - Effect: "Allow"
+                Action: 
+                  - "lambda:InvokeFunction"
+                Resource:
+                  - !GetAtt RestoreObjectFunction.Arn
+        - PolicyName: s3
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement: 
+              - Effect: "Allow"
+                Action: 
+                  - "s3:GetObjectAttributes"
+                  - "s3:GetObject"
+                  - "s3:ListBucket"
+                Resource:
+                  - "*"
+  RestoreLambdaFunctionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies: 
+        - PolicyName: s3
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement: 
+              - Effect: "Allow"
+                Action: 
+                  - "s3:RestoreObject"
+                Resource: "*"
+        - PolicyName: dynamodb
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement: 
+              - Effect: "Allow"
+                Action: 
+                  - "dynamodb:UpdateItem"
+                Resource: !GetAtt RestoreStateDynamoDBTable.Arn
+  CompleteLambdaFunctionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies: 
+        - PolicyName: step-function
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement: 
+              - Effect: "Allow"
+                Action: 
+                  - "states:SendTaskSuccess"
+                  - "states:SendTaskFailure"
+                Resource: !GetAtt RestoreStateMachine.Arn
+        - PolicyName: dynamodb
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement: 
+              - Effect: "Allow"
+                Action: 
+                  - "dynamodb:GetItem"
+                  - "dynamodb:DeleteItem"
+                Resource: !GetAtt RestoreStateDynamoDBTable.Arn
+  # ---- DynamoDB ----
+  RestoreStateDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties: 
+      TableName: !Sub "${ResourcePrefix}-state-table"
+      BillingMode: "PAY_PER_REQUEST"
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      AttributeDefinitions: 
+        - 
+          AttributeName: "S3Bucket"
+          AttributeType: "S"
+        - 
+          AttributeName: "S3Key"
+          AttributeType: "S"
+      KeySchema: 
+        - 
+          AttributeName: "S3Bucket"
+          KeyType: "HASH"
+        - 
+          AttributeName: "S3Key"
+          KeyType: "RANGE"
+    
+  # ---- CloudWatch Logs ----
+  RestoreObjectFunctionLog:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 5
+      LogGroupName: !Sub "/aws/lambda/${ResourcePrefix}-restore-fn"
+  
+  RestoreCompleteFunctionLog:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 5
+      LogGroupName: !Sub "/aws/lambda/${ResourcePrefix}-complete-fn"
+
+  # ---- Lambda Functions ----
+  RestoreObjectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: restoreObject.handler
+      Role: !GetAtt ["RestoreLambdaFunctionRole",'Arn']
+      Description: "Restores an S3 Object."
+      FunctionName: !Sub "${ResourcePrefix}-restore-fn"
+      Environment:
+        Variables:
+          DB_TABLE_NAME: !Ref RestoreStateDynamoDBTable
+  RestoreCompleteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: completeObject.handler
+      Role: !GetAtt ["CompleteLambdaFunctionRole",'Arn']
+      Description: "Resumes the Step Function on restore completion."
+      FunctionName: !Sub "${ResourcePrefix}-complete-fn"
+      Environment:
+        Variables:
+          DB_TABLE_NAME: !Ref RestoreStateDynamoDBTable
+
+  # ---- EventBridge Rule ----
+  RestoreObjectRule: 
+    Type: AWS::Events::Rule
+    Properties: 
+      Name: !Sub "${ResourcePrefix}-restore-object-rule"
+      Description: "Rule for Restore Object"
+      EventPattern:
+        source:
+          - 'aws.s3'
+        detail-type:
+          - 'Object Restore Completed'
+      State: "ENABLED"
+      Targets: 
+        - 
+          Arn: !GetAtt RestoreCompleteFunction.Arn
+          Id: "TargetFunctionV1"
+  PermissionForEventBridgeToInvokeLambda: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: !Ref RestoreCompleteFunction
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt RestoreObjectRule.Arn
+
+  # ---- Step Function ----
+  RestoreStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/statemachine.asl.json
+      DefinitionSubstitutions:
+        restoreFunctionArn: !GetAtt [RestoreObjectFunction,'Arn']
+      Name: !Sub "${ResourcePrefix}-sfn"
+      Role: !GetAtt  [StepFunctionRole,'Arn']
+
+Outputs:
+  StateMachineArn:
+    Value: !Ref RestoreStateMachine
+  StateMachineName:
+    Value: !GetAtt [RestoreStateMachine,Name]
