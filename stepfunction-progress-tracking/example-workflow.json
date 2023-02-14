@@ -2,7 +2,7 @@
     "title": "Track AWS Step Functions execution progress via WebSocket API",
     "description": "Submit progress updates via Amazon API Gateway WebSocket to the client without polling",
     "language": "",
-    "simplicity": "2 -  Pattern",
+    "simplicity": "2 - Pattern",
     "usecase": "",
     "type": "Standard",
     "diagram":"/resources/diagram.png",
