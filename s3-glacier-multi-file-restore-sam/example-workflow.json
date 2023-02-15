@@ -2,7 +2,7 @@
     "title": "Restore multiple files from S3 Glacier storage classes",
     "description": "This project demonstrates how to use Step Functions to orchestrate restoration of multiple files from S3 Glacier storage classes.",
     "language": "",
-    "simplicity": "3 - Applications",
+    "simplicity": "3 - Application",
     "usecase": "",
     "type": "Standard",
     "diagram":"/resources/statemachine.png",
