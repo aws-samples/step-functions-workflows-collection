@@ -1,0 +1,55 @@
+{
+  "Comment": "Calling APIGW REST Endpoint",
+  "StartAt": "Add Pet to Store",
+  "States": {
+    "Add Pet to Store": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::apigateway:invoke",
+      "Parameters": {
+        "ApiEndpoint": "${APIID}.execute-api.${REGION}.amazonaws.com",
+        "Method": "POST",
+        "Stage": "${STAGE}",
+        "Path": "pets",
+        "RequestBody.$": "$.NewPet",
+        "AuthType": "IAM_ROLE"
+      },
+      "ResultSelector": {
+        "ResponseBody.$": "$.ResponseBody"
+      },
+      "Next": "Pet was Added Successfully?",
+      "Credentials": {
+        "RoleArn": "${APIRoleArn}"
+      }
+    },
+    "Pet was Added Successfully?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.ResponseBody.errors",
+          "IsPresent": true,
+          "Next": "Failure"
+        }
+      ],
+      "Default": "Retrieve Pet Store Data"
+    },
+    "Failure": {
+      "Type": "Fail"
+    },
+    "Retrieve Pet Store Data": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::apigateway:invoke",
+      "Parameters": {
+        "ApiEndpoint": "${APIID}.execute-api.${REGION}.amazonaws.com",
+        "Method": "GET",
+        "Stage": "${STAGE}",
+        "Path": "pets",
+        "AuthType": "IAM_ROLE"
+      },
+      "ResultSelector": {
+        "Pets.$": "$.ResponseBody"
+      },
+      "ResultPath": "$.ExistingPets",
+      "End": true
+    }
+  }
+}
