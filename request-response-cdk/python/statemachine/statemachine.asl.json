@@ -1,0 +1,21 @@
+{
+  "StartAt": "Wait for timestamp",
+  "States": {
+    "Wait for timestamp": {
+      "Type": "Wait",
+      "SecondsPath": "$.timer_seconds",
+      "Next": "Send message to SNS"
+    },
+    "Send message to SNS": {
+      "End": true,
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "arn:aws:sns:us-east-1:111122223333:RequestResponsePython-topic",
+        "Message": {
+          "input.$": "$.message"
+        }
+      }
+    }
+  }
+}
