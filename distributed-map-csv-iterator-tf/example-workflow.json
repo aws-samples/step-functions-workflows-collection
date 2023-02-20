@@ -1,0 +1,72 @@
+{
+    "title": "Distributed Map with CSV file in Terraform",
+    "description": "This workflow is an example application of a step function using distributed map. This distributed map iterates over an CSV file that is stored in an S3 bucket.",
+    "language": "",
+    "simplicity": "3 - Application",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "300",
+    "framework": "Terraform",
+    "services": [],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "The state machine will take as an input a CSV file that contains a header and multiple items. For each item, the Map state runs each iteration as a child workflow execution, which enables high concurrency of up to 10,000 parallel child workflow executions.",
+        "Each of the Map state will add the item to a DynamoDB table. But you can do more complex things in this state machine."
+
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>terraform destroy</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "terraform init",
+        "terraform apply"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/distributed-map-csv-iterator-tf/",
+        "templateDir":"distributed-map-csv-iterator-tf",
+        "templateFile": "main.tf",
+        "ASL": "statemachines/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Ahmad Aboushady",
+          "image": "https://serverlessland.com/assets/images/resources/contributors/ext-ahmad-aboushady.jpg",
+          "bio": "Senior Technical Account Manager, AWS",
+          "linkedin": "https://www.linkedin.com/in/aboushady/",
+          "twitter": ""
+        }
+      ]
+  }
+  
