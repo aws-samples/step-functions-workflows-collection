@@ -1,0 +1,73 @@
+{
+  "title": "Request response",
+  "description": "Wait for a specified delay, then we will publish to a SNS topic using the Request Response pattern",
+  "language": "Python",
+  "simplicity": "1 - Fundamental",
+  "usecase": "Request Response",
+  "type": "Standard",
+  "diagram": "/resources/statemachine.png",
+  "videoId": "",
+  "level": "100",
+  "framework": "CDK",
+  "services": ["sfn", "sns"],
+  "introBox": {
+    "headline": "How it works",
+    "text": [
+      "When Step Functions calls another service using the Task state, the default pattern is Request Response. With this task orchestration pattern, Step Functions will call the service and then immediately proceed to the next state. The Task state will not wait for the underlying job to complete."
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": ["See the GitHub repo for detailed testing instructions."]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": ["1. Delete the stack: <code>cdk destroy</code>."]
+  },
+  "deploy": {
+    "text": ["cdk deploy"]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/request-response-cdk/",
+      "templateDir": "request-response-cdk/python",
+      "templateFile": "app.py",
+      "ASL": "statemachine/statemachine.asl.json",
+      "definition": "resources/statemachine.png"
+    },
+    "payloads": [
+      {
+        "headline": "",
+        "payloadURL": ""
+      }
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "The AWS Step Functions Workshop",
+        "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+      },
+      {
+        "text": "Try the serverlesspresso workshop",
+        "link": "https://workshop.serverlesscoffee.com/"
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Benjamin Smith",
+      "image": "https://serverlessland.com/assets/images/resources/benjasl.jpg",
+      "bio": "Ben is a senior developer advocate for Serverless Applications at Amazon Web Services based in London, UK. Prior to joining AWS Ben worked in a number of different technical roles specializing in workflow Automation and web development.",
+      "linkedin": "bensmithportfolio",
+      "twitter": "benjamin_l_s"
+    },
+    {
+      "name": "Adrian Hunter",
+      "image": "https://avatars.githubusercontent.com/u/4285633?v=4",
+      "bio": "Adrian Hunter is a Senior Solutions Architect at Amazon Web Services (AWS) based on the Gold Coast, Australia.",
+      "linkedin": "adrianhunter"
+    }
+  ]
+}
