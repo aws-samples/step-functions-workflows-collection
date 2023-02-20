@@ -1,0 +1,53 @@
+{
+  "StartAt": "Map",
+  "States": {
+    "Map": {
+      "Type": "Map",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "DISTRIBUTED",
+          "ExecutionType": "EXPRESS"
+        },
+        "StartAt": "Add Item",
+        "States": {
+          "Add Item": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::dynamodb:putItem",
+            "Parameters": {
+              "TableName": "${TableName}",
+              "Item": {
+                "id": {
+                  "S.$": "$.Content"
+                },
+                "VideoPublishTime": {
+                  "S.$": "$.VideoPublishTime"
+                },
+                "VideoTitle": {
+                  "S.$": "$.VideoTitle"
+                },
+                "Views": {
+                  "N.$": "$.Views"
+                }
+              }
+            },
+            "ResultPath": "$.result",
+            "End": true
+          }
+        }
+      },
+      "End": true,
+      "MaxConcurrency": 100,
+      "ItemReader": {
+        "Resource": "arn:aws:states:::s3:getObject",
+        "ReaderConfig": {
+          "InputType": "CSV",
+          "CSVHeaderLocation": "FIRST_ROW"
+        },
+        "Parameters": {
+          "Bucket.$": "$.BucketName",
+          "Key.$": "$.FileKey"
+        }
+      }
+    }
+  }
+}
