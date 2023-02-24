@@ -5,7 +5,7 @@
     "simplicity": "3 - Application",
     "usecase": "",
     "type": "Standard",
-    "diagram":"/resources/statemachine.png",
+    "diagram":"resources/statemachine.png",
     "videoId": "",
     "level": "300",
     "framework": "Terraform",
