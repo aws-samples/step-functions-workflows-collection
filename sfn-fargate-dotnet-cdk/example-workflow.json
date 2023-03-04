@@ -1,0 +1,71 @@
+{
+    "title": "AWS Step functions with ECS Task with Fargate container",
+    "description": "AWS Step functions integration with ECS Task with Fargate container",
+    "language": ".NET",
+    "simplicity": "3 - Application",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "200",
+    "framework": "cdk",
+    "services": ["lambda","ecs", "fargate", "stepfunctions"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "This workflow shows how to use ECS Fargate with AWS Step Functions and create components using AWS CDK for .NET. "
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>cdk destroy</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "cdk apply"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/sfn-fargate-dotnet-cdk/",
+        "templateDir":"/src/cdk",
+        "templateFile": "CdkStack.cs",
+        "ASL": "statemachine/statemachine.asl"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "AWS Step Functions",
+          "link": "https://docs.aws.amazon.com/step-functions/index.html"
+        },
+		{
+          "text": "Manage Amazon ECS or Fargate Tasks with Step Functions",
+          "link": "https://docs.aws.amazon.com/step-functions/latest/dg/connect-ecs.html"
+        }		
+    },
+    "authors": [
+    {
+      "name": "Uma Shankar",
+      "image": "https://avatars.githubusercontent.com/u/12746278?s=400&u=ff64e2f3321c310ff9c1d1a8ac7ab381f8e2bebc&v=4",
+      "bio": "Application Development Consultant at AWS Professional Services.",
+      "linkedin": "https://www.linkedin.com/in/uma-shankar-patel-061a7924/"
+    }
+  ]
+  }
+  

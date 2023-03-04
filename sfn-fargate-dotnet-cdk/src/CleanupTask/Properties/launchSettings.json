@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "CleanupTask": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}
