@@ -1,97 +1,76 @@
-# Saga Pattern
+This is a sample project that showcases how to use AWS Cloud Development Kit (CDK) to deploy a serverless workflow using AWS Step Functions inetegrated with ECS Fargate task.
 
-This workflow uses AWS Step Functions to build a saga pattern to book flights, book car rentals, and process payments for a vacation. The saga pattern is a failure management pattern that coordinates transactions between multiple microservices to maintain data consistency.
+## Prerequisites
+Before starting, make sure you have the following installed on your local development machine:
 
-Learn more about this workflow at Step Functions workflows collection: << Add the live URL here >>
-
-For more info about the saga pattern, please read [Implement the serverless saga pattern by using AWS Step Functions](https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/implement-the-serverless-saga-pattern-by-using-aws-step-functions.html)
-
-Important: this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the [AWS Pricing page](https://aws.amazon.com/pricing/) for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
-
-## Requirements
-
+* [.NET Core](https://dotnet.microsoft.com/en-us/download/dotnet/6.0) installed
 * [Create an AWS account](https://portal.aws.amazon.com/gp/aws/developer/registration/index.html) if you do not already have one and log in. The IAM user that you use must have sufficient permissions to make necessary AWS service calls and manage AWS resources.
 * [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html) installed and configured
 * [Git Installed](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
-* [Terraform](https://developer.hashicorp.com/terraform/downloads) installed
+* [AWS CDK](https://docs.aws.amazon.com/cdk/v2/guide/work-with-cdk-csharp.html) installed
 
-## Deployment Instructions
+## Getting Started
+To get started, follow these steps:
 
-1. Create a new directory, navigate to that directory in a terminal and clone the GitHub repository:
-    ``` 
-    git clone https://github.com/aws-samples/step-functions-workflows-collection
-    ```
-1. Change directory to the pattern directory:
-    ```
-    cd saga-pattern-tf
-    ```
+1. Clone this repository to your local machine.
+2. Open a terminal window and navigate to the root directory of the project.
+3. In Program.cs file under cdk project, either pass you AWS account id or set enviorment variable `CDK_DEFAULT_ACCOUNT` with aws account id.
+   `
+                Env = new Amazon.CDK.Environment
+                {
+                    Account = System.Environment.GetEnvironmentVariable("CDK_DEFAULT_ACCOUNT"),
+                    Region = System.Environment.GetEnvironmentVariable("CDK_DEFAULT_REGION"),
+                }
+   `
+4. Run `dotnet restore` to restore the NuGet packages.
+5. Run `dotnet publish -c Release`
+5. Run `cdk bootstrap` to create an S3 bucket in your AWS account to store the CDK toolkit stack.
+5. Run `cdk deploy` to deploy the application stack to your AWS account.
+6. After the deployment is complete, you should see a Step Function state machine and an ECS Fargate task definition in your AWS account.
 
-1. If needed, update the variable ```region``` in ```variables.tf``` to the region of your choice.  The default is ```us-east-1```.
+## Project Structure
+The project structure is as follows:
 
-2. From the command line, use npm to install dependencies and run the build process for the Lambda functions.
-    ```
-    npm install
-    npm run build
-    ```
-
-3. From the command line, use Terraform to deploy the AWS resources for the workflow as specified in the main.tf file:
-    ```
-    terraform init
-    terraform apply
-    ```
-
-## How it works
-
-The following workflow diagram illustrates the typical flow of the travel reservation system. The workflow consists of reserving air travel, reserving a car, processing payments, confirming flight reservations, and confirming car rentals followed by a success notification when these steps are complete. However, if the system encounters any errors in running any of these transactions, it starts to fail backward. For example, an error with payment processing triggers a refund, which then triggers a cancellation of the rental car and flight, which ends the entire transaction with a failure message.
+1. **cdk** - CDK project to setup AWS services
+2. **CleanupTask** - Sample application configured in docker  image
+4. **CopyFilesTask** - Sample application configured in docker image
+5. **ListFilesFunction** - A lambda function
+6. **WorkflowApp.Models** - A class library for project model classes
+7. **Dockerfile** - containing all the commands requires to call on the command line to assemble an image
 
 ## Image
 Provide an exported .png of the workflow in the `/resources` directory from [Workflow studio](https://docs.aws.amazon.com/step-functions/latest/dg/workflow-studio.html) and add here.
 ![image](./resources/statemachine.png)
 
-## Testing
+## Resources Created
+The following AWS resources are created by the CDK stacks:
 
-For testing purposes, this pattern deploys API Gateway and a test Lambda function that triggers the Step Functions state machine. With Step Functions, you can control the functionality of the travel reservation system by passing a run_type parameter to mimic failures in “ReserveFlight,” “ReserveCarRental,” “ProcessPayment,” “ConfirmFlight,” and “ConfirmCarRental.”
+1. **ECS Fargate Task Definition** - An ECS task definition that references a Docker image from a ECR registry.
+2. **AWS Lambda function** - A sample AWS Lambda function added to the state machine.
+2. **Step Function State Machine** - A Step Function state machine that orchestrates the execution of the ECS Fargate task using AWS Step Functions.
+3. **IAM Roles and Policies**
+    - An IAM role for the ECS task execution.
+    - An IAM role for the Step Function execution.
 
-The saga Lambda function (sagaLambda.ts) takes input from the query parameters in the API Gateway URL, creates the following JSON object, and passes it to Step Functions for execution:
+## Testing and Validation
+1. Log in to your AWS Management Console and navigate to the AWS Step Functions service.
+2. Click on the State machines tab and select the state machine name strat with `WorkflowAppStateMachine`.
+3. Click on the Start Execution button to start the execution of the state machine.
+4. In the Start Execution dialog box, enter below input data, and click the Start Execution button.
+   `
+   {
+  "SourceLocation": "MyFiles/A",
+  "TargetLocation": "MyFiles/B"
+   }
+   `
+5. The execution details page will open where you can monitor the execution of your state machine.
+6. Once the execution is complete, you can check the output in the Execution Details section.
+7. To validate the state machine, you can check if the execution went through all the states as defined in the state machine definition.
+8. To validate `ListFilesFunction` execution logs, click on Logs on against `ListFiles` step, and to check ECS Task logs, click on `ECSTask` and then check logs. 
+9. You can also use the CloudWatch Logs console to view the logs generated during the execution of your state machine.
 
-    ```
-    let input = {
-        "trip_id": tripID, //  value taken from query parameter, default is AWS request ID
-        "depart_city": "Detroit",
-        "depart_time": "2021-07-07T06:00:00.000Z",
-        "arrive_city": "Frankfurt",
-        "arrive_time": "2021-07-09T08:00:00.000Z",
-        "rental": "BMW",
-        "rental_from": "2021-07-09T00:00:00.000Z",
-        "rental_to": "2021-07-17T00:00:00.000Z",
-        "run_type": runType // value taken from query parameter, default is "success"
-    };
-    ```
+## Cleaning up
+To delete the resources created by this project, run `cdk destroy`.
 
-You can experiment with different flows of the Step Functions state machine by passing the following URL parameters:
-
-Successful Execution ─ https://{api gateway url}
-
-Reserve Flight Fail ─ https://{api gateway url}?runType=failFlightsReservation
-
-Confirm Flight Fail ─ https://{api gateway url}?runType=failFlightsConfirmation
-
-Reserve Car Rental Fail ─ https://{api gateway url}?runType=failCarRentalReservation
-
-Confirm Car Rental Fail ─ https://{api gateway url}?runType=failCarRentalConfirmation
-
-Process Payment Fail ─ https://{api gateway url}?runType=failPayment
-
-Pass a Trip ID ─ https://{api gateway url}?tripID={by default, trip ID will be the AWS request ID}
-
-## Cleanup
- 
-1. Delete the stack
-    ```bash
-    terraform destroy
-    ```
-
-----
-Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-
-SPDX-License-Identifier: MIT-0
+## Conclusion
+This project demonstrates how to use AWS CDK to deploy a serverless workflow using AWS Step Functions and an ECS Fargate task. With the AWS CDK, you can define your infrastructure as code, which makes it easier to manage and automate the deployment of your applications.
