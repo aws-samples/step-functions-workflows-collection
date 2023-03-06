@@ -1,0 +1,73 @@
+{
+  "title": "AWS Step functions with ECS Task with Fargate container",
+  "description": "AWS Step functions integration with ECS Task with Fargate container",
+  "language": ".NET",
+  "simplicity": "3 - Application",
+  "usecase": "",
+  "type": "Standard",
+  "diagram": "/resources/statemachine.png",
+  "videoId": "",
+  "level": "200",
+  "framework": "cdk",
+  "services": [ "lambda", "ecs", "fargate", "stepfunctions" ],
+  "introBox": {
+    "headline": "AWS Step functions with ECS Task with Fargate container",
+    "text": [
+      "AWS Lambda is an AWS service that allows users to run code without the need to provision or manage servers. ECS is another AWS service that provides containerized compute capacity, which can be used to run applications or services.",
+      "When combining Step Functions with Lambda and ECS, it is possible to create workflows that are executed in a serverless and scalable environment. The main advantage of this approach is that it allows users to create complex workflows that can be executed in a reliable and cost-effective manner. However, there is a challenge with using Lambda functions in Step Functions workflows: the maximum execution time for a Lambda function is 15 minutes. This can be a problem for workflows that require longer execution times.",
+      "To overcome this challenge, it is possible to use ECSTask to run the long-running tasks. ECSTask allows users to create containerized tasks that can run for much longer periods than a Lambda function. When a task needs to be executed, Step Functions can trigger an ECSTask to run the task, passing any necessary input or configuration data to the task.",
+      "In summary, combining Step Functions with Lambda and ECSTask provides a powerful tool for creating complex, serverless workflows. By leveraging the strengths of each service, it is possible to create workflows that are reliable, scalable, and cost-effective."
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": [
+      "See the GitHub repo for detailed testing instructions."
+    ]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": [
+      "1. Delete the stack: <code>cdk destroy</code>."
+    ]
+  },
+  "deploy": {
+    "text": [
+      "cdk apply"
+    ]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/sfn-fargate-dotnet-cdk/",
+      "templateDir": "/src/cdk",
+      "templateFile": "CdkStack.cs",
+      "ASL": "statemachine/statemachine.asl"
+    },
+    "payloads": [
+      {
+        "headline": "",
+        "payloadURL": ""
+      }
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "AWS Step Functions",
+        "link": "https://docs.aws.amazon.com/step-functions/index.html"
+      },
+      {
+        "text": "Manage Amazon ECS or Fargate Tasks with Step Functions",
+        "link": "https://docs.aws.amazon.com/step-functions/latest/dg/connect-ecs.html"
+      }
+  },
+  "authors": [
+    {
+      "name": "Uma Shankar",
+      "image": "https://avatars.githubusercontent.com/u/12746278?s=400&u=ff64e2f3321c310ff9c1d1a8ac7ab381f8e2bebc&v=4",
+      "bio": "Application Development Consultant at AWS Professional Services.",
+      "linkedin": "https://www.linkedin.com/in/uma-shankar-patel-061a7924/"
+    }
+  ]
+}
