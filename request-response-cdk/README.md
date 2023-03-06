@@ -6,6 +6,8 @@ Choose your preferred language to work with [CDK](https://aws.amazon.com/cdk/):
 
 * [python/](python/) - uses AWS CDK to build and deploy the infrastructure using Python
 
+* [typescript/](typescript/) - uses AWS CDK to build and deploy the infrastructure using Typescript
+
 See README's in specific language folders for specific requirements and deployment steps.
 
 ## What does this workflow do?
