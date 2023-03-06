@@ -1,5 +1,0 @@
-export {};
-export declare const handler: (event: any) => Promise<{
-    status: string;
-    payment_id: string;
-}>;
