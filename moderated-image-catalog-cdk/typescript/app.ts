@@ -6,6 +6,7 @@ import {
   StackProps,
   aws_dynamodb as dynamodb,
   aws_iam as iam,
+  aws_kms as kms,
   aws_s3 as s3,
   aws_sns as sns,
   aws_sns_subscriptions as subscriptions,
@@ -48,11 +49,13 @@ export class moderatedImageCatalogStack extends Stack {
     });
 
     // Create SNS Topic for moderator notifications
+    const sns_key = kms.Alias.fromAliasName(this, "SnsKey", "alias/aws/sns");
     const moderatorNotificationTopic = new sns.Topic(
       this,
       "ModeratorNotificationTopic",
       {
         topicName: "ModeratorNotificationTopic-Typescript",
+        masterKey: sns_key,
       }
     );
     // Subscribe moderator to notifications
