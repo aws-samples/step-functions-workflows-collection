@@ -23,7 +23,7 @@ class wordFilteringScriptGeneratorStack(Stack):
     ) -> None:
         super().__init__(scope, id, **kwargs)
 
-        # Create Amazon S3 bucket to store TTS text media
+        # Create Amazon S3 bucket to store Transcript media
         transcript_media_bucket = s3.Bucket(
             self,
             "TranscriptMediaBucket",
@@ -35,7 +35,7 @@ class wordFilteringScriptGeneratorStack(Stack):
             auto_delete_objects=True,  # note that this parameter deletes bucket content upon stack removal using an AWS Lambda function
         )
 
-        # Create Amazon S3 bucket to store TTS mp3 results
+        # Create Amazon S3 bucket to store transcription results
         transcript_results_bucket = s3.Bucket(
             self,
             "TranscriptResultBucket",
@@ -135,7 +135,7 @@ class wordFilteringScriptGeneratorStack(Stack):
             ],
         )
 
-        # Step to get current transciprtion job status
+        # Step to get current transcription job status
         get_transcription_job_status = tasks.CallAwsService(
             self,
             "Get Transcription Job Status",
@@ -246,7 +246,7 @@ class wordFilteringScriptGeneratorStack(Stack):
             tracing_enabled=True,
         )
 
-        # Creates an Amazon EventBridge rule that looks for new objects created on the TTS Media Bucket
+        # Creates an Amazon EventBridge rule that looks for new objects created on the Transcription Media Bucket
         s3_media_trigger = events.Rule(
             self,
             "S3MediaTrigger",
