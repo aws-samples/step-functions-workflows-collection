@@ -31,7 +31,7 @@ Important: this application uses various AWS services and there are costs associ
     cd moderated-image-catalog-cdk/typescript
     ```
 
-1. From the command line, use npm to install dependencies and run the build process for the Lambda functions.
+1. From the command line, use npm to install dependencies and run the build process.
 
     ```bash
     npm install
