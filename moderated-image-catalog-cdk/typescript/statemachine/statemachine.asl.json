@@ -113,7 +113,7 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::sns:publish",
       "Parameters": {
-        "TopicArn": "arn:aws:sns:ap-southeast-2:285718370301:ModeratorNotificationTopic-Typescript",
+        "TopicArn": "arn:aws:sns:us-east-1:111122223333:ModeratorNotificationTopic-Typescript",
         "Message.$": "$"
       }
     }
