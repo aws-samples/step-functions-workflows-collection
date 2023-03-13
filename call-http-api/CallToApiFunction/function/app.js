@@ -12,9 +12,9 @@ exports.lambdaHandler = async (event, context) => {
   }
   
   let config = event.config
-  if (!event.enableIPv6){
-    console.debug("Forcing axios to use IPv4")
+  if (!(event in forceIPv4) or event.forceIPv4){
     // Lambda functions don't support outbound IPv6 yet, force IPv4
+    console.debug("Forcing axios to use IPv4")
     const agent = new http.Agent({ family: 4 });
     config = {...config, httpAgent: agent}
   }
