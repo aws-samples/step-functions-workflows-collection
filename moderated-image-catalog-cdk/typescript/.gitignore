@@ -18,4 +18,5 @@ yarn-error.log*
 !/cdk.json
 cdk.out/
 .cdk.staging/
+/dist
 

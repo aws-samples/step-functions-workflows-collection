@@ -1,8 +1,8 @@
 {
-  "name": "moderatored-image-catalog-cdk",
+  "name": "moderated-image-catalog-cdk",
   "version": "0.1.0",
   "bin": {
-    "moderatored-image-catalog-cdk": "app.js"
+    "moderated-image-catalog-cdk": "app.js"
   },
   "scripts": {
     "build": "tsc",
