@@ -39,3 +39,13 @@ It returns the HTTP status code, header and response body in the `Payload` objec
 	// ...
 }
 ```
+
+# Deployment
+```
+sam build
+sam deploy --guided
+```
+
+# Troubleshooting
+* Error: `Runtime.ImportModuleError: Error: Cannot find module 'axios'`
+  Solution: Run `sam build`, the run `sam deploy --guided` again.
