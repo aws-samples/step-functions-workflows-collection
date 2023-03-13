@@ -1,4 +1,5 @@
 const axios = require('axios')
+const http = require('http');
 
 exports.lambdaHandler = async (event, context) => {
   console.debug(event)
@@ -10,7 +11,14 @@ exports.lambdaHandler = async (event, context) => {
     throw Error("Missing HTTP request config in the input.")
   }
   
-  const resp = await axios(event.config)
+  let config = event.config
+  if (!event.enableIPv6){
+    console.debug("Forcing axios to use IPv4")
+    // Lambda functions don't support outbound IPv6 yet, force IPv4
+    const agent = new http.Agent({ family: 4 });
+    config = {...config, httpAgent: agent}
+  }
+  const resp = await axios(config)
   .catch(function (error) {
     console.error(error)
     throw error

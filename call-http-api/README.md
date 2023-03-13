@@ -10,11 +10,12 @@ The workflow takes an Axios (Node.js-based HTTP client) config as input. For exa
 # Step function input
 {
 	"config": {
-		"url": "www.example.com",
+		"url": "https://www.example.com",
 		"method": "get"
 		// More options can be found in https://axios-http.com/docs/req_config
 	},
-	"enableLog": true # Enable/disable Lambda logging.
+	"enableLog": true // Enable/disable Lambda logging.
+    "enableIPv6": false // Currently Lambda functions do not support outbound IPv6, reserved for future use.
 	
 }
 ```
