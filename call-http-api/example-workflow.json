@@ -19,7 +19,7 @@
         "# Step function input",
         "{",
         "	\"config\": {",
-        "		\"url\": \"www.example.com\",
+        "		\"url\": \"https://www.example.com\",
         "		\"method\": \"get\"
         "		// More options can be found in https://axios-http.com/docs/req_config",
         "	},",
@@ -64,6 +64,7 @@
     },
     "deploy": {
       "text": [
+        "sam build",
         "sam deploy --guided"
       ]
     },

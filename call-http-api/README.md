@@ -10,14 +10,15 @@ The workflow takes an Axios (Node.js-based HTTP client) config as input. For exa
 # Step function input
 {
 	"config": {
-		"url": "www.example.com",
+		"url": "https://www.example.com",
 		"method": "get"
 		// More options can be found in https://axios-http.com/docs/req_config
 	},
-	"enableLog": true # Enable/disable Lambda logging.
+	"enableLog": true // Enable/disable Lambda logging.
 	
 }
 ```
+(Remember to remove the comments before copy-pasting, they are not valid JSON)
 
 You can see the full list of options in the [Axios documentation](https://axios-http.com/docs/req_config)
 
@@ -39,3 +40,13 @@ It returns the HTTP status code, header and response body in the `Payload` objec
 	// ...
 }
 ```
+
+# Deployment
+```
+sam build
+sam deploy --guided
+```
+
+# Troubleshooting
+* Error: `Runtime.ImportModuleError: Error: Cannot find module 'axios'`
+  Solution: Run `sam build`, the run `sam deploy --guided` again.
