@@ -1,0 +1,47 @@
+{
+  "StartAt": "Get Support Case Details",
+  "States": {
+    "Get Support Case Details": {
+      "Next": "Determine Severity",
+      "Type": "Task",
+      "InputPath": "$.detail.case-id",
+      "ResultPath": "$.CaseDetails",
+      "Resource": "arn:aws:states:::aws-sdk:support:describeCases",
+      "Parameters": {
+        "CaseIdList.$": "States.Array($)"
+      }
+    },
+    "Determine Severity": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Or": [
+            {
+              "Variable": "$.CaseDetails.Cases[0].SeverityCode",
+              "StringEquals": "critical"
+            },
+            {
+              "Variable": "$.CaseDetails.Cases[0].SeverityCode",
+              "StringEquals": "urgent"
+            }
+          ],
+          "Next": "Notify that a new case has been created"
+        }
+      ],
+      "Default": "Notification not required"
+    },
+    "Notification not required": {
+      "Type": "Succeed"
+    },
+    "Notify that a new case has been created": {
+      "End": true,
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "arn:aws:sns:us-east-1:111122223333:SupportCaseNotifications-SupportCaseCreatedNotificationA1B2C3D4-EXAMPLE11111",
+        "Message.$": "States.Format('A new AWS Support case (Case ID: {}) has been opened in account {}, with a {} severity by {}. The subject is {}. You can access this case by logging into AWS account {} and clicking the following link: https://console.aws.amazon.com/support/home#/case/?displayId={}&language=en', $.CaseDetails.Cases[0].DisplayId, $.account, $.CaseDetails.Cases[0].SeverityCode, $.CaseDetails.Cases[0].SubmittedBy, $.CaseDetails.Cases[0].Subject, $.account, $.CaseDetails.Cases[0].DisplayId)",
+        "Subject.$": "States.Format('AWS Support Case Created - Case ID: {} - {}', $.CaseDetails.Cases[0].DisplayId, $.CaseDetails.Cases[0].Subject)"
+      }
+    }
+  }
+}
