@@ -268,7 +268,7 @@ export class ec2IsolationStack extends Stack {
 
 const app = new App();
 new ec2IsolationStack(app, "ec2IsolationTypescript", {
-    vpcId: "vpc-03631b5c59525db6c",
+    vpcId: "<your vpc ID >",
     env: {
         account: process.env.CDK_DEFAULT_ACCOUNT,
         region: process.env.CDK_DEFAULT_REGION

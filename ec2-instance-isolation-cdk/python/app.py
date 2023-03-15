@@ -256,6 +256,6 @@ Ec2IsolationStack(
     app,
     "Ec2IsolationPython",
     env=Environment(account=os.getenv('CDK_DEFAULT_ACCOUNT'), region=os.getenv('CDK_DEFAULT_REGION')),
-    vpc_id="vpc-03631b5c59525db6c"
+    vpc_id="<your VPC ID>"
 )
 app.synth()
