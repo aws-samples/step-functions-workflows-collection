@@ -1,0 +1,129 @@
+{
+  "StartAt": "List Vocabulary Filters",
+  "States": {
+    "List Vocabulary Filters": {
+      "Next": "Does Vocabulary Filter already exist?",
+      "Type": "Task",
+      "ResultPath": "$.VocabularyListResult",
+      "Resource": "arn:aws:states:::aws-sdk:transcribe:listVocabularyFilters",
+      "Parameters": {
+        "NameContains": "wordFilter"
+      }
+    },
+    "Does Vocabulary Filter already exist?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "And": [
+            {
+              "Variable": "$.VocabularyListResult.VocabularyFilters[0]",
+              "IsPresent": true
+            },
+            {
+              "Variable": "$.VocabularyListResult.VocabularyFilters[0].VocabularyFilterName",
+              "StringEquals": "wordFilter"
+            }
+          ],
+          "Next": "Start Transcription Job"
+        }
+      ],
+      "Default": "Create Vocabulary Filter"
+    },
+    "Create Vocabulary Filter": {
+      "Next": "Wait while filter is being created",
+      "Type": "Task",
+      "ResultPath": null,
+      "Resource": "arn:aws:states:::aws-sdk:transcribe:createVocabularyFilter",
+      "Parameters": {
+        "LanguageCode": "en-US",
+        "VocabularyFilterName": "wordFilter",
+        "Words": [
+          "amazon"
+        ]
+      }
+    },
+    "Wait while filter is being created": {
+      "Type": "Wait",
+      "Seconds": 20,
+      "Next": "Start Transcription Job"
+    },
+    "Start Transcription Job": {
+      "Next": "Wait for Transcription job to complete",
+      "Type": "Task",
+      "ResultPath": "$.TranscriptionResult",
+      "Resource": "arn:aws:states:::aws-sdk:transcribe:startTranscriptionJob",
+      "Parameters": {
+        "Media": {
+          "MediaFileUri.$": "States.Format('s3://{}/{}', $.detail.bucket.name, $.detail.object.key)"
+        },
+        "OutputBucketName": "wordfilteringscriptgener-transcriptresultbucketA1-EXAMPLE11111",
+        "OutputKey.$": "States.Format('{}-temp.json', $.detail.object.key)",
+        "LanguageCode": "en-US",
+        "TranscriptionJobName.$": "$$.Execution.Name",
+        "Settings": {
+          "VocabularyFilterMethod": "mask",
+          "VocabularyFilterName": "wordFilter"
+        }
+      }
+    },
+    "Wait for Transcription job to complete": {
+      "Type": "Wait",
+      "Seconds": 10,
+      "Next": "Get Transcription Job Status"
+    },
+    "Get Transcription Job Status": {
+      "Next": "Evaluate Transcription Job Status",
+      "Type": "Task",
+      "ResultPath": "$.TranscriptionResult",
+      "Resource": "arn:aws:states:::aws-sdk:transcribe:getTranscriptionJob",
+      "Parameters": {
+        "TranscriptionJobName.$": "$.TranscriptionResult.TranscriptionJob.TranscriptionJobName"
+      }
+    },
+    "Evaluate Transcription Job Status": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.TranscriptionResult.TranscriptionJob.TranscriptionJobStatus",
+          "StringEquals": "COMPLETED",
+          "Next": "Get Transcript from Raw Transcription Result"
+        },
+        {
+          "Variable": "$.TranscriptionResult.TranscriptionJob.TranscriptionJobStatus",
+          "StringEquals": "FAILED",
+          "Next": "Failed"
+        }
+      ],
+      "Default": "Wait for Transcription job to complete"
+    },
+    "Get Transcript from Raw Transcription Result": {
+      "Next": "Store Transcript in S3",
+      "Type": "Task",
+      "ResultPath": "$.transcription",
+      "ResultSelector": {
+        "filecontent.$": "States.StringToJson($.Body)"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:s3:getObject",
+      "Parameters": {
+        "Bucket": "wordfilteringscriptgener-transcriptresultbucketA1-EXAMPLE11111",
+        "Key.$": "States.Format('{}-temp.json', $.detail.object.key)"
+      }
+    },
+    "Store Transcript in S3": {
+      "End": true,
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:s3:putObject",
+      "Parameters": {
+        "Bucket": "wordfilteringscriptgener-transcriptresultbucketA1-EXAMPLE11111",
+        "Key.$": "States.Format('{}-transcript.txt', $.detail.object.key)",
+        "Body.$": "$.transcription.filecontent.results.transcripts[0].transcript"
+      }
+    },
+    "Failed": {
+      "Type": "Fail",
+      "Error": "FAILED",
+      "Cause": "Transcription job failed"
+    }
+  },
+  "TimeoutSeconds": 900
+}
