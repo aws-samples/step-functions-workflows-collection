@@ -1,0 +1,88 @@
+{
+    "title": "EC2 Instance Isolation",
+    "description": "Isolate an EC2 instance suspected in a security incident",
+    "language": "Typescript",
+    "simplicity": "3 - Application",
+    "usecase": "",
+    "type": "Standard",
+    "diagram": "/resources/statemachine.png",
+    "videoId": "",
+    "level": "200",
+    "framework": "CDK",
+    "services": [
+      "ec2",
+      "ebs"
+    ],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "This step function orchestrates the process of isolating an EC2 instance involved in a potential security anomaly.",
+        "Using all native API calls the step function: ",
+        "1. Captures the metadata from the Amazon EC2 instance",
+        "2. Protects the Amazon EC2 instance from accidental termination by enabling termination protection for the instance.",
+        "3. Isolates the Amazon EC2 instance by switching the VPC Security Group.",
+        "4. Detach the Amazon EC2 instance from any AWS Auto Scaling groups. Which will deregister the Amazon EC2 instance from any related Elastic Load Balancing service.",
+        "5. Snapshots the Amazon EBS data volumes that are attached to the EC2 instance for preservation and follow-up investigations.",
+        "6. Tags the Amazon EC2 instance as quarantined for investigation, and add any pertinent metadata, such as the trouble ticket associated with the investigation.",
+        "7. Creates a forensic instance with the EBS volume from the suspected instance and allows ingress to the quarantined instance."
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+        "headline": "Cleanup",
+        "text": [
+          "Delete the stack: <code>cdk destroy</code>."
+        ]
+      },
+      "deploy": {
+        "text": [
+          "<code>cdk deploy</code>"
+        ]
+      },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/ec2-instance-isolation-cdk/",
+        "templateDir": "ec2-instance-isolation-cdk/typescript",
+        "templateFile": "app.testing",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional Resources",
+      "bullets": [
+        {
+          "text": "AWS Security Incident Response Guide",
+          "link": "https://docs.aws.amazon.com/whitepapers/latest/aws-security-incident-response-guide/welcome.html"
+        },
+        {
+          "text": "Orchestrating a security incident response with AWS Step Functions",
+          "link": "https://aws.amazon.com/blogs/compute/orchestrating-a-security-incident-response-with-aws-step-functions/"
+        }
+      ]
+    },
+    "authors": [
+      {
+        "name": "Jeremy Cianella",
+        "image": "https://avatars.githubusercontent.com/jcianella",
+        "bio": "Jeremy is a Senior Solutions Architect at Amazon Web Services based in Miami, FL. Prior to AWS, Jeremy worked in the energy industry leading DevOps transformations and creating serverless applications.",
+        "linkedin": "jcianella"
+      },
+      {
+        "name": "Stan Fan",
+        "image": "https://avatars.githubusercontent.com/u/58756168?v=4",
+        "bio": "Stan Fan is a Solutions Architect at Amazon Web Services (AWS) based on Sydney, Australia.",
+        "linkedin": "hongyi-fan-05101992"
+      }
+    ]
+  }

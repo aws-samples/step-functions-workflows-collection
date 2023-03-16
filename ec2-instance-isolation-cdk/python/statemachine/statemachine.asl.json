@@ -1,0 +1,215 @@
+{
+  "StartAt": "Get EC2 Instance Info",
+  "States": {
+    "Get EC2 Instance Info": {
+      "Type": "Task",
+      "Parameters": {
+        "InstanceIds.$": "States.Array($.IsolatedInstanceId)"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:ec2:describeInstances",
+      "Next": "Disable Instance Termination",
+      "ResultPath": "$.InstanceDescription"
+    },
+    "Disable Instance Termination": {
+      "Type": "Task",
+      "Parameters": {
+        "InstanceId.$": "$.IsolatedInstanceId",
+        "DisableApiTermination": {
+          "Value": "true"
+        }
+      },
+      "Resource": "arn:aws:states:::aws-sdk:ec2:modifyInstanceAttribute",
+      "Next": "Get AutoScalingGroup Info",
+      "ResultPath": null
+    },
+    "Get AutoScalingGroup Info": {
+      "Type": "Task",
+      "Parameters": {
+        "InstanceIds.$": "States.Array($.IsolatedInstanceId)"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:autoscaling:describeAutoScalingInstances",
+      "Next": "Has ASG?",
+      "ResultPath": "$.AutoScalingResult"
+    },
+    "Has ASG?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.AutoScalingResult.AutoScalingInstances[0].AutoScalingGroupName",
+          "IsPresent": true,
+          "Next": "Detach Instance from ASG"
+        }
+      ],
+      "Default": "Create Forensic Instance, Snapshots, Volume"
+    },
+    "Detach Instance from ASG": {
+      "Type": "Task",
+      "Parameters": {
+        "AutoScalingGroupName.$": "$.AutoScalingResult.AutoScalingInstances[0].AutoScalingGroupName",
+        "ShouldDecrementDesiredCapacity": "false",
+        "InstanceIds.$": "States.Array($.IsolatedInstanceId)"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:autoscaling:detachInstances",
+      "Next": "Create Forensic Instance, Snapshots, Volume",
+      "ResultPath": null
+    },
+    "Create Forensic Instance, Snapshots, Volume": {
+      "Type": "Parallel",
+      "Branches": [
+        {
+          "StartAt": "Create Forensic Instance",
+          "States": {
+            "Create Forensic Instance": {
+              "Type": "Task",
+              "Parameters": {
+                "MaxCount": 1,
+                "MinCount": 1,
+                "InstanceType.$": "$.InstanceDescription.Reservations[0].Instances[0].InstanceType",
+                "ImageId.$": "$.InstanceDescription.Reservations[0].Instances[0].ImageId",
+                "SubnetId.$": "$.InstanceDescription.Reservations[0].Instances[0].NetworkInterfaces[0].SubnetId",
+                "SecurityGroupIds": [
+                  "${EC2IsolationSecurityGroup}"
+                ]
+              },
+              "Resource": "arn:aws:states:::aws-sdk:ec2:runInstances",
+              "ResultSelector": {
+                "ForensicInstanceId.$": "$.Instances[0].InstanceId"
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Create Snapshot from Isolated Instance",
+          "States": {
+            "Create Snapshot from Isolated Instance": {
+              "Type": "Task",
+              "Parameters": {
+                "VolumeId.$": "$.InstanceDescription.Reservations[0].Instances[0].BlockDeviceMappings[0].Ebs.VolumeId"
+              },
+              "Resource": "arn:aws:states:::aws-sdk:ec2:createSnapshot",
+              "ResultPath": "$.SnapshotId",
+              "Next": "Get Snapshot Status"
+            },
+            "Get Snapshot Status": {
+              "Type": "Task",
+              "Parameters": {
+                "SnapshotIds.$": "States.Array($.SnapshotId.SnapshotId)"
+              },
+              "Resource": "arn:aws:states:::aws-sdk:ec2:describeSnapshots",
+              "ResultPath": "$.SnapshotStatus",
+              "ResultSelector": {
+                "SnapshotState.$": "$.Snapshots.[0].State"
+              },
+              "Next": "Is Snapshot Complete?"
+            },
+            "Is Snapshot Complete?": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.SnapshotStatus.SnapshotState",
+                  "StringEquals": "completed",
+                  "Next": "Create EBS Volume from Snapshot"
+                }
+              ],
+              "Default": "Wait for Snapshot Creation"
+            },
+            "Create EBS Volume from Snapshot": {
+              "Type": "Task",
+              "Parameters": {
+                "AvailabilityZone.$": "$.InstanceDescription.Reservations[0].Instances[0].Placement.AvailabilityZone",
+                "SnapshotId.$": "$.SnapshotId.SnapshotId"
+              },
+              "Resource": "arn:aws:states:::aws-sdk:ec2:createVolume",
+              "Next": "Get EBS Volume Status",
+              "ResultPath": "$.Volumes"
+            },
+            "Get EBS Volume Status": {
+              "Type": "Task",
+              "Parameters": {
+                "VolumeIds.$": "States.Array($.Volumes.VolumeId)"
+              },
+              "Resource": "arn:aws:states:::aws-sdk:ec2:describeVolumes",
+              "ResultPath": "$.VolumeDescription",
+              "Next": "Is Volume Available?"
+            },
+            "Is Volume Available?": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Not": {
+                    "Variable": "$.VolumeDescription.Volumes[0].State",
+                    "StringEquals": "available"
+                  },
+                  "Next": "Wait for Volume Creation"
+                }
+              ],
+              "Default": "Volume Creation Complete"
+            },
+            "Volume Creation Complete": {
+              "Type": "Pass",
+              "End": true,
+              "ResultPath": null
+            },
+            "Wait for Volume Creation": {
+              "Type": "Wait",
+              "Seconds": 15,
+              "Next": "Get EBS Volume Status"
+            },
+            "Wait for Snapshot Creation": {
+              "Type": "Wait",
+              "Seconds": 15,
+              "Next": "Get Snapshot Status"
+            }
+          }
+        }
+      ],
+      "Next": "Attach Volume"
+    },
+    "Attach Volume": {
+      "Type": "Task",
+      "Parameters": {
+        "Device": "/dev/sdf",
+        "InstanceId.$": "$[0].ForensicInstanceId",
+        "VolumeId.$": "$[1].Volumes.VolumeId"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:ec2:attachVolume",
+      "Next": "Allow Forensic Instance Ingress",
+      "ResultPath": null
+    },
+    "Allow Forensic Instance Ingress": {
+      "Type": "Task",
+      "Parameters": {
+        "GroupId.$": "$[1].InstanceDescription.Reservations[0].Instances[0].SecurityGroups[0].GroupId",
+        "IpPermissions": [
+          {
+            "IpProtocol": "-1",
+            "FromPort": -1,
+            "UserIdGroupPairs": [
+              {
+                "GroupId": "${EC2IsolationSecurityGroup}"
+              }
+            ]
+          }
+        ]
+      },
+      "Resource": "arn:aws:states:::aws-sdk:ec2:authorizeSecurityGroupIngress",
+      "Next": "Tag Instance as Quarantine",
+      "ResultPath": null
+    },
+    "Tag Instance as Quarantine": {
+      "Type": "Task",
+      "End": true,
+      "Parameters": {
+        "Resources.$": "States.Array($[1].IsolatedInstanceId)",
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": "Quarantine"
+          }
+        ]
+      },
+      "Resource": "arn:aws:states:::aws-sdk:ec2:createTags"
+    }
+  }
+}
