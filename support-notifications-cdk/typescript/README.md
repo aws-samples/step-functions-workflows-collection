@@ -29,18 +29,17 @@ Important: this application uses various AWS services and there are costs associ
 1. Change directory to the pattern directory:
 
     ```bash
-    cd support-notifications-cdk/python
+    cd support-notifications-cdk/typescript
     ```
 
-1. Create a Python virtual environment and install the requirements:
+1. From the command line, use npm to install dependencies and run the build process.
 
     ```bash
-    python3 -m venv .venv
-    source .venv/bin/activate
-    python3 -m pip install -r requirements.txt
+    npm install
+    npm run build
     ```
 
-1. At the bottom of the `app.py` file, replace the `notification_email` variable with your own email address.
+1. At the bottom of the `app.ts` file, replace the `notificationEmail` variable with your own email address.
 
 1. Create a system variable `CDK_DEFAULT_ACCOUNT` set to your AWS account id. You can do this in Linux from the command line, with the following:
 
@@ -48,7 +47,7 @@ Important: this application uses various AWS services and there are costs associ
     export CDK_DEFAULT_ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
     ```
 
-1. From the command line, use CDK to deploy the AWS resources for the workflow as specified in the ```app.py``` file:
+1. From the command line, use CDK to deploy the AWS resources for the workflow as specified in the ```app.ts``` file:
 
     ```bash
     cdk deploy
@@ -72,7 +71,7 @@ Important: this application uses various AWS services and there are costs associ
 
 ## Testing
 
-1. Deploy the State Machine via CDK using the instructions above, ensuring that you configure your `notification_email` and set the `CDK_DEFAULT_ACCOUNT` system variable.
+1. Deploy the State Machine via CDK using the instructions above, ensuring that you configure your `notificationEmail` and set the `CDK_DEFAULT_ACCOUNT` system variable.
 1. You should receive an email requesting confirmation of your subscription to the Amazon SNS topic. Accept this.
 1. Create a new support case. As this creates real cases with AWS Support, please ensure that you craft a subject and body that states that this is purely for testing.
 1. After creating the case, if it is of the required severity level, you should receive an email notifying of the new case being created from SNS.
@@ -90,7 +89,7 @@ To delete the resources created by this template:
 1. During the prompts:
 
     ```bash
-        Are you sure you want to delete: SupportNotificationsPython (y/n)? Y
+        Are you sure you want to delete: SupportNotificationsTypescript (y/n)? Y
     ```
 
 ---
