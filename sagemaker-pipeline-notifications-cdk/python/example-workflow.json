@@ -1,0 +1,67 @@
+{
+  "title": "SageMaker Pipeline Notifications",
+  "description": "Be notified when a SageMaker Pipeline execution fails",
+  "language": "Python",
+  "simplicity": "3 - Application",
+  "usecase": "Automation",
+  "type": "Standard",
+  "diagram": "/resources/statemachine.png",
+  "videoId": "",
+  "level": "100",
+  "framework": "CDK",
+  "services": ["sfn", "sagemaker", "sns"],
+  "introBox": {
+    "headline": "How it works",
+    "text": [
+      "This workflow implements a notification system for when an Amazon SageMaker Pipeline execution fails. For customers with many running pipelines, it becomes challenging to see which ones may have failed. This workflow provides an alert of a failed pipeline execution for further investigation as to why the pipeline failed. The system sends an email notification via Amazon SNS but could easily be extended to trigger other automated remediation actions e.g. automated creation of a ticket in your ticketing system via AWS Lambda.",
+      "The workflow relies exclusively on AWS SDK service integrations and contains no custom Lambda code that needs to be maintained."
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": ["See the GitHub repo for detailed testing instructions."]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": ["1. Delete the stack: <code>cdk destroy</code>."]
+  },
+  "deploy": {
+    "text": ["cdk deploy"]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/sagemaker-pipeline-notifications-cdk/",
+      "templateDir": "sagemaker-pipeline-notifications-cdk/python",
+      "templateFile": "app.py",
+      "ASL": "statemachine/statemachine.asl.json",
+      "definition": "resources/statemachine.png"
+    },
+    "payloads": [
+      {
+        "headline": "",
+        "payloadURL": ""
+      }
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "The AWS Step Functions Workshop",
+        "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+      },
+      {
+        "text": "Try the serverlesspresso workshop",
+        "link": "https://workshop.serverlesscoffee.com/"
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Adrian Hunter",
+      "image": "https://avatars.githubusercontent.com/u/4285633?v=4",
+      "bio": "Adrian Hunter is a Senior Solutions Architect at Amazon Web Services (AWS) based on the Gold Coast, Australia.",
+      "linkedin": "adrianhunter"
+    }
+  ]
+}

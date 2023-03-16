@@ -1,0 +1,66 @@
+{
+  "Comment": "A state machine that mocks an ATM dispenser.",
+  "StartAt": "Dispense50",
+  "States": {
+    "Dispense50": {
+      "Type": "Task",
+      "Resource": "${Handler1FunctionArn}",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.TaskFailedId"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Dispense20"
+    },
+    "Dispense20": {
+      "Type": "Task",
+      "Resource": "${Handler2FunctionArn}",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.TaskFailedId"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Dispense10"
+    },
+    "Dispense10": {
+      "Type": "Task",
+      "Resource": "${Handler3FunctionArn}",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.TaskFailedId"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Dispense1"
+    },
+    "Dispense1": {
+      "Type": "Task",
+      "End": true,
+      "Resource": "${Handler4FunctionArn}",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.TaskFailedId"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    }
+  }
+}

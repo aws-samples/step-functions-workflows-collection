@@ -1,0 +1,68 @@
+{
+  "StartAt": "GetTextFile",
+  "States": {
+    "GetTextFile": {
+      "Next": "StartSpeechSynthesisTask",
+      "Type": "Task",
+      "ResultSelector": {
+        "filecontent.$": "$.Body"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:s3:getObject",
+      "Parameters": {
+        "Bucket.$": "$.detail.bucket.name",
+        "Key.$": "$.detail.object.key"
+      }
+    },
+    "StartSpeechSynthesisTask": {
+      "Next": "Wait",
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:polly:startSpeechSynthesisTask",
+      "Parameters": {
+        "OutputFormat": "mp3",
+        "OutputS3BucketName": "ttsconverterpython-ttsresultbucketA1B2C3D4-EXAMPLE111111",
+        "Text.$": "$.filecontent",
+        "TextType": "text",
+        "OutputS3KeyPrefix": "audio",
+        "VoiceId": "Amy"
+      }
+    },
+    "Wait": {
+      "Type": "Wait",
+      "Seconds": 10,
+      "Next": "GetSpeechSynthesisTask"
+    },
+    "GetSpeechSynthesisTask": {
+      "Next": "SpeechSynthesisTaskStatus",
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:polly:getSpeechSynthesisTask",
+      "Parameters": {
+        "TaskId.$": "$.SynthesisTask.TaskId"
+      }
+    },
+    "SpeechSynthesisTaskStatus": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.SynthesisTask.TaskStatus",
+          "StringEquals": "completed",
+          "Next": "Success"
+        },
+        {
+          "Variable": "$.SynthesisTask.TaskStatus",
+          "StringEquals": "failed",
+          "Next": "Failed"
+        }
+      ],
+      "Default": "Wait"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "Failed": {
+      "Type": "Fail",
+      "Error": "FAILED",
+      "Cause": "transcription job failed"
+    }
+  },
+  "TimeoutSeconds": 900
+}

@@ -15,10 +15,10 @@ The workflow takes an Axios (Node.js-based HTTP client) config as input. For exa
 		// More options can be found in https://axios-http.com/docs/req_config
 	},
 	"enableLog": true // Enable/disable Lambda logging.
-    "forceIPv4": true // Currently Lambda functions do not support outbound IPv6. Default: true
-	
+  "forceIPv4": true // Currently Lambda functions do not support outbound IPv6. Default: true
 }
 ```
+(Remember to remove the comments before copy-pasting, they are not valid JSON)
 
 You can see the full list of options in the [Axios documentation](https://axios-http.com/docs/req_config)
 

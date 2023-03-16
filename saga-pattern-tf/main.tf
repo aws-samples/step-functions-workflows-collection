@@ -13,7 +13,6 @@ provider "aws" {
 
 locals {
   project_name = "serverless-saga-pattern"
-
 }
 
 data "aws_caller_identity" "caller" {}
@@ -38,7 +37,7 @@ resource "aws_iam_role" "reserve_flight_role" {
 }
 
 resource "aws_iam_policy" "reserve_flight_policy" {
-  name = "reserve_flight_policy"
+  name = "${local.project_name}_reserve_flight_policy"
 
   policy = <<POLICY
 {
@@ -51,7 +50,7 @@ resource "aws_iam_policy" "reserve_flight_policy" {
                 "dynamodb:PutItem",
                 "dynamodb:UpdateItem"
             ],
-            "Resource": "arn:aws:dynamodb:*:*:table/Flights"
+            "Resource": "arn:aws:dynamodb:*:*:table/${local.project_name}-Flights"
         },
         {
             "Effect": "Allow",
@@ -110,7 +109,7 @@ resource "aws_iam_role" "reserve_car_rental_role" {
 }
 
 resource "aws_iam_policy" "reserve_car_rental_policy" {
-  name = "reserve_car_rental_policy"
+  name = "${local.project_name}_reserve_car_rental_policy"
 
   policy = <<POLICY
 {
@@ -123,7 +122,7 @@ resource "aws_iam_policy" "reserve_car_rental_policy" {
                 "dynamodb:PutItem",
                 "dynamodb:UpdateItem"
             ],
-            "Resource": "arn:aws:dynamodb:*:*:table/Rentals"
+            "Resource": "arn:aws:dynamodb:*:*:table/${local.project_name}-Rentals"
         },
         {
             "Effect": "Allow",
@@ -183,7 +182,7 @@ resource "aws_iam_role" "process_payment_role" {
 
 
 resource "aws_iam_policy" "process_payment_policy" {
-  name = "process_payment_policy"
+  name = "${local.project_name}_process_payment_policy"
 
   policy = <<POLICY
 {
@@ -194,7 +193,7 @@ resource "aws_iam_policy" "process_payment_policy" {
             "Action": [
                 "dynamodb:PutItem"
             ],
-            "Resource": "arn:aws:dynamodb:*:*:table/Payments"
+            "Resource": "arn:aws:dynamodb:*:*:table/${local.project_name}-Payments"
         },
         {
             "Effect": "Allow",
@@ -253,7 +252,7 @@ resource "aws_iam_role" "confirm_flight_role" {
 }
 
 resource "aws_iam_policy" "confirm_flight_policy" {
-  name = "confirm_flight_policy"
+  name = "${local.project_name}-confirm_flight_policy"
 
   policy = <<POLICY
 {
@@ -266,7 +265,7 @@ resource "aws_iam_policy" "confirm_flight_policy" {
                 "dynamodb:PutItem",
                 "dynamodb:UpdateItem"
             ],
-            "Resource": "arn:aws:dynamodb:*:*:table/Flights"
+            "Resource": "arn:aws:dynamodb:*:*:table/${local.project_name}-Flights"
         },
         {
             "Effect": "Allow",
@@ -325,7 +324,7 @@ resource "aws_iam_role" "confirm_car_rental_role" {
 }
 
 resource "aws_iam_policy" "confirm_car_rental_policy" {
-  name = "confirm_car_rental_policy"
+  name = "${local.project_name}-confirm_car_rental_policy"
 
   policy = <<POLICY
 {
@@ -338,7 +337,7 @@ resource "aws_iam_policy" "confirm_car_rental_policy" {
                 "dynamodb:PutItem",
                 "dynamodb:UpdateItem"
             ],
-            "Resource": "arn:aws:dynamodb:*:*:table/Rentals"
+            "Resource": "arn:aws:dynamodb:*:*:table/${local.project_name}-Rentals"
         },
         {
             "Effect": "Allow",
@@ -397,7 +396,7 @@ resource "aws_iam_role" "refund_payment_role" {
 }
 
 resource "aws_iam_policy" "refund_payment_policy" {
-  name = "refund_payment_policy"
+  name = "${local.project_name}-refund_payment_policy"
 
   policy = <<POLICY
 {
@@ -408,7 +407,7 @@ resource "aws_iam_policy" "refund_payment_policy" {
             "Action": [
                 "dynamodb:DeleteItem"
             ],
-            "Resource": "arn:aws:dynamodb:*:*:table/Payments"
+            "Resource": "arn:aws:dynamodb:*:*:table/${local.project_name}-Payments"
         },
         {
             "Effect": "Allow",
@@ -467,7 +466,7 @@ resource "aws_iam_role" "cancel_car_reservation_role" {
 }
 
 resource "aws_iam_policy" "cancel_car_reservation_policy" {
-  name = "cancel_car_reservation_policy"
+  name = "${local.project_name}-cancel_car_reservation_policy"
 
   policy = <<POLICY
 {
@@ -478,7 +477,7 @@ resource "aws_iam_policy" "cancel_car_reservation_policy" {
             "Action": [
                 "dynamodb:DeleteItem"
             ],
-            "Resource": "arn:aws:dynamodb:*:*:table/Rentals"
+            "Resource": "arn:aws:dynamodb:*:*:table/${local.project_name}-Rentals"
         },
         {
             "Effect": "Allow",
@@ -537,7 +536,7 @@ resource "aws_iam_role" "cancel_flight_role" {
 }
 
 resource "aws_iam_policy" "cancel_flight_policy" {
-  name = "cancel_flight_policy"
+  name = "${local.project_name}-cancel_flight_policy"
 
   policy = <<POLICY
 {
@@ -548,7 +547,7 @@ resource "aws_iam_policy" "cancel_flight_policy" {
             "Action": [
                 "dynamodb:DeleteItem"
             ],
-            "Resource": "arn:aws:dynamodb:*:*:table/Flights"
+            "Resource": "arn:aws:dynamodb:*:*:table/${local.project_name}-Flights"
         },
         {
             "Effect": "Allow",
@@ -591,7 +590,7 @@ resource "aws_lambda_function" "cancel_flight_function" {
 }
 
 resource "aws_dynamodb_table" "Flights" {
-  name           = "Flights"
+  name           = "${local.project_name}-Flights"
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "pk"
   range_key = "sk"
@@ -605,7 +604,7 @@ resource "aws_dynamodb_table" "Flights" {
   }
 }
 resource "aws_dynamodb_table" "Rentals" {
-  name           = "Rentals"
+  name           = "${local.project_name}-Rentals"
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "pk"
   range_key = "sk"
@@ -619,7 +618,7 @@ resource "aws_dynamodb_table" "Rentals" {
   }
 }
 resource "aws_dynamodb_table" "Payments" {
-  name           = "Payments"
+  name           = "${local.project_name}-Payments"
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "pk"
   range_key = "sk"
@@ -633,7 +632,7 @@ resource "aws_dynamodb_table" "Payments" {
   }
 }
 resource "aws_sns_topic" "topic" {
-  display_name      = "booking-topic"
+  display_name      = "${local.project_name}-booking-topic"
   name              = "${local.project_name}-booking-topic"
   kms_master_key_id = "alias/aws/sns"
 }
@@ -727,7 +726,7 @@ resource "aws_iam_role" "saga_lambda_role" {
 }
 
 resource "aws_iam_policy" "saga_lambda_policy" {
-  name = "saga_lambda_policy"
+  name = "${local.project_name}-topic_saga_lambda_policy"
 
   policy = <<POLICY
 {
