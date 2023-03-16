@@ -1,0 +1,85 @@
+{
+  "title": "Moderated Image Catalog",
+  "description": "Moderated image catalog with tagging and content moderation",
+  "language": "Python",
+  "simplicity": "3 - Application",
+  "usecase": "Content Moderation",
+  "type": "Standard",
+  "diagram": "/resources/statemachine.png",
+  "videoId": "",
+  "level": "300",
+  "framework": "CDK",
+  "services": ["sfn", "rekognition", "dynamodb", "sns"],
+  "introBox": {
+    "headline": "How it works",
+    "text": [
+      "This workflow implements a moderated image cataloging pipeline.",
+      "It includes content moderation, automated tagging, parallel image processing and automated notifications.",
+      "The workflow relies exclusively on AWS SDK service integrations and contains no custom Lambda code that needs to be maintained."
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": ["See the GitHub repo for detailed testing instructions."]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": ["1. Delete the stack: <code>cdk destroy</code>."]
+  },
+  "deploy": {
+    "text": ["cdk deploy"]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/moderated-image-catalog-cdk/",
+      "templateDir": "moderated-image-catalog-cdk/python",
+      "templateFile": "app.py",
+      "ASL": "statemachine/statemachine.asl.json",
+      "definition": "resources/statemachine.png"
+    },
+    "payloads": [
+      {
+        "headline": "",
+        "payloadURL": ""
+      }
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "Building a serverless image catalog with AWS Step Functions Workflow Studio",
+        "link": "https://aws.amazon.com/blogs/compute/building-a-serverless-image-catalog-with-aws-step-functions-workflow-studio/"
+      },
+      {
+        "text": "The AWS Step Functions Workshop",
+        "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+      },
+      {
+        "text": "Try the serverlesspresso workshop",
+        "link": "https://workshop.serverlesscoffee.com/"
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Pascal Vogel",
+      "image": "https://avatars.githubusercontent.com/u/100202393?v=4",
+      "bio": "Pascal Vogel is an Associate Solutions Architect at Amazon Web Services (AWS).",
+      "linkedin": "pascal-vogel",
+      "twitter": "pvogel_"
+    },
+    {
+      "name": "Benjamin Meyer",
+      "image": "https://avatars.githubusercontent.com/u/4281635?v=4",
+      "bio": "Benjamin Meyer is a Senior Solutions Architect, Game Tech at Amazon Web Services (AWS).",
+      "linkedin": "bemeyer"
+    },
+    {
+      "name": "Adrian Hunter",
+      "image": "https://avatars.githubusercontent.com/u/4285633?v=4",
+      "bio": "Adrian Hunter is a Senior Solutions Architect at Amazon Web Services (AWS) based on the Gold Coast, Australia.",
+      "linkedin": "adrianhunter"
+    }
+  ]
+}
