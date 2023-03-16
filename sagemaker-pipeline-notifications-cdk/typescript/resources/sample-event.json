@@ -1,0 +1,22 @@
+{
+  "version": "0",
+  "id": "a1b2c3d4-1234-5678-9abc-12345678abcd",
+  "detail-type": "SageMaker Model Building Pipeline Execution Status Change",
+  "source": "aws.sagemaker",
+  "account": "111122223333",
+  "time": "2023-03-15T08:36:42Z",
+  "region": "us-east-1",
+  "resources": [
+    "arn:aws:sagemaker:us-east-1:111122223333:pipeline/abalone-pipeline",
+    "arn:aws:sagemaker:us-east-1:111122223333:pipeline/abalone-pipeline/execution/a1b2c3d4e6f7"
+  ],
+  "detail": {
+    "pipelineExecutionDisplayName": "test",
+    "currentPipelineExecutionStatus": "Failed",
+    "previousPipelineExecutionStatus": "Executing",
+    "executionStartTime": "2023-03-15T08:36:39Z",
+    "executionEndTime": "2023-03-15T08:36:42Z",
+    "pipelineArn": "arn:aws:sagemaker:us-east-1:111122223333:pipeline/abalone-pipeline",
+    "pipelineExecutionArn": "arn:aws:sagemaker:us-east-1:111122223333:pipeline/abalone-pipeline/execution/a1b2c3d4e6f7"
+  }
+}

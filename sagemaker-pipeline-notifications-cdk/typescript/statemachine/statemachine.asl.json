@@ -1,0 +1,15 @@
+{
+  "StartAt": "Notify that a SageMaker Pipeline execution has failed",
+  "States": {
+    "Notify that a SageMaker Pipeline execution has failed": {
+      "End": true,
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "arn:aws:sns:us-east-1:111122223333:SageMakerPipelineNotificationsPython-SageMakerPipelineFailedNotificationA1B2C3D4-EXAMPLE11111",
+        "Message.$": "States.Format('The SageMaker Pipeline, {}, started at {} and failed at {}.', States.ArrayGetItem(States.StringSplit($.detail.pipelineArn, '/'), 1), $.detail.executionStartTime, $.detail.executionEndTime)",
+        "Subject.$": "States.Format('Amazon SageMaker Pipeline Failed - Pipeline Name: {}', States.ArrayGetItem(States.StringSplit($.detail.pipelineArn, '/'), 1))"
+      }
+    }
+  }
+}
