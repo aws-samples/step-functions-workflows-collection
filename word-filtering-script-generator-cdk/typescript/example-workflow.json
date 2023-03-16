@@ -1,0 +1,70 @@
+{
+  "title": "Word Filtering Script Generator",
+  "description": "Generating scripts that filters certain words from video or audio. When you type the word you want to filter, the video recognizes the word and marks it as '***' in the script.",
+  "language": "Typescript",
+  "simplicity": "3 - Application",
+  "usecase": "Transcribe",
+  "type": "Standard",
+  "diagram": "/resources/statemachine.png",
+  "videoId": "",
+  "level": "200",
+  "framework": "CDK",
+  "services": ["sfn", "eventbridge", "transcribe", "s3"],
+  "introBox": {
+    "headline": "How it works",
+    "text": [
+      "This workflow generates scripts that filters certain words from video or audio. When you specify the words you wish to filter, Amazon Transcribe recognizes the word and marks it as `***` in the transcript. This feature is useful when you want to erase swear words or slang when creating movie subtitles, or when you want to hide certain words."
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": ["See the GitHub repo for detailed testing instructions."]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": ["1. Delete the stack: <code>cdk destroy</code>."]
+  },
+  "deploy": {
+    "text": ["cdk deploy"]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/word-filtering-script-generator-cdk/",
+      "templateDir": "word-filtering-script-generator-cdk/typescript",
+      "templateFile": "app.ts",
+      "ASL": "statemachine/statemachine.asl.json",
+      "definition": "resources/statemachine.png"
+    },
+    "payloads": [
+      {
+        "headline": "",
+        "payloadURL": ""
+      }
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "The AWS Step Functions Workshop",
+        "link": "https://catalog.workshops.aws/stepfunctions/en-US",
+        "sample video file": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/word-filtering-script-generator-cdk/resources/sample-video.mp4"
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Yoonseo Kim",
+      "image": "https://github.com/aws-samples/step-functions-workflows-collection/blob/main/script-generator/resources/yoonseokim.jpeg?raw=true",
+      "bio": "Solutions Architect in Amazon Web Services Korea",
+      "linkedin": "https://www.linkedin.com/in/yoonseo-kim-573780208/",
+      "twitter": ""
+    },
+    {
+      "name": "Adrian Hunter",
+      "image": "https://avatars.githubusercontent.com/u/4285633?v=4",
+      "bio": "Adrian Hunter is a Senior Solutions Architect at Amazon Web Services (AWS) based on the Gold Coast, Australia.",
+      "linkedin": "adrianhunter"
+    }
+  ]
+}
