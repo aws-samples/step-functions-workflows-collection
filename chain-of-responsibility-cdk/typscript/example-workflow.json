@@ -1,0 +1,79 @@
+{
+  "title": "Chain Of Responsibility Pattern",
+  "description": "ATM Money Dispenser representing Chained or Chain of Responsibility Pattern",
+  "language": "Typescript",
+  "simplicity": "2 - Pattern",
+  "usecase": "",
+  "type": "Standard",
+  "diagram": "/resources/chain-of-responsibility.png",
+  "videoId": "",
+  "level": "200",
+  "framework": "CDK",
+  "services": [
+    "lambda",
+    "stepfunctions"
+  ],
+  "introBox": {
+    "headline": "How it works",
+    "text": [
+      "The AWS Step Function Workflow is used to demonstrate how an ATM would be dispensing different types of bills until the entire requested amount is dispensed.",
+      "The state machine does this by utilizing the Chain Of Responsibility Pattern and going through the chain of tasks (AWS Lambda Functions) that dispense $50, $20, $10 & $1 bills. Each task would dispense its notes, update the amunt ramaining to be dispensed and add the amount of notes it already dispensed. The output of that task will be passed as an input of the next one. At the end, if the requested amount to be dispensed was an integer, all the money should be dispensed and the ramaining dispense amount should be equal to 0"
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": [
+      "See the GitHub repo for detailed testing instructions."
+    ]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": [
+      "1. Delete the stack: <code>cdk destroy</code>."
+    ]
+  },
+  "deploy": {
+    "text": [
+      "cdk deploy"
+    ]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/chain-of-responsibility-cdk/",
+      "templateDir": "chain-of-responsibility-cdk/python",
+      "templateFile": "app.py",
+      "ASL": "statemachine/statemachine.asl.json",
+      "definition": "resources/statemachine.png"
+    },
+    "payloads": [
+      {
+        "headline": "",
+        "payloadURL": ""
+      }
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "The AWS Step Functions Workshop",
+        "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Tsvetko Tsenkov",
+      "image": "https://avatars.githubusercontent.com/u/27500154?v=4",
+      "bio": "Tsvetko is a Senior Partner Solutions Architect based out of Atlanta, GA.",
+      "linkedin": "tsvetko-tsenkov-6501413",
+      "twitter": "cvetko_cenkov"
+    },
+    {
+      "name": "Stan Fan",
+      "image": "https://avatars.githubusercontent.com/u/58756168?v=4",
+      "bio": "Stan Fan is a Solutions Architect at Amazon Web Services (AWS) based on Sydney, Australia.",
+      "linkedin": "hongyi-fan-05101992"
+    }
+  ]
+}
