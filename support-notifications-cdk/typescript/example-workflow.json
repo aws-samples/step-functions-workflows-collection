@@ -1,7 +1,7 @@
 {
   "title": "Support Notifications",
   "description": "Be notified when critical and urgent cases are lodged with AWS Premium Support",
-  "language": "Python",
+  "language": "Typescript",
   "simplicity": "3 - Application",
   "usecase": "Automation",
   "type": "Standard",
@@ -32,8 +32,8 @@
   "gitHub": {
     "template": {
       "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/support-notifications-cdk/",
-      "templateDir": "support-notifications-cdk/python",
-      "templateFile": "app.py",
+      "templateDir": "support-notifications-cdk/typescript",
+      "templateFile": "app.ts",
       "ASL": "statemachine/statemachine.asl.json",
       "definition": "resources/statemachine.png"
     },
