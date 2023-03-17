@@ -1,0 +1,163 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Wait Either For Process Completion Or Timeout",
+  "States": {
+    "Wait Either For Process Completion Or Timeout": {
+      "Type": "Parallel",
+      "Branches": [
+        {
+          "StartAt": "TimeoutWait",
+          "States": {
+            "TimeoutWait": {
+              "Type": "Wait",
+              "Seconds": 15,
+              "Next": "Ran out of Time"
+            },
+            "Ran out of Time": {
+              "Type": "Fail",
+              "Error": "States.RanOutOfTime"
+            }
+          }
+        },
+        {
+          "StartAt": "Get Process1 Completion Status",
+          "States": {
+            "Get Process1 Completion Status": {
+              "Type": "Pass",
+              "Next": "Check If Process1 Completed",
+              "Result": {
+                "Completed": false
+              },
+              "Comment": "This is a placeholder. Can be replaced with pretty much anythng that needs to be polled.",
+              "ResultPath": "$.QueryResult"
+            },
+            "Wait Before Getting Process 1 Status": {
+              "Type": "Wait",
+              "Seconds": 5,
+              "Next": "Get Process1 Completion Status"
+            },
+            "Check If Process1 Completed": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Or": [
+                    {
+                      "And": [
+                        {
+                          "Variable": "$.Process1ToComplete",
+                          "IsPresent": true
+                        },
+                        {
+                          "Variable": "$.Process1ToComplete",
+                          "BooleanEquals": true
+                        }
+                      ]
+                    },
+                    {
+                      "Variable": "$.QueryResult.Completed",
+                      "BooleanEquals": true
+                    }
+                  ],
+                  "Next": "Process1 Completed (DummyFailure)"
+                }
+              ],
+              "Default": "Wait Before Getting Process 1 Status"
+            },
+            "Process1 Completed (DummyFailure)": {
+              "Type": "Fail",
+              "Error": "States.FauxFailure1",
+              "Comment": "This is actually a success criterion."
+            }
+          }
+        },
+        {
+          "StartAt": "Get Process2 Completion Status",
+          "States": {
+            "Get Process2 Completion Status": {
+              "Type": "Pass",
+              "Next": "Check If Process2 Completed",
+              "Result": {
+                "Completed": false
+              },
+              "Comment": "This is a placeholder. Can be replaced with pretty much anythng that needs to be polled.",
+              "ResultPath": "$.QueryResult"
+            },
+            "Wait Before Getting Process 2 Status": {
+              "Type": "Wait",
+              "Seconds": 5,
+              "Next": "Get Process2 Completion Status"
+            },
+            "Check If Process2 Completed": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Or": [
+                    {
+                      "And": [
+                        {
+                          "Variable": "$.Process2ToComplete",
+                          "IsPresent": true
+                        },
+                        {
+                          "Variable": "$.Process2ToComplete",
+                          "BooleanEquals": true
+                        }
+                      ]
+                    },
+                    {
+                      "Variable": "$.QueryResult.Completed",
+                      "BooleanEquals": true
+                    }
+                  ],
+                  "Next": "Process2 Completed (DummyFailure)"
+                }
+              ],
+              "Default": "Wait Before Getting Process 2 Status"
+            },
+            "Process2 Completed (DummyFailure)": {
+              "Type": "Fail",
+              "Error": "States.FauxFailure2",
+              "Comment": "This is actually a success criterion."
+            }
+          }
+        }
+      ],
+      "Next": "Next Step If Process1 Completes",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.FauxFailure1"
+          ],
+          "Next": "Next Step If Process1 Completes",
+          "Comment": "Process1 Completed"
+        },
+        {
+          "ErrorEquals": [
+            "States.FauxFailure2"
+          ],
+          "Comment": "Process2 Completed",
+          "Next": "Next Step if Process 2 Completes"
+        },
+        {
+          "ErrorEquals": [
+            "States.RanOutOfTime"
+          ],
+          "Comment": "Process Ran out of Time",
+          "Next": "Next Step if Process Ran out of time"
+        }
+      ]
+    },
+    "Next Step if Process 2 Completes": {
+      "Type": "Pass",
+      "End": true
+    },
+    "Next Step if Process Ran out of time": {
+      "Type": "Pass",
+      "End": true
+    },
+    "Next Step If Process1 Completes": {
+      "Type": "Pass",
+      "End": true
+    }
+  }
+}
