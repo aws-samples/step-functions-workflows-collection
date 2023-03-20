@@ -21,7 +21,7 @@ Important: this application uses various AWS services and there are costs associ
     ```
 1. Change directory to the pattern directory:
     ```
-    cd either-or-parallel-workflow
+    cd either-or-parallel-pattern
     ```
 1. From the command line, use AWS SAM to deploy the AWS resources for the workflow as specified in the template.yaml file:
     ```
@@ -38,7 +38,15 @@ Important: this application uses various AWS services and there are costs associ
 
 ## How it works
 
-Explain how the workflow works.
+The pattern shows how to implement a parallel task in a way that if any one of the parallel flows finish, the execution will move out of the parallel step. It works in the following way.
+
+- In this step functions workflow pattern there are 3 parallel flows inside the Parallel state.
+- One of them is a time out, while the other two are actual flows. For the purposes of this pattern I have added two but it can be any number.
+- The time out flow waits for 15 seconds and completes the execution of the Parallel state is none of the other flows finish by then.
+- The other two flows use the following logic.
+    - Check for any process to see if it completed (this is a Pass state in this pattern, but it could be any call to check, say, for RDS backup completion, or completion of an AWS Batch job triggered earlier, etc). If it is not completed, wait for 5 seconds and check again.
+    - If the process completed, it will raise an "error", which is needed to break out of this parallel flow. For your business need this might not be an actual error scenario, but it is still implemented as an error, so that the flow can move out of the Parallel step
+- The Parallel state has 3 catch statements in its error handling, one to receive the time out error, and the other two receive the "error"s thrown by the 2 flows. To reiterate, these might not be actual errors in terms of your business logic but is just used to move control to outside the Parallel step.
 
 ## Image
 ![image](./resources/statemachine.png)
