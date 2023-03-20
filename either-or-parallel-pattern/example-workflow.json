@@ -1,5 +1,5 @@
 {
-  "title": "Either Or Parallel Workflow",
+  "title": "Either Or Parallel Workflow Pattern",
   "description": "A pattern to implement an either-or logic with parallel processes",
   "language": "",
   "simplicity": "2 - Pattern",
@@ -11,7 +11,7 @@
   "framework": "SAM",
   "services": ["states"],
   "introBox": {
-    "headline": "Either Or Parallel Workflow",
+    "headline": "Either Or Parallel Workflow Pattern",
     "text": [
       "This workflow shows how to implement an either/or pattern in step functions with two processes running in parallel."
 
@@ -36,8 +36,8 @@
   },
   "gitHub": {
     "template": {
-      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/either-or-parallel-workflow/",
-      "templateDir":"either-or-parallel-workflow",
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/either-or-parallel-pattern/",
+      "templateDir":"either-or-parallel-pattern",
       "templateFile": "template.yaml",
       "ASL": "statemachine/statemachine.asl.yaml"
     },

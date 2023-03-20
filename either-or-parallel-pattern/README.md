@@ -41,18 +41,32 @@ Important: this application uses various AWS services and there are costs associ
 Explain how the workflow works.
 
 ## Image
-Provide an exported .png of the workflow in the `/resources` directory from [Workflow stuio](https://docs.aws.amazon.com/step-functions/latest/dg/workflow-studio.html) and add here.
 ![image](./resources/statemachine.png)
 
 ## Testing
 
 1. After deployment navigate to the AWS Step Functions console and select the `EitherOrParallel` workflow. If you don't see it, make sure you are in the correct Region.
-3. Select `Start Execution`, provide the input as `{ "Process1ToComplete" : true }` and then click `Start Execution`.
-4. You will see that the task "Next Step If Process 1 Completes" gets executed.
-3. Select `Start Execution` again, and this time provide the input as `{ "Process2ToComplete" : true }` and then click `Start Execution`.
-4. You will see that the task "Next Step If Process 2 Completes" gets executed.
-3. Select `Start Execution` again, and this time use the default json and then click `Start Execution`.
-4. You will see that the task "Next Step If Process Ran out of time" gets executed.
+
+1. Select `Start Execution`, provide the input as
+    ```
+    {
+        "Process1ToComplete" : true
+    }
+    ```
+and then click `Start Execution`.
+
+3. You will see that the task "Next Step If Process 1 Completes" gets executed.
+
+1. Select `Start Execution` again, and this time provide the input as 
+    ```
+    {
+        "Process2ToComplete" : true
+    }
+    ```  and then click `Start Execution`.  
+
+1. You will see that the task "Next Step If Process 2 Completes" gets executed.  
+1. Select `Start Execution` again, and this time use the default json and then click `Start Execution`.  
+1. You will see that the task "Next Step If Process Ran out of time" gets executed.
 
 
 ## Cleanup
