@@ -1,0 +1,69 @@
+{
+  "title": "Quorum with Parallel Workflow Pattern",
+  "description": "A pattern to implement a quorum logic with parallel processes",
+  "language": "",
+  "simplicity": "2 - Pattern",
+  "usecase": "",
+  "type": "Standard",
+  "diagram":"/resources/statemachine.png",
+  "videoId": "",
+  "level": "200",
+  "framework": "SAM",
+  "services": ["states"],
+  "introBox": {
+    "headline": "Quorum with Parallel Workflow Pattern",
+    "text": [
+      "This workflow shows how to implement a quorum pattern in step functions with multiple processes running in parallel."
+
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": [
+      "See the GitHub repo for detailed testing instructions."
+    ]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": [
+      "1. Delete the stack: <code>sam delete</code>."
+    ]
+  },
+  "deploy": {
+    "text": [
+      "sam deploy --guided"
+    ]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/quorum-with-parallel-pattern/",
+      "templateDir":"quorum-with-parallel-pattern",
+      "templateFile": "template.yaml",
+      "ASL": "statemachine/statemachine.asl.yaml"
+    },
+    "payloads": [
+      {
+        "headline": "",
+        "payloadURL": ""
+      }
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "The AWS Step Functions Workshop",
+        "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+      }
+    ]
+  },
+  "authors": [
+      {
+        "name": "Madhav Vishnubhatta",
+        "image": "",
+        "bio": "Madhav is a Technical Account Manager at AWS",
+        "linkedin": "",
+        "twitter": ""
+      }
+    ]
+}

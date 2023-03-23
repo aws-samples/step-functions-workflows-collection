@@ -1,0 +1,410 @@
+{
+  "Comment": "A state machine that demonstrates how to achieve quorum pattern with a paralel workflow",
+  "StartAt": "Log execution in DynamoDB",
+  "States": {
+    "Log execution in DynamoDB": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:putItem",
+      "Parameters": {
+        "TableName": "${DDBTable}",
+        "Item": {
+          "id.$": "$$.Execution.Id",
+          "timeout_occurred": {
+            "BOOL": "false"
+          },
+          "processes_completed": {
+            "L": []
+          }
+        }
+      },
+      "Next": "Wait for at least \"quorum\" number processes complete"
+    },
+    "Wait for at least \"quorum\" number processes complete": {
+      "Type": "Parallel",
+      "Parameters": {
+        "uuid.$": "States.UUID()"
+      },
+      "Branches": [
+        {
+          "StartAt": "Get Process1 Completion Status",
+          "States": {
+            "Get Process1 Completion Status": {
+              "Type": "Pass",
+              "Next": "Check If Process1 Completed",
+              "Result": {
+                "Completed": false
+              },
+              "Comment": "This is a placeholder. Can be replaced with pretty much anythng that needs to be polled.",
+              "ResultPath": "$.QueryResult"
+            },
+            "Wait Before Getting Process 1 Status": {
+              "Type": "Wait",
+              "Seconds": 5,
+              "Next": "Get Process1 Completion Status"
+            },
+            "Check If Process1 Completed": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Or": [
+                    {
+                      "And": [
+                        {
+                          "Variable": "$$.Execution.Input.Process1ToComplete",
+                          "IsPresent": true
+                        },
+                        {
+                          "Variable": "$$.Execution.Input.Process1ToComplete",
+                          "BooleanEquals": true
+                        }
+                      ]
+                    },
+                    {
+                      "Variable": "$.QueryResult.Completed",
+                      "BooleanEquals": true
+                    }
+                  ],
+                  "Next": "Update Process1 Completion"
+                }
+              ],
+              "Default": "Wait Before Getting Process 1 Status"
+            },
+            "Update Process1 Completion": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::dynamodb:updateItem",
+              "Parameters": {
+                "TableName": "${DDBTable}",
+                "Key": {
+                  "id": {
+                    "S.$": "$$.Execution.Id"
+                  }
+                },
+                "UpdateExpression": "SET processes_completed = list_append(processes_completed, :proc)",
+                "ExpressionAttributeValues": {
+                  ":proc": {
+                    "L": [
+                      "Process1"
+                    ]
+                  }
+                }
+              },
+              "Next": "Get Process Completion Statuses1"
+            },
+            "Get Process Completion Statuses1": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::dynamodb:getItem",
+              "Parameters": {
+                "TableName": "${DDBTable}",
+                "Key": {
+                  "id": {
+                    "S.$": "$$.Execution.Id"
+                  }
+                }
+              },
+              "Next": "Count Processes 1"
+            },
+            "Count Processes 1": {
+              "Type": "Pass",
+              "Next": "Check If Quorum Met 1",
+              "Parameters": {
+                "completed_processes_count.$": "States.ArrayLength($.Item.processes_completed.L)"
+              }
+            },
+            "Check If Quorum Met 1": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.completed_processes_count",
+                  "NumericGreaterThanEqualsPath": "$$.Execution.Input.quorum",
+                  "Next": "Quorum Met (DummyFailure) - 1"
+                }
+              ],
+              "Default": "Wait For Other Processes to Complete or For Time out 1"
+            },
+            "Wait For Other Processes to Complete or For Time out 1": {
+              "Type": "Pass",
+              "End": true
+            },
+            "Quorum Met (DummyFailure) - 1": {
+              "Type": "Fail",
+              "Error": "States.QuorumMet",
+              "Comment": "This is actually a success criterion."
+            }
+          }
+        },
+        {
+          "StartAt": "Get Process2 Completion Status",
+          "States": {
+            "Get Process2 Completion Status": {
+              "Type": "Pass",
+              "Next": "Check If Process2 Completed",
+              "Result": {
+                "Completed": false
+              },
+              "Comment": "This is a placeholder. Can be replaced with pretty much anythng that needs to be polled.",
+              "ResultPath": "$.QueryResult"
+            },
+            "Wait Before Getting Process 2 Status": {
+              "Type": "Wait",
+              "Seconds": 5,
+              "Next": "Get Process2 Completion Status"
+            },
+            "Check If Process2 Completed": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Or": [
+                    {
+                      "And": [
+                        {
+                          "Variable": "$$.Execution.Input.Process2ToComplete",
+                          "IsPresent": true
+                        },
+                        {
+                          "Variable": "$$.Execution.Input.Process2ToComplete",
+                          "BooleanEquals": true
+                        }
+                      ]
+                    },
+                    {
+                      "Variable": "$.QueryResult.Completed",
+                      "BooleanEquals": true
+                    }
+                  ],
+                  "Next": "Update Process2 Completion"
+                }
+              ],
+              "Default": "Wait Before Getting Process 2 Status"
+            },
+            "Update Process2 Completion": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::dynamodb:updateItem",
+              "Parameters": {
+                "TableName": "${DDBTable}",
+                "Key": {
+                  "id": {
+                    "S.$": "$$.Execution.Id"
+                  }
+                },
+                "UpdateExpression": "SET processes_completed = list_append(processes_completed, :proc)",
+                "ExpressionAttributeValues": {
+                  ":proc": {
+                    "L": [
+                      "Process2"
+                    ]
+                  }
+                }
+              },
+              "Next": "Get Process Completion Statuses2"
+            },
+            "Get Process Completion Statuses2": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::dynamodb:getItem",
+              "Parameters": {
+                "TableName": "${DDBTable}",
+                "Key": {
+                  "id": {
+                    "S.$": "$$.Execution.Id"
+                  }
+                }
+              },
+              "Next": "Count Processes 2"
+            },
+            "Count Processes 2": {
+              "Type": "Pass",
+              "Next": "Check If Quorum Met 2",
+              "Parameters": {
+                "completed_processes_count.$": "States.ArrayLength($.Item.processes_completed.L)"
+              }
+            },
+            "Check If Quorum Met 2": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.completed_processes_count",
+                  "NumericGreaterThanEqualsPath": "$$.Execution.Input.quorum",
+                  "Next": "Quorum Met (DummyFailure) - 2"
+                }
+              ],
+              "Default": "Wait For Other Processes to Complete or For Time out 2"
+            },
+            "Wait For Other Processes to Complete or For Time out 2": {
+              "Type": "Pass",
+              "End": true
+            },
+            "Quorum Met (DummyFailure) - 2": {
+              "Type": "Fail",
+              "Error": "States.QuorumMet",
+              "Comment": "This is actually a success criterion."
+            }
+          }
+        },
+        {
+          "StartAt": "Get Process3 Completion Status",
+          "States": {
+            "Get Process3 Completion Status": {
+              "Type": "Pass",
+              "Next": "Check If Process3 Completed",
+              "Result": {
+                "Completed": false
+              },
+              "Comment": "This is a placeholder. Can be replaced with pretty much anythng that needs to be polled.",
+              "ResultPath": "$.QueryResult"
+            },
+            "Wait Before Getting Process 3 Status": {
+              "Type": "Wait",
+              "Seconds": 5,
+              "Next": "Get Process3 Completion Status"
+            },
+            "Check If Process3 Completed": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Or": [
+                    {
+                      "And": [
+                        {
+                          "Variable": "$$.Execution.Input.Process3ToComplete",
+                          "IsPresent": true
+                        },
+                        {
+                          "Variable": "$$.Execution.Input.Process3ToComplete",
+                          "BooleanEquals": true
+                        }
+                      ]
+                    },
+                    {
+                      "Variable": "$.QueryResult.Completed",
+                      "BooleanEquals": true
+                    }
+                  ],
+                  "Next": "Update Process3 Completion"
+                }
+              ],
+              "Default": "Wait Before Getting Process 3 Status"
+            },
+            "Update Process3 Completion": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::dynamodb:updateItem",
+              "Parameters": {
+                "TableName": "${DDBTable}",
+                "Key": {
+                  "id": {
+                    "S.$": "$$.Execution.Id"
+                  }
+                },
+                "UpdateExpression": "SET processes_completed = list_append(processes_completed, :proc)",
+                "ExpressionAttributeValues": {
+                  ":proc": {
+                    "L": [
+                      "Process3"
+                    ]
+                  }
+                }
+              },
+              "Next": "Get Process Completion Statuses3"
+            },
+            "Get Process Completion Statuses3": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::dynamodb:getItem",
+              "Parameters": {
+                "TableName": "${DDBTable}",
+                "Key": {
+                  "id": {
+                    "S.$": "$$.Execution.Id"
+                  }
+                }
+              },
+              "Next": "Count Processes 3"
+            },
+            "Count Processes 3": {
+              "Type": "Pass",
+              "Next": "Check if Quorum Met 3",
+              "Parameters": {
+                "completed_processes_count.$": "States.ArrayLength($.Item.processes_completed.L)"
+              }
+            },
+            "Check if Quorum Met 3": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.completed_processes_count",
+                  "NumericGreaterThanEqualsPath": "$$.Execution.Input.quorum",
+                  "Next": "Quorum Met (DummyFailure) - 3"
+                }
+              ],
+              "Default": "Wait For Other Processes to Complete or For Time out 3"
+            },
+            "Wait For Other Processes to Complete or For Time out 3": {
+              "Type": "Pass",
+              "End": true
+            },
+            "Quorum Met (DummyFailure) - 3": {
+              "Type": "Fail",
+              "Error": "States.QuorumMet",
+              "Comment": "This is actually a success criterion."
+            }
+          }
+        },
+        {
+          "StartAt": "TimeoutWait",
+          "States": {
+            "TimeoutWait": {
+              "Type": "Wait",
+              "Seconds": 15,
+              "Next": "Update Process Ran out of time"
+            },
+            "Update Process Ran out of time": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::dynamodb:updateItem",
+              "Parameters": {
+                "TableName": "${DDBTable}",
+                "Key": {
+                  "id": {
+                    "S.$": "$$.Execution.Id"
+                  }
+                },
+                "UpdateExpression": "SET timeout_occurred = :var",
+                "ExpressionAttributeValues": {
+                  ":var": {
+                    "BOOL": true
+                  }
+                }
+              },
+              "Next": "Ran out of Time"
+            },
+            "Ran out of Time": {
+              "Type": "Fail",
+              "Error": "States.RanOutOfTime"
+            }
+          }
+        }
+      ],
+      "Next": "Next Step When Quorum is met",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.QuorumMet"
+          ],
+          "Next": "Next Step When Quorum is met",
+          "Comment": "Quorum Met"
+        },
+        {
+          "ErrorEquals": [
+            "States.RanOutOfTime"
+          ],
+          "Comment": "Ran out of Time",
+          "Next": "Next Step if Process Ran out of time"
+        }
+      ]
+    },
+    "Next Step When Quorum is met": {
+      "Type": "Pass",
+      "End": true
+    },
+    "Next Step if Process Ran out of time": {
+      "Type": "Pass",
+      "End": true
+    }
+  }
+}
