@@ -1,0 +1,16 @@
+
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  either-or-parallel-pattern
+
+  Sample SAM template for either-or-parallel-pattern
+
+# Comment each resource section to explain usage
+Resources:
+# STATE MACHINE #
+  EitherOrParallelStateMachine:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      Name: EitherOrParallel
+      DefinitionUri: statemachine/statemachine.asl.json
