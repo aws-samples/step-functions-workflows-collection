@@ -1,0 +1,33 @@
+
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Quorum-with-parallel-workflow-pattern
+
+  Sample SAM template for Quorum-with-parallel-workflow-pattern
+
+# Comment each resource section to explain usage
+Resources:
+# STATE MACHINE #
+  QuorumWithParallelStateMachine:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      Name: QuorumWithParallelWorkflowPattern
+      DefinitionUri: statemachine/statemachine.asl.json
+      DefinitionSubstitutions:
+        DDBTable: !Ref DDBTable
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - DynamoDBWritePolicy:
+            TableName: !Ref DDBTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref DDBTable
+
+# DYNAMODB TABLE #
+# This is used to store the number of flows completed
+  DDBTable:
+    Type: AWS::Serverless::SimpleTable # More info about SimpleTable Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-simpletable.html
+    Properties:
+      TableName: QuorumWorkflowTable
+      PrimaryKey:
+        Name: id
+        Type: String
