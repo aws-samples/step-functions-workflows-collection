@@ -1,0 +1,76 @@
+{
+  "title": "Train ML Model",
+  "description": "This sample project demonstrates how to use Step Functions to pre-process data with AWS Lambda & store in S3, train a ML model & implement batch transformation through Sagemaker. Deploying this sample project will create an AWS Step Functions state machine, a Lambda function, S3 bucket along with required IAM roles & Log Group.",
+  "language": "Python",
+  "simplicity": "2 - Pattern",
+  "usecase": "",
+  "type": "Standard",
+  "diagram": "/resources/statemachine-train-ml-model.png",
+  "videoId": "",
+  "level": "200",
+  "framework": "SAM",
+  "services": [
+    "lambda",
+    "s3",
+    "stepfunctions",
+    "sagemaker",
+  ],
+  "introBox": {
+    "headline": "How it works",
+    "text": [
+      "Below are the various stages of the Step Function workflow and how it orchestrates the various steps for training an machine learning model in Sagemaker."
+      "a. The first stage of the Step Function workflow calls a Lambda function which generates data & processes it to create a train-test split dataset. These train & test data is places in the form of csv file in the S3 bucket."
+      "b. In the second stage, using SageMaker service integration, Step Function starts a Sagemaker Training job to create a logistic regression ML model for the given train dataset using XGBoost to predict the value."
+      "c. Once the model is trained, it is saved to s3 bucket using Sagemaker model job in the third stage of the state machine run."
+      "d. In the last stage, the test data is run through a batch transformation using Sagemaker transform job and the output file is places in the S3 output location."
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": [
+      "See the GitHub repo for detailed testing instructions."
+    ]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": [
+      "1. Delete the stack: <code>sam delete</code>."
+    ]
+  },
+  "deploy": {
+    "text": [
+      "sam deploy -guided"
+    ]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/train-ml-model/",
+      "templateDir": "train-ml-model",
+      "templateFile": "template.yaml",
+      "ASL": "statemachine/statemachine.asl.json"
+    },
+    "payloads": [
+      {
+        "headline": "",
+        "payloadURL": ""
+      }
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "The AWS Step Functions Workshop",
+        "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Shivapriya Pajjur",
+      "image": "https://drive.google.com/file/d/1WsKnJX-lAoGiMx9WHvoksjJ217pbXC1D/view?usp=drivesdk",
+      "bio": "Solution Architect at Amazon Web Services (AWS).",
+      "linkedin": "shivapriyap"
+    } 
+  ]
+}

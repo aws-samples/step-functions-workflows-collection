@@ -1,0 +1,93 @@
+{
+  "Comment": "Using Amazon States Language for a step function to generate data, train ML model & perform batch transformation.",
+  "StartAt": "Generate dataset",
+  "States": {
+    "Generate dataset": {
+      "Resource": "${DataGenerationJobArn}",
+      "Type": "Task",
+      "Next": "Train model (XGBoost)"
+    },
+    "Train model (XGBoost)": {
+      "Resource": "arn:${partition}:states:::sagemaker:createTrainingJob.sync",
+      "Parameters": {
+        "AlgorithmSpecification": {
+          "TrainingImage": "${regionalTrainingImage}",
+          "TrainingInputMode": "File"
+        },
+        "OutputDataConfig": {
+          "S3OutputPath": "s3://${trainmlmodelbucket}/models"
+        },
+        "StoppingCondition": {
+          "MaxRuntimeInSeconds": 86400
+        },
+        "ResourceConfig": {
+          "InstanceCount": 1,
+          "InstanceType": "ml.m5.xlarge",
+          "VolumeSizeInGB": 30
+        },
+        "RoleArn": "${SagemakerAPIExecutionRole}",
+        "InputDataConfig": [
+          {
+            "DataSource": {
+              "S3DataSource": {
+                "S3DataDistributionType": "ShardedByS3Key",
+                "S3DataType": "S3Prefix",
+                "S3Uri": "s3://${trainmlmodelbucket}/csv/train.csv"
+              }
+            },
+            "ChannelName": "train",
+            "ContentType": "text/csv"
+          }
+        ],
+        "HyperParameters": {
+          "objective": "reg:logistic",
+          "eval_metric": "rmse",
+          "num_round": "5"
+        },
+        "TrainingJobName.$": "$$.Execution.Name"
+      },
+      "Type": "Task",
+      "Next": "Save Model"
+    },
+    "Save Model": {
+      "Parameters": {
+        "PrimaryContainer": {
+          "Image": "${regionalTrainingImage}",
+          "Environment": {},
+          "ModelDataUrl.$": "$.ModelArtifacts.S3ModelArtifacts"
+        },
+        "ExecutionRoleArn": "${SagemakerAPIExecutionRole}",
+        "ModelName.$": "$.TrainingJobName"
+      },
+      "Resource": "arn:${partition}:states:::sagemaker:createModel",
+      "Type": "Task",
+      "Next": "Batch transform"
+    },
+    "Batch transform": {
+      "Type": "Task",
+      "Resource": "arn:${partition}:states:::sagemaker:createTransformJob.sync",
+      "Parameters": {
+        "ModelName.$": "$$.Execution.Name",
+        "TransformInput": {
+          "CompressionType": "None",
+          "ContentType": "text/csv",
+          "DataSource": {
+            "S3DataSource": {
+              "S3DataType": "S3Prefix",
+              "S3Uri": "s3://${trainmlmodelbucket}/csv/test.csv"
+            }
+          }
+        },
+        "TransformOutput": {
+          "S3OutputPath": "s3://${trainmlmodelbucket}/output"
+        },
+        "TransformResources": {
+          "InstanceCount": 1,
+          "InstanceType": "ml.m5.xlarge"
+        },
+        "TransformJobName.$": "$$.Execution.Name"
+      },
+      "End": true
+    }
+  }
+}

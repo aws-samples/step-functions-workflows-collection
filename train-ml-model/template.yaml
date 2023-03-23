@@ -1,0 +1,279 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: AWS Step Functions Workflow sample project to train a machine learning model 
+
+
+Parameters:
+  ResourcePrefix:
+    Type: String
+    Default: "sfn-train-ml-model-sample"
+
+Mappings:
+  TrainingImagesRegionMap:
+    us-west-1:
+      AMI: 632365934929.dkr.ecr.us-west-1.amazonaws.com/xgboost:latest
+    us-west-2:
+      AMI: 433757028032.dkr.ecr.us-west-2.amazonaws.com/xgboost:latest
+    us-east-1:
+      AMI: 811284229777.dkr.ecr.us-east-1.amazonaws.com/xgboost:latest
+    us-east-2:
+      AMI: 825641698319.dkr.ecr.us-east-2.amazonaws.com/xgboost:latest
+    us-gov-west-1:
+      AMI: 226302683700.dkr.ecr.us-gov-west-1.amazonaws.com/xgboost:latest
+    ap-northeast-1:
+      AMI: 501404015308.dkr.ecr.ap-northeast-1.amazonaws.com/xgboost:latest
+    ap-northeast-2:
+      AMI: 306986355934.dkr.ecr.ap-northeast-2.amazonaws.com/xgboost:latest
+    ap-south-1:
+      AMI: 991648021394.dkr.ecr.ap-south-1.amazonaws.com/xgboost:latest
+    ap-southeast-1:
+      AMI: 475088953585.dkr.ecr.ap-southeast-1.amazonaws.com/xgboost:latest
+    ap-southeast-2:
+      AMI: 544295431143.dkr.ecr.ap-southeast-2.amazonaws.com/xgboost:latest
+    ca-central-1:
+      AMI: 469771592824.dkr.ecr.ca-central-1.amazonaws.com/xgboost:latest
+    eu-central-1:
+      AMI: 813361260812.dkr.ecr.eu-central-1.amazonaws.com/xgboost:latest
+    eu-west-1:
+      AMI: 685385470294.dkr.ecr.eu-west-1.amazonaws.com/xgboost:latest
+    eu-west-2:
+      AMI: 644912444149.dkr.ecr.eu-west-2.amazonaws.com/xgboost:latest
+    eu-north-1:
+      AMI: 669576153137.dkr.ecr.eu-north-1.amazonaws.com/xgboost:latest
+    eu-west-3:
+      AMI: 749696950732.dkr.ecr.eu-west-3.amazonaws.com/xgboost:latest
+    sa-east-1:
+      AMI: 855470959533.dkr.ecr.sa-east-1.amazonaws.com/xgboost:latest
+    ap-east-1:
+      AMI: 286214385809.dkr.ecr.ap-east-1.amazonaws.com/xgboost:latest
+    me-south-1:
+      AMI: 801668240914.dkr.ecr.me-south-1.amazonaws.com/xgboost:latest
+    cn-north-1:
+      AMI: 450853457545.dkr.ecr.cn-north-1.amazonaws.com.cn/xgboost:latest
+    cn-northwest-1:
+      AMI: 451049120500.dkr.ecr.cn-northwest-1.amazonaws.com.cn/xgboost:latest
+
+# Comment each resource section to explain usage
+Resources:
+
+  # ---- IAM Roles ----
+
+  #--- StepFunction Execution Role ----                
+  MachineLearningWorkflowExecutionRole:
+    Type: 'AWS::IAM::Role'
+    #DependsOn: SageMakerAPIExecutionRole
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - states.amazonaws.com
+      Policies: 
+        - PolicyName: SageMakerAccessPolicy
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement: 
+              - Effect: "Allow"
+                Action: 
+                  - "sagemaker:CreateTrainingJob"
+                  - "sagemaker:CreateModel"
+                  - "sagemaker:CreateTransformJob"
+                  - "sagemaker:AddTags"
+                  - "sagemaker:DeleteTags"
+                Resource: "*"
+        - PolicyName: PassIAMRolePolicy
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement: 
+              - Effect: "Allow"
+                Action: 
+                  - "iam:PassRole"
+                Resource: "*"
+                Condition: {
+                  "StringEquals": {"iam:PassedToService": "sagemaker.amazonaws.com"}
+                  }
+        - PolicyName: LambdaInvocationPolicy
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement: 
+              - Effect: "Allow"
+                Action: 
+                  - "lambda:InvokeFunction"
+                Resource:
+                  - !GetAtt LambdaForDataGeneration.Arn
+        - PolicyName: StepFunctionEventsPolicy
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement: 
+              - Effect: "Allow"
+                Action:
+                  - "events:PutTargets"
+                  - "events:PutRule"
+                  - "events:DescribeRule"
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/StepFunctionsGetEventsForSageMakerTrainingJobsRule"
+                  - !Sub "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/StepFunctionsGetEventsForSageMakerTransformJobsRule"
+                  - !Sub "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/StepFunctionsGetEventsForSageMakerTuningJobsRule"
+        - PolicyName: CloudWatchLogPolicy
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement: 
+              - Effect: "Allow"
+                Action: 
+                  - "logs:CreateLogDelivery"
+                  - "logs:GetLogDelivery"
+                  - "logs:UpdateLogDelivery"
+                  - "logs:DeleteLogDelivery"
+                  - "logs:ListLogDeliveries"
+                  - "logs:PutResourcePolicy"
+                  - "logs:DescribeResourcePolicies"
+                  - "logs:DescribeLogGroups"
+                Resource: "*"                        
+    Metadata:
+      SamResourceId: MachineLearningWorkflowExecutionRole
+
+  
+  #--- SageMaker Execution Role ---
+  SagemakerAPIExecutionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - sagemaker.amazonaws.com
+      ManagedPolicyArns:
+         - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies: 
+        - PolicyName: SageMakerAPIExecutionPolicy
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement: 
+              - Effect: "Allow"
+                Action: 
+                  - "cloudwatch:PutMetricData"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                  - "logs:CreateLogGroup"
+                  - "logs:DescribeLogStreams"
+                  - "ecr:GetAuthorizationToken"
+                  - "ecr:BatchCheckLayerAvailability"
+                  - "ecr:GetDownloadUrlForLayer"
+                  - "ecr:BatchGetImage"
+                Resource: "*"
+        - PolicyName: SageMakerAPIS3Policy
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement: 
+              - Effect: "Allow"
+                Action: 
+                  - "s3:GetObject"
+                  - "s3:PutObject"
+                Resource: !Join ["/", [!GetAtt trainmlmodelbucket.Arn, "*"]]
+              - Effect: "Allow"
+                Action: 
+                  - "s3:ListBucket"
+                Resource: !GetAtt trainmlmodelbucket.Arn
+    Metadata:
+      SamResourceId: SagemakerAPIExecutionRole
+
+ #--- Lambda Execution Role ---
+  LambdaForDataGenerationExecutionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies: 
+        - PolicyName: LambdaS3AccessPolicy
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement: 
+              - Effect: "Allow"
+                Action: 
+                  - "s3:PutObject"
+                Resource: !Join ["/", [!GetAtt trainmlmodelbucket.Arn, "*"]]
+    Metadata:
+      SamResourceId: LambdaForDataGenerationExecutionRole
+      
+      
+  # ---- Lambda Functions ----
+  LambdaForDataGeneration:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Description: "Generates Data in S3 bucket"
+      FunctionName: !Sub "${ResourcePrefix}-generatedata-fn"
+      Handler: generateData.handler
+      PackageType: "Zip"
+      Runtime: "python3.7"
+      Timeout: 60
+      Role: !GetAtt LambdaForDataGenerationExecutionRole.Arn     
+      Environment:
+        Variables:
+          S3_BUCKET_NAME: !Ref trainmlmodelbucket
+    Metadata:
+      SamResourceId: LambdaForDataGeneration
+
+  # ---- CloudWatch Logs ----
+  lambdaForDataGenerationLog:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 3
+      LogGroupName: !Sub "/aws/lambda/${ResourcePrefix}-generatedata-fn"
+    Metadata:
+      SamResourceId: lambdaForDataGenerationLog
+
+  # ---- S3 Buckets ----
+  trainmlmodelbucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: trainmlmodelbucket
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      VersioningConfiguration:
+        Status: Enabled
+    Metadata:
+      SamResourceId: trainmlmodelbucket
+      
+
+  # ---- Step Function/ State Machine ----
+  TrainAndBatchTransformStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name: !Sub "${ResourcePrefix}-sfn"
+      Role: !GetAtt  MachineLearningWorkflowExecutionRole.Arn
+      DefinitionUri: statemachine/statemachine.asl.json
+      DefinitionSubstitutions:
+        DataGenerationJobArn: !GetAtt LambdaForDataGeneration.Arn
+        trainmlmodelbucket: trainmlmodelbucket
+        SagemakerAPIExecutionRole: !GetAtt  SagemakerAPIExecutionRole.Arn
+        regionalTrainingImage: !FindInMap [TrainingImagesRegionMap, !Ref "AWS::Region", AMI]
+        partition: !Ref "AWS::Partition"
+        
+
+
+
+Outputs:
+  StateMachineArn:
+    Value: !Ref TrainAndBatchTransformStateMachine
+  StateMachineName:
+    Value: !GetAtt [TrainAndBatchTransformStateMachine,Name]
