@@ -1,0 +1,60 @@
+{
+  "title": "Start Athena Query",
+  "description": "This workflow use Step Functions and Amazon Athena and AWS Lambda Functions to start an Athena query and send a notification via SNS with query results.",
+  "language": "Python",
+  "simplicity": "1 - Fundamental",
+  "usecase": "",
+  "type": "Standard",
+  "diagram": "/resources/statemachine.png",
+  "videoId": "",
+  "level": "100",
+  "framework": "Terraform",
+  "services": [
+    "lambda",
+    "stepfunctions",
+    "glue",
+    "athena",
+    "sns"
+  ],
+  "introBox": {
+    "headline": "How it works",
+    "text": [
+      "In this project, Step Functions uses a state machine to invoke a Lambda function to generate data, then, another lambda function is triggered, which invokes a Glue crawler, which categorizes data stored in S3."
+      "The Athena query is then initiated and runs until it is completed. Once the query is completed, the results are obtained and published to the SNS (Simple Notification Service) topic."
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": [
+      "See the GitHub repo for detailed testing instructions."
+    ]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": [
+      "1. Delete the stack: <code>terraform destroy</code>."
+    ]
+  },
+  "deploy": {
+    "text": [
+      "terraform init",
+      "terraform apply"
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "The AWS Step Functions Workshop",
+        "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Itziar Olivera Goicolea",
+      "bio": "Itziar is a Technical Account Manager at AWS from Iberia (EMEA)."
+      "linkedin": "itziar-olivera-goicolea-a36438174"
+    }
+  ]
+}

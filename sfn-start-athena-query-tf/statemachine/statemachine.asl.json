@@ -1,0 +1,44 @@
+{
+  "Comment": "Amazon State machine to start an athena query.",
+  "StartAt": "Generate example log",
+    "States": {
+      "Generate example log": {
+        "Resource": "${data_generation_function}",
+        "Type": "Task",
+        "Next": "Run Glue crawler"
+      },
+      "Run Glue crawler": {
+        "Resource": "${invoke_crawler_function}",
+        "Type": "Task",
+        "Next": "Start an Athena query"
+      },
+      "Start an Athena query": {
+        "Resource": "arn:aws:states:::athena:startQueryExecution.sync",
+        "Parameters": {
+          "QueryString": "SELECT * FROM \"${start_athena_query_db}\".\"log\" limit 1",
+          "WorkGroup": "${aws_athena_workgroup}"
+        },
+        "Type": "Task",
+        "Next": "Get query results"
+      },
+      "Get query results": {
+        "Resource": "arn:aws:states:::athena:getQueryResults",
+        "Parameters": {
+          "QueryExecutionId.$": "$.QueryExecution.QueryExecutionId"
+        },
+        "Type": "Task",
+        "Next": "Send query results"
+      },
+      "Send query results": {
+        "Resource": "arn:aws:states:::sns:publish",
+        "Parameters": {
+          "TopicArn": "${athena_updates}",
+          "Message": {
+            "Input.$": "$.ResultSet.Rows"
+          }
+        },
+        "Type": "Task",
+        "End": true
+      }
+    }
+}
