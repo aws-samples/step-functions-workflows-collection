@@ -6,20 +6,6 @@
       "Type": "Parallel",
       "Branches": [
         {
-          "StartAt": "TimeoutWait",
-          "States": {
-            "TimeoutWait": {
-              "Type": "Wait",
-              "Seconds": 15,
-              "Next": "Ran out of Time"
-            },
-            "Ran out of Time": {
-              "Type": "Fail",
-              "Error": "States.RanOutOfTime"
-            }
-          }
-        },
-        {
           "StartAt": "Get Process1 Completion Status",
           "States": {
             "Get Process1 Completion Status": {
@@ -120,6 +106,20 @@
               "Comment": "This is actually a success criterion."
             }
           }
+        },
+        {
+          "StartAt": "TimeoutWait",
+          "States": {
+            "TimeoutWait": {
+              "Type": "Wait",
+              "Seconds": 15,
+              "Next": "Ran out of Time"
+            },
+            "Ran out of Time": {
+              "Type": "Fail",
+              "Error": "States.RanOutOfTime"
+            }
+          }
         }
       ],
       "Next": "Next Step If Process1 Completes",
@@ -147,15 +147,15 @@
         }
       ]
     },
+    "Next Step If Process1 Completes": {
+      "Type": "Pass",
+      "End": true
+    },
     "Next Step if Process 2 Completes": {
       "Type": "Pass",
       "End": true
     },
     "Next Step if Process Ran out of time": {
-      "Type": "Pass",
-      "End": true
-    },
-    "Next Step If Process1 Completes": {
       "Type": "Pass",
       "End": true
     }
