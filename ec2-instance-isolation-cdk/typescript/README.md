@@ -32,11 +32,10 @@ Important: this application uses various AWS services and there are costs associ
 3. Change directory to the pattern directory:
 
     ```bash
-    cd ec2-instance-isolation-cdk/python
+    cd ec2-instance-isolation-cdk/typescript
     ```
 
-4. Create a Python virtual environment and install the requirements:
-
+4. From the command line, use npm to install dependencies and run the build process for the Lambda functions.
 
     ```bash
     npm install

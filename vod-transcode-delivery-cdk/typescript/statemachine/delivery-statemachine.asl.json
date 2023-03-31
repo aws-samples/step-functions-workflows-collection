@@ -1,0 +1,35 @@
+{
+  "StartAt": "Asset creation function",
+  "States": {
+    "Asset creation function": {
+      "Next": "Push Notification",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:ap-southeast-2:234937851863:function:DeliverChannelStack-VODAssetCreateFunctionB3D474A5-oCfQCXBaF9N4",
+        "Payload.$": "$"
+      }
+    },
+    "Push Notification": {
+      "End": true,
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "arn:aws:sns:ap-southeast-2:234937851863:SharedResourcesStack-NotificationTopicEB7A0DF1-DVHa274p8Xpy",
+        "Message.$": "$.Payload"
+      }
+    }
+  }
+}

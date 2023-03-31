@@ -1,0 +1,74 @@
+{
+    "title": "Video-on-demand transcode and deliver workflow",
+    "description": "Vidoe-on-demand serverless workflow, it defines the transcode, delivery and errorhandling.",
+    "language": "Typescript",
+    "simplicity": "3 - Application",
+    "usecase": "",
+    "type": "Standard",
+    "diagram": ["/resources/transcode-statemachine.png","/resources/packaging-statemachine.png"],
+    "videoId": "",
+    "level": "300",
+    "framework": "CDK",
+    "services": [
+        "AWS Elemental MediaConvert",
+        "AWS Elemental MediaPackage",
+        "Amazon CloudFront"
+    ],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "The step function for transcoding workflow orchestrates the process of AWS Elemental MediaConvert service",
+        "1. Starts the media transcoding process by invoking a Lambda function responsible for submitting a MediaConvert job. ",
+        "2. Checks the status of the MediaConvert job by invoking another Lambda function.",
+        "3. Updates a DynamoDB table with information about the video, such as video_id, video_name, job_status, etc.",
+        "4. Invokes a Lambda function to archive the original video.",
+        "5. Publishes a message to an SNS topic with the payload of the previous states. After this state, the state machine ends.",
+        "The step function for packaging workflow orchestrates the process of creating the asset for a AWS Elemental MediaPackage packing group",
+        "1. start the asset creation process by invoking a Lambda function responsible for creating an asset.",
+        "2. publish a message to an SNS topic with the payload from the previous \"Asset creation function\" state. After this state, the state machine ends."
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+        "headline": "Cleanup",
+        "text": [
+          "Delete the stack: <code>cdk destroy --all</code>."
+        ]
+      },
+      "deploy": {
+        "text": [
+          "<code>cdk deploy --all</code>"
+        ]
+      },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/vod-transcode-delivery-cdk/",
+        "templateDir": "vod-transcode-delivery-cdk/typescript",
+        "ASL": ["statemachine/transcoding-statemachine.asl.json", "delivery-statemachine.asl.json"]
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional Resources",
+      "bullets": [
+      ]
+    },
+    "authors": [
+      {
+        "name": "Stan Fan",
+        "image": "https://avatars.githubusercontent.com/u/58756168?v=4",
+        "bio": "Stan Fan is a Solutions Architect at Amazon Web Services (AWS) based on Sydney, Australia.",
+        "linkedin": "hongyi-fan-05101992"
+      }
+    ]
+  }

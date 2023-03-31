@@ -1,0 +1,140 @@
+{
+  "StartAt": "MediaConvert Transcode",
+  "States": {
+    "MediaConvert Transcode": {
+      "Next": "Get MediaConvert Transcode Status",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:ap-southeast-2:234937851863:function:MediaTranscodeStack-VODJobSubmitBA97FFF4-wO6t5wpPgwpS",
+        "Payload.$": "$"
+      }
+    },
+    "Get MediaConvert Transcode Status": {
+      "Next": "Is Meida Convert job Complete?",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:ap-southeast-2:234937851863:function:MediaTranscodeStack-VODGetJobStatus2FC2D1C8-mmEqRUpTVvWF",
+        "Payload.$": "$.Payload"
+      }
+    },
+    "wait 5 sec": {
+      "Type": "Wait",
+      "Seconds": 5,
+      "Next": "Get MediaConvert Transcode Status"
+    },
+    "Is Meida Convert job Complete?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.Payload.job_status",
+          "StringEquals": "COMPLETE",
+          "Next": "parallel update ddb, and pub sns"
+        }
+      ],
+      "Default": "wait 5 sec"
+    },
+    "parallel update ddb, and pub sns": {
+      "Type": "Parallel",
+      "End": true,
+      "Branches": [
+        {
+          "StartAt": "DDBPutItem",
+          "States": {
+            "DDBPutItem": {
+              "End": true,
+              "Type": "Task",
+              "InputPath": "$.Payload",
+              "Resource": "arn:aws:states:::dynamodb:putItem",
+              "Parameters": {
+                "Item": {
+                  "video_id": {
+                    "S.$": "$.invocation_id"
+                  },
+                  "video_name": {
+                    "S.$": "$.results[0].videoName"
+                  },
+                  "video_postive": {
+                    "N": "0"
+                  },
+                  "video_negative": {
+                    "N": "0"
+                  },
+                  "job_status": {
+                    "S.$": "$.job_status"
+                  }
+                },
+                "TableName": "SharedResourcesStack-VideoTableE38FEE4B-1QTLS7OCK0EEI"
+              }
+            }
+          }
+        },
+        {
+          "StartAt": "Archive original video",
+          "States": {
+            "Archive original video": {
+              "End": true,
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 6,
+                  "BackoffRate": 2
+                }
+              ],
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "arn:aws:lambda:ap-southeast-2:234937851863:function:MediaTranscodeStack-VODArchiveC5D11BE8-JzqeWkg8OHKk",
+                "Payload.$": "$.Payload"
+              }
+            }
+          }
+        },
+        {
+          "StartAt": "Push Notification",
+          "States": {
+            "Push Notification": {
+              "End": true,
+              "Type": "Task",
+              "Resource": "arn:aws:states:::sns:publish",
+              "Parameters": {
+                "TopicArn": "arn:aws:sns:ap-southeast-2:234937851863:SharedResourcesStack-NotificationTopicEB7A0DF1-DVHa274p8Xpy",
+                "Message.$": "$.Payload"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
