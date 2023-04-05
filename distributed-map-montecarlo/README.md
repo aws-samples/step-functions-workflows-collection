@@ -1,10 +1,12 @@
 # Step function distributed map workflow for montecarlo simulation
 
-This workflow is an example application of a step function distributed map implementing a montecarlo simulation. The state machine performs random sampling of input parameters to generate input samples in S3. The distributed map uses the input samples to run financial calculations in parallel. The resulting statistical results are stored in S3. 
+This workflow is an application of a step function distributed map, implementing a Monte Carlo simulation with parallel calculations. 
 
-For processing each input sample the Step Function will call a child state machine to run financial calculations.
+Monte Carlo simulation is a mathematical technique that predicts possible outcomes of an uncertain event. This technique provides multiple possible outcomes and the probability of each from a large pool of random data samples. Monte Carlo simulation predictions are used in many industries including finance, energy, engineering, and online gaming. To find out more about Monte Carlo Simulation visit [What is the Monte Carlo Simulation?](https://aws.amazon.com/what-is/monte-carlo-simulation/). 
 
-Learn more about this workflow at Step Functions workflows collection: https://serverlessland.com/workflows/distributed-map-montecarlo-financial
+The state machine performs random sampling of input parameters to generate inputs in S3. The distributed map uses the input samples to run calculations in parallel. For each input sample the Step Function will call a child state machine to run calculation. The results are stored in S3 and pre-signed URLs are returned in execution outputs. 
+
+Learn more about this workflow at Step Functions workflows collection: https://serverlessland.com/workflows/distributed-map-montecarlo
 
 Important: this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the [AWS Pricing page](https://aws.amazon.com/pricing/) for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
 
@@ -25,8 +27,9 @@ Important: this application uses various AWS services and there are costs associ
    ```
    cd distributed-map-montecarlo-financial
    ```
-1. From the command line, use AWS SAM to deploy the AWS resources for the workflow as specified in the template.yaml file:
+1. From the command line, use AWS SAM to build and deploy the AWS resources for the workflow as specified in the template.yaml file:
    ```
+   sam build
    sam deploy --guided
    ```
 1. During the prompts:
@@ -41,51 +44,41 @@ Important: this application uses various AWS services and there are costs associ
 
 ## How it works
 
-The state machine will take JSON input for mean, standard deviation and number of samples to generate samples for calculation. 
+The state machine takes JSON input for monthly production values, unit price, mean and standard deviation for price changes, and number of samples to generate random samples for simulation. 
+
+![image](./resources/statemachine.png)
+
 See below example input:
 
 ```
 {
-  "kwh_price_mean": 0.4,
-  "kwh_price_standard_deviation": 0.2,
+  "monthly_production": [60, 80, 90, 95, 100, 98, 96, 94, 92, 90, 89, 88, 87, 86, 85, 84, 83, 82, 81, 80, 79, 78, 77, 76, 75],
+  "unit_price": 100,
   "number_of_samples": 1000
+  "mean_price_change": 2,
+  "standard_deviation": 5,
 }
 ```
 
-From this example input the state machine will generate 1000 sample input CSV files in S3, which will be processed in the distributed map state by the child state machine.
+This example input above provides 24 values (2 years worth of monthly production data), and number of samples for the Monte Carlo simulation as 1000.
 
+With with this example input, the first step of the state machine generates 1000 random input samples for calculation, stored in S3 bucket `input/` path as individual CSV files.
 
-![image](./resources/statemachine.png)
+The second step is a distributed map state, and it processes all the CSV files in the `input/` path in the S3 bucket. 
+The child state machine is from the type `Express`. For each input sample it invokes a lambda function to calculate the revenue figures, and writes the results to the `output/` path in the S3 bucket. 
 
-The child state machine is from the type Express. It will run financial calculations and write the results to S3. 
-The aggregate step will calculate statistical summary and render a graph.
+The last step of the state machine is another lambda function that aggregates the results in a combined CSV files. It calculates percentiles such as p10, p50, p90, and plot them on a line graph.
 
-## Testing
-
-1. You need to upload a CSV file, called `solarfarm-data-yearly.csv` to the S3 bucket that was created when deploying this stack. 
-This will provide the yearly electricity production and cost values for the solar farm we will calculate the financial indicator for. 
-The file needs to have the following format:
-
-```
-date,capex_usd,opex_usd,production_kwh
-2020-01-01T00:00:00Z,240000,8000,0
-2021-01-01T00:00:00Z,140000,8000,0
-2022-01-01T00:00:00Z,140000,8000,120000
-2023-01-01T00:00:00Z,0,40000,440000
-...
-```
-
-After that you can start an execution on the state machine. With the parameters for mean price, standard deviation and number of samples. 
-
-You can then use the generated S3 presigned URLs for the summary results and the graph.
+The execution output contains a pre-signed URL for the line graph, and another for the aggregate CSV file. You can paste these URLs into the address bar of your browser to view the results. Below is an example line graph.
 
 ![image](./resources/sample_result.png)
+
 
 ## Cleanup
 
 1. Delete the stack
    ```bash
-   aws cloudformation delete-stack --stack-name STACK_NAME
+   sam delete --stack-name STACK_NAME
    ```
 1. Confirm the stack has been deleted
    ```bash
@@ -94,6 +87,6 @@ You can then use the generated S3 presigned URLs for the summary results and the
 
 ---
 
-Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
 SPDX-License-Identifier: MIT-0

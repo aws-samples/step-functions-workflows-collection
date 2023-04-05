@@ -1,9 +1,9 @@
 {
   "title": "Distributed Map - MonteCarlo Simulation",
-  "description": "This workflow is an example application of a step function distributed map implementing a montecarlo simulation.",
+  "description": "This workflow is an application of a step function distributed map, implementing a Monte Carlo simulation with parallel calculations.",
   "language": "python",
   "simplicity": "3 - Application",
-  "usecase": "MonteCarlo simulation with stepfunctions distributed map.",
+  "usecase": "Monte Carlo simulation with stepfunctions distributed map.",
   "type": "Standard",
   "diagram": "/resources/statemachine.png",
   "videoId": "",
@@ -13,8 +13,10 @@
   "introBox": {
     "headline": "How it works",
     "text": [
-      "The state machine performs random sampling of input parameters to generate input samples in S3. The distributed map uses the input samples to run financial calculations in parallel. The resulting statistical results are stored in S3.",
-      "For processing each input sample the Step Function will call a child state machine to run financial calculations."
+      "The state machine performs random sampling of input parameters to generate inputs in S3.",
+      "The distributed map uses the input samples to run calculations in parallel.",
+      "For each input sample the Step Function will call a child state machine to run calculation.",
+      "The results are stored in S3, and pre-signed URLs are returned in execution outputs."
     ]
   },
   "testing": {
@@ -53,7 +55,11 @@
   },
   "authors": [
     {
-      "name": "Harun Hasdal"
+      "name": "Harun Hasdal",
+      "image": "https://avatars.githubusercontent.com/u/4698942",
+      "bio": "Senior Solutions Architect @ AWS. Serverless advocate.",
+      "linkedin": "harunhasdal",
+      "twitter": "@harunhasdal"
     }
   ]
 }

@@ -1,0 +1,10 @@
+{
+  "monthly_production": [
+    60, 80, 90, 95, 100, 98, 96, 94, 92, 90, 89, 88, 87, 86, 85, 84, 83, 82, 81,
+    80, 79, 78, 77, 76, 75, 75, 75, 75
+  ],
+  "unit_price": 100,
+  "mean_price_change": 2,
+  "standard_deviation": 5,
+  "number_of_samples": 1000
+}
