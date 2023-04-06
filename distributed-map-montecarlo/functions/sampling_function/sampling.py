@@ -4,9 +4,18 @@ import numpy as np
 import pandas as pd
 import datetime
 import boto3
+import asyncio
+import functools
+from botocore.config import Config
 
 DATA_BUCKET = os.environ['DATA_BUCKET']
-s3 = boto3.client("s3")
+config = Config(
+    retries={
+        'max_attempts': 10,
+        'mode': 'standard'
+    }
+)
+s3 = boto3.client("s3", config=config)
 
 """
 This lambda function is used to generate samples from a given production array and unit price.
@@ -21,7 +30,11 @@ def lambda_handler(event:dict, context:dict):
     bucket_name = DATA_BUCKET
     prefix = generate_prefix()
     
-    generate_samples(production_array, unit_price, change_mean, change_std, number_of_samples, bucket_name, prefix)
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(
+        generate_samples(production_array, unit_price, change_mean, change_std, number_of_samples, bucket_name, prefix)
+    )
+    
 
     result = {
         "number_of_samples": number_of_samples,
@@ -49,14 +62,20 @@ This function is used to generate samples from a given production array and unit
 @param bucket_name: The name of the S3 bucket.
 @param prefix: The prefix for the S3 objects.
 """
-def generate_samples(production_array, unit_price, change_mean, change_std, number_of_samples, bucket_name, prefix):
+async def generate_samples(production_array, unit_price, change_mean, change_std, number_of_samples, bucket_name, prefix):
     size = len(production_array)
-    for i in range(number_of_samples):
+    
+    loop = asyncio.get_running_loop()
+    def generate_sample(index):
         dx = np.random.normal(change_mean, change_std, size)
         price_array = unit_price + np.cumsum(dx)
         df = pd.concat([pd.Series(production_array), pd.Series(price_array)], axis=1)
-        key = f"{prefix}/inputs/{i}.csv"
-        write_df(bucket=bucket_name, key=key, df=df)
+        key = f"{prefix}/inputs/{index}.csv"
+        return loop.run_in_executor(None, functools.partial(
+            write_df, bucket=bucket_name, key=key, df=df
+        ))
+
+    await asyncio.gather(*list(map(generate_sample, range(number_of_samples))))
 
 """
 This function is used to write a dataframe to S3 as a CSV file.

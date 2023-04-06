@@ -23,7 +23,7 @@ Resources:
       Runtime: python3.7
       Description: "Function generating input samples for montecarlo simulation."
       FunctionName: !Sub "${resourcePrefix}-sampling"
-      MemorySize: 512
+      MemorySize: 2048
       Environment:
         Variables:
           DATA_BUCKET: !Ref MonteCarloBucket
