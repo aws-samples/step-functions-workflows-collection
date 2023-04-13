@@ -58,16 +58,16 @@ Important: this application uses various AWS services and there are costs associ
 ![image](./resources/mapstate_statemachine.png)
 
 ## Testing
-1- After deployment you receive an email titled AWS Notification - Subscription Confirmation. Click on the link in the email to confirm your subscription. This will allow SNS to send you emails.
-2- Add messages to the Amazon SQS queue.
+1. After deployment you receive an email titled AWS Notification - Subscription Confirmation. Click on the link in the email to confirm your subscription. This will allow SNS to send you emails.
+2. Add messages to the Amazon SQS queue.
 * Navigate to the Amazon SQS console, and choose the queue that was created by the SAM template. The name will be similar to  **MapSampleProj-SQSQueue-1UDIC9VZDORN7**. 
 * Select **Send and receieve messages** 
 * On the **Send a Message** window, enter a message and choose **Send Message**. Continue entering messages until you have several in the Amazon SQS queue.
-3- Start a new step functions execution 
+3. Start a new step functions execution 
 * Navigate to the AWS Step Functions console and choose **MapStateStateMachine**, then choose **Start execution**
 * On the New execution page, enter an execution name (optional), and then choose Start Execution.
 * When an execution is complete, you can select states on the Visual workflow and browse the Input and Output under Step details.
-4- You should be receiving emails that contain the content of the messages that you sent to the SQS queue. You can also check the DynamoDB table for the messages saved. 
+4. You should be receiving emails that contain the content of the messages that you sent to the SQS queue. You can also check the DynamoDB table for the messages saved. 
 * To check the DynamoDB table, navigate to the Amazon DynamoDB console and choose the table created by the SAM template. The name will be similar to **MapSampleProj-DDBTable-SADKY45DNPN6**.
 * Choose **Explore table items**.
 * Under **Items returned** you should see the messages that were sent to the SQS queue.
