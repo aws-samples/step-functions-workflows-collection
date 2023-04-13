@@ -44,7 +44,7 @@
       "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/dynamically-process-data-with-map-state/",
       "templateDir": "dynamically-process-data-with-map-state",
       "templateFile": "template.yaml",
-      "ASL": "statemachine/mapstate_statemachine.asl.json"
+      "ASL": "statemachine/statemachine.asl.json"
     },
     "payloads": [
       {
