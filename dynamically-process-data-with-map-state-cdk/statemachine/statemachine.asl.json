@@ -1,0 +1,109 @@
+{
+    "StartAt": "Read messages from SQS queue",
+    "States": {
+      "Read messages from SQS queue": {
+        "Next": "Are there messages to process?",
+        "Retry": [
+          {
+            "ErrorEquals": [
+              "Lambda.ServiceException",
+              "Lambda.AWSLambdaException",
+              "Lambda.SdkClientException"
+            ],
+            "IntervalSeconds": 2,
+            "MaxAttempts": 6,
+            "BackoffRate": 2
+          }
+        ],
+        "Type": "Task",
+        "OutputPath": "$.Payload",
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "Parameters": {
+          "FunctionName": "arn:aws:lambda:me-south-1:112233445566:function:MapStateCdkStack-ReadfromSQS7A438AF1-rxxSWTi0VGpc",
+          "Payload.$": "$"
+        }
+      },
+      "Are there messages to process?": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "Variable": "$",
+            "StringEquals": "No messages",
+            "Next": "Finish"
+          }
+        ],
+        "Default": "Process Messages"
+      },
+      "Process Messages": {
+        "Type": "Map",
+        "Next": "Finish",
+        "Parameters": {
+          "MessageNumber.$": "$$.Map.Item.Index",
+          "MessageDetails.$": "$$.Map.Item.Value"
+        },
+        "Iterator": {
+          "StartAt": "Write message to DynamoDB",
+          "States": {
+            "Write message to DynamoDB": {
+              "Next": "Remove messages from SQS queue",
+              "Type": "Task",
+              "ResultPath": null,
+              "Resource": "arn:aws:states:::dynamodb:putItem",
+              "Parameters": {
+                "Item": {
+                  "MessageId": {
+                    "S.$": "$.MessageDetails.MessageId"
+                  },
+                  "Body": {
+                    "S.$": "$.MessageDetails.Body"
+                  }
+                },
+                "TableName": "MapStateCdkStack-MessagesTable05B58A27-12YI1A00B0RE6",
+                "ReturnConsumedCapacity": "TOTAL"
+              }
+            },
+            "Remove messages from SQS queue": {
+              "Next": "Publish message to SNS topic",
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 6,
+                  "BackoffRate": 2
+                }
+              ],
+              "Type": "Task",
+              "InputPath": "$.MessageDetails",
+              "ResultPath": null,
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "arn:aws:lambda:me-south-1:112233445566:function:MapStateCdkStack-DeletefromsqsEF763BFD-ARg8hYoj6vPu",
+                "Payload": {
+                  "ReceiptHandle.$": "$.ReceiptHandle"
+                }
+              }
+            },
+            "Publish message to SNS topic": {
+              "End": true,
+              "Type": "Task",
+              "InputPath": "$.MessageDetails",
+              "Resource": "arn:aws:states:::sns:publish",
+              "Parameters": {
+                "TopicArn": "arn:aws:sns:me-south-1:112233445566:MapStateCdkStack-NotificationTopic",
+                "Message.$": "$.Body",
+                "Subject": "Message from Step Functions!"
+              }
+            }
+          }
+        },
+        "ItemsPath": "$"
+      },
+      "Finish": {
+        "Type": "Succeed"
+      }
+    }
+  }
