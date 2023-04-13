@@ -1,9 +1,9 @@
 {
   "title": "Dynamically process data with a Map state",
   "description": "This workflow demonstrates dynamic parallelism using a Map state.",
-  "language": "",
+  "language": "Javascript",
   "simplicity": "1 - Fundamental",
-  "usecase": "",
+  "usecase": "Dynamic message processing parallelism using a Map state.",
   "type": "Standard",
   "diagram": "/resources/mapstate_statemachine.png",
   "videoId": "",
