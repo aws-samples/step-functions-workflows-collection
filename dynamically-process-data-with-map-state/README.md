@@ -1,4 +1,4 @@
-# Workflow title
+# Dynamically process data with a Map state
 
 This workflow demonstrates dynamic parallelism using a Map state.
 The template provided creates the following:
