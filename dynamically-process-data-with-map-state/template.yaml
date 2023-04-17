@@ -1,0 +1,157 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: AWS Step Functions sample project for mapping over an array of elements
+Globals:
+  Function:
+    Runtime: nodejs14.x
+    CodeUri: "functions/"
+Parameters:
+  # During deployment, this paramter will prompt for the email address of the user to receive notifications of SQS messages
+  UserEmailAddress:
+    Type: String
+    Default: user@example.com
+    Description: Enter the email address that will receive SQS message notifications.
+Resources:
+# Map state state machine
+  MapStateStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/statemachine.asl.json
+      DefinitionSubstitutions:
+        ReadFromSQSFunctionName: !GetAtt ReadFromSQSFunction.Arn 
+        DDBTableName: !Ref DDBTable
+        DeleteFromSQSFunctionName: !GetAtt DeleteFromSQSFunction.Arn
+        SNSTopicArn: !Ref SNSTopic
+      Role: !GetAtt GenericExecRole.Arn
+    Connectors:
+      StateMachineConnectors:
+        Properties:
+          Destination: 
+            - Id: DDBTable
+            - Id: ReadFromSQSFunction
+            - Id: DeleteFromSQSFunction
+            - Id: SNSTopic
+          Permissions:
+            - Write
+
+# Lambda function to read messages from SQS queue
+  ReadFromSQSFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: read-from-sqs.lambda_handler
+      Timeout: 60
+      Environment:
+        Variables:
+          SQS_QUEUE_URL: !Ref SQSQueue
+      Policies:
+      - SQSPollerPolicy:
+          QueueName:
+            !GetAtt SQSQueue.QueueName
+# Lambda function to delete the messages from SQS queue after processing
+  DeleteFromSQSFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: delete-from-sqs.lambda_handler
+      Timeout: 20
+      Environment:
+        Variables:
+          SQS_QUEUE_URL: !Ref SQSQueue
+      Policies:
+      - SQSPollerPolicy:
+          QueueName:
+            !GetAtt SQSQueue.QueueName
+# DynamoDB table to store SQS messages           
+  DDBTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey: 
+        Name: MessageId
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1  
+    Role: !GetAtt  GenericExecRole.Arn 
+# Generic execution role    
+  GenericExecRole:
+      Type: "AWS::IAM::Role"
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: states.amazonaws.com
+              Action: "sts:AssumeRole"
+# SQS queue
+  SQSQueue:
+    Type: AWS::SQS::Queue
+# Key to encrypt SNS topic   
+  SNSKey:
+    DeletionPolicy : Retain
+    UpdateReplacePolicy: Retain 
+    Type: AWS::KMS::Key
+    Properties: 
+      Enabled: true
+      KeyPolicy: {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Sid": "Allow access through SNS for all principals in the account that are authorized to use SNS",
+                "Effect": "Allow",
+                "Principal": {
+                    "AWS": "*"
+                },
+                "Action": [
+                    "kms:Encrypt",
+                    "kms:Decrypt",
+                    "kms:ReEncrypt*",
+                    "kms:GenerateDataKey*",
+                    "kms:CreateGrant",
+                    "kms:DescribeKey"
+                ],
+                "Resource": "*",
+                "Condition": {
+                    "StringEquals": {
+                        "kms:ViaService":  { "Fn::Join": [".",["sns","Ref" : "AWS::Region","amazonaws.com"]]},
+                        "kms:CallerAccount": { "Ref" : "AWS::AccountId" }
+                    }
+                }
+            },
+            {
+                "Sid": "Allow direct access to key metadata to the account",
+                "Effect": "Allow",
+                "Principal": {
+                    "AWS": {"Fn::Join": [":",["arn:aws:iam:","Ref" : "AWS::AccountId","root"]]}
+                },
+                "Action": [
+                    "kms:*"                  
+                ],
+                "Resource": "*"
+            }
+        ]
+    }
+# SNS Key alias    
+  SNSKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub 
+      - 'alias/Stack-StackName/sns-key'
+      - StackName: !Ref AWS::StackName
+      TargetKeyId: 
+        Ref: SNSKey
+# SNS topic        
+  SNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      KmsMasterKeyId: !Ref SNSKeyAlias
+      Subscription: 
+        - Endpoint: !Ref UserEmailAddress
+          Protocol: "email"
+# Outputs
+Outputs:
+  StateMachineArn:
+    Value:
+      Ref: MapStateStateMachine
+  ExecutionInput:
+    Description: Sample input to StartExecution.
+    Value: "{}"
