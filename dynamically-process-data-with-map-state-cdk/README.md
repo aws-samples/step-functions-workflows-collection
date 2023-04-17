@@ -49,7 +49,7 @@ Important: this application uses various AWS services and there are costs associ
     ```
     Do you wish to deploy these changes (y/n)? Y
     ```
-7. Note the outputs from the cdk deployment process. The State Machine Name and ARN are outputted for testing.
+7. Note the outputs from the cdk deployment process. These contain the resource names and/or ARNs which are used for testing.
 ## How it works
 
 1. Messages are sent to an an SQS queue that resides in the AWS account.
@@ -87,6 +87,6 @@ Important: this application uses various AWS services and there are costs associ
         Are you sure you want to delete: MapStateCdkStack (y/n)? Y
     ```
 ----
-Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
 SPDX-License-Identifier: MIT-0
