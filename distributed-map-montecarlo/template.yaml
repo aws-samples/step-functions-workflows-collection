@@ -1,0 +1,137 @@
+
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: AWS Step Functions sample project for using distributed map for montecarlo simulation.
+
+Globals:
+  Function:
+    Tracing: Active
+    Timeout: 300
+
+Parameters:
+  resourcePrefix:
+    Type: String 
+    Default: "sfn-montecarlo"
+
+
+Resources:
+  SamplingFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      CodeUri: functions/sampling_function/
+      Handler: sampling.lambda_handler
+      Runtime: python3.7
+      Description: "Function generating input samples for montecarlo simulation."
+      FunctionName: !Sub "${resourcePrefix}-sampling"
+      MemorySize: 2048
+      Environment:
+        Variables:
+          DATA_BUCKET: !Ref MonteCarloBucket
+    Connectors:
+      SamplingBucketConnect:
+        Properties:
+          Destination:
+            Id: MonteCarloBucket
+          Permissions:
+            - Read
+            - Write
+
+  CalculatorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/calculator_function/
+      Handler: calculator.lambda_handler
+      Runtime: python3.7
+      Description: "Function calculating revenue for each sample in montecarlo simulation."
+      FunctionName: !Sub "${resourcePrefix}-calculator"
+      Environment:
+        Variables:
+          DATA_BUCKET: !Ref MonteCarloBucket
+    Connectors:
+      CalculatorBucketConnect:
+        Properties:
+          Destination:
+            Id: MonteCarloBucket
+          Permissions:
+            - Read
+            - Write
+
+  AggregatorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/aggregator_function/
+      Handler: aggregator.lambda_handler
+      Runtime: python3.7
+      Description: "Function aggregating montecarlo results."
+      FunctionName: !Sub "${resourcePrefix}-aggregator"
+      MemorySize: 2048
+      Environment:
+        Variables:
+          DATA_BUCKET: !Ref MonteCarloBucket
+    Connectors:
+      AggregatorBucketConnect:
+        Properties:
+          Destination:
+            Id: MonteCarloBucket
+          Permissions:
+            - Read
+            - Write
+
+  MonteCarloBucket:
+    Type: 'AWS::S3::Bucket'
+    DeletionPolicy: Delete
+  
+  # Create the montecarlo state machine
+  MontecarloStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name: !Sub "${resourcePrefix}-statemachine"
+      DefinitionUri: ./statemachine/statemachine.asl.json
+      DefinitionSubstitutions:
+        SamplingFunctionArn: !GetAtt SamplingFunction.Arn
+        CalculatorFunctionArn: !GetAtt CalculatorFunction.Arn
+        AggregatorFunctionArn: !GetAtt AggregatorFunction.Arn
+      Policies:
+        - S3CrudPolicy: # Add IAM policy to the stepfunction execution role access the S3 bucket
+            BucketName: !Ref MonteCarloBucket
+        - StepFunctionsExecutionPolicy: # Add IAM policy to the stepfunction execution role start child executions
+            StateMachineName: !Sub "${resourcePrefix}-statemachine"
+
+  # Add IAM policy to the stepfunction execution role to invoke SamplingFunction
+  SfnToSamplingFunctionConnector:
+    Type: AWS::Serverless::Connector 
+    Properties:
+      Source:
+        Id: MontecarloStateMachine
+      Destination:
+        Id: SamplingFunction
+      Permissions:
+        - Write
+
+  # Add IAM policy to the stepfunction execution role to invoke CalculatorFunction
+  SfnToCalculatorFunctionConnector:
+    Type: AWS::Serverless::Connector
+    Properties:
+      Source:
+        Id: MontecarloStateMachine
+      Destination:
+        Id: CalculatorFunction
+      Permissions:
+        - Write
+
+  # Add IAM policy to the stepfunction execution role to invoke AggregatorFunction
+  SfnToAggregatorFunctionConnector:
+    Type: AWS::Serverless::Connector
+    Properties:
+      Source:
+        Id: MontecarloStateMachine
+      Destination:
+        Id: AggregatorFunction
+      Permissions:
+        - Write
+
+Outputs:
+  StateMachineArn:
+    Value: !Ref MontecarloStateMachine
+
+

@@ -1,0 +1,10 @@
+{
+  "monthly_production": [
+    300, 320, 360, 420, 450, 480, 500, 510, 490, 460, 400, 350, 290, 310, 350,
+    410, 440, 470, 490, 500, 480, 450, 380, 330
+  ],
+  "unit_price": 80,
+  "mean_price_change": 3,
+  "standard_deviation": 10,
+  "number_of_samples": 500
+}
