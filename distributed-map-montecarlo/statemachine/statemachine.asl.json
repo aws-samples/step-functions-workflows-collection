@@ -1,0 +1,74 @@
+{
+  "Comment": "Monte Carlo simulation example statemachine",
+  "StartAt": "Generate Random Samples",
+  "States": {
+    "Generate Random Samples": {
+      "Type": "Task",
+      "Resource": "${SamplingFunctionArn}",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.TaskFailed"
+          ],
+          "IntervalSeconds": 15,
+          "MaxAttempts": 2,
+          "BackoffRate": 1
+        }
+      ],
+      "Next": "Monte Carlo Simulation - (Distributed Map)"
+    },
+    "Monte Carlo Simulation - (Distributed Map)": {
+      "Type": "Map",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "DISTRIBUTED",
+          "ExecutionType": "EXPRESS"
+        },
+        "StartAt": "Calculate Revenue",
+        "States": {
+          "Calculate Revenue": {
+            "Type": "Task",
+            "Resource": "${CalculatorFunctionArn}",
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "States.TaskFailed"
+                ],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 2,
+                "BackoffRate": 1
+              }
+            ],
+            "End": true
+          }
+        }
+      },
+      "Next": "Aggregate Results",
+      "Label": "DistributedMontecarlo",
+      "MaxConcurrency": 1000,
+      "ItemReader": {
+        "Resource": "arn:aws:states:::s3:listObjectsV2",
+        "Parameters": {
+          "Bucket.$": "$.bucket_name",
+          "Prefix.$": "$.inputprefix"
+        }
+      },
+      "ResultPath": "$.MapOutput"
+    },
+    "Aggregate Results": {
+      "Type": "Task",
+      "Resource": "${AggregatorFunctionArn}",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.TaskFailed"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 2,
+          "BackoffRate": 1
+        }
+      ],
+      "End": true
+    }
+  }
+}

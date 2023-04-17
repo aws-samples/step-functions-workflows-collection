@@ -1,0 +1,65 @@
+{
+  "title": "Distributed Map - MonteCarlo Simulation",
+  "description": "This workflow is an application of a step function distributed map, implementing a Monte Carlo simulation with parallel calculations.",
+  "language": "python",
+  "simplicity": "3 - Application",
+  "usecase": "Monte Carlo simulation with stepfunctions distributed map.",
+  "type": "Standard",
+  "diagram": "/resources/statemachine.png",
+  "videoId": "",
+  "level": "200",
+  "framework": "SAM",
+  "services": ["s3", "stepfunctions", "lambda"],
+  "introBox": {
+    "headline": "How it works",
+    "text": [
+      "The state machine performs random sampling of input parameters to generate inputs in S3.",
+      "The distributed map uses the input samples to run calculations in parallel.",
+      "For each input sample the Step Function will call a child state machine to run calculation.",
+      "The results are stored in S3, and pre-signed URLs are returned in execution outputs."
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": ["See the GitHub repo for detailed testing instructions."]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": ["1. Delete the stack: <code>sam delete</code>."]
+  },
+  "deploy": {
+    "text": ["sam deploy --guided"]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/distributed-map-montecarlo/",
+      "templateDir": "./",
+      "templateFile": "template.yaml",
+      "ASL": "statemachine/statemachine.asl.json"
+    },
+    "payloads": [
+      {
+        "headline": "",
+        "payloadURL": ""
+      }
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "The AWS Step Functions Workshop",
+        "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Harun Hasdal",
+      "image": "https://avatars.githubusercontent.com/u/4698942",
+      "bio": "Senior Solutions Architect @ AWS. Serverless advocate.",
+      "linkedin": "harunhasdal",
+      "twitter": "@harunhasdal"
+    }
+  ]
+}
