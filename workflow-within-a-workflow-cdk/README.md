@@ -59,7 +59,7 @@ Important: this application uses various AWS services and there are costs associ
 * Navigate to the AWS Step Functions console and choose **NestedPatternMainStateMachine**, then choose **Start execution**
 * On the New execution page, enter an execution name (optional), and then choose **Start execution**.
 * When an execution is complete, you can select states on the Visual workflow and browse the Input and Output under Step details.
-1. Examine the nested state machine's execution based on the different integration patterns.
+2. Examine the nested state machine's execution based on the different integration patterns.
 * Navigate to the AWS Step Functions console and choose **NestedStateMachine**.
 * Examine the execution logs under **Executions**. You should see three different execution logs for each execution started.
 * Choose the log name for each execution and notice the different paths that the state machine takes based on the integration pattern chosed by the main state machine. You can also select states on the Visual workflow and browse the Input and Output under Step details.
