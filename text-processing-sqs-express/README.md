@@ -63,7 +63,7 @@ Important: this application uses various AWS services and there are costs associ
 * Select the queue that was created by the sample project. The name will be similar to **Example-SQSQueue-wJalrXUtnFEMI**.
 * Select **Send and receieve messages** 
 * On the **Send a Message** window, enter the SQS sample message provided to you by the SAM deployment process output. 
-1. Check the status of the step functions execution.
+2. Check the status of the step functions execution.
 * Navigate to the [Step Functions console](https://docs.aws.amazon.com/step-functions/latest/dg/sample-project-express-high-volume-sqs.html).
 * Choose the state machine created by the sample project. The name will be similar to **ExpressStateMachineForTextProcessing-8g1YFCmjTjrH**.
 * Navigate to the **Logging** tab and choose the name of the CloudWatch Logs log group and inspect the logs. The name of the log group will look like **example-ExpressLogGroup-wJalrXUtnFEMI**. 
