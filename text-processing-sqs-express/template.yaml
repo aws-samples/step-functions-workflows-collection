@@ -1,0 +1,122 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: An example of using Express workflows to run text processing for each message sent from an SQS queue.
+
+Globals:
+  Function:
+    Runtime: python3.7
+    CodeUri: "functions/"
+    Timeout: 20
+
+Resources:
+# Base 64 decode function
+  Base64DecodeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: base64-decode.lambda_handler
+      Policies:
+      - AWSLambdaBasicExecutionRole 
+# Generate statistics function
+  GenerateStatsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: generate-statistics.lambda_handler
+      Policies:
+      - AWSLambdaBasicExecutionRole     
+# String cleaner function
+  StringCleanerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: string-cleaner.lambda_handler
+      Policies:
+      - AWSLambdaBasicExecutionRole   
+# Tokenize and count function
+  TokenizerCounterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: tokenizer-counter.lambda_handler
+      Policies:
+      - AWSLambdaBasicExecutionRole  
+# Cloudwatch log group for express state machine
+  ExpressLogGroup:
+    Type: AWS::Logs::LogGroup
+# Express state machine for text processing 
+  ExpressStateMachineForTextProcessing:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Type: EXPRESS
+      Logging: 
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt 
+              - ExpressLogGroup
+              - Arn
+      DefinitionUri: statemachine/statemachine.asl.json
+      DefinitionSubstitutions:
+        Base64DecodeLambda: !Ref Base64DecodeFunction
+        StringCleanerLambda: !Ref StringCleanerFunction
+        GenerateStatsLambda: !Ref GenerateStatsFunction
+        TokenizerCounterLambda: !Ref TokenizerCounterFunction
+      Policies:
+        - CloudWatchLogsFullAccess
+    Connectors:
+      LambdaInvokeConnector:
+        Properties:
+          Destination:
+            - Id: Base64DecodeFunction
+            - Id: GenerateStatsFunction
+            - Id: StringCleanerFunction
+            - Id: TokenizerCounterFunction
+          Permissions:
+            - Write
+# SQS queue that receives text messages to process
+  SQSQueue:
+    Type: AWS::SQS::Queue
+
+# Lambda function that triggers express state machine once messages arrive in the queue
+  TriggerOnSQSQueueFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: trigger-on-sqs.lambda_handler
+      Timeout: 30
+      Events:
+        SQSQueueEvent:
+          Type: SQS
+          Properties: 
+            Queue: !GetAtt SQSQueue.Arn
+            BatchSize: 1
+            Enabled: true
+      Environment:
+        Variables: 
+          STATE_MACHINE_ARN: !Ref ExpressStateMachineForTextProcessing
+      Policies:
+      - AWSLambdaBasicExecutionRole
+      - SQSPollerPolicy:
+          QueueName:
+            !GetAtt SQSQueue.QueueName
+      - StepFunctionsExecutionPolicy:
+          StateMachineName:
+            !GetAtt ExpressStateMachineForTextProcessing.Name
+
+#Outputs
+Outputs:
+  SQSResource:
+    Value:
+      Ref: SQSQueue
+  SQSSampleMessage:
+    Description: Sample input to SQS Queue
+    Value: "{
+      \"input\": \"QW5kIGxpa2UgdGhlIGJhc2VsZXNzIGZhYnJpYyBvZiB0aGlzIHZpc2lvbiwgVGhlIGNsb3VkLWNhcHBlZCB0b3dlcnMsIHRoZSBnb3JnZW91cyBwYWxhY2VzLCBUaGUgc29sZW1uIHRlbXBsZXMsIHRoZSBncmVhdCBnbG9iZSBpdHNlbGbigJQgWWVhLCBhbGwgd2hpY2ggaXQgaW5oZXJpdOKAlHNoYWxsIGRpc3NvbHZlLCBBbmQgbGlrZSB0aGlzIGluc3Vic3RhbnRpYWwgcGFnZWFudCBmYWRlZCwgTGVhdmUgbm90IGEgcmFjayBiZWhpbmQuIFdlIGFyZSBzdWNoIHN0dWZmIEFzIGRyZWFtcyBhcmUgbWFkZSBvbiwgYW5kIG91ciBsaXR0bGUgbGlmZSBJcyByb3VuZGVkIHdpdGggYSBzbGVlcC4gU2lyLCBJIGFtIHZleGVkLiBCZWFyIHdpdGggbXkgd2Vha25lc3MuIE15IG9sZCBicmFpbiBpcyB0cm91YmxlZC4gQmUgbm90IGRpc3R1cmJlZCB3aXRoIG15IGluZmlybWl0eS4gSWYgeW91IGJlIHBsZWFzZWQsIHJldGlyZSBpbnRvIG15IGNlbGwgQW5kIHRoZXJlIHJlcG9zZS4gQSB0dXJuIG9yIHR3byBJ4oCZbGwgd2FsayBUbyBzdGlsbCBteSBiZWF0aW5nIG1pbmQu\"
+    }"
+  StateMachineArn:
+    Value:
+      Ref: ExpressStateMachineForTextProcessing
+  ExecutionInput:
+    Description: Sample input to StartExecution.
+    Value: "{
+      \"input\": \"QW5kIGxpa2UgdGhlIGJhc2VsZXNzIGZhYnJpYyBvZiB0aGlzIHZpc2lvbiwgVGhlIGNsb3VkLWNhcHBlZCB0b3dlcnMsIHRoZSBnb3JnZW91cyBwYWxhY2VzLCBUaGUgc29sZW1uIHRlbXBsZXMsIHRoZSBncmVhdCBnbG9iZSBpdHNlbGbigJQgWWVhLCBhbGwgd2hpY2ggaXQgaW5oZXJpdOKAlHNoYWxsIGRpc3NvbHZlLCBBbmQgbGlrZSB0aGlzIGluc3Vic3RhbnRpYWwgcGFnZWFudCBmYWRlZCwgTGVhdmUgbm90IGEgcmFjayBiZWhpbmQuIFdlIGFyZSBzdWNoIHN0dWZmIEFzIGRyZWFtcyBhcmUgbWFkZSBvbiwgYW5kIG91ciBsaXR0bGUgbGlmZSBJcyByb3VuZGVkIHdpdGggYSBzbGVlcC4gU2lyLCBJIGFtIHZleGVkLiBCZWFyIHdpdGggbXkgd2Vha25lc3MuIE15IG9sZCBicmFpbiBpcyB0cm91YmxlZC4gQmUgbm90IGRpc3R1cmJlZCB3aXRoIG15IGluZmlybWl0eS4gSWYgeW91IGJlIHBsZWFzZWQsIHJldGlyZSBpbnRvIG15IGNlbGwgQW5kIHRoZXJlIHJlcG9zZS4gQSB0dXJuIG9yIHR3byBJ4oCZbGwgd2FsayBUbyBzdGlsbCBteSBiZWF0aW5nIG1pbmQu\"
+    }"
+
+  

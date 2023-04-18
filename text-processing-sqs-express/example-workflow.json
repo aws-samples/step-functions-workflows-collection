@@ -1,0 +1,75 @@
+{
+  "title": "Process High-Volume Messages from Amazon SQS",
+  "description": "This sample project demonstrates how to use an AWS Step Functions Express Workflow to process messages or data from a high-volume event source, such as Amazon Simple Queue Service (Amazon SQS).",
+  "language": "Python",
+  "simplicity": "1 - Fundamental",
+  "usecase": "High-volume event processing or streaming data workloads.",
+  "type": "Express",
+  "diagram": "/resources/statemachine.png",
+  "videoId": "",
+  "level": "100",
+  "framework": "SAM",
+  "services": [
+    "sqs",
+    "lambda"
+  ],
+  "introBox": {
+    "headline": "How it works",
+    "text": [
+      "When messages are sent to the SQS queue, a lambda function that has event source mapping to the SQS queue will invoke the state machine.",
+      "The state machine will then invoke a lambda function that will decode the base64 string recieved from the SQS queue. The lambda function's output will be sent to the next state. ",
+      "Next, the state machine will invoke a lambda function that will generate statistics based on the string input received. Statistics include text length, average word length, number of digits and number of special characters. The lambda function's output will be sent to the next state.",
+      "Next, The state machine will invoke a lambda function that will remove special characters from the string input received. The lambda function's output will be sent to the next state.",
+      "Finally, the state machine will invoke a lambda function that will tokenize and count the occurance of each word in the string input received."
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": [
+      "See the GitHub repo for detailed testing instructions."
+    ]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": [
+      "1. Delete the stack: <code>sam delete</code>."
+    ]
+  },
+  "deploy": {
+    "text": [
+      "sam deploy --guided"
+    ]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/text-processing-sqs-express/",
+      "templateDir": "text-processing-sqs-express",
+      "templateFile": "template.yaml",
+      "ASL": "statemachine/statemachine.asl.json"
+    },
+    "payloads": [
+      {
+        "headline": "",
+        "payloadURL": ""
+      }
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "The AWS Step Functions Workshop",
+        "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Zainab Allawi",
+      "image": "https://drive.google.com/file/d/1xofu12A4AnZXvtzshK5mFVYCRI9Z9vK5/view?usp=sharing",
+      "bio": "Zainab Allawi is a Solutions Architect at Amazon Web Services (AWS) based in Bahrain. She enjoys collaborating with customers to build automated solutions in AWS to solve every-day challenges.",
+      "linkedin": "zainaballawi",
+      "twitter": "_zainabaws"
+    }
+  ]
+}
