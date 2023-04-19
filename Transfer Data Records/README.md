@@ -1,4 +1,4 @@
-# Workflow title
+# Transfer Data Records
 
 This sample project demonstrates how to read values from an Amazon DynamoDB table and send them to Amazon SQS using AWS Step Functions. Deploying this sample project will create a Step Functions state machine, a DynamoDB table, an AWS Lambda function, and an Amazon SQS topic.
 
