@@ -1,8 +1,8 @@
 # Workflow title
 
-This application creates a State Machine with Activity state that enables you to implement a worker hosted anywhere. An activity worker can be an application running on EC2 instance/ AWS Lambda or a mobile device application that can make HTTP connection. 
+This sample project demonstrates how to read values from an Amazon DynamoDB table and send them to Amazon SQS using AWS Step Functions. Deploying this sample project will create a Step Functions state machine, a DynamoDB table, an AWS Lambda function, and an Amazon SQS topic.
 
-The example workflow runs an activity task state which waits for activity worker running on AWS Lambda. When State Machine workflow reaches activity task state, it pauses in "In progress" status and waits for activity worker to poll for a task. Once the function polls for activity task, the workflow then waits for the time configured in "TimeoutSeconds" to allow worker complete and report success/failure.
+In this project, Step Functions uses the Lambda function to populate the DynamoDB table, uses a for loop to read each of the entries, and then sends each entry to Amazon SQS.
 
 For more Step Functions workflows check [ServerlessLand Workflows](https://serverlessland.com/workflows)
 
