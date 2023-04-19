@@ -1,7 +1,10 @@
 # Workflow title
 
-This workflow << explain usage >>
-For more Step Functions workflows check ServerlessLand Workflows
+This application creates a State Machine with Activity state that enables you to implement a worker hosted anywhere. An activity worker can be an application running on EC2 instance/ AWS Lambda or a mobile device application that can make HTTP connection. 
+
+The example workflow runs an activity task state which waits for activity worker running on AWS Lambda. When State Machine workflow reaches activity task state, it pauses in "In progress" status and waits for activity worker to poll for a task. Once the function polls for activity task, the workflow then waits for the time configured in "TimeoutSeconds" to allow worker complete and report success/failure.
+
+For more Step Functions workflows check [ServerlessLand Workflows](https://serverlessland.com/workflows)
 
 Important: this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the [AWS Pricing page](https://aws.amazon.com/pricing/) for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
 
