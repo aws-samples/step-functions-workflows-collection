@@ -2,8 +2,6 @@
 
 This sample project demonstrates how to read values from an Amazon DynamoDB table and send them to Amazon SQS using AWS Step Functions. Deploying this sample project will create a Step Functions state machine, a DynamoDB table, an AWS Lambda function, and an Amazon SQS topic.
 
-In this project, Step Functions uses the Lambda function to populate the DynamoDB table, uses a for loop to read each of the entries, and then sends each entry to Amazon SQS.
-
 For more Step Functions workflows check [ServerlessLand Workflows](https://serverlessland.com/workflows)
 
 Important: this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the [AWS Pricing page](https://aws.amazon.com/pricing/) for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
@@ -40,7 +38,15 @@ Important: this application uses various AWS services and there are costs associ
 
 ## How it works
 
-Explain how the workflow works.
+In this project, Step Functions uses the Lambda function to populate the DynamoDB table, uses a for loop to read each of the entries, and then sends each entry to Amazon SQS.
+
+1.	"Seed the DynamoDB Table": Lambda function adds 10 new items to a DynamoDB table and returns a list of generated message IDs.
+2.	"For Loop Condition": Choice state checks if the first element returned by the previous state is "DONE". If yes, the execution ends at "Succeed" state. If not, it proceeds to the next state.
+3.	"Read Next Message from DynamoDB": Task state retrieves message data from DynamoDB using message ID.
+4.	"Send Message to SQS": Task state sends message data to an SQS queue.
+5.	"Pop Element from List": Pass state removes the first element returned by "Seed the DynamoDB Table" state and returns the updated array.
+6.	"Succeed": Terminal state that ends the execution of the state machine.
+
 
 ## Image
 Provide an exported .png of the workflow in the `/resources` directory from [Workflow stuio](https://docs.aws.amazon.com/step-functions/latest/dg/workflow-studio.html) and add here.
