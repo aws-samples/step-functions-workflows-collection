@@ -1,0 +1,86 @@
+{  
+  "title": "Transfer Data Records",
+  "description": "This sample project demonstrates how to read values from an Amazon DynamoDB table and send them to Amazon SQS using AWS Step Functions",
+  "language": "Javascript",
+  "simplicity": "1 - Fundamental",
+  "usecase": "",
+  "type": "Standard",
+  "diagram": "/resources/statemachine.png",
+  "videoId": "",
+  "level": "200",
+  "framework": "SAM",
+  "services": [
+    "lambda",
+    "stepfunctions"
+  ],
+  "introBox": {
+    "headline": "How it works",
+    "text": [
+      "In this project, Step Functions uses the Lambda function to populate the DynamoDB table, uses a for loop to read each of the entries, and then sends each entry to Amazon SQS.",
+     "bullets": [
+      {
+        "Seed the DynamoDB Table": "Lambda function adds 10 new items to a DynamoDB table and returns a list of generated message IDs.",
+        "For Loop Condition": "Choice state checks if the first element returned by the previous state is DONE. If yes, the execution ends at Succeed state. If not, it proceeds to the next state.",
+"Read Next Message from DynamoDB": "Task state retrieves message data from DynamoDB using message ID.",
+"Send Message to SQS": "Task state sends message data to an SQS queue.",
+"Pop Element from List": "Pass state removes the first element returned by Seed the DynamoDB Table state and returns the updated array.",
+"Succeed": "Terminal state that ends the execution of the state machine."
+      }
+    ]
+      
+      
+   
+
+
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": [
+      "See the GitHub repo for detailed testing instructions."
+    ]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+    ]
+  },
+  "deploy": {
+    "text": [
+      "cdk deploy"
+    ]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/TransferData-Records/",
+      "templateDir": "TransferData-Records",
+      "templateFile": "template.yaml",
+      "ASL": "statemachine/statemachine.asl.json",
+      "definition": "resources/statemachine.png"
+    },
+    "payloads": [
+      {
+        "headline": "",
+        "payloadURL": ""
+      }
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "The AWS Step Functions Workshop",
+        "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Mohamed Salah",
+      "image": "https://avatars.githubusercontent.com/mosalahs",
+      "bio": "Solution Architect with 15 years of experience in IT, leading solution design and project delivery of complex enterprise multi-tier distributed architectures. Expertise in digital transformation and IoT across different industries - public sector, telecommunication and transportation.",
+      "linkedin": "mohamed-mohamed-salah-30aa4b58"
+    }
+  ]
+}
