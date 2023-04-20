@@ -54,7 +54,9 @@ Provide an exported .png of the workflow in the `/resources` directory from [Wor
 
 ## Testing
 
-Provide steps to trigger the workflow and show what should be observed if successful.
+1. Deploy the application as listed above.
+2. Open the work flow in the AmWS Step Functions console. Choose **Start execution** ![image](./resources/test01.png)
+1. Leave the event as is and choose **Start execution** again ![image](./resources/test02.png)
 
 ## Cleanup
  
