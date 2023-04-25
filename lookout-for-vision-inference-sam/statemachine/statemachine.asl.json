@@ -65,7 +65,7 @@
           "BackoffRate": 2
         }
       ],
-      "Next": "Choice"
+      "Next": "Anomalous Image?"
     },
     "Anomalous Image?": {
       "Type": "Choice",
