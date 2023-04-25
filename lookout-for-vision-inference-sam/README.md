@@ -1,8 +1,8 @@
 # Workflow title
 
-This workflow << explain usage >>
+This workflow demonstrates how to use Step Functions to orchestrate detection of anomalies in image uploaded into Amazon S3 bucket with Amazon Lookout for Vision. 
 
-Learn more about this workflow at Step Functions workflows collection: << Add the live URL here >>
+Learn more about this workflow at Step Functions workflows collection: https://serverlessland.com/workflows/lookout-for-vision-inference-sam
 
 Important: this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the [AWS Pricing page](https://aws.amazon.com/pricing/) for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
 
@@ -30,6 +30,8 @@ Important: this application uses various AWS services and there are costs associ
 1. During the prompts:
     * Enter a stack name
     * Enter the desired AWS Region
+    * Enter Amazon Lookout for Vision project name
+    * Enter Amazon Lookout for Vision model version
     * Allow SAM CLI to create IAM roles with the required permissions.
 
     Once you have run `sam deploy --guided` mode once and saved arguments to a configuration file (samconfig.toml), you can use `sam deploy` in future to use these defaults.
@@ -38,7 +40,7 @@ Important: this application uses various AWS services and there are costs associ
 
 ## How it works
 
-Explain how the workflow works.
+When an image is uploaded into the raw Amazon S3 bucket, Amazon EventBridge will trigger the workflow. To use a trained model in AWS Cloud, Step Functions first check the model status and start the model if necessary. AWS Lambda calls DetectAnomalies operation to detect anomalies. If the image is anomalous, it will be copied to result Amazon S3 bucket.
 
 ## Image
 Provide an exported .png of the workflow in the `/resources` directory from [Workflow stuio](https://docs.aws.amazon.com/step-functions/latest/dg/workflow-studio.html) and add here.
@@ -46,7 +48,9 @@ Provide an exported .png of the workflow in the `/resources` directory from [Wor
 
 ## Testing
 
-Provide steps to trigger the workflow and show what should be observed if successful.
+Ensure you have a trained Amazon Lookout for Vision model. Refer [code examples and datasets](https://docs.aws.amazon.com/lookout-for-vision/latest/developer-guide/example-code.html) if necessary.
+
+Upload an image into the raw S3 bucket. EventBridge will trigger the workflow. If anomalies are detected, the image will be copied into result S3 bucket.
 
 ## Cleanup
  
@@ -59,6 +63,6 @@ Provide steps to trigger the workflow and show what should be observed if succes
     aws cloudformation list-stacks --query "StackSummaries[?contains(StackName,'STACK_NAME')].StackStatus"
     ```
 ----
-Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
 SPDX-License-Identifier: MIT-0

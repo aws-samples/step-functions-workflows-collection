@@ -17,10 +17,10 @@ def handler(event, context):
     print(event)
     bucket = event["detail"]["bucket"]["name"]
     key = event["detail"]["object"]["key"]
-    is_anomolous = detect_anomalies(bucket, key)
+    is_anomalous = detect_anomalies(bucket, key)
     response = {}
     jsondata = {}
-    response['anomolous'] = is_anomolous
+    response['anomalous'] = is_anomalous
     copysource = "/" + bucket + "/" + key
     response['newkeyname'] = key
     jsondata['response'] = response

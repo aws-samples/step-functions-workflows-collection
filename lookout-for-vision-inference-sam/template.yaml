@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: Template to create inference for lookout
+Description: Template to create visual defect detector with Amazon Lookout for Vision
 Globals:
   Function:
     #Common function options
@@ -11,10 +11,10 @@ Globals:
 Parameters:
   L4vProject:
     Type: String
-    Description: Project name
+    Description: Amazon Lookout for Vision project name
   L4vModelVersion:
     Type: String
-    Description: Model Version
+    Description: Amazon Lookout for Vision model Version
 Resources:
   # ---- IAM Role ----
   LambdaFunctionRole:

@@ -67,16 +67,16 @@
       ],
       "Next": "Choice"
     },
-    "Choice": {
+    "Anomalous Image?": {
       "Type": "Choice",
       "Choices": [
         {
-          "Variable": "$.response.anomolous",
+          "Variable": "$.response.anomalous",
           "BooleanEquals": true,
           "Next": "Copy Anomalous Object"
         },
         {
-          "Variable": "$.response.anomolous",
+          "Variable": "$.response.anomalous",
           "BooleanEquals": false,
           "Next": "Success"
         }

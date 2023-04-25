@@ -1,21 +1,19 @@
 {
-    "title": "Synchronous Job",
-    "description": "Wait for an asynchroous Job to finish before moving onto the next state",
+    "title": "Visual Defect Detection",
+    "description": "Detect anomalies in image with Amazon Lookout for Vision",
     "language": "",
-    "simplicity": "1 - Fundamental",
+    "simplicity": "3 - Application",
     "usecase": "",
     "type": "Standard",
     "diagram":"/resources/statemachine.png",
     "videoId": "",
-    "level": "100",
+    "level": "200",
     "framework": "SAM",
-    "services": ["sns","batch"],
+    "services": ["s3","lookoutvision","lambda"],
     "introBox": {
       "headline": "How it works",
       "text": [
-        "This workflow submits an AWS Batch job. In its normal state the job is asynchronous. The state machine submits the job to the AWS Batch service and waits for the job to complete before sending a Notify Success message to an Amazon SNS topic.",
-        "This is done by making use of Step Functions `.sync` execution pattern"
-
+        "This workflow demonstrates how to use Step Functions to orchestrate detection of anomalies in image uploaded into Amazon S3 bucket with Amazon Lookout for Vision. "
       ]
     },
     "testing": {
@@ -60,11 +58,11 @@
     },
     "authors": [
         {
-          "name": "Cheng Ling Saw",
+          "name": "ChengLing Saw",
           "image": "link-to-your-photo.jpg",
-          "bio": "Your bio.",
+          "bio": "Solutions Architect in Amazon Web Services Energy",
           "linkedin": "linked-in-ID",
-          "twitter": "twitter-handle"
+          "twitter": ""
         }
       ]
   }
