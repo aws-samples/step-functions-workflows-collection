@@ -161,7 +161,7 @@ Resources:
   ResultImageBucket:
     Type: 'AWS::S3::Bucket'
     Properties:
-      BucketName: !Sub 'bucket-${AWS::AccountId}-${AWS::Region}-l4v-result'
+      BucketName: !Sub 'bucket-${AWS::AccountId}-${AWS::Region}-l4v-anomalous'
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:

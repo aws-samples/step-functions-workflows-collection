@@ -1,4 +1,4 @@
-# Workflow title
+# Visual Defect Detector
 
 This workflow demonstrates how to use Step Functions to orchestrate detection of anomalies in image uploaded into Amazon S3 bucket with Amazon Lookout for Vision. 
 
@@ -43,14 +43,13 @@ Important: this application uses various AWS services and there are costs associ
 When an image is uploaded into the raw Amazon S3 bucket, Amazon EventBridge will trigger the workflow. To use a trained model in AWS Cloud, Step Functions first check the model status and start the model if necessary. AWS Lambda calls DetectAnomalies operation to detect anomalies. If the image is anomalous, it will be copied to result Amazon S3 bucket.
 
 ## Image
-Provide an exported .png of the workflow in the `/resources` directory from [Workflow stuio](https://docs.aws.amazon.com/step-functions/latest/dg/workflow-studio.html) and add here.
 ![image](./resources/statemachine.png)
 
 ## Testing
 
 Ensure you have a trained Amazon Lookout for Vision model. Refer [code examples and datasets](https://docs.aws.amazon.com/lookout-for-vision/latest/developer-guide/example-code.html) if necessary.
 
-Upload an image into the raw S3 bucket. EventBridge will trigger the workflow. If anomalies are detected, the image will be copied into result S3 bucket.
+Upload an image into the raw S3 bucket. Amazon EventBridge will trigger the workflow. If anomalies are detected, the image will be copied to result S3 bucket.
 
 ## Cleanup
  
@@ -63,6 +62,6 @@ Upload an image into the raw S3 bucket. EventBridge will trigger the workflow. I
     aws cloudformation list-stacks --query "StackSummaries[?contains(StackName,'STACK_NAME')].StackStatus"
     ```
 ----
-Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
 SPDX-License-Identifier: MIT-0

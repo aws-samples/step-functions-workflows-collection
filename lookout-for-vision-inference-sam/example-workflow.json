@@ -35,8 +35,8 @@
     },
     "gitHub": {
       "template": {
-        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/synchronous-job/",
-        "templateDir":"synchronous-job",
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/lookout-for-vision-inference-sam/",
+        "templateDir":"lookout-for-vision-inference-sam",
         "templateFile": "template.yaml",
         "ASL": "statemachine/statemachine.asl.json"
       },
@@ -53,15 +53,19 @@
         {
           "text": "The AWS Step Functions Workshop",
           "link": "https://catalog.workshops.aws/stepfunctions/en-US"
-        }
+        },
+        {
+          "text": "Amazon Lookout for Vision Sample",
+          "link": "https://github.com/aws-samples/amazon-lookout-for-vision"
+        },
       ]
     },
     "authors": [
         {
           "name": "ChengLing Saw",
-          "image": "link-to-your-photo.jpg",
+          "image": "https://drive.google.com/file/d/1J1BeYTYs75s4gBNPSW44DhZM2_gNfE29/view?usp=drivesdk",
           "bio": "Solutions Architect in Amazon Web Services Energy",
-          "linkedin": "linked-in-ID",
+          "linkedin": "saw-cheng-ling",
           "twitter": ""
         }
       ]
