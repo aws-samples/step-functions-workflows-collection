@@ -11,7 +11,7 @@ The template provided creates the following:
 Step function uses an AWS Lambda function to pull messages off an Amazon SQS queue, and passes a JSON array of those message to a Map state.
 For each message in the queue, the state machine writes the message to DynamoDB, invokes the other Lambda function to remove the message from Amazon SQS, and then publishes the message to the Amazon SNS topic.
 
-Learn more about this workflow at Step Functions workflows collection: << Add the live URL here >>
+Learn more about this workflow at Step Functions workflows collection: https://serverlessland.com/workflows/dynamically-process-data-with-map-state
 
 Important: this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the [AWS Pricing page](https://aws.amazon.com/pricing/) for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
 
