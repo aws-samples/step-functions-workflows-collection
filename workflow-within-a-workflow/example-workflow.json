@@ -1,0 +1,75 @@
+{
+  "title": "Start a Workflow within a Workflow",
+  "description": "This sample project demonstrates how to use an AWS Step Functions state machine to launch other state machine executions.",
+  "language": "Javascript",
+  "simplicity": "1 - Fundamental",
+  "usecase": "Starting workflows within a workflow, using various integration patterns.",
+  "type": "Standard",
+  "diagram": "/resources/main_statemachine.png",
+  "videoId": "",
+  "level": "100",
+  "framework": "SAM",
+  "services": [
+    "stepfunctions",
+    "lambda"
+  ],
+  "introBox": {
+    "headline": "How it works",
+    "text": [
+      "The state machine combines workflows using a Step Functions StartExecution task state with various integration patterns.",
+      "When the main state machine is executed, it will first start executing the nested state machine using the call and continue integration pattern. This integration pattern means that the main state machine will call an API (StartExecution), receive an HTTP response and then continue to the next step.",
+      "In parallel, the main state machine will then execute the nested state machine using wait for child execution to complete on one branch, and wait for callback on another branch.",
+      "When the main state machine starts executing the nested state machine using the wait for child execution to complete integration pattern, this causes the main state machine to pause the execution at this state and monitor the nested state machine's execution. The main state machine will resume when the nested state machine's execution is complete.",
+      "When the main state machine starts executing the nested state machine using the wait for callback integration pattern, this causes the main state machine to pause the execution until it receives a callback from the SendTaskSuccess or SendTaskFailure APIs with the task token. The nested state machine's Lambda function will send a SendTaskSuccess API call when this integration pattern is chosen."
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": [
+      "See the GitHub repo for detailed testing instructions."
+    ]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": [
+      "1. Delete the stack: <code>sam delete</code>."
+    ]
+  },
+  "deploy": {
+    "text": [
+      "sam deploy --guided"
+    ]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/workflow-within-a-workflow/",
+      "templateDir": "workflow-within-a-workflow",
+      "templateFile": "template.yaml",
+      "ASL": "statemachines/main-state-machine.asl.json"
+    },
+    "payloads": [
+      {
+        "headline": "",
+        "payloadURL": ""
+      }
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "The AWS Step Functions Workshop",
+        "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Zainab Allawi",
+      "image": "https://drive.google.com/file/d/1xofu12A4AnZXvtzshK5mFVYCRI9Z9vK5/view?usp=sharing",
+      "bio": "Zainab Allawi is a Solutions Architect at Amazon Web Services (AWS) based in Bahrain. She enjoys collaborating with customers to build automated solutions in AWS to solve every-day challenges.",
+      "linkedin": "zainaballawi",
+      "twitter": "_zainabaws"
+    }
+  ]
+}

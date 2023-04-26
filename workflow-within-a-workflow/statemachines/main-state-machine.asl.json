@@ -1,0 +1,64 @@
+{
+    "Comment": "An example of combining workflows using a Step Functions StartExecution task state with various integration patterns.",
+    "StartAt": "Start new workflow and continue",
+    "States": {
+        "Start new workflow and continue": {
+            "Comment": "Start an execution of another Step Functions state machine and continue",
+            "Type": "Task",
+            "Resource": "arn:aws:states:::states:startExecution",
+            "Parameters": {
+                "StateMachineArn": "${NestingPatternAnotherStateMachineArn}",
+                "Input": {
+                    "NeedCallback": false,
+                    "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+                }
+            },
+            "Next": "Start in parallel"
+        },
+        "Start in parallel": {
+            "Comment": "Start two executions of the same state machine in parallel",
+            "Type": "Parallel",
+            "End": true,
+            "Branches": [
+                {
+                    "StartAt": "Start new workflow and wait for completion",
+                    "States": {
+                        "Start new workflow and wait for completion": {
+                            "Comment": "Start an execution and wait for its completion",
+                            "Type": "Task",
+                            "Resource": "arn:aws:states:::states:startExecution.sync:2",
+                            "Parameters": {
+                                "StateMachineArn": "${NestingPatternAnotherStateMachineArn}",
+                                "Input": {
+                                    "NeedCallback": false,
+                                    "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+                                }
+                            },
+                            "OutputPath": "$.Output",
+                            "End": true
+                        }
+                    }
+                },
+                {
+                    "StartAt": "Start new workflow and wait for callback",
+                    "States": {
+                        "Start new workflow and wait for callback": {
+                            "Comment": "Start an execution and wait for it to call back with a task token",
+                            "Type": "Task",
+                            "Resource": "arn:aws:states:::states:startExecution.waitForTaskToken",
+                            "Parameters": {
+                                "StateMachineArn": "${NestingPatternAnotherStateMachineArn}",
+                                "Input": {
+                                    "NeedCallback": true,
+                                    "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id",
+                                    "TaskToken.$": "$$.Task.Token"
+                                }
+                            },
+                            "End": true
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

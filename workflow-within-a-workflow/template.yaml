@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: AWS Step Functions sample project for combining workflows using the Step Functions StartExecution API service integration in various patterns.
+Globals:
+  Function:
+    Runtime: nodejs14.x
+    CodeUri: "functions/"
+Resources:
+# Callback Lambda function
+  NestingPatternCallbackLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: callback.lambda_handler
+      Timeout: 25
+      Policies:
+      - AWSLambdaBasicExecutionRole 
+      - Statement:
+        - Sid: SendTaskSuccessPolicy
+          Effect: Allow
+          Action: 
+            - "states:SendTaskSuccess"
+          Resource: "*"
+
+# IAM role for the state machines
+  StateMachineExecRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: states.amazonaws.com
+            Action: "sts:AssumeRole"
+# Nested state machine
+  NestingPatternAnotherStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachines/nested-state-machine.asl.json
+      DefinitionSubstitutions: 
+        NestingPatternCallbackLambdaFunction: !GetAtt NestingPatternCallbackLambdaFunction.Arn
+      Role: !GetAtt StateMachineExecRole.Arn
+    Connectors:
+      LambdaCallbackConnector:
+        Properties:
+          Destination:
+            - Id: NestingPatternCallbackLambdaFunction
+          Permissions:
+            - Write
+
+# Main state machine
+  NestingPatternMainStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachines/main-state-machine.asl.json
+      DefinitionSubstitutions:
+        NestingPatternAnotherStateMachineArn: !Ref NestingPatternAnotherStateMachine
+      Role: !GetAtt StateMachineExecRole.Arn
+    Connectors:
+      NestedMachineRWAccessConnector:
+        Properties:
+          Destination:
+            - Id: NestingPatternAnotherStateMachine
+          Permissions:
+            - Write
+            - Read
+      EventWriteAccessConnector:
+        Properties:
+          Destination:
+            - Arn: !Sub arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/StepFunctionsGetEventsForStepFunctionsExecutionRule
+              Type: AWS::Events::EventBus
+          Permissions:
+          - Write
+# Outputs 
+Outputs:
+  StateMachineArn:
+    Value:
+      Ref: NestingPatternMainStateMachine
+  ExecutionInput:
+    Description: Sample input to StartExecution.
+    Value:
+      >
+        {}
+        
+    
+
+
