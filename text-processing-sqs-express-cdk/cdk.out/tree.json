@@ -1,0 +1,1025 @@
+{
+  "version": "tree-0.1",
+  "tree": {
+    "id": "App",
+    "path": "",
+    "children": {
+      "ProcesshighvolumemessagesSqsExpressStack": {
+        "id": "ProcesshighvolumemessagesSqsExpressStack",
+        "path": "ProcesshighvolumemessagesSqsExpressStack",
+        "children": {
+          "LambdaFunctionsExecRole": {
+            "id": "LambdaFunctionsExecRole",
+            "path": "ProcesshighvolumemessagesSqsExpressStack/LambdaFunctionsExecRole",
+            "children": {
+              "ImportLambdaFunctionsExecRole": {
+                "id": "ImportLambdaFunctionsExecRole",
+                "path": "ProcesshighvolumemessagesSqsExpressStack/LambdaFunctionsExecRole/ImportLambdaFunctionsExecRole",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.Resource",
+                  "version": "2.72.1"
+                }
+              },
+              "Resource": {
+                "id": "Resource",
+                "path": "ProcesshighvolumemessagesSqsExpressStack/LambdaFunctionsExecRole/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                  "aws:cdk:cloudformation:props": {
+                    "assumeRolePolicyDocument": {
+                      "Statement": [
+                        {
+                          "Action": "sts:AssumeRole",
+                          "Effect": "Allow",
+                          "Principal": {
+                            "Service": "lambda.amazonaws.com"
+                          }
+                        }
+                      ],
+                      "Version": "2012-10-17"
+                    },
+                    "managedPolicyArns": [
+                      {
+                        "Fn::Join": [
+                          "",
+                          [
+                            "arn:",
+                            {
+                              "Ref": "AWS::Partition"
+                            },
+                            ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                          ]
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_iam.CfnRole",
+                  "version": "2.72.1"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_iam.Role",
+              "version": "2.72.1"
+            }
+          },
+          "Base 64 Decode": {
+            "id": "Base 64 Decode",
+            "path": "ProcesshighvolumemessagesSqsExpressStack/Base 64 Decode",
+            "children": {
+              "Code": {
+                "id": "Code",
+                "path": "ProcesshighvolumemessagesSqsExpressStack/Base 64 Decode/Code",
+                "children": {
+                  "Stage": {
+                    "id": "Stage",
+                    "path": "ProcesshighvolumemessagesSqsExpressStack/Base 64 Decode/Code/Stage",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.AssetStaging",
+                      "version": "2.72.1"
+                    }
+                  },
+                  "AssetBucket": {
+                    "id": "AssetBucket",
+                    "path": "ProcesshighvolumemessagesSqsExpressStack/Base 64 Decode/Code/AssetBucket",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_s3.BucketBase",
+                      "version": "2.72.1"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_s3_assets.Asset",
+                  "version": "2.72.1"
+                }
+              },
+              "Resource": {
+                "id": "Resource",
+                "path": "ProcesshighvolumemessagesSqsExpressStack/Base 64 Decode/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::Lambda::Function",
+                  "aws:cdk:cloudformation:props": {
+                    "code": {
+                      "s3Bucket": {
+                        "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+                      },
+                      "s3Key": "ade70232632a0067c97c866a7825571a0aa985d79d834aebaaa26e838b6e274b.zip"
+                    },
+                    "role": {
+                      "Fn::GetAtt": [
+                        "LambdaFunctionsExecRoleAC6F00FA",
+                        "Arn"
+                      ]
+                    },
+                    "handler": "base64-decode.lambda_handler",
+                    "runtime": "python3.7",
+                    "timeout": 20
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_lambda.CfnFunction",
+                  "version": "2.72.1"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_lambda.Function",
+              "version": "2.72.1"
+            }
+          },
+          "Generate Statistics": {
+            "id": "Generate Statistics",
+            "path": "ProcesshighvolumemessagesSqsExpressStack/Generate Statistics",
+            "children": {
+              "Code": {
+                "id": "Code",
+                "path": "ProcesshighvolumemessagesSqsExpressStack/Generate Statistics/Code",
+                "children": {
+                  "Stage": {
+                    "id": "Stage",
+                    "path": "ProcesshighvolumemessagesSqsExpressStack/Generate Statistics/Code/Stage",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.AssetStaging",
+                      "version": "2.72.1"
+                    }
+                  },
+                  "AssetBucket": {
+                    "id": "AssetBucket",
+                    "path": "ProcesshighvolumemessagesSqsExpressStack/Generate Statistics/Code/AssetBucket",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_s3.BucketBase",
+                      "version": "2.72.1"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_s3_assets.Asset",
+                  "version": "2.72.1"
+                }
+              },
+              "Resource": {
+                "id": "Resource",
+                "path": "ProcesshighvolumemessagesSqsExpressStack/Generate Statistics/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::Lambda::Function",
+                  "aws:cdk:cloudformation:props": {
+                    "code": {
+                      "s3Bucket": {
+                        "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+                      },
+                      "s3Key": "3ddb3178e77bbe1d51dc006d22a0bd33dfb498a394718fddb66b3b4c032a11ee.zip"
+                    },
+                    "role": {
+                      "Fn::GetAtt": [
+                        "LambdaFunctionsExecRoleAC6F00FA",
+                        "Arn"
+                      ]
+                    },
+                    "handler": "generate-statistics.lambda_handler",
+                    "runtime": "python3.7",
+                    "timeout": 20
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_lambda.CfnFunction",
+                  "version": "2.72.1"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_lambda.Function",
+              "version": "2.72.1"
+            }
+          },
+          "String Cleaner": {
+            "id": "String Cleaner",
+            "path": "ProcesshighvolumemessagesSqsExpressStack/String Cleaner",
+            "children": {
+              "Code": {
+                "id": "Code",
+                "path": "ProcesshighvolumemessagesSqsExpressStack/String Cleaner/Code",
+                "children": {
+                  "Stage": {
+                    "id": "Stage",
+                    "path": "ProcesshighvolumemessagesSqsExpressStack/String Cleaner/Code/Stage",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.AssetStaging",
+                      "version": "2.72.1"
+                    }
+                  },
+                  "AssetBucket": {
+                    "id": "AssetBucket",
+                    "path": "ProcesshighvolumemessagesSqsExpressStack/String Cleaner/Code/AssetBucket",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_s3.BucketBase",
+                      "version": "2.72.1"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_s3_assets.Asset",
+                  "version": "2.72.1"
+                }
+              },
+              "Resource": {
+                "id": "Resource",
+                "path": "ProcesshighvolumemessagesSqsExpressStack/String Cleaner/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::Lambda::Function",
+                  "aws:cdk:cloudformation:props": {
+                    "code": {
+                      "s3Bucket": {
+                        "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+                      },
+                      "s3Key": "0cb14c0485758ebe8e5af538f46bfdd424c8a52d378b2beeae078b6210bc5606.zip"
+                    },
+                    "role": {
+                      "Fn::GetAtt": [
+                        "LambdaFunctionsExecRoleAC6F00FA",
+                        "Arn"
+                      ]
+                    },
+                    "handler": "string-cleaner.lambda_handler",
+                    "runtime": "python3.7",
+                    "timeout": 20
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_lambda.CfnFunction",
+                  "version": "2.72.1"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_lambda.Function",
+              "version": "2.72.1"
+            }
+          },
+          "Tokenize and Count": {
+            "id": "Tokenize and Count",
+            "path": "ProcesshighvolumemessagesSqsExpressStack/Tokenize and Count",
+            "children": {
+              "Code": {
+                "id": "Code",
+                "path": "ProcesshighvolumemessagesSqsExpressStack/Tokenize and Count/Code",
+                "children": {
+                  "Stage": {
+                    "id": "Stage",
+                    "path": "ProcesshighvolumemessagesSqsExpressStack/Tokenize and Count/Code/Stage",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.AssetStaging",
+                      "version": "2.72.1"
+                    }
+                  },
+                  "AssetBucket": {
+                    "id": "AssetBucket",
+                    "path": "ProcesshighvolumemessagesSqsExpressStack/Tokenize and Count/Code/AssetBucket",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_s3.BucketBase",
+                      "version": "2.72.1"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_s3_assets.Asset",
+                  "version": "2.72.1"
+                }
+              },
+              "Resource": {
+                "id": "Resource",
+                "path": "ProcesshighvolumemessagesSqsExpressStack/Tokenize and Count/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::Lambda::Function",
+                  "aws:cdk:cloudformation:props": {
+                    "code": {
+                      "s3Bucket": {
+                        "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+                      },
+                      "s3Key": "1deb428b8c72bca69fc6388c9cd3b982dd0a79bc0c5a6daa513bce9f1a40ab72.zip"
+                    },
+                    "role": {
+                      "Fn::GetAtt": [
+                        "LambdaFunctionsExecRoleAC6F00FA",
+                        "Arn"
+                      ]
+                    },
+                    "handler": "tokenizer-counter.lambda_handler",
+                    "runtime": "python3.7",
+                    "timeout": 20
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_lambda.CfnFunction",
+                  "version": "2.72.1"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_lambda.Function",
+              "version": "2.72.1"
+            }
+          },
+          "Decode base64 string": {
+            "id": "Decode base64 string",
+            "path": "ProcesshighvolumemessagesSqsExpressStack/Decode base64 string",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_stepfunctions_tasks.LambdaInvoke",
+              "version": "2.72.1"
+            }
+          },
+          "Generate statistics": {
+            "id": "Generate statistics",
+            "path": "ProcesshighvolumemessagesSqsExpressStack/Generate statistics",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_stepfunctions_tasks.LambdaInvoke",
+              "version": "2.72.1"
+            }
+          },
+          "Remove special characters": {
+            "id": "Remove special characters",
+            "path": "ProcesshighvolumemessagesSqsExpressStack/Remove special characters",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_stepfunctions_tasks.LambdaInvoke",
+              "version": "2.72.1"
+            }
+          },
+          "Tokenize and count": {
+            "id": "Tokenize and count",
+            "path": "ProcesshighvolumemessagesSqsExpressStack/Tokenize and count",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_stepfunctions_tasks.LambdaInvoke",
+              "version": "2.72.1"
+            }
+          },
+          "ExpressLogGroup": {
+            "id": "ExpressLogGroup",
+            "path": "ProcesshighvolumemessagesSqsExpressStack/ExpressLogGroup",
+            "children": {
+              "Resource": {
+                "id": "Resource",
+                "path": "ProcesshighvolumemessagesSqsExpressStack/ExpressLogGroup/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::Logs::LogGroup",
+                  "aws:cdk:cloudformation:props": {
+                    "retentionInDays": 731
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_logs.CfnLogGroup",
+                  "version": "2.72.1"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_logs.LogGroup",
+              "version": "2.72.1"
+            }
+          },
+          "ExpressStateMachineForTextProcessing": {
+            "id": "ExpressStateMachineForTextProcessing",
+            "path": "ProcesshighvolumemessagesSqsExpressStack/ExpressStateMachineForTextProcessing",
+            "children": {
+              "Role": {
+                "id": "Role",
+                "path": "ProcesshighvolumemessagesSqsExpressStack/ExpressStateMachineForTextProcessing/Role",
+                "children": {
+                  "ImportRole": {
+                    "id": "ImportRole",
+                    "path": "ProcesshighvolumemessagesSqsExpressStack/ExpressStateMachineForTextProcessing/Role/ImportRole",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.Resource",
+                      "version": "2.72.1"
+                    }
+                  },
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "ProcesshighvolumemessagesSqsExpressStack/ExpressStateMachineForTextProcessing/Role/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                      "aws:cdk:cloudformation:props": {
+                        "assumeRolePolicyDocument": {
+                          "Statement": [
+                            {
+                              "Action": "sts:AssumeRole",
+                              "Effect": "Allow",
+                              "Principal": {
+                                "Service": "states.amazonaws.com"
+                              }
+                            }
+                          ],
+                          "Version": "2012-10-17"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_iam.CfnRole",
+                      "version": "2.72.1"
+                    }
+                  },
+                  "DefaultPolicy": {
+                    "id": "DefaultPolicy",
+                    "path": "ProcesshighvolumemessagesSqsExpressStack/ExpressStateMachineForTextProcessing/Role/DefaultPolicy",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "ProcesshighvolumemessagesSqsExpressStack/ExpressStateMachineForTextProcessing/Role/DefaultPolicy/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::IAM::Policy",
+                          "aws:cdk:cloudformation:props": {
+                            "policyDocument": {
+                              "Statement": [
+                                {
+                                  "Action": [
+                                    "logs:CreateLogDelivery",
+                                    "logs:DeleteLogDelivery",
+                                    "logs:DescribeLogGroups",
+                                    "logs:DescribeResourcePolicies",
+                                    "logs:GetLogDelivery",
+                                    "logs:ListLogDeliveries",
+                                    "logs:PutResourcePolicy",
+                                    "logs:UpdateLogDelivery"
+                                  ],
+                                  "Effect": "Allow",
+                                  "Resource": "*"
+                                },
+                                {
+                                  "Action": "lambda:InvokeFunction",
+                                  "Effect": "Allow",
+                                  "Resource": [
+                                    {
+                                      "Fn::GetAtt": [
+                                        "Base64Decode7789B883",
+                                        "Arn"
+                                      ]
+                                    },
+                                    {
+                                      "Fn::GetAtt": [
+                                        "GenerateStatistics62712191",
+                                        "Arn"
+                                      ]
+                                    },
+                                    {
+                                      "Fn::GetAtt": [
+                                        "StringCleanerACAF150C",
+                                        "Arn"
+                                      ]
+                                    },
+                                    {
+                                      "Fn::GetAtt": [
+                                        "TokenizeandCount1C7B3816",
+                                        "Arn"
+                                      ]
+                                    },
+                                    {
+                                      "Fn::Join": [
+                                        "",
+                                        [
+                                          {
+                                            "Fn::GetAtt": [
+                                              "Base64Decode7789B883",
+                                              "Arn"
+                                            ]
+                                          },
+                                          ":*"
+                                        ]
+                                      ]
+                                    },
+                                    {
+                                      "Fn::Join": [
+                                        "",
+                                        [
+                                          {
+                                            "Fn::GetAtt": [
+                                              "GenerateStatistics62712191",
+                                              "Arn"
+                                            ]
+                                          },
+                                          ":*"
+                                        ]
+                                      ]
+                                    },
+                                    {
+                                      "Fn::Join": [
+                                        "",
+                                        [
+                                          {
+                                            "Fn::GetAtt": [
+                                              "StringCleanerACAF150C",
+                                              "Arn"
+                                            ]
+                                          },
+                                          ":*"
+                                        ]
+                                      ]
+                                    },
+                                    {
+                                      "Fn::Join": [
+                                        "",
+                                        [
+                                          {
+                                            "Fn::GetAtt": [
+                                              "TokenizeandCount1C7B3816",
+                                              "Arn"
+                                            ]
+                                          },
+                                          ":*"
+                                        ]
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ],
+                              "Version": "2012-10-17"
+                            },
+                            "policyName": "ExpressStateMachineForTextProcessingRoleDefaultPolicyDF98D5C9",
+                            "roles": [
+                              {
+                                "Ref": "ExpressStateMachineForTextProcessingRole546F0F12"
+                              }
+                            ]
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_iam.CfnPolicy",
+                          "version": "2.72.1"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_iam.Policy",
+                      "version": "2.72.1"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_iam.Role",
+                  "version": "2.72.1"
+                }
+              },
+              "Resource": {
+                "id": "Resource",
+                "path": "ProcesshighvolumemessagesSqsExpressStack/ExpressStateMachineForTextProcessing/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::StepFunctions::StateMachine",
+                  "aws:cdk:cloudformation:props": {
+                    "roleArn": {
+                      "Fn::GetAtt": [
+                        "ExpressStateMachineForTextProcessingRole546F0F12",
+                        "Arn"
+                      ]
+                    },
+                    "definitionString": {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "{\"StartAt\":\"Decode base64 string\",\"States\":{\"Decode base64 string\":{\"Next\":\"Generate statistics\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"OutputPath\":\"$.Payload\",\"Resource\":\"arn:",
+                          {
+                            "Ref": "AWS::Partition"
+                          },
+                          ":states:::lambda:invoke\",\"Parameters\":{\"FunctionName\":\"",
+                          {
+                            "Fn::GetAtt": [
+                              "Base64Decode7789B883",
+                              "Arn"
+                            ]
+                          },
+                          "\",\"Payload.$\":\"$\"}},\"Generate statistics\":{\"Next\":\"Remove special characters\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"OutputPath\":\"$.Payload\",\"Resource\":\"arn:",
+                          {
+                            "Ref": "AWS::Partition"
+                          },
+                          ":states:::lambda:invoke\",\"Parameters\":{\"FunctionName\":\"",
+                          {
+                            "Fn::GetAtt": [
+                              "GenerateStatistics62712191",
+                              "Arn"
+                            ]
+                          },
+                          "\",\"Payload.$\":\"$\"}},\"Remove special characters\":{\"Next\":\"Tokenize and count\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"OutputPath\":\"$.Payload\",\"Resource\":\"arn:",
+                          {
+                            "Ref": "AWS::Partition"
+                          },
+                          ":states:::lambda:invoke\",\"Parameters\":{\"FunctionName\":\"",
+                          {
+                            "Fn::GetAtt": [
+                              "StringCleanerACAF150C",
+                              "Arn"
+                            ]
+                          },
+                          "\",\"Payload.$\":\"$\"}},\"Tokenize and count\":{\"End\":true,\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"OutputPath\":\"$.Payload\",\"Resource\":\"arn:",
+                          {
+                            "Ref": "AWS::Partition"
+                          },
+                          ":states:::lambda:invoke\",\"Parameters\":{\"FunctionName\":\"",
+                          {
+                            "Fn::GetAtt": [
+                              "TokenizeandCount1C7B3816",
+                              "Arn"
+                            ]
+                          },
+                          "\",\"Payload.$\":\"$\"}}}}"
+                        ]
+                      ]
+                    },
+                    "loggingConfiguration": {
+                      "destinations": [
+                        {
+                          "cloudWatchLogsLogGroup": {
+                            "logGroupArn": {
+                              "Fn::GetAtt": [
+                                "ExpressLogGroupE303E80B",
+                                "Arn"
+                              ]
+                            }
+                          }
+                        }
+                      ],
+                      "includeExecutionData": true,
+                      "level": "ALL"
+                    },
+                    "stateMachineType": "EXPRESS"
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_stepfunctions.CfnStateMachine",
+                  "version": "2.72.1"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_stepfunctions.StateMachine",
+              "version": "2.72.1"
+            }
+          },
+          "sqsLambdaFunctionExecRole": {
+            "id": "sqsLambdaFunctionExecRole",
+            "path": "ProcesshighvolumemessagesSqsExpressStack/sqsLambdaFunctionExecRole",
+            "children": {
+              "ImportsqsLambdaFunctionExecRole": {
+                "id": "ImportsqsLambdaFunctionExecRole",
+                "path": "ProcesshighvolumemessagesSqsExpressStack/sqsLambdaFunctionExecRole/ImportsqsLambdaFunctionExecRole",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.Resource",
+                  "version": "2.72.1"
+                }
+              },
+              "Resource": {
+                "id": "Resource",
+                "path": "ProcesshighvolumemessagesSqsExpressStack/sqsLambdaFunctionExecRole/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                  "aws:cdk:cloudformation:props": {
+                    "assumeRolePolicyDocument": {
+                      "Statement": [
+                        {
+                          "Action": "sts:AssumeRole",
+                          "Effect": "Allow",
+                          "Principal": {
+                            "Service": "lambda.amazonaws.com"
+                          }
+                        }
+                      ],
+                      "Version": "2012-10-17"
+                    },
+                    "managedPolicyArns": [
+                      {
+                        "Fn::Join": [
+                          "",
+                          [
+                            "arn:",
+                            {
+                              "Ref": "AWS::Partition"
+                            },
+                            ":iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
+                          ]
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_iam.CfnRole",
+                  "version": "2.72.1"
+                }
+              },
+              "DefaultPolicy": {
+                "id": "DefaultPolicy",
+                "path": "ProcesshighvolumemessagesSqsExpressStack/sqsLambdaFunctionExecRole/DefaultPolicy",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "ProcesshighvolumemessagesSqsExpressStack/sqsLambdaFunctionExecRole/DefaultPolicy/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::IAM::Policy",
+                      "aws:cdk:cloudformation:props": {
+                        "policyDocument": {
+                          "Statement": [
+                            {
+                              "Action": [
+                                "sqs:ChangeMessageVisibility",
+                                "sqs:DeleteMessage",
+                                "sqs:GetQueueAttributes",
+                                "sqs:GetQueueUrl",
+                                "sqs:ReceiveMessage"
+                              ],
+                              "Effect": "Allow",
+                              "Resource": {
+                                "Fn::GetAtt": [
+                                  "Queue4A7E3555",
+                                  "Arn"
+                                ]
+                              }
+                            }
+                          ],
+                          "Version": "2012-10-17"
+                        },
+                        "policyName": "sqsLambdaFunctionExecRoleDefaultPolicy971FCD19",
+                        "roles": [
+                          {
+                            "Ref": "sqsLambdaFunctionExecRole9C40DA8F"
+                          }
+                        ]
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_iam.CfnPolicy",
+                      "version": "2.72.1"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_iam.Policy",
+                  "version": "2.72.1"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_iam.Role",
+              "version": "2.72.1"
+            }
+          },
+          "LambdaStateMachinePermissions": {
+            "id": "LambdaStateMachinePermissions",
+            "path": "ProcesshighvolumemessagesSqsExpressStack/LambdaStateMachinePermissions",
+            "children": {
+              "Resource": {
+                "id": "Resource",
+                "path": "ProcesshighvolumemessagesSqsExpressStack/LambdaStateMachinePermissions/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::IAM::Policy",
+                  "aws:cdk:cloudformation:props": {
+                    "policyDocument": {
+                      "Statement": [
+                        {
+                          "Action": "states:StartExecution",
+                          "Effect": "Allow",
+                          "Resource": {
+                            "Ref": "ExpressStateMachineForTextProcessing8B7BD844"
+                          }
+                        }
+                      ],
+                      "Version": "2012-10-17"
+                    },
+                    "policyName": "LambdaStateMachinePermissions0FF96150",
+                    "roles": [
+                      {
+                        "Ref": "sqsLambdaFunctionExecRole9C40DA8F"
+                      }
+                    ]
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_iam.CfnPolicy",
+                  "version": "2.72.1"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_iam.Policy",
+              "version": "2.72.1"
+            }
+          },
+          "Nesting Pattern Callback": {
+            "id": "Nesting Pattern Callback",
+            "path": "ProcesshighvolumemessagesSqsExpressStack/Nesting Pattern Callback",
+            "children": {
+              "Code": {
+                "id": "Code",
+                "path": "ProcesshighvolumemessagesSqsExpressStack/Nesting Pattern Callback/Code",
+                "children": {
+                  "Stage": {
+                    "id": "Stage",
+                    "path": "ProcesshighvolumemessagesSqsExpressStack/Nesting Pattern Callback/Code/Stage",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.AssetStaging",
+                      "version": "2.72.1"
+                    }
+                  },
+                  "AssetBucket": {
+                    "id": "AssetBucket",
+                    "path": "ProcesshighvolumemessagesSqsExpressStack/Nesting Pattern Callback/Code/AssetBucket",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_s3.BucketBase",
+                      "version": "2.72.1"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_s3_assets.Asset",
+                  "version": "2.72.1"
+                }
+              },
+              "Resource": {
+                "id": "Resource",
+                "path": "ProcesshighvolumemessagesSqsExpressStack/Nesting Pattern Callback/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::Lambda::Function",
+                  "aws:cdk:cloudformation:props": {
+                    "code": {
+                      "s3Bucket": {
+                        "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+                      },
+                      "s3Key": "233a89a17c2e72aaceefee2407ea33070b337042c86c0543d99974667cc897d2.zip"
+                    },
+                    "role": {
+                      "Fn::GetAtt": [
+                        "sqsLambdaFunctionExecRole9C40DA8F",
+                        "Arn"
+                      ]
+                    },
+                    "environment": {
+                      "variables": {
+                        "STATE_MACHINE_ARN": {
+                          "Ref": "ExpressStateMachineForTextProcessing8B7BD844"
+                        }
+                      }
+                    },
+                    "handler": "trigger-on-sqs.lambda_handler",
+                    "runtime": "python3.7",
+                    "timeout": 30
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_lambda.CfnFunction",
+                  "version": "2.72.1"
+                }
+              },
+              "SqsEventSource:ProcesshighvolumemessagesSqsExpressStackQueueC4B3E20B": {
+                "id": "SqsEventSource:ProcesshighvolumemessagesSqsExpressStackQueueC4B3E20B",
+                "path": "ProcesshighvolumemessagesSqsExpressStack/Nesting Pattern Callback/SqsEventSource:ProcesshighvolumemessagesSqsExpressStackQueueC4B3E20B",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "ProcesshighvolumemessagesSqsExpressStack/Nesting Pattern Callback/SqsEventSource:ProcesshighvolumemessagesSqsExpressStackQueueC4B3E20B/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::Lambda::EventSourceMapping",
+                      "aws:cdk:cloudformation:props": {
+                        "functionName": {
+                          "Ref": "NestingPatternCallback6C121667"
+                        },
+                        "batchSize": 1,
+                        "eventSourceArn": {
+                          "Fn::GetAtt": [
+                            "Queue4A7E3555",
+                            "Arn"
+                          ]
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_lambda.CfnEventSourceMapping",
+                      "version": "2.72.1"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_lambda.EventSourceMapping",
+                  "version": "2.72.1"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_lambda.Function",
+              "version": "2.72.1"
+            }
+          },
+          "Queue": {
+            "id": "Queue",
+            "path": "ProcesshighvolumemessagesSqsExpressStack/Queue",
+            "children": {
+              "Resource": {
+                "id": "Resource",
+                "path": "ProcesshighvolumemessagesSqsExpressStack/Queue/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::SQS::Queue",
+                  "aws:cdk:cloudformation:props": {
+                    "sqsManagedSseEnabled": true
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_sqs.CfnQueue",
+                  "version": "2.72.1"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_sqs.Queue",
+              "version": "2.72.1"
+            }
+          },
+          "SQSResource": {
+            "id": "SQSResource",
+            "path": "ProcesshighvolumemessagesSqsExpressStack/SQSResource",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.CfnOutput",
+              "version": "2.72.1"
+            }
+          },
+          "SQSSampleMessage": {
+            "id": "SQSSampleMessage",
+            "path": "ProcesshighvolumemessagesSqsExpressStack/SQSSampleMessage",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.CfnOutput",
+              "version": "2.72.1"
+            }
+          },
+          "StateMachineArn": {
+            "id": "StateMachineArn",
+            "path": "ProcesshighvolumemessagesSqsExpressStack/StateMachineArn",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.CfnOutput",
+              "version": "2.72.1"
+            }
+          },
+          "ExecutionInput": {
+            "id": "ExecutionInput",
+            "path": "ProcesshighvolumemessagesSqsExpressStack/ExecutionInput",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.CfnOutput",
+              "version": "2.72.1"
+            }
+          },
+          "CDKMetadata": {
+            "id": "CDKMetadata",
+            "path": "ProcesshighvolumemessagesSqsExpressStack/CDKMetadata",
+            "children": {
+              "Default": {
+                "id": "Default",
+                "path": "ProcesshighvolumemessagesSqsExpressStack/CDKMetadata/Default",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.CfnResource",
+                  "version": "2.72.1"
+                }
+              },
+              "Condition": {
+                "id": "Condition",
+                "path": "ProcesshighvolumemessagesSqsExpressStack/CDKMetadata/Condition",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.CfnCondition",
+                  "version": "2.72.1"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "constructs.Construct",
+              "version": "10.1.307"
+            }
+          },
+          "BootstrapVersion": {
+            "id": "BootstrapVersion",
+            "path": "ProcesshighvolumemessagesSqsExpressStack/BootstrapVersion",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.CfnParameter",
+              "version": "2.72.1"
+            }
+          },
+          "CheckBootstrapVersion": {
+            "id": "CheckBootstrapVersion",
+            "path": "ProcesshighvolumemessagesSqsExpressStack/CheckBootstrapVersion",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.CfnRule",
+              "version": "2.72.1"
+            }
+          }
+        },
+        "constructInfo": {
+          "fqn": "aws-cdk-lib.Stack",
+          "version": "2.72.1"
+        }
+      },
+      "Tree": {
+        "id": "Tree",
+        "path": "Tree",
+        "constructInfo": {
+          "fqn": "constructs.Construct",
+          "version": "10.1.307"
+        }
+      }
+    },
+    "constructInfo": {
+      "fqn": "aws-cdk-lib.App",
+      "version": "2.72.1"
+    }
+  }
+}

@@ -1,0 +1,63 @@
+{
+    "StartAt": "Start new workflow and continue",
+    "States": {
+      "Start new workflow and continue": {
+        "Next": "Start in parallel",
+        "Type": "Task",
+        "Comment": "Start an execution of another Step Functions state machine and continue",
+        "Resource": "arn:aws:states:::states:startExecution",
+        "Parameters": {
+          "Input": {
+            "NeedCallback": false,
+            "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+          },
+          "StateMachineArn": "arn:aws:states:me-south-1:112233445566:stateMachine:NestedStateMachine0545D63E-B7mTHyUm3dld"
+        }
+      },
+      "Start in parallel": {
+        "Type": "Parallel",
+        "Comment": "Start two executions of the same state machine in parallel",
+        "End": true,
+        "Branches": [
+          {
+            "StartAt": "Start new workflow and wait for completion",
+            "States": {
+              "Start new workflow and wait for completion": {
+                "End": true,
+                "Type": "Task",
+                "Comment": "Start an execution and wait for its completion",
+                "OutputPath": "$.Output",
+                "Resource": "arn:aws:states:::states:startExecution.sync:2",
+                "Parameters": {
+                  "Input": {
+                    "NeedCallback": false,
+                    "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+                  },
+                  "StateMachineArn": "arn:aws:states:me-south-1:112233445566:stateMachine:NestedStateMachine0545D63E-B7mTHyUm3dld"
+                }
+              }
+            }
+          },
+          {
+            "StartAt": "Start new workflow and wait for callback",
+            "States": {
+              "Start new workflow and wait for callback": {
+                "End": true,
+                "Type": "Task",
+                "Comment": "Start an execution and wait for it to call back with a task token",
+                "Resource": "arn:aws:states:::states:startExecution.waitForTaskToken",
+                "Parameters": {
+                  "Input": {
+                    "NeedCallback": true,
+                    "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id",
+                    "TaskToken.$": "$$.Task.Token"
+                  },
+                  "StateMachineArn": "arn:aws:states:me-south-1:112233445566:stateMachine:NestedStateMachine0545D63E-B7mTHyUm3dld"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }

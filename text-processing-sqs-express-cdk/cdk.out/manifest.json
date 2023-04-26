@@ -1,0 +1,184 @@
+{
+  "version": "31.0.0",
+  "artifacts": {
+    "ProcesshighvolumemessagesSqsExpressStack.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "ProcesshighvolumemessagesSqsExpressStack.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "ProcesshighvolumemessagesSqsExpressStack": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://unknown-account/unknown-region",
+      "properties": {
+        "templateFile": "ProcesshighvolumemessagesSqsExpressStack.template.json",
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-${AWS::Region}",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-${AWS::Region}",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/e27ac56de5c7fa7925d21393bd1aa7330e01ec17049340cd19b354ec1ba2c393.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "ProcesshighvolumemessagesSqsExpressStack.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-${AWS::Region}",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "ProcesshighvolumemessagesSqsExpressStack.assets"
+      ],
+      "metadata": {
+        "/ProcesshighvolumemessagesSqsExpressStack/LambdaFunctionsExecRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LambdaFunctionsExecRoleAC6F00FA"
+          }
+        ],
+        "/ProcesshighvolumemessagesSqsExpressStack/Base 64 Decode/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "Base64Decode7789B883"
+          }
+        ],
+        "/ProcesshighvolumemessagesSqsExpressStack/Generate Statistics/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GenerateStatistics62712191"
+          }
+        ],
+        "/ProcesshighvolumemessagesSqsExpressStack/String Cleaner/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StringCleanerACAF150C"
+          }
+        ],
+        "/ProcesshighvolumemessagesSqsExpressStack/Tokenize and Count/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "TokenizeandCount1C7B3816"
+          }
+        ],
+        "/ProcesshighvolumemessagesSqsExpressStack/ExpressLogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExpressLogGroupE303E80B"
+          }
+        ],
+        "/ProcesshighvolumemessagesSqsExpressStack/ExpressStateMachineForTextProcessing/Role/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExpressStateMachineForTextProcessingRole546F0F12"
+          }
+        ],
+        "/ProcesshighvolumemessagesSqsExpressStack/ExpressStateMachineForTextProcessing/Role/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExpressStateMachineForTextProcessingRoleDefaultPolicyDF98D5C9"
+          }
+        ],
+        "/ProcesshighvolumemessagesSqsExpressStack/ExpressStateMachineForTextProcessing/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExpressStateMachineForTextProcessing8B7BD844"
+          }
+        ],
+        "/ProcesshighvolumemessagesSqsExpressStack/sqsLambdaFunctionExecRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sqsLambdaFunctionExecRole9C40DA8F"
+          }
+        ],
+        "/ProcesshighvolumemessagesSqsExpressStack/sqsLambdaFunctionExecRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "sqsLambdaFunctionExecRoleDefaultPolicy971FCD19"
+          }
+        ],
+        "/ProcesshighvolumemessagesSqsExpressStack/LambdaStateMachinePermissions/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LambdaStateMachinePermissions0FF96150"
+          }
+        ],
+        "/ProcesshighvolumemessagesSqsExpressStack/Nesting Pattern Callback/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "NestingPatternCallback6C121667"
+          }
+        ],
+        "/ProcesshighvolumemessagesSqsExpressStack/Nesting Pattern Callback/SqsEventSource:ProcesshighvolumemessagesSqsExpressStackQueueC4B3E20B/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "NestingPatternCallbackSqsEventSourceProcesshighvolumemessagesSqsExpressStackQueueC4B3E20B7EBF41FC"
+          }
+        ],
+        "/ProcesshighvolumemessagesSqsExpressStack/Queue/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "Queue4A7E3555"
+          }
+        ],
+        "/ProcesshighvolumemessagesSqsExpressStack/SQSResource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SQSResource"
+          }
+        ],
+        "/ProcesshighvolumemessagesSqsExpressStack/SQSSampleMessage": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SQSSampleMessage"
+          }
+        ],
+        "/ProcesshighvolumemessagesSqsExpressStack/StateMachineArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StateMachineArn"
+          }
+        ],
+        "/ProcesshighvolumemessagesSqsExpressStack/ExecutionInput": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExecutionInput"
+          }
+        ],
+        "/ProcesshighvolumemessagesSqsExpressStack/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/ProcesshighvolumemessagesSqsExpressStack/CDKMetadata/Condition": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadataAvailable"
+          }
+        ],
+        "/ProcesshighvolumemessagesSqsExpressStack/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/ProcesshighvolumemessagesSqsExpressStack/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "ProcesshighvolumemessagesSqsExpressStack"
+    },
+    "Tree": {
+      "type": "cdk:tree",
+      "properties": {
+        "file": "tree.json"
+      }
+    }
+  }
+}

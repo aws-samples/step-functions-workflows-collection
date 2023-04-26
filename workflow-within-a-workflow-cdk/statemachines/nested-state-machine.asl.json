@@ -1,0 +1,55 @@
+{
+    "StartAt": "First long-running job",
+    "States": {
+      "First long-running job": {
+        "Type": "Wait",
+        "Seconds": 1,
+        "Next": "Need callback?"
+      },
+      "Need callback?": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "Variable": "$.NeedCallback",
+            "BooleanEquals": true,
+            "Next": "Callback"
+          }
+        ],
+        "Default": "Second long-running job"
+      },
+      "Second long-running job": {
+        "Type": "Wait",
+        "Seconds": 1,
+        "Next": "Report completion"
+      },
+      "Callback": {
+        "Next": "Second long-running job",
+        "Retry": [
+          {
+            "ErrorEquals": [
+              "Lambda.ServiceException",
+              "Lambda.AWSLambdaException",
+              "Lambda.SdkClientException"
+            ],
+            "IntervalSeconds": 2,
+            "MaxAttempts": 6,
+            "BackoffRate": 2
+          }
+        ],
+        "Type": "Task",
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "Parameters": {
+          "FunctionName": "arn:aws:lambda:me-south-1:112233445566:function:WorkflowWithinAWorkflowCd-NestingPatternCallback6C-8ne4ql6WKx3W",
+          "Payload": {
+            "TaskToken.$": "$$.Execution.Input.TaskToken",
+            "Message": "Callback right after the first long-running job is completed"
+          }
+        }
+      },
+      "Report completion": {
+        "Type": "Pass",
+        "Result": "The whole execution is completed including both long-running jobs",
+        "End": true
+      }
+    }
+  }
