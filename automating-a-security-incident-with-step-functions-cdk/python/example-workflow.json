@@ -1,0 +1,63 @@
+{
+    "title": "Automated security orchestrator with AWS Step Functions",
+    "description": "This is an AWS Stepfunctions based workflow automates the process of verifying if newly created IAM Policies contain any of the predefined list of restricted actions.",
+    "language": "Python",
+    "simplicity": "3 - Application",
+    "usecase": "Security",
+    "type": "Standard",
+    "diagram": "/resources/statemachine.png",
+    "videoId": "",
+    "level": "300",
+    "framework": "CDK",
+    "services": ["iam", "sfn", "lambda"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "An event rule is created which specifically looks for IAM CreatePolicy event. When a new policy is created, this event gets triggered and the step function is started. First, the step function validates the policy document to see if the actions contain any of the restricted actions. If yes, it creates a temporary policy with the same ARN as the new policy and sends a notification to the email configured with links to either approve or deny."
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": ["See the GitHub repo for detailed testing instructions."]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": ["1. Delete the stack: <code>cdk destroy</code>."]
+    },
+    "deploy": {
+      "text": ["cdk deploy"]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/automating-a-security-incident-with-step-functions-cdk",
+        "templateDir": "automating-a-security-incident-with-step-functions-cdk/python",
+        "templateFile": "stack.py",
+        "ASL": "statemachine/statemachine.asl.json",
+        "definition": "resources/statemachine.png"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US",
+          "sample video file": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/word-filtering-script-generator-cdk/resources/sample-video.mp4"
+        }
+      ]
+    },
+    "authors": [
+      {
+        "name": "Sada Velayutham",
+        "bio": "Builder and Serverless Enthusiast",
+        "linkedin": "sadavelayutham",
+      }
+    ]
+  }
+  

@@ -1,0 +1,93 @@
+
+{
+    "Comment": "Defect detection state machine",
+    "StartAt": "ModifyState",
+    "States": {
+      "ModifyState": {
+        "Type": "Pass",
+        "Parameters": {
+          "policy.$": "$.detail.requestParameters.policyDocument",
+          "accountId.$": "$.detail.userIdentity.accountId",
+          "region.$": "$.region",
+          "policyMeta.$":"$.detail.responseElements.policy"
+        },
+        "ResultPath": "$",
+        "Next": "ValidatePolicy"
+      },
+      "ValidatePolicy": {
+        "Type": "Task",
+        "ResultPath":"$.taskresult",
+        "Resource": "${ValidatePolicyArn}",
+        "Next": "ChooseAction"
+      },
+      "RevertPolicyArn": {
+        "Type": "Task",
+        "ResultPath":"$.taskresult",
+        "Resource": "${RevertPolicyArn}",
+        "Next": "AskUser"
+      },
+      "ChooseAction": {
+        "Type" : "Choice",
+        "Choices": [
+          {
+            "Variable": "$.taskresult.action",
+            "StringEquals": "remedy",
+            "Next": "RevertPolicyArn"
+          },
+          {
+            "Variable": "$.taskresult.action",
+            "StringEquals": "alert",
+            "Next": "AllowWithNotification"
+          }
+        ],
+        "Default": "AllowWithNotification"
+      },
+      "AllowWithNotification": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::sns:publish",
+        "Parameters": {
+          "TopicArn": "${AlertTopic}",
+          "Subject": "Policy change detected!",
+          "Message.$": "$.taskresult.message"
+        },
+        "End": true
+      },
+      "AskUser":{
+          "Type": "Task",
+          "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+            "Parameters":{  
+                "FunctionName": "${AskUserArn}",
+                "Payload":{  
+                    "token.$":"$$.Task.Token"
+                  }
+            },
+          "ResultPath":"$.taskresult",
+          "Next": "usersChoice"
+      },
+      "usersChoice": {
+        "Type" : "Choice",
+        "Choices": [
+          {
+            "Variable": "$.taskresult.action",
+            "StringEquals": "delete",
+            "Next": "denied"
+          },
+          {
+            "Variable": "$.taskresult.action",
+            "StringEquals": "allow",
+            "Next": "approved"
+          }
+        ],
+        "Default": "denied"
+      },
+      "denied": {
+        "Type": "Pass",
+        "End": true
+      },
+      "approved": {
+        "Type": "Task",
+        "Resource": "${ApprovedArn}",
+        "End": true
+      }
+    }
+  }
