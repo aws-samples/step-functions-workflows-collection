@@ -1,0 +1,46 @@
+{
+    "Comment": "An example of using Express workflows to run text processing for each message sent from an SQS queue.",
+    "StartAt": "Decode base64 string",
+    "States": {
+        "Decode base64 string": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "OutputPath": "$.Payload",
+            "Parameters": {
+                "FunctionName": "${Base64DecodeLambda}",
+                "Payload.$": "$"
+            },
+            "Next": "Generate statistics"
+        },
+        "Generate statistics": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "OutputPath": "$.Payload",
+            "Parameters": {
+                "FunctionName": "${GenerateStatsLambda}",
+                "Payload.$": "$"
+            },
+            "Next": "Remove special characters"
+        },
+        "Remove special characters": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "OutputPath": "$.Payload",
+            "Parameters": {
+                "FunctionName": "${StringCleanerLambda}",
+                "Payload.$": "$"
+            },
+            "Next": "Tokenize and count"
+        },
+        "Tokenize and count": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "OutputPath": "$.Payload",
+            "Parameters": {
+                "FunctionName": "${TokenizerCounterLambda}",
+                "Payload.$": "$"
+            },
+            "End": true
+        }
+    }
+}
