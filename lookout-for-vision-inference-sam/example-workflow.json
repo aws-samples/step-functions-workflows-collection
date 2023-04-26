@@ -1,0 +1,73 @@
+{
+    "title": "Visual Defect Detection",
+    "description": "Detect anomalies in image with Amazon Lookout for Vision",
+    "language": "",
+    "simplicity": "3 - Application",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "200",
+    "framework": "SAM",
+    "services": ["s3","lookoutvision","lambda"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "This workflow demonstrates how to use Step Functions to orchestrate detection of anomalies in image uploaded into Amazon S3 bucket with Amazon Lookout for Vision. "
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/lookout-for-vision-inference-sam/",
+        "templateDir":"lookout-for-vision-inference-sam",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        },
+        {
+          "text": "Amazon Lookout for Vision Sample",
+          "link": "https://github.com/aws-samples/amazon-lookout-for-vision"
+        },
+      ]
+    },
+    "authors": [
+        {
+          "name": "ChengLing Saw",
+          "image": "https://drive.google.com/file/d/1J1BeYTYs75s4gBNPSW44DhZM2_gNfE29/view?usp=drivesdk",
+          "bio": "Solutions Architect in Amazon Web Services Energy",
+          "linkedin": "saw-cheng-ling",
+          "twitter": ""
+        }
+      ]
+  }
+  

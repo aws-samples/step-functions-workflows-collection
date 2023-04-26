@@ -1,0 +1,104 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Check Model Status",
+  "States": {
+    "Check Model Status": {
+      "Type": "Task",
+      "Next": "Model Ready?",
+      "Parameters": {
+        "ModelVersion": "${L4VModelVersion}",
+        "ProjectName": "${L4VProject}"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:lookoutvision:describeModel",
+      "ResultPath": "$.L4V"
+    },
+    "Model Ready?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.L4V.ModelDescription.Status",
+          "StringMatches": "TRAINED",
+          "Next": "Start Model"
+        },
+        {
+          "Variable": "$.L4V.ModelDescription.Status",
+          "StringMatches": "STARTING_HOSTING",
+          "Next": "Wait 30 second"
+        },
+        {
+          "Variable": "$.L4V.ModelDescription.Status",
+          "StringMatches": "HOSTED",
+          "Next": "L4V Inference"
+        }
+      ],
+      "Default": "Wait 30 second"
+    },
+    "Start Model": {
+      "Type": "Task",
+      "Parameters": {
+        "MinInferenceUnits": 1,
+        "ModelVersion": "${L4VModelVersion}",
+        "ProjectName": "${L4VProject}"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:lookoutvision:startModel",
+      "Next": "Wait 30 second",
+      "ResultPath": null
+    },
+    "L4V Inference": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "${FunctionName}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Anomalous Image?"
+    },
+    "Anomalous Image?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.response.anomalous",
+          "BooleanEquals": true,
+          "Next": "Copy Anomalous Object"
+        },
+        {
+          "Variable": "$.response.anomalous",
+          "BooleanEquals": false,
+          "Next": "Success"
+        }
+      ]
+    },
+    "Copy Anomalous Object": {
+      "Type": "Task",
+      "End": true,
+      "Parameters": {
+        "Bucket": "${ResultBucketName}",
+        "CopySource.$": "$.copysource",
+        "Key.$": "$.response.newkeyname"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:s3:copyObject"
+    },
+    "Wait 30 second": {
+      "Type": "Wait",
+      "Seconds": 30,
+      "Next": "Check Model Status"
+    },
+    "Success": {
+      "Type": "Succeed"
+    }
+  }
+}

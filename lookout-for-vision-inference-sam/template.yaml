@@ -1,0 +1,196 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Template to create visual defect detector with Amazon Lookout for Vision
+Globals:
+  Function:
+    #Common function options
+    Runtime: python3.8
+    MemorySize: 128
+    CodeUri: "src/"
+    Timeout: 30
+Parameters:
+  L4vProject:
+    Type: String
+    Description: Amazon Lookout for Vision project name
+  L4vModelVersion:
+    Type: String
+    Description: Amazon Lookout for Vision model Version
+Resources:
+  # ---- IAM Role ----
+  LambdaFunctionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies: 
+        - PolicyName: s3
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement: 
+              - Effect: "Allow"
+                Action: 
+                  - "s3:*"
+                Resource: "*"
+        - PolicyName: l4v
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement: 
+              - Effect: "Allow"
+                Action: 
+                  - "lookoutvision:*"
+                Resource: "*"
+  
+  StepFunctionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - states.amazonaws.com
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess'
+      Policies: 
+        - PolicyName: cloudwatch
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement: 
+              - Effect: "Allow"
+                Action: 
+                  - "logs:CreateLogDelivery"
+                  - "logs:GetLogDelivery"
+                  - "logs:UpdateLogDelivery"
+                  - "logs:DeleteLogDelivery"
+                  - "logs:ListLogDeliveries"
+                  - "logs:PutResourcePolicy"
+                  - "logs:DescribeResourcePolicies"
+                  - "logs:DescribeLogGroups"
+                Resource: "*"
+        - PolicyName: lambda
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement: 
+              - Effect: "Allow"
+                Action: 
+                  - "lambda:InvokeFunction"
+                Resource:
+                  - !GetAtt InferenceFunction.Arn
+        - PolicyName: l4v
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement: 
+              - Effect: "Allow"
+                Action: 
+                  - "lookoutvision:*"
+                Resource:
+                  - "*"
+        - PolicyName: s3
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement: 
+              - Effect: "Allow"
+                Action: 
+                  - "s3:*"
+                Resource: "*"
+
+  EventsRuleRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - events.amazonaws.com
+      Policies: 
+        - PolicyName: stepfunction
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement: 
+              - Effect: "Allow"
+                Action: 
+                  - "states:StartExecution"
+                Resource: "*"
+
+  # ---- EventBridge Rule ----
+  CreateObjectRule: 
+    Type: AWS::Events::Rule
+    Properties: 
+      Name: !Sub 'rule-${AWS::AccountId}-${AWS::Region}-l4v'
+      Description: "Rule for Restore Object"
+      EventPattern:
+        source:
+          - 'aws.s3'
+        detail-type:
+          - 'Object Created'
+      State: "ENABLED"
+      Targets: 
+        - Arn: !GetAtt InferenceStateMachine.Arn
+          Id: !GetAtt InferenceStateMachine.Name
+          RoleArn: !GetAtt EventsRuleRole.Arn
+
+  # ---- S3 Bucket ----
+  RawImageBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Sub 'bucket-${AWS::AccountId}-${AWS::Region}-l4v-raw'
+      NotificationConfiguration:
+        EventBridgeConfiguration:
+          EventBridgeEnabled: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+  
+  ResultImageBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Sub 'bucket-${AWS::AccountId}-${AWS::Region}-l4v-anomalous'
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  # ---- Step Function ----
+  InferenceStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/statemachine.asl.json
+      DefinitionSubstitutions:
+        L4VProject: !Ref L4vProject
+        L4VModelVersion: !Ref L4vModelVersion
+        RawBucketName: !Ref RawImageBucket
+        ResultBucketName: !Ref ResultImageBucket
+        FunctionName: !GetAtt [InferenceFunction,'Arn']
+      Name: !Sub 'statemachine-${AWS::AccountId}-${AWS::Region}-l4v'
+      Role: !GetAtt  [StepFunctionRole,'Arn']
+
+  # ---- Lambda Function ----
+  InferenceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          RAW_BUCKET_NAME: !Ref RawImageBucket
+          RESULT_BUCKET_NAME: !Ref ResultImageBucket
+          L4V_PROJECT: !Ref L4vProject
+          L4V_MODEL_VERSION: !Ref L4vModelVersion
+      Role: !GetAtt  [LambdaFunctionRole,'Arn']
+      Handler: l4vInference.handler
+      FunctionName: !Sub 'function-${AWS::AccountId}-${AWS::Region}-l4v'
