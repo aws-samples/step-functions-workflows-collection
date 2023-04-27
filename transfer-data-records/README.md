@@ -21,7 +21,7 @@ Important: this application uses various AWS services and there are costs associ
     ```
 1. Change directory to the pattern directory:
     ```
-    cd Transfer-DataRecords
+    cd transfer-data-records
     ```
 1. From the command line, use AWS SAM to deploy the AWS resources for the workflow as specified in the template.yaml file:
     ```
