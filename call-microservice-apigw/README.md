@@ -1,4 +1,4 @@
-# Transfer Data Records
+# Call a microservice running on Fargate using API Gateway integration
 
 This sample project demonstrates how to use Step Functions to make a call to API Gateway in order to interact with a service on AWS Fargate, and also to check whether the call succeeded. This sample project creates the following:
 
