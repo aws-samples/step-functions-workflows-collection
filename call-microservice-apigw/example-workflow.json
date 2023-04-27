@@ -1,0 +1,80 @@
+{  
+  "title": "Call a microservice running on Fargate using API Gateway",
+  "description": "This sample project demonstrates how to use Step Functions to make a call to API Gateway in order to interact with a service on AWS Fargate, and also to check whether the call succeeded.",
+  "language": "Javascript",
+  "simplicity": "1 - Fundamental",
+  "usecase": "",
+  "type": "Standard",
+  "diagram": "/resources/statemachine.png",
+  "videoId": "",
+  "level": "200",
+  "framework": "SAM",
+  "services": [
+    "lambda",
+    "stepfunctions"
+  ],
+  "introBox": {
+    "headline": "How it works",
+    "text": [
+      "In this project, Step functions is calling an API Gateway endpoint, checking the response status code, and notifying a specified SNS topic of the success or failure of the API call.
+",
+     "bullets": [
+      {
+"Calls an API Gateway HTTP endpoint using an IAM role for authentication.",
+"Checks if the response status code is 200 using a Choice state.",
+"If the response status code is 200, publishes a success message to an SNS topic using a Task state.",
+"If the response status code is not 200, publishes a failure message to the same SNS topic using a Task state."
+      }
+    ]
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": [
+      "See the GitHub repo for detailed testing instructions."
+    ]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+    ]
+  },
+  "deploy": {
+    "text": [
+      "cdk deploy"
+    ]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/call-microservice-apigw/",
+      "templateDir": "call-microservice-apigw",
+      "templateFile": "template.yml",
+      "ASL": "statemachine/statemachine.asl.json",
+      "definition": "resources/statemachine.png"
+    },
+    "payloads": [
+      {
+        "headline": "",
+        "payloadURL": ""
+      }
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "The AWS Step Functions Workshop",
+        "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Mohamed Salah",
+      "image": "https://avatars.githubusercontent.com/mosalahs",
+      "bio": "Solution Architect with 15 years of experience in IT, leading solution design and project delivery of complex enterprise multi-tier distributed architectures. Expertise in digital transformation and IoT across different industries - public sector, telecommunication and transportation.",
+      "linkedin": "mohamed-mohamed-salah-30aa4b58"
+    }
+  ]
+}
