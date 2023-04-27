@@ -1,0 +1,58 @@
+{
+  "Comment" : "An example of the Amazon States Language for reading messages from a DynamoDB table and sending them to SQS",
+  "StartAt": "Seed the DynamoDB Table",
+  "TimeoutSeconds": 3600,
+  "States": {
+    "Seed the DynamoDB Table": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:960196974364:function:StepFunctionsSample-TransferDataRe-SeedingFunction-gRchrSqb4Sfq",
+      "ResultPath": "$.List",
+      "Next": "For Loop Condition"
+    },
+    "For Loop Condition": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Not": {
+            "Variable": "$.List[0]",
+            "StringEquals": "DONE"
+          },
+          "Next": "Read Next Message from DynamoDB"
+        }
+      ],
+      "Default": "Succeed"
+    },
+    "Read Next Message from DynamoDB": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:getItem",
+      "Parameters": {
+        "TableName": "StepFunctionsSample-TransferDataRecordsc0168b74-be57-4c99-b09c-acf1831b2bcf-DDBTable-1AC2BGX60YBEG",
+        "Key": {
+          "MessageId": {"S.$": "$.List[0]"}
+        }
+      },
+      "ResultPath": "$.DynamoDB",
+      "Next": "Send Message to SQS"
+    },
+    "Send Message to SQS": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sqs:sendMessage",
+      "Parameters": {
+        "MessageBody.$": "$.DynamoDB.Item.Message.S",
+        "QueueUrl": "https://sqs.us-east-1.amazonaws.com/960196974364/StepFunctionsSample-TransferDataRecordsc0168b74-be57-4c99--SQSQueue-H9FO9W4vaWmw"
+      },
+      "ResultPath": "$.SQS",
+      "Next": "Pop Element from List"
+    },
+    "Pop Element from List": {
+      "Type": "Pass",
+      "Parameters": {
+        "List.$": "$.List[1:]"
+      },
+      "Next": "For Loop Condition"
+    },
+    "Succeed": {
+      "Type": "Succeed"
+    }
+  }
+}
