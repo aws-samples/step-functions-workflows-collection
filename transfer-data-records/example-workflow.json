@@ -53,8 +53,13 @@
   },
   "gitHub": {
     "template": {
+<<<<<<< HEAD
       "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/transfer-data-records/",
       "templateDir": "transfer-data-records",
+=======
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/TransferData-Records/",
+      "templateDir": "TransferData-Records",
+>>>>>>> 865cfbc908743deb18fca97e116ef323ee9c7b84
       "templateFile": "template.yaml",
       "ASL": "statemachine/statemachine.asl.json",
       "definition": "resources/statemachine.png"
