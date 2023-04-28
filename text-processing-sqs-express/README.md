@@ -8,7 +8,6 @@ Here are two commonly used methods to execute your state machine from an event s
 
 * Map the event source to a Lambda function, and write function code to execute your state machine. The AWS Lambda function is invoked each time your event source emits an event, in turn starting a state machine execution. For more information see [Using AWS Lambda with Amazon SQS](https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html).
 
-This sample project uses the second method to start an execution each time the Amazon SQS queue sends a message. The state machine, which consists of a chain of Lambda functions, will then process the text message by decoding it, generating statistics, removing special characters, tokenizing and counting the number of occurrence of each word in the text passage.    
 
 Learn more about this workflow at Step Functions workflows collection: << Add the live URL here >>
 

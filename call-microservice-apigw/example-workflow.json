@@ -1,6 +1,6 @@
 {  
-  "title": "Transfer Data Records",
-  "description": "This sample project demonstrates how to read values from an Amazon DynamoDB table and send them to Amazon SQS using AWS Step Functions",
+  "title": "Call a microservice running on Fargate using API Gateway",
+  "description": "This sample project demonstrates how to use Step Functions to make a call to API Gateway in order to interact with a service on AWS Fargate, and also to check whether the call succeeded.",
   "language": "Javascript",
   "simplicity": "1 - Fundamental",
   "usecase": "",
@@ -16,15 +16,14 @@
   "introBox": {
     "headline": "How it works",
     "text": [
-      "In this project, Step Functions uses the Lambda function to populate the DynamoDB table, uses a for loop to read each of the entries, and then sends each entry to Amazon SQS.",
+      "In this project, Step functions is calling an API Gateway endpoint, checking the response status code, and notifying a specified SNS topic of the success or failure of the API call.
+",
      "bullets": [
       {
-        "Seed the DynamoDB Table": "Lambda function adds 10 new items to a DynamoDB table and returns a list of generated message IDs.",
-        "For Loop Condition": "Choice state checks if the first element returned by the previous state is DONE. If yes, the execution ends at Succeed state. If not, it proceeds to the next state.",
-"Read Next Message from DynamoDB": "Task state retrieves message data from DynamoDB using message ID.",
-"Send Message to SQS": "Task state sends message data to an SQS queue.",
-"Pop Element from List": "Pass state removes the first element returned by Seed the DynamoDB Table state and returns the updated array.",
-"Succeed": "Terminal state that ends the execution of the state machine."
+"Calls an API Gateway HTTP endpoint using an IAM role for authentication.",
+"Checks if the response status code is 200 using a Choice state.",
+"If the response status code is 200, publishes a success message to an SNS topic using a Task state.",
+"If the response status code is not 200, publishes a failure message to the same SNS topic using a Task state."
       }
     ]
     ]
@@ -48,11 +47,9 @@
   },
   "gitHub": {
     "template": {
-      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/transfer-data-records/",
-      "templateDir": "transfer-data-records",
-      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/TransferData-Records/",
-      "templateDir": "TransferData-Records",
-      "templateFile": "template.yaml",
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/call-microservice-apigw/",
+      "templateDir": "call-microservice-apigw",
+      "templateFile": "template.yml",
       "ASL": "statemachine/statemachine.asl.json",
       "definition": "resources/statemachine.png"
     },

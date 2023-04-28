@@ -1,0 +1,45 @@
+{
+  "Comment": "Calling APIGW HTTP Endpoint",
+  "StartAt": "Call API",
+  "States": {
+    "Call API": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::apigateway:invoke",
+      "Parameters": {
+        "ApiEndpoint": "8dr32vcmf1.execute-api.us-east-2.amazonaws.com",
+        "Method": "GET",
+        "AuthType": "IAM_ROLE"
+      },
+      "Next": "Call Successful?"
+    },
+    "Call Successful?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.StatusCode",
+          "NumericEquals": 200,
+          "Next": "Notify Success"
+        }
+      ],
+      "Default": "Notify Failure"
+    },
+    "Notify Success": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "Message": "Call was successful",
+        "TopicArn": "arn:aws:sns:us-east-2:960196974364:StepFunctionsSample-ApiGatewayECSWorkflow8c411f30-ea02-47cd-8166-a47a28c7b088-SNSTopic-pOprfVyxWL6j"
+      },
+      "End": true
+    },
+    "Notify Failure": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "Message": "Call was not successful",
+        "TopicArn": "arn:aws:sns:us-east-2:960196974364:StepFunctionsSample-ApiGatewayECSWorkflow8c411f30-ea02-47cd-8166-a47a28c7b088-SNSTopic-pOprfVyxWL6j"
+      },
+      "End": true
+    }
+  }
+}
