@@ -27,6 +27,11 @@
 "Succeed": "Terminal state that ends the execution of the state machine."
       }
     ]
+      
+      
+   
+
+
     ]
   },
   "testing": {
@@ -48,8 +53,6 @@
   },
   "gitHub": {
     "template": {
-      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/transfer-data-records/",
-      "templateDir": "transfer-data-records",
       "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/TransferData-Records/",
       "templateDir": "TransferData-Records",
       "templateFile": "template.yaml",

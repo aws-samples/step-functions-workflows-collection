@@ -1,17 +1,48 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Transform: 'AWS::Serverless-2016-10-31'
 Resources:
   DynamoDBToSQSStateMachine:
-        Type: AWS::Serverless::StateMachine
-        Properties:
-            DefinitionSubstitutions:
-                ddbTableName: !Ref DDBTable
-                sqsQueueUrl: !GetAtt SQSQueue.Arn
-                seedingFunctionArn: !GetAtt SeedingFunction.Arn
-            DefinitionUri: statemachine/statemachine.asl.json
-            Role: !GetAtt DynamoDBToSQSExecutionRole.Arn
-        Metadata:
-            SamResourceId: DynamoDBToSQSStateMachine
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      RoleArn:
+        Fn::GetAtt:
+        - DynamoDBToSQSExecutionRole
+        - Arn
+      DefinitionString:
+        Fn::Sub:
+        - "{\n  \"Comment\" : \"An example of the Amazon States Language for reading\
+          \ messages from a DynamoDB table and sending them to SQS\",\n  \"StartAt\"\
+          : \"Seed the DynamoDB Table\",\n  \"TimeoutSeconds\": 3600,\n  \"States\"\
+          : {\n    \"Seed the DynamoDB Table\": {\n      \"Type\": \"Task\",\n   \
+          \   \"Resource\": \"${seedingFunctionArn}\",\n      \"ResultPath\": \"$.List\"\
+          ,\n      \"Next\": \"For Loop Condition\"\n    },\n    \"For Loop Condition\"\
+          : {\n      \"Type\": \"Choice\",\n      \"Choices\": [\n        {\n    \
+          \      \"Not\": {\n            \"Variable\": \"$.List[0]\",\n          \
+          \  \"StringEquals\": \"DONE\"\n          },\n          \"Next\": \"Read\
+          \ Next Message from DynamoDB\"\n        }\n      ],\n      \"Default\":\
+          \ \"Succeed\"\n    },\n    \"Read Next Message from DynamoDB\": {\n    \
+          \  \"Type\": \"Task\",\n      \"Resource\": \"arn:${AWS::Partition}:states:::dynamodb:getItem\"\
+          ,\n      \"Parameters\": {\n        \"TableName\": \"${ddbTableName}\",\n\
+          \        \"Key\": {\n          \"MessageId\": {\"S.$\": \"$.List[0]\"}\n\
+          \        }\n      },\n      \"ResultPath\": \"$.DynamoDB\",\n      \"Next\"\
+          : \"Send Message to SQS\"\n    },\n    \"Send Message to SQS\": {\n    \
+          \  \"Type\": \"Task\",\n      \"Resource\": \"arn:${AWS::Partition}:states:::sqs:sendMessage\"\
+          ,\n      \"Parameters\": {\n        \"MessageBody.$\": \"$.DynamoDB.Item.Message.S\"\
+          ,\n        \"QueueUrl\": \"${sqsQueueUrl}\"\n      },\n      \"ResultPath\"\
+          : \"$.SQS\",\n      \"Next\": \"Pop Element from List\"\n    },\n    \"\
+          Pop Element from List\": {\n      \"Type\": \"Pass\",\n      \"Parameters\"\
+          : {\n        \"List.$\": \"$.List[1:]\"\n      },\n      \"Next\": \"For\
+          \ Loop Condition\"\n    },\n    \"Succeed\": {\n      \"Type\": \"Succeed\"\
+          \n    }\n  }\n}"
+        - ddbTableName:
+            Ref: DDBTable
+          sqsQueueUrl:
+            Ref: SQSQueue
+          seedingFunctionArn:
+            Fn::GetAtt:
+            - SeedingFunction
+            - Arn
+    Metadata:
+      SamResourceId: DynamoDBToSQSStateMachine
   DynamoDBToSQSExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -133,4 +164,5 @@ Outputs:
   ExecutionInput:
     Description: Sample input to StartExecution.
     Value: '{}
+
       '
