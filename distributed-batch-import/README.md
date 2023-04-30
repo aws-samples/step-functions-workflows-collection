@@ -1,6 +1,6 @@
 # Workflow title
 
-This workflow will process the content of a uploaded S3 file by running multiple state machines in paralell, each state machine is processing the file content in batches before inserting into DynamoDB.
+This workflow will process the content of a uploaded S3 file by running multiple state machines in parallel, each state machine is processing the file content in batches before inserting into DynamoDB.
 
 ## Requirements
 
