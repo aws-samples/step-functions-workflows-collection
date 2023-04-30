@@ -6,10 +6,10 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::dynamodb:getItem",
       "Parameters": {
-        "TableName": "${DDBTable}",
+        "TableName": "${WebHookTable}",
         "Key": {
           "pk": {
-            "S.$": "States.Format('webhook_{}_{}', $.customerId, $.webhookEvent)"
+            "S.$": "States.Format('webhook_{}_{}.{}', $.detail.customerId, $.source, $.detail.status)"
           },
           "type": {
             "S": "webhook"
@@ -33,7 +33,7 @@
               "IsPresent": true
             },
             {
-              "Variable": "$.webhookData.Item.accessToken.S",
+              "Variable": "$.webhookData.Item.signingToken.S",
               "IsPresent": true
             },
             {
@@ -45,22 +45,19 @@
         }
       ],
       "Default": "SkipExecution"
-    },
-
-    
-
+    }, 
     "Prepare webhook call": {
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
       "Parameters": {
         "Payload.$": "$",
-        "FunctionName": "${PrepareWebHookFunction}"
+        "FunctionName": "${PrepareWebHookCallFunctionArn}"
       },
       "Next": "Queue webhook call",
       "ResultPath": "$.webhookCallData",
       "ResultSelector": {
-        "id.$": "$.Payload.id",
-        "payload.$": "$.Payload.payload"
+        "id.$": "$.id",
+        "payload.$": "$.payload"
       }
     },
     "Queue webhook call": {
@@ -69,9 +66,8 @@
       "Parameters": {
         "QueueUrl": "${QueueUrl}",
         "MessageBody": {
-          "url.$": "$.webhookUrl",
-          "webhookCallId.$": "$.webhookCallData.id",
-          "signingToken.$": "$.webhookSignToken",
+          "url.$": "$.webhookCallData.url",
+     
           "payload.$": "$.webhookCallData.payload",
           "taskToken.$": "$$.Task.Token"
         }
@@ -116,7 +112,7 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::dynamodb:updateItem",
       "Parameters": {
-        "TableName": "${DDBTable}",
+        "TableName": "${WebHookTable}",
         "Key": {
           "pk": {
             "S.$": "$.webhookCallData.id"

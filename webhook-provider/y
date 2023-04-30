@@ -1,0 +1,12 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "webhook-provider"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-84blbe3xy5mx"
+s3_prefix = "webhook-provider"
+region = "us-east-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Stage=\"dev\" eventSource=\"orders\" EventBusName=\"eCommBus\""
+image_repositories = []

@@ -3,7 +3,7 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   sam-webhook-provider
 
-  Sample SAM Template for sam-webhook-provider
+  Sample SAM Template for  webhook-provider
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -17,10 +17,14 @@ Parameters:
     Default: 'dev'
   eventSource:
     Type: String
-    Default: orders
+    Default: order
   EventBusName:
     Type: String
     Default: eCommBus
+  HMACHeaderName:
+    Type: String
+    Default: X-aws-Hmac-SHA256
+
 
 Resources:
  
@@ -33,8 +37,6 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       VisibilityTimeout: 60
-
- 
 
   WebHookTable:
     Type: AWS::DynamoDB::Table
@@ -81,14 +83,15 @@ Resources:
     Type: AWS::Serverless::StateMachine 
     # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
     Properties:
-      DefinitionUri: statemachine/webhook-provider.asl.json
+      DefinitionUri: statemachine/statemachine.asl.json
       DefinitionSubstitutions:
  
         CallWebHookFunctionArn: !GetAtt CallWebHookFunction.Arn
-        PrepareWebHookFunctionArn: !GetAtt PrepareWebHookFunction.Arn
+        PrepareWebHookCallFunctionArn: !GetAtt PrepareWebHookCallFunction.Arn
         DDBPutItem: !Sub arn:${AWS::Partition}:states:::dynamodb:putItem
-        DDBTable: !Ref WebHookTable
+        WebHookTable: !Ref WebHookTable
         QueueUrl: !Ref WebHookCallQueue
+        HMACHeader: !Ref HMACHeaderName
       Events:
         EventBridgeRule:
           Type: EventBridgeRule
@@ -97,7 +100,7 @@ Resources:
             Pattern:
               source:
                 - !Ref eventSource
-              detail-type:
+              detail-type: #Add the events that you are interested in.
                 - order.created
                 - order.shipped
                 - order.picked
@@ -109,18 +112,19 @@ Resources:
         - LambdaInvokePolicy:
             FunctionName: !Ref CallWebHookFunction
         - LambdaInvokePolicy:
-            FunctionName: !Ref PrepareWebHookFunction
-        - DynamoDBWritePolicy:
+            FunctionName: !Ref PrepareWebHookCallFunction
+        - DynamoDBCrudPolicy:
             TableName: !Ref WebHookTable
+        - SQSSendMessagePolicy:
+            QueueName:  !GetAtt WebHookCallQueue.QueueName
 
- 
 
   CallWebHookFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/call-webhook/
       Handler: app.lambdaHandler
-      Runtime: nodejs16.x
+      Runtime: nodejs18.x
       Architectures:
         - x86_64
       EventInvokeConfig:
@@ -140,17 +144,18 @@ Resources:
             Queue: !GetAtt WebHookCallQueue.Arn
             BatchSize: 10
 
-  PrepareWebHookFunction:
+  PrepareWebHookCallFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/prepare-webhook/
       Handler: app.lambdaHandler
-      Runtime: nodejs16.x
+      Runtime: nodejs18.x
       Architectures:
         - x86_64
       Environment:
         Variables:
-          DB_TABLE: !Ref WebHookTable
+          WEBHOOK_TABLE: !Ref WebHookTable
+          HMAC_HEADER: !Ref HMACHeaderName
       Policies:
         - DynamoDBWritePolicy:
             TableName: !Ref WebHookTable
@@ -167,3 +172,16 @@ Outputs:
   WebHookProviderStateMachineRole:
     Description: "IAM Role created for WebHook Provider state machine based on the specified SAM Policy Templates"
     Value: !GetAtt WebHookProviderStateMachineRole.Arn
+  WebHookTableArn:
+    Description: "WebHook Table Arn"
+    Value: !GetAtt WebHookTable.Arn
+  EventBus:
+    Description: "Event Bus Arn"
+    Value: !GetAtt EventBus.Arn
+ 
+  PrepareWebHookCallFunction:
+    Description: prepare webhook  function name
+    Value: !Ref PrepareWebHookCallFunction
+  SQSQueueUrl:
+    Description: SQS Queue URL
+    Value: !Ref WebHookCallQueue
