@@ -43,7 +43,7 @@ module.exports.lambdaHandler = async (event) => {
         let params = {
           taskToken: data.taskToken,
           cause: "Webhook call failure",
-          error: error.message,
+          error: error,
         };
         console.log(params);
         await client.send(new SendTaskFailureCommand(params));

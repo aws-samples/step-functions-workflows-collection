@@ -108,8 +108,8 @@
         "status": "failed",
         "payload": "",
         "output": {
-          "Error.$": "$.webhookCallResult.error",
-          "Cause.$": "$.webhookCallResult.cause"
+          "Error.$": "$.webhookCallResult.Error",
+          "Cause.$": "$.webhookCallResult.Cause"
         }
       }
     },
