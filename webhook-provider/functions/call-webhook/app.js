@@ -1,4 +1,5 @@
 const https = require("https");
+
 const {
   SFNClient,
   SendTaskFailureCommand,
@@ -15,49 +16,54 @@ module.exports.lambdaHandler = async (event) => {
     data.payload.notificationTime = Date.now();
     var payload = JSON.stringify(data.payload);
     let url = data.url;
-    try {
-      const options = {
-        hostname: url,
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-HMAC-Signature": data.token,
-          "Content-Length": payload.length,
-        },
-      };
 
-      const req = https.request(options, (res) => {
-        console.log(`statusCode: ${res.statusCode}`);
+    const options = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-HMAC-Signature": data.token,
+        "Content-Length": payload.length,
+      },
+    };
 
-        res.on("data", (d) => {
-          process.stdout.write(d);
-        });
+    console.log(options);
+    let response = await callapi(url, payload, options)
+      .then(async (result) => {
+        let params = {
+          taskToken: data.taskToken,
+          output: JSON.stringify({
+            status: "success",
+            output: result,
+          }),
+        };
+        console.log(params);
+        await client.send(new SendTaskSuccessCommand(params));
+      })
+      .catch(async (error) => {
+        let params = {
+          taskToken: data.taskToken,
+          cause: "Webhook call failure",
+          error: error.message,
+        };
+        console.log(params);
+        await client.send(new SendTaskFailureCommand(params));
       });
-
-      req.on("error", async (error) => {
-        console.log("Task failed " + error);
-        throw error;
-      });
-
-      req.write(payload);
-      req.end();
-      let params = {
-        taskToken: data.taskToken,
-        output: JSON.stringify({
-          status: "success",
-          output: {},
-        }),
-      };
-
-      await client.send(new SendTaskSuccessCommand(params));
-    } catch (error) {
-      let params = {
-        taskToken: data.taskToken,
-        cause: "Webhook call failure",
-        error: error.message,
-      };
-
-      await client.send(new SendTaskFailureCommand(params));
-    }
   }
 };
+
+let callapi = async (url, payload, options) =>
+  new Promise((resolve, reject) => {
+    const req = https.request(url, options, (res) => {
+      let buffer = "";
+      res.on("data", (chunk) => (buffer += chunk));
+
+      res.on("end", () => resolve(JSON.parse(buffer)));
+    });
+
+    req.on("error", (e) => {
+      console.log(e);
+      reject(e.message);
+    });
+    req.write(payload);
+    req.end();
+  });
