@@ -24,6 +24,7 @@ module.exports.lambdaHandler = async (event) => {
         "X-HMAC-Signature": data.token,
         "Content-Length": payload.length,
       },
+      timeout: 5000 
     };
 
     console.log(options);
@@ -63,6 +64,11 @@ let callapi = async (url, payload, options) =>
     req.on("error", (e) => {
       console.log(e);
       reject(e.message);
+    });
+    req.on("timeout", () => {
+      req.destroy(); 
+      reject("timeout");
+
     });
     req.write(payload);
     req.end();
