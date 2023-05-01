@@ -1,4 +1,3 @@
- 
 const { createHmac } = require("crypto");
 const crypto = require("crypto");
 const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
@@ -9,27 +8,26 @@ const docClient = DynamoDBDocumentClient.from(dynamo);
 const tableName = process.env.WEBHOOK_TABLE;
 const encoder = new TextEncoder();
 
-
 module.exports.lambdaHandler = async (event) => {
- console.log(event);
-  let callInfo = JSON.parse( JSON.stringify(event.webhookData.Item));
+  console.log(event);
+  let callInfo = JSON.parse(JSON.stringify(event.webhookData.Item));
   let currentTime = new Date().toUTCString();
-  let payLoad = event.detail;
- console.log(callInfo);
-  console.log(payLoad);
-  let token=createHmac('sha256',encoder.encode(callInfo.signingToken.S)).update(encoder.encode(JSON.stringify(payLoad))).digest('hex');
-
+  let payload = event.detail;
+  console.log(callInfo);
+  console.log(payload);
+  let token = createHmac("sha256", encoder.encode(callInfo.signingToken.S))
+    .update(encoder.encode(JSON.stringify(payload)))
+    .digest("hex");
 
   let postData = {
- 
-    pk: callInfo.pk.S + "+" + payLoad.id + "+" +crypto.randomUUID(),
+    pk: callInfo.pk.S + "+" + payload.id + "+" + crypto.randomUUID(),
     type: "webhookcall",
     url: callInfo.url.S,
-    payLoad:payLoad,
+    payload: payload,
     invokeTime: currentTime,
     status: "pending",
-    token:token
-
+    token: token,
+    messageTime: event.time,
   };
   console.log(postData);
   const params = {
@@ -38,17 +36,16 @@ module.exports.lambdaHandler = async (event) => {
   };
   console.log(params);
 
-
-
   try {
     const response = await docClient.send(new PutCommand(params));
     console.log(response);
     return {
-      'id': postData.pk,
-      'webhookData': postData
+      id: postData.pk,
+      payload: postData.payload,
+      url: postData.url,
+      token: token,
     };
   } catch (e) {
     console.error(e);
   }
- 
 };

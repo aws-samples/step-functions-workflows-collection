@@ -56,8 +56,11 @@
       "Next": "Queue webhook call",
       "ResultPath": "$.webhookCallData",
       "ResultSelector": {
-        "id.$": "$.id",
-        "payload.$": "$.payload"
+        "id.$": "$.Payload.id",
+        "payload.$": "$.Payload.payload",
+        "url.$": "$.Payload.url",
+        "token.$": "$.Payload.token"
+
       }
     },
     "Queue webhook call": {
@@ -67,9 +70,11 @@
         "QueueUrl": "${QueueUrl}",
         "MessageBody": {
           "url.$": "$.webhookCallData.url",
-     
+          "token.$":  "$.webhookCallData.token",
           "payload.$": "$.webhookCallData.payload",
-          "taskToken.$": "$$.Task.Token"
+          "taskToken.$": "$$.Task.Token",
+          "id.$":"$.webhookCallData.id"
+
         }
       },
       "HeartbeatSeconds": 3600,

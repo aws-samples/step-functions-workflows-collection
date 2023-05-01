@@ -1,62 +1,63 @@
 const https = require("https");
+const {
+  SFNClient,
+  SendTaskFailureCommand,
+  SendTaskSuccessCommand,
+} = require("@aws-sdk/client-sfn");
+const { resolve } = require("path");
+
+const client = new SFNClient({ region: process.env.REGION });
 
 module.exports.lambdaHandler = async (event) => {
   for (const message of event.Records) {
-    const data = JSON.stringify({
-      resource: message.resourceType,
-      Event: message.eventType,
-      resourceId: message.resourceId,
-      createdAt: message.createdAt,
-    });
+    var data = JSON.parse(message.body);
+    console.log(data);
+    data.payload.notificationTime = Date.now();
+    var payload = JSON.stringify(data.payload);
+    let url = data.url;
+    try {
+      const options = {
+        hostname: url,
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-HMAC-Signature": data.token,
+          "Content-Length": payload.length,
+        },
+      };
 
-    //TODO: Decrypt and add the authz
-    let url = message.callbackURL;
-    const options = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Content-Length": data.length,
-      },
-    };
+      const req = https.request(options, (res) => {
+        console.log(`statusCode: ${res.statusCode}`);
 
-    let response = callapi(url, data, options);
-    console.log("Sent notification to customer");
-  }
-  return {
-    statusCode: 200,
-    body: JSON.stringify(
-      {
-        message: "processed records",
-        input: event,
-      },
-      null,
-      2
-    ),
-  };
-};
-
-
-async function callapi(url, payload, options) {
-  return new Promise((resolve, reject) => {
-    const req = https.request(options, (res) => {
-      console.log(`statusCode: ${res.statusCode}`);
-
-      res.on("data", (d) => {
-        process.stdout.write(payload);
+        res.on("data", (d) => {
+          process.stdout.write(d);
+        });
       });
-    });
 
-    req.on("error", (error) => {
-      reject(req);
-      console.error(error);
-    });
+      req.on("error", async (error) => {
+        console.log("Task failed " + error);
+        throw error;
+      });
 
-    // set a timeout of 5 seconds
-    req.setTimeout(5000, () => {
-      req.destroy();
-    });
+      req.write(payload);
+      req.end();
+      let params = {
+        taskToken: data.taskToken,
+        output: JSON.stringify({
+          status: "success",
+          output: {},
+        }),
+      };
 
-    req.end();
-    resolve(req);
-  });
-}
+      await client.send(new SendTaskSuccessCommand(params));
+    } catch (error) {
+      let params = {
+        taskToken: data.taskToken,
+        cause: "Webhook call failure",
+        error: error.message,
+      };
+
+      await client.send(new SendTaskFailureCommand(params));
+    }
+  }
+};
