@@ -1,0 +1,9 @@
+
+  [{"EventBusName": "arn:aws:events:us-east-1:902714605340:event-bus/eCommBus", 
+                  "Source": "order", 
+                  "DetailType": "order.created", 
+                  "Detail": "{   \"id\": \"6500\",  \"type\": \"order\",   \"customerId\": \"10000\", \"status\": \"created\",  \"createdAt\": \"1000450\"  }"
+}]
+
+
+                 
