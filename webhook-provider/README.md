@@ -1,6 +1,8 @@
-# Workflow title
+# Webhook provider service using AWS Step Functions
 
-This workflow << explain usage >>
+This workflow implements a webhook provider service using AWS Stepfunctions.
+
+A webhook provider is a service or system that offers the capability to send outgoing webhook notifications to external systems or applications. A webhook is an HTTP callback that sends a notification to a predefined URL (endpoint) when a specific event or trigger occurs. Webhooks allow real-time communication and data exchange between different systems or services.
 
 Learn more about this workflow at Step Functions workflows collection: << Add the live URL here >>
 
@@ -21,7 +23,7 @@ Important: this application uses various AWS services and there are costs associ
     ```
 1. Change directory to the pattern directory:
     ```
-    cd _workflow-model
+    cd webhook-provider
     ```
 1. From the command line, use AWS SAM to deploy the AWS resources for the workflow as specified in the template.yaml file:
     ```
@@ -38,10 +40,10 @@ Important: this application uses various AWS services and there are costs associ
 
 ## How it works
 
-Explain how the workflow works.
+When an event that matches the configured filter conditions is triggered, the step function handles the flow of retrieving event data and validates if the customer has set up a webhook subscription. If a valid subscription exists, it prepares the webhook call, queues the call, and updates the webhook call entry in DynamoDB.
 
 ## Image
-Provide an exported .png of the workflow in the `/resources` directory from [Workflow stuio](https://docs.aws.amazon.com/step-functions/latest/dg/workflow-studio.html) and add here.
+ 
 ![image](./resources/statemachine.png)
 
 ## Testing
@@ -59,6 +61,6 @@ Provide steps to trigger the workflow and show what should be observed if succes
     aws cloudformation list-stacks --query "StackSummaries[?contains(StackName,'STACK_NAME')].StackStatus"
     ```
 ----
-Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
 SPDX-License-Identifier: MIT-0

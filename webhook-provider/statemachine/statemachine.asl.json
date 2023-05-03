@@ -1,5 +1,5 @@
 {
-  "Comment": "State machine for webhook provider",
+  "Comment": "A state machine implementing a webhook provider ",
   "StartAt": "Get webhooks for customer and event",
   "States": {
     "Get webhooks for customer and event": {
@@ -146,7 +146,7 @@
     "SkipExecution": {
       "Type": "Pass",
       "End": true,
-      "Comment": "no webhooks for this customer and event type"
+      "Comment": "no webhook subscription for this customer and event type"
     }
   }
 }

@@ -7,7 +7,7 @@
     "type": "Standard",
     "diagram":"/resources/statemachine.png",
     "videoId": "",
-    "level": "100",
+    "level": "200",
     "framework": "SAM",
     "services": ["sns","batch"],
     "introBox": {
