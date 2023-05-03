@@ -2,7 +2,7 @@
     "title": "Webhook provider with AWS Step functions",
     "description": "A webhook provider is a service or system that offers the capability to send outgoing webhook notifications to external systems or applications. A webhook is an HTTP callback that sends a notification to a predefined URL (endpoint) when a specific event or trigger occurs. Webhooks allow real-time communication and data exchange between different systems or services.",
     "language": "",
-    "simplicity": "2 - Intermediate",
+    "simplicity": "2 - Pattern",
     "usecase": "Webhook providers are commonly used in various scenarios, such as:\n1. Integration with third-party services.\n2. Real-time data synchronization.\n3. Automation and event-driven workflows",
     "type": "Standard",
     "diagram":"/resources/statemachine.png",
@@ -35,8 +35,8 @@
     },
     "gitHub": {
       "template": {
-        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/synchronous-job/",
-        "templateDir":"synchronous-job",
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/webhook-provider/",
+        "templateDir":"webhook-provider",
         "templateFile": "template.yaml",
         "ASL": "statemachine/statemachine.asl.json"
       },
