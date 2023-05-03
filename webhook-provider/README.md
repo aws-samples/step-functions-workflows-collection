@@ -40,7 +40,7 @@ Important: this application uses various AWS services and there are costs associ
 
 ## How it works
 
-When an event that matches the configured filter conditions is triggered, the step function handles the flow of retrieving event data and validates if the customer has set up a webhook subscription. If a valid subscription exists, it prepares the webhook call, queues the call, and updates the webhook call entry in DynamoDB.
+When an event that matches the configured filter conditions is triggered, the step function handles the flow of retrieving event data and validates if the customer has set up a webhook subscription for the event. If a valid subscription exists, it prepares the webhook call, queues the call, and updates the webhook call entry in DynamoDB.The queue entry triggers a lambda function that calls the webhook. The retry interval and count along with backoff settings can be configured.
 
 ## Image
  

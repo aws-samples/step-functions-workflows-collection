@@ -2,12 +2,14 @@ const { createHmac } = require("crypto");
 const crypto = require("crypto");
 const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
 const { DynamoDBDocumentClient, PutCommand } = require("@aws-sdk/lib-dynamodb");
+const { KMSClient,DecryptCommand } = require("@aws-sdk/client-kms");
 
 const dynamo = new DynamoDBClient(process.env.AWS_REGION);
 const docClient = DynamoDBDocumentClient.from(dynamo);
 const tableName = process.env.WEBHOOK_TABLE;
 const encoder = new TextEncoder();
 const kmsKeyId = process.env.KMS_KEY;
+const kms=new KMSClient(process.env.AWS_REGION);
 
 // Decrypt the signing token using the KMS key
 const decryptSigningToken = async (encryptedData, keyId) => {
@@ -15,9 +17,10 @@ const decryptSigningToken = async (encryptedData, keyId) => {
     CiphertextBlob: Buffer.from(encryptedData, "base64"),
     KeyId: keyId,
   };
-
+ 
   try {
-    const { plaintext } = await kms.decrypt(params).promise();
+    const command = new DecryptCommand(params);
+    const { plaintext } = await kms.send(command);
     return plaintext.toString();
   } catch (error) {
     console.error("Decryption failed:", error);
@@ -34,12 +37,22 @@ module.exports.lambdaHandler = async (event) => {
   let webhookInfo = JSON.parse(JSON.stringify(event.webhookData.Item));
   let currentTime = new Date().toUTCString();
   let payload = event.detail;
+  var callbackURL= webhookInfo.url.S;
 
-  //Decrypt the signing Token
+// validate the payload and callback url
+  if (typeof payload === "undefined") {
+    throw new Error("payload is empty"); 
+  }
+
+  if (typeof callbackURL === "string" && callbackURL.length === 0) {
+    throw new Error("call back urlis empty");
+  }
+ 
   var signingToken = event.webhookData.Item.signingToken.S;
   if (typeof signingToken === "string" && signingToken.length === 0) {
     throw new Error("signing token is empty");
   }
+  //Decrypt the signing Token
   var decryptedSigningToken = await decryptSigningToken(signingToken, kmsKeyId);
 
   // Generate a token for the payload
@@ -52,7 +65,7 @@ module.exports.lambdaHandler = async (event) => {
   let postData = {
     pk: webhookInfo.pk.S + "+" + payload.id + "+" + crypto.randomUUID(),
     type: "webhookcall",
-    url: webhookInfo.url.S,
+    url: callbackURL,
     payload: payload,
     invokeTime: currentTime,
     status: "pending",

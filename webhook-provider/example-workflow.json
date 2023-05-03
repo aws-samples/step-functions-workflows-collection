@@ -1,21 +1,19 @@
 {
-    "title": "Synchronous Job",
-    "description": "Wait for an asynchroous Job to finish before moving onto the next state",
+    "title": "Webhook provider with AWS Step functions",
+    "description": "A webhook provider is a service or system that offers the capability to send outgoing webhook notifications to external systems or applications. A webhook is an HTTP callback that sends a notification to a predefined URL (endpoint) when a specific event or trigger occurs. Webhooks allow real-time communication and data exchange between different systems or services.",
     "language": "",
-    "simplicity": "1 - Fundamental",
-    "usecase": "",
+    "simplicity": "2 - Intermediate",
+    "usecase": "Webhook providers are commonly used in various scenarios, such as:\n1. Integration with third-party services.\n2. Real-time data synchronization.\n3. Automation and event-driven workflows",
     "type": "Standard",
     "diagram":"/resources/statemachine.png",
     "videoId": "",
     "level": "200",
     "framework": "SAM",
-    "services": ["sns","batch"],
+    "services": ["sqs","lambda","dynamodb,eventbridge"],
     "introBox": {
       "headline": "How it works",
       "text": [
-        "This workflow submits an AWS Batch job. In its normal state the job is asynchronous. The state machine submits the job to the AWS Batch service and waits for the job to complete before sending a Notify Success message to an Amazon SNS topic.",
-        "This is done by making use of Step Functions `.sync` execution pattern"
-
+       "When an event that matches the configured filter conditions is triggered,\nthe step function handles the flow of retrieving event data and validates if the customer has set up a webhook subscription for the event.\nIf a valid subscription exists, it prepares the webhook call, queues the call, and updates the webhook call entry in DynamoDB. \nThe queue entry triggers a lambda function that calls the webhook. The retry interval and count along with backoff settings can be configured."
       ]
     },
     "testing": {
@@ -60,11 +58,11 @@
     },
     "authors": [
         {
-          "name": "Your name",
+          "name": "Subha Venugopal",
           "image": "link-to-your-photo.jpg",
-          "bio": "Your bio.",
-          "linkedin": "linked-in-ID",
-          "twitter": "twitter-handle"
+          "bio": "Subha is a Sr.Solution Architect at AWS.\nShe is passionate about revolutionizing healthcare delivery and making it accessible to all 🚀💙.",
+          "linkedin": "linked-in-ID"
+           
         }
       ]
   }
