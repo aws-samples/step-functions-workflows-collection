@@ -21,9 +21,6 @@ Parameters:
   EventBusName:
     Type: String
     Default: eCommBus
-  HMACHeaderName:
-    Type: String
-    Default: X-aws-Hmac-SHA256
   SigningTokenKmsKey:
     Type: String
     Default: 9367b0de-6cb5-48aa-830c-cbe01bb82cbd
@@ -93,7 +90,7 @@ Resources:
         DDBPutItem: !Sub arn:${AWS::Partition}:states:::dynamodb:putItem
         WebHookTable: !Ref WebHookTable
         QueueUrl: !Ref WebHookCallQueue
-        HMACHeader: !Ref HMACHeaderName
+         
       Events:
         EventBridgeRule:
           Type: EventBridgeRule
@@ -157,7 +154,6 @@ Resources:
       Environment:
         Variables:
           WEBHOOK_TABLE: !Ref WebHookTable
-          HMAC_HEADER: !Ref HMACHeaderName
           KMS_KEY: !Ref SigningTokenKmsKey
       Policies:
         - DynamoDBWritePolicy:
@@ -175,8 +171,7 @@ Resources:
         - x86_64
       Environment:
         Variables:
-          WEBHOOK_TABLE: !Ref WebHookTable
-        
+          WEBHOOK_TABLE: !Ref WebHookTable      
           KMS_KEY: !Ref SigningTokenKmsKey
       Policies:
         - DynamoDBWritePolicy:

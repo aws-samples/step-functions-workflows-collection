@@ -3,7 +3,7 @@
     "description": "A webhook provider is a service or system that offers the capability to send outgoing webhook notifications to external systems or applications. A webhook is an HTTP callback that sends a notification to a predefined URL (endpoint) when a specific event or trigger occurs. Webhooks allow real-time communication and data exchange between different systems or services.",
     "language": "",
     "simplicity": "2 - Pattern",
-    "usecase": "Webhook providers are commonly used in various scenarios, such as:\n1. Integration with third-party services.\n2. Real-time data synchronization.\n3. Automation and event-driven workflows",
+    "usecase": "Webhook providers are commonly used in scenarios, such as:\n1. Integration with third-party services.\n2. Real-time data synchronization.\n3. Automation and event-driven workflows",
     "type": "Standard",
     "diagram":"/resources/statemachine.png",
     "videoId": "",
@@ -59,11 +59,11 @@
     "authors": [
         {
           "name": "Subha Venugopal",
-          "image": "link-to-your-photo.jpg",
-          "bio": "Subha is a Sr.Solution Architect at AWS.\nShe is passionate about revolutionizing healthcare delivery and making it accessible to all 🚀💙.",
-          "linkedin": "linked-in-ID"
+          "image": "https://d6im48gnkrshd.cloudfront.net/public/subha.jpg",
+          "bio": "Subha is a Sr.Solution Architect at AWS.\nShe is passionate about improving healthcare delivery and making it accessible to all 🚀💙.",
+          "linkedin": "https://www.linkedin.com/in/subhavivek/"
            
         }
       ]
   }
-  
+   

@@ -48,9 +48,9 @@ When an event that matches the configured filter conditions is triggered, the st
 
 ## Testing
 
-* [Put Events] (https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutEvents.html#API_PutEvents_Examples) into the configured event bus and matching the filter criteria.
+* [Put Events] (https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutEvents.html#API_PutEvents_Examples) into the configured event bus and matching filter criteria.
 * The workflow ends if there is a no valid subscription for the customer and event type.
-* If there is an entry The Workflow logs the call entry into dynamo db and queues a call to the webhook.
+* If there is an entry The Workflow logs the call entry into dynamodb and queues a call to the webhook.
 * If the webhook call succeeds, the dynamodb entry for the call is marked success.
 * If the webhook call fails, the workflow retries the call as per the configured count and delay. 
 * If the webhook call does not succeed after retries, the dynamodb entry for the call is marked as failure.

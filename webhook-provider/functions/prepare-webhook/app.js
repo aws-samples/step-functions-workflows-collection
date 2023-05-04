@@ -1,6 +1,6 @@
 const { createHmac, randomUUID } = require("crypto");
 
-const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const { DynamoDBDocumentClient, PutCommand } = require("@aws-sdk/lib-dynamodb");
 const { KMSClient, DecryptCommand } = require("@aws-sdk/client-kms");
 
@@ -13,21 +13,20 @@ const kms = new KMSClient(process.env.AWS_REGION);
 
 // Decrypt the signing token using the KMS key
 const decryptSigningToken = async (encryptedData, keyId) => {
-   
   //param ciphertextBlob for decrypt should be Uint8Array
-  
+
   const buffer = Buffer.from(encryptedData, "base64");
   const uint8Array = Uint8Array.from(buffer);
   const params = {
     CiphertextBlob: uint8Array,
     KeyId: keyId,
   };
-  
+
   try {
     const command = new DecryptCommand(params);
-    const plaintext = await kms.send(command);
-  //plaintext is also Uint8Array - convert to string
-    return Buffer.from(plaintext.Plaintext).toString();
+    const plainText = await kms.send(command);
+    //plaintext is also Uint8Array - convert to string
+    return Buffer.from(plainText.Plaintext).toString();
   } catch (error) {
     console.error("Decryption failed:", error);
     throw error;
@@ -59,7 +58,6 @@ module.exports.lambdaHandler = async (event) => {
   //Decrypt the signing Token
   var decryptedSigningToken = await decryptSigningToken(signingToken, kmsKeyId);
 
-  
   // Generate a signature token for the payload
   let token = createHmac("sha256", encoder.encode(decryptedSigningToken))
     .update(encoder.encode(JSON.stringify(payload)))
@@ -82,13 +80,17 @@ module.exports.lambdaHandler = async (event) => {
     TableName: tableName,
     Item: postData,
   };
+  try {
+    const response = await docClient.send(new PutCommand(params));
 
-  const response = await docClient.send(new PutCommand(params));
-  // Return the data to the SFN to map to the next step.
-  return {
-    id: postData.pk,
-    payload: postData.payload,
-    url: postData.url,
-    token: token,
-  };
+    return {
+      id: postData.pk,
+      payload: postData.payload,
+      url: postData.url,
+      token: token,
+    };
+  } catch (err) {
+    console.error("Error saving to DynamoDB:", err);
+    throw err;
+  }
 };

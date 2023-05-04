@@ -1,10 +1,6 @@
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const { DynamoDBDocumentClient, PutCommand } = require("@aws-sdk/lib-dynamodb");
-const {
-  KMSClient,
-  EncryptCommand
-   
-} = require("@aws-sdk/client-kms");
+const { KMSClient, EncryptCommand } = require("@aws-sdk/client-kms");
 
 const dynamo = new DynamoDBClient(process.env.AWS_REGION);
 const docClient = DynamoDBDocumentClient.from(dynamo);
@@ -34,19 +30,15 @@ exports.lambdaHandler = async (event, context) => {
       type: event.type,
       signingToken: token,
       url: event.url,
-    
     },
   };
-  console.log(params);
+ 
   try {
     const response = await docClient.send(new PutCommand(params));
-    console.log("Item saved to DynamoDB");
+    
     return { statusCode: 200, body: "Item saved to DynamoDB" };
   } catch (err) {
     console.error("Error saving to DynamoDB:", err);
     return { statusCode: 500, body: "Error saving to DynamoDB" };
   }
 };
-
- 
-

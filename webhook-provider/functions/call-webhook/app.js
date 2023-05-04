@@ -5,7 +5,6 @@ const {
   SendTaskFailureCommand,
   SendTaskSuccessCommand,
 } = require("@aws-sdk/client-sfn");
-const { resolve } = require("path");
 
 const client = new SFNClient({ region: process.env.REGION });
 
