@@ -15,7 +15,7 @@ Parameters:
   Stage:
     Type: String
     Default: 'dev'
-  eventSource:
+  EventSource:
     Type: String
     Default: order
   EventBusName:
@@ -24,7 +24,9 @@ Parameters:
   HMACHeaderName:
     Type: String
     Default: X-aws-Hmac-SHA256
-
+  SigningTokenKmsKey:
+    Type: String
+    Default: 9367b0de-6cb5-48aa-830c-cbe01bb82cbd
 
 Resources:
  
@@ -99,7 +101,7 @@ Resources:
             EventBusName: !Ref EventBus
             Pattern:
               source:
-                - !Ref eventSource
+                - !Ref EventSource
               detail-type: #Add the events that you are interested in.
                 - order.created
                 - order.shipped
@@ -156,11 +158,33 @@ Resources:
         Variables:
           WEBHOOK_TABLE: !Ref WebHookTable
           HMAC_HEADER: !Ref HMACHeaderName
+          KMS_KEY: !Ref SigningTokenKmsKey
       Policies:
         - DynamoDBWritePolicy:
             TableName: !Ref WebHookTable
+        - KMSDecryptPolicy:
+            KeyId: !Ref SigningTokenKmsKey
 
- 
+  AddSubscriptionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/add-subscription/
+      Handler: app.lambdaHandler
+      Runtime: nodejs18.x
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          WEBHOOK_TABLE: !Ref WebHookTable
+        
+          KMS_KEY: !Ref SigningTokenKmsKey
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref WebHookTable
+        - KMSEncryptPolicy:
+            KeyId: !Ref SigningTokenKmsKey
+    
+
 
 Outputs:
   # StockTradingStateMachineHourlyTradingSchedule is an implicit Schedule event rule created out of Events key under Serverless::StateMachine
@@ -178,10 +202,15 @@ Outputs:
   EventBus:
     Description: "Event Bus Arn"
     Value: !GetAtt EventBus.Arn
- 
+  CallWebHookFunction:
+    Description: call webhook  function name
+    Value: !Ref CallWebHookFunction
   PrepareWebHookCallFunction:
     Description: prepare webhook  function name
     Value: !Ref PrepareWebHookCallFunction
+  AddSubscriptionFunction:
+    Description: Add Subscription function name
+    Value: !Ref AddSubscriptionFunction
   SQSQueueUrl:
     Description: SQS Queue URL
     Value: !Ref WebHookCallQueue

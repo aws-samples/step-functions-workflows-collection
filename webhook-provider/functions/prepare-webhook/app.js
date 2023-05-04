@@ -1,27 +1,33 @@
-const { createHmac } = require("crypto");
-const crypto = require("crypto");
+const { createHmac, randomUUID } = require("crypto");
+
 const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
 const { DynamoDBDocumentClient, PutCommand } = require("@aws-sdk/lib-dynamodb");
-const { KMSClient,DecryptCommand } = require("@aws-sdk/client-kms");
+const { KMSClient, DecryptCommand } = require("@aws-sdk/client-kms");
 
 const dynamo = new DynamoDBClient(process.env.AWS_REGION);
 const docClient = DynamoDBDocumentClient.from(dynamo);
 const tableName = process.env.WEBHOOK_TABLE;
 const encoder = new TextEncoder();
 const kmsKeyId = process.env.KMS_KEY;
-const kms=new KMSClient(process.env.AWS_REGION);
+const kms = new KMSClient(process.env.AWS_REGION);
 
 // Decrypt the signing token using the KMS key
 const decryptSigningToken = async (encryptedData, keyId) => {
+   
+  //param ciphertextBlob for decrypt should be Uint8Array
+  
+  const buffer = Buffer.from(encryptedData, "base64");
+  const uint8Array = Uint8Array.from(buffer);
   const params = {
-    CiphertextBlob: Buffer.from(encryptedData, "base64"),
+    CiphertextBlob: uint8Array,
     KeyId: keyId,
   };
- 
+  
   try {
     const command = new DecryptCommand(params);
-    const { plaintext } = await kms.send(command);
-    return plaintext.toString();
+    const plaintext = await kms.send(command);
+  //plaintext is also Uint8Array - convert to string
+    return Buffer.from(plaintext.Plaintext).toString();
   } catch (error) {
     console.error("Decryption failed:", error);
     throw error;
@@ -37,25 +43,24 @@ module.exports.lambdaHandler = async (event) => {
   let webhookInfo = JSON.parse(JSON.stringify(event.webhookData.Item));
   let currentTime = new Date().toUTCString();
   let payload = event.detail;
-  var callbackURL= webhookInfo.url.S;
+  var callbackURL = webhookInfo.url.S;
 
-// validate the payload and callback url
+  // validate the payload and callback url
   if (typeof payload === "undefined") {
-    throw new Error("payload is empty"); 
+    throw new Error("payload is empty");
   }
 
   if (typeof callbackURL === "string" && callbackURL.length === 0) {
     throw new Error("call back urlis empty");
   }
- 
+
   var signingToken = event.webhookData.Item.signingToken.S;
-  if (typeof signingToken === "string" && signingToken.length === 0) {
-    throw new Error("signing token is empty");
-  }
+
   //Decrypt the signing Token
   var decryptedSigningToken = await decryptSigningToken(signingToken, kmsKeyId);
 
-  // Generate a token for the payload
+  
+  // Generate a signature token for the payload
   let token = createHmac("sha256", encoder.encode(decryptedSigningToken))
     .update(encoder.encode(JSON.stringify(payload)))
     .digest("hex");
@@ -63,7 +68,7 @@ module.exports.lambdaHandler = async (event) => {
   // Create the DynamoDB record for the webhook call.
 
   let postData = {
-    pk: webhookInfo.pk.S + "+" + payload.id + "+" + crypto.randomUUID(),
+    pk: webhookInfo.pk.S + "+" + payload.id + "+" + randomUUID(),
     type: "webhookcall",
     url: callbackURL,
     payload: payload,
