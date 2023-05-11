@@ -1,6 +1,6 @@
 # Account Vending Machine 
 
-This workflow creates a new AWS Account under an existing Organizational Unit. If the Organizational Unit does not exist, the workflow will create a new one under the root. If the account is created successfully it will deploy a CloudFormation template, that is provided as input, to the new account.
+This workflow is an Account Vending Machine, it help automate new AWS accounts creation within an AWS Organizations. It needs to be deployed on the AWS Organizations management account to help create new AWS Account under an existing Organizational Unit (OU) that you provide as an input. If the OU does not exist, the workflow will create a new one under the root OU. If the account is created successfully it will be moved under the provided OU and the workflow will deploy a CloudFormation template, that is provided as input, to the new account.
 
 For more Step Functions workflows check [ServerlessLand Workflows](https://serverlessland.com/workflows)
 

@@ -1,6 +1,6 @@
 {
     "title": "Account Vending Machine",
-    "description": "Create new AWS accounts in your AWS Organizations with a CloudFormation template that includes your standard basline configuration",
+    "description": "Automate the creation of new AWS accounts in your AWS Organizations with a CloudFormation template that includes your standard basline configuration",
     "language": "",
     "simplicity": "3 - Application",
     "usecase": "",
@@ -13,7 +13,7 @@
     "introBox": {
       "headline": "How it works",
       "text": [
-        "This workflow allow the automatic creation of new AWS account within a new/existing Organizational Unit. It takes a CloudFormation template as input and deploys it in the new AWS account",
+        "This workflow automate the creation of new AWS account within a new/existing Organizational Unit. It takes a CloudFormation template as input and deploys it in the new AWS account.",
         "The CloudFormation template is supposed to include any standard baseline configuration and guardrails that you would typically deploy as part of new AWS accounts."
 
       ]
