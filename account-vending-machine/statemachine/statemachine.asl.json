@@ -1,0 +1,169 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Get Organization Root",
+  "States": {
+    "Get Organization Root": {
+      "Type": "Task",
+      "Parameters": {},
+      "Resource": "arn:aws:states:::aws-sdk:organizations:listRoots",
+      "ResultPath": "$.data.rootOU",
+      "Next": "Create New Organizational Unit"
+    },
+    "Create New Organizational Unit": {
+      "Type": "Task",
+      "Parameters": {
+        "Name.$": "$.OU",
+        "ParentId.$": "$.data.rootOU.Roots[0].Id"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:organizations:createOrganizationalUnit",
+      "ResultPath": "$.result.newOU",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "Organizations.DuplicateOrganizationalUnitException"
+          ],
+          "Next": "List Organizational Units",
+          "ResultPath": null,
+          "Comment": "OU Exists"
+        }
+      ],
+      "Next": "Create New Account"
+    },
+    "Create New Account": {
+      "Type": "Task",
+      "Parameters": {
+        "AccountName.$": "$.AccountName",
+        "Email.$": "$.AccountEmail"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:organizations:createAccount",
+      "ResultPath": "$.result.NewAccount",
+      "Next": "Wait 30 Sec"
+    },
+    "Wait 30 Sec": {
+      "Type": "Wait",
+      "Seconds": 30,
+      "Next": "New Account Status"
+    },
+    "New Account Status": {
+      "Type": "Task",
+      "Parameters": {
+        "CreateAccountRequestId.$": "$.result.NewAccount.CreateAccountStatus.Id"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:organizations:describeCreateAccountStatus",
+      "ResultPath": "$.result.NewAccount",
+      "Next": "Check Account Status"
+    },
+    "Check Account Status": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.result.NewAccount.CreateAccountStatus.State",
+          "StringEquals": "IN_PROGRESS",
+          "Next": "Wait 30 Sec"
+        },
+        {
+          "Variable": "$.result.NewAccount.CreateAccountStatus.State",
+          "StringEquals": "FAILED",
+          "Next": "Failed"
+        }
+      ],
+      "Default": "Move Account To OU"
+    },
+    "Move Account To OU": {
+      "Type": "Task",
+      "Next": "New Account Credentials",
+      "Parameters": {
+        "AccountId.$": "$.result.NewAccount.CreateAccountStatus.AccountId",
+        "DestinationParentId.$": "$.result.newOU.OrganizationalUnit.Id",
+        "SourceParentId.$": "$.data.rootOU.Roots[0].Id"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:organizations:moveAccount",
+      "ResultPath": "$.result.MoveAccount"
+    },
+    "New Account Credentials": {
+      "Type": "Pass",
+      "Next": "Create Stack",
+      "Parameters": {
+        "Credentials.$": "States.Format('arn:aws:iam::{}:role/OrganizationAccountAccessRole',$.result.NewAccount.CreateAccountStatus.AccountId)"
+      },
+      "ResultPath": "$.result"
+    },
+    "Create Stack": {
+      "Type": "Task",
+      "End": true,
+      "Parameters": {
+        "StackName.$": "$.StackName",
+        "TemplateBody.$": "$.TemplateBody"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:cloudformation:createStack",
+      "ResultPath": "$.result.CreateStack",
+      "Credentials": {
+        "RoleArn.$": "$.result.Credentials"
+      }
+    },
+    "List Organizational Units": {
+      "Type": "Task",
+      "Next": "Loop over all OUs",
+      "Parameters": {
+        "ParentId.$": "$.data.rootOU.Roots[0].Id"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:organizations:listOrganizationalUnitsForParent",
+      "ResultPath": "$.data.existingOUs"
+    },
+    "Loop over all OUs": {
+      "Type": "Map",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "INLINE"
+        },
+        "StartAt": "Is this the OU?",
+        "States": {
+          "Is this the OU?": {
+            "Type": "Choice",
+            "Choices": [
+              {
+                "Variable": "$.OrganizationalUnit.Name",
+                "StringEqualsPath": "$.OU",
+                "Next": "Get OU ID"
+              }
+            ],
+            "Default": "Ignore"
+          },
+          "Get OU ID": {
+            "Type": "Pass",
+            "Result": 1,
+            "ResultPath": "$.OU",
+            "End": true
+          },
+          "Ignore": {
+            "Type": "Pass",
+            "Result": 0,
+            "ResultPath": "$.OU",
+            "End": true
+          }
+        }
+      },
+      "Next": "Get The OU Details",
+      "ResultPath": "$.targetOU",
+      "ItemSelector": {
+        "OrganizationalUnit.$": "$$.Map.Item.Value",
+        "OU.$": "$.OU"
+      },
+      "ItemsPath": "$.data.existingOUs.OrganizationalUnits",
+      "ResultSelector": {
+        "newOU.$": "$.[?(@.OU > 0)]"
+      }
+    },
+    "Get The OU Details": {
+      "Type": "Pass",
+      "Next": "Create New Account",
+      "ResultPath": "$.result",
+      "Parameters": {
+        "newOU.$": "$.targetOU.newOU[0]"
+      }
+    },
+    "Failed": {
+      "Type": "Fail"
+    }
+  }
+}
