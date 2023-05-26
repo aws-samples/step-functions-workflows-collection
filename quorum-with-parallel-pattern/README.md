@@ -1,8 +1,10 @@
 # Quorum With Parallel Pattern Workflow
 
-This application will create a State Machine, and a DynamoDB Table. The State Machine shows a pattern where there are multiple processes running in parallel, but the state machine can proceed only if a minimum number of processes (a quorum) have completed. To achieve this it will use the execution id of the statem machine save to DDB a list of `processes_completed` as emnpty and `timeout_occurred` as false. 
+This application will create a State Machine, a Lambda Function and a DynamoDB Table. The State Machine shows a pattern where there are multiple processes running in parallel, but the state machine can proceed only if a minimum number of processes (a quorum) have completed successfully. To achieve this it will use the execution id of the statem machine save to DDB two empty lists of `successful_processes` and `failed_processes`, and `timeout_occurred` as false. 
 
-As and when a process completes, it will udpate the processes_completed field in the DynamoDB entry and immediately check if the required number of processes have completed. If yes, it will break out of the Parallel State. It will not, it will wait for other processes to finish.
+The "process" is simulated by a Lambda function which either waits a random amount of time between 1 and 15 seconds or fail.
+
+As and when a process completes, it will udpate the either the `successful_processes` or `failed_processes` field in the DynamoDB entry and immediately check if the required number of processes have successfully completed. If yes, it will break out of the Parallel State. It will not, it will wait for other processes to finish.
 
 Learn more about this workflow at Step Functions workflows collection: << Add the live URL here >>
 
@@ -47,12 +49,13 @@ The pattern shows how to implement a parallel task in a way that if a "quorum" n
 - One of them is a time out, while the other three are actual flows. For the purposes of this pattern I have added two but it can be any number.
 - The time out flow waits for 15 seconds and completes the execution of the Parallel state if the quorum is not met by then.
 - The other three flows use the following logic.
-    - Check for any process to see if it completed (this is a Pass state in this pattern, but it could be any call to check, say, for RDS backup completion, or completion of an AWS Batch job triggered earlier, etc). If it is not completed, wait for 5 seconds and check again.
-    - If the process completed, it will update the DynamoDB table with the name of the process.
-    - After making the DynamoDB update, it checks the DynamoDB table to see if its completion causes the quorum to be met. It does by counting the processes completed against the "quorum" input passed to the workflow.
+    - Start off the processes, which in this example, is simulated with a Lambda function. This could be replaced with any synchronous process, or an asynchronous process with a polling mechanism.
+    - If the process completed, it will update the DynamoDB table's appropriate field (either `successful_processes` or `failed_processes`) with the name of the process.
+    - After making the DynamoDB update, it checks the DynamoDB table to see if its completion causes the quorum to be met. It does by counting the processes successully completed against the "quorum" input passed to the workflow.
     - If the quorum is met it raise an "error", which is needed to break out of this parallel flow. For your business need this might not be an actual error scenario, but it is still implemented as an error, so that the flow can move out of the Parallel step
     - If the quorum is not met, it will just move forward waiting for other flows to complete. The idea is that each flow checks quorum after its own completion. So whichever flow's completion causes the quorum condition to be met will trigger an "error" and break out of the parallel state
 - The Parallel state has 2 catch statement in its error handling, one to receive the time out error, and the other to receive the "error" thrown by the 3 flows. To reiterate, the "errors" by the 3 parallel flows are not actual errors in terms of your business logic but is just used to move control to outside the Parallel step.
+- The final state retrieves the item from the DynamoDB table which ends up being the Step Function's output. Any process that calls the step function can use this output to understand what happened, which processes succeeded, which ones failed etc.
 
 ## Image
 ![image](./resources/statemachine.png)
@@ -64,39 +67,14 @@ The pattern shows how to implement a parallel task in a way that if a "quorum" n
 1. Select `Start Execution`, provide the input as
     ```
     {
-        "Process1ToComplete" : true,
         "quorum" : 2
     }
     ```
     and then click `Start Execution`.
 
-1. You will see that the task "Next Step If Process Ran out of time" gets executed because only 1 process completed.
+    You can see each parallel process either waiting an arbitrary amount of time, or failing. Executing this step functions a few times, will give different scenarios, like a process failing, a time out happening etc. Feel free to modify the logic in the Lambda function to trigger any particular scenarios you would like to simulate.
 
-1. Select `Start Execution` again, and this time provide the input as 
-    ```
-    {
-        "Process1ToComplete" : true,
-        "Process2ToComplete" : true,
-        "quorum" : 2
-    }
-    ```
-    and then click `Start Execution`.  
-
-1. You will see that the task "Next Step If Quorum Is Met" gets executed because the quorum is 2 and the number of processes completed is 2.
-1. Select `Start Execution` again, and this time use the default json and then click `Start Execution`.  
-1. You will see that the task "Next Step If Process Ran out of time" gets executed because no process finishes before timeout.
-1. Select `Start Execution` again, and this time provide the input as 
-    ```
-    {
-        "Process1ToComplete" : true,
-        "Process2ToComplete" : true,
-        "Process3ToComplete" : true,
-        "quorum" : 2
-    }
-    ```
-    and then click `Start Execution`.  
-1. You will see that the task "Next Step If Quorum Is Met" gets executed because the quorum is 2 and the number of processes completed is 3 (which is more than the quorum requirement).
-
+1. If the quorum is met, you will see the Step Function's output as having at least 2 processes completed.
 
 ## Cleanup
  

@@ -8,6 +8,42 @@ Description: >
 
 # Comment each resource section to explain usage
 Resources:
+
+  LambdaFunctionRole:
+      Type: 'AWS::IAM::Role'
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Action:
+                - 'sts:AssumeRole'
+              Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+        ManagedPolicyArns:
+          - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+
+  #Lambda Function
+  MockProcessLambdaFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      CodeUri: src/
+      Description: "Function that takes a random amount of time to complete or fail"
+      FunctionName: "QuorumPatternMockProcessFuntion"
+      Handler: function.handler
+      PackageType: "Zip"
+      Runtime: "python3.10"
+      Role: !GetAtt LambdaFunctionRole.Arn
+
+  # Explicitly create function log group to set retention and delete during cleanup.
+  FunctionLogGroup:
+    Type: 'AWS::Logs::LogGroup'
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/MockProcessLambdaFunction"
+      RetentionInDays: 1
+
+
 # STATE MACHINE #
   QuorumWithParallelStateMachine:
     Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
@@ -16,11 +52,14 @@ Resources:
       DefinitionUri: statemachine/statemachine.asl.json
       DefinitionSubstitutions:
         DDBTable: !Ref DDBTable
+        LambdaFunctionName: !Ref MockProcessLambdaFunction
       Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
         - DynamoDBWritePolicy:
             TableName: !Ref DDBTable
         - DynamoDBReadPolicy:
             TableName: !Ref DDBTable
+        - LambdaInvokePolicy:
+            FunctionName: !Ref MockProcessLambdaFunction
 
 # DYNAMODB TABLE #
 # This is used to store the number of flows completed
