@@ -1,0 +1,50 @@
+{
+    "StartAt": "Update Order History",
+    "States": {
+      "Update Order History": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "Parameters": {
+         "FunctionName": "${UpdateDatabaseLambdaFunction}",
+          "Payload": {
+            "Message": "Update order history."
+          }
+        },
+        "Next": "Update Data Warehouse"
+      },
+      "Update Data Warehouse": {
+        "Type" : "Task",
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "Parameters": {
+          "FunctionName": "${UpdateDatabaseLambdaFunction}",
+          "Payload": {
+            "Message": "Update data warehouse."
+          }
+        },
+        "Next": "Update Customer Profile"
+      },
+      "Update Customer Profile": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "Parameters": {
+          "FunctionName": "${UpdateDatabaseLambdaFunction}",
+          "Payload": {
+            "Message": "Update customer profile."
+          }
+        },
+        "Next": "Update Inventory"
+      },
+      "Update Inventory": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "Parameters": {
+          "FunctionName": "${UpdateDatabaseLambdaFunction}",
+          "Payload": {
+            "Message": "Update inventory."
+          }
+        },
+        "End": true
+      }
+    }
+  }
+  
