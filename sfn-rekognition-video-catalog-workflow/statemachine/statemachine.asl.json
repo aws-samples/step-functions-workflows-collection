@@ -1,0 +1,455 @@
+{
+  "Comment" : "Rekognition Video Analysis State Machine",
+  "StartAt" : "Content Moderation Map",
+  "States" : {
+    "Content Moderation Map" : {
+      "ItemProcessor" : {
+        "ProcessorConfig" : {
+          "ExecutionType" : "STANDARD",
+          "Mode" : "DISTRIBUTED"
+        },
+        "StartAt" : "StartContentModeration",
+        "States" : {
+          "Choice" : {
+            "Choices" : [ {
+              "IsPresent" : true,
+              "Next" : "Write Rekognition Content Moderation Results to file",
+              "Variable" : "$.Results.ModerationLabels[0]"
+            } ],
+            "Default" : "Pass",
+            "Type" : "Choice"
+          },
+          "GetContentModeration" : {
+            "Next" : "Update ContentModeration Job status",
+            "Parameters" : {
+              "JobId.$" : "$.Rekognition.JobId",
+              "MaxResults" : 1000
+            },
+            "Resource" : "arn:aws:states:::aws-sdk:rekognition:getContentModeration",
+            "ResultPath" : "$.Results",
+            "Type" : "Task"
+          },
+          "Pass" : {
+            "End" : true,
+            "Type" : "Pass"
+          },
+          "StartContentModeration" : {
+            "Next" : "Wait for ContentModeration Callback",
+            "Parameters" : {
+              "MinConfidence" : 95,
+              "NotificationChannel" : {
+                "RoleArn" : "arn:aws:iam::{ACCOUNT-NUMBER}:role/rekognition-service-sns-role",
+                "SnsTopicArn" : "arn:aws:sns:{REGION}:{ACCOUNT-NUMBER}:SfnRekognitionVideoCatalogWorkflowStack-rekognitionNotificationstopic5A634F86-H287ejWtZ07P"
+              },
+              "Video" : {
+                "S3Object" : {
+                  "Bucket" : "videos-for-processing-{ACCOUNT-NUMBER}-{REGION}",
+                  "Name.$" : "$.Key"
+                }
+              }
+            },
+            "Resource" : "arn:aws:states:::aws-sdk:rekognition:startContentModeration",
+            "ResultPath" : "$.Rekognition",
+            "Type" : "Task"
+          },
+          "Update ContentModeration Job status" : {
+            "Next" : "Choice",
+            "Parameters" : {
+              "ExpressionAttributeValues" : {
+                ":processingStatus" : {
+                  "S.$" : "$.Results.JobStatus"
+                }
+              },
+              "Key" : {
+                "jobid" : {
+                  "S.$" : "$.Rekognition.JobId"
+                },
+                "video-name" : {
+                  "S.$" : "$.Key"
+                }
+              },
+              "TableName" : "rekognition-job-tracker",
+              "UpdateExpression" : "SET processingStatus = :processingStatus"
+            },
+            "Resource" : "arn:aws:states:::dynamodb:updateItem",
+            "ResultPath" : "$.DynamoDBResult",
+            "Type" : "Task"
+          },
+          "Wait for ContentModeration Callback" : {
+            "Next" : "GetContentModeration",
+            "Parameters" : {
+              "Item" : {
+                "Key" : {
+                  "S.$" : "$.Key"
+                },
+                "jobName" : {
+                  "S" : "Content Moderation"
+                },
+                "jobid" : {
+                  "S.$" : "$.Rekognition.JobId"
+                },
+                "processingStatus" : {
+                  "S" : "processing"
+                },
+                "taskToken" : {
+                  "S.$" : "$$.Task.Token"
+                },
+                "video-name" : {
+                  "S.$" : "$.Key"
+                }
+              },
+              "TableName" : "rekognition-job-tracker"
+            },
+            "Resource" : "arn:aws:states:::aws-sdk:dynamodb:putItem.waitForTaskToken",
+            "ResultPath" : "$.DynamoDBResult",
+            "Type" : "Task"
+          },
+          "Write Rekognition Content Moderation Results to file" : {
+            "Next" : "Pass",
+            "OutputPath" : "$.Payload",
+            "Parameters" : {
+              "FunctionName" : "arn:aws:lambda:{REGION}:{ACCOUNT-NUMBER}:function:SfnRekognitionVideoCatalo-writecontentmoderateddat-ET30IBBDb64b",
+              "Payload" : {
+                "Key.$" : "$.Key",
+                "Results.$" : "$.Results",
+                "executionId.$" : "$$.Execution.Name",
+                "prefix" : "content"
+              }
+            },
+            "Resource" : "arn:aws:states:::lambda:invoke",
+            "Retry" : [ {
+              "BackoffRate" : 2,
+              "ErrorEquals" : [ "Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.SdkClientException", "Lambda.TooManyRequestsException" ],
+              "IntervalSeconds" : 2,
+              "MaxAttempts" : 6
+            } ],
+            "Type" : "Task"
+          }
+        }
+      },
+      "ItemReader" : {
+        "Parameters" : {
+          "Bucket" : "videos-for-processing-{ACCOUNT-NUMBER}-{REGION}"
+        },
+        "Resource" : "arn:aws:states:::s3:listObjectsV2"
+      },
+      "Label" : "ContentModerationMap",
+      "MaxConcurrency" : 10,
+      "Next" : "Segment Detection Map",
+      "Type" : "Map"
+    },
+    "Create/Update VideoContentCatalog" : {
+      "Next" : "Move Proccessed Files",
+      "Parameters" : {
+        "Name" : "video_content_data_crawler"
+      },
+      "Resource" : "arn:aws:states:::aws-sdk:glue:startCrawler",
+      "Type" : "Task"
+    },
+    "Label Detection Map" : {
+      "ItemProcessor" : {
+        "ProcessorConfig" : {
+          "ExecutionType" : "STANDARD",
+          "Mode" : "DISTRIBUTED"
+        },
+        "StartAt" : "StartLabelDetection",
+        "States" : {
+          "GetLabelDetection" : {
+            "Next" : "Update Label Detection Status",
+            "Parameters" : {
+              "AggregateBy" : "SEGMENTS",
+              "JobId.$" : "$.Rekognition.JobId",
+              "MaxResults" : 1000,
+              "SortBy" : "NAME"
+            },
+            "Resource" : "arn:aws:states:::aws-sdk:rekognition:getLabelDetection",
+            "ResultPath" : "$.Results",
+            "Type" : "Task"
+          },
+          "StartLabelDetection" : {
+            "Next" : "Wait for LabelDetection Callback",
+            "Parameters" : {
+              "MinConfidence" : 95,
+              "NotificationChannel" : {
+                "RoleArn" : "arn:aws:iam::{ACCOUNT-NUMBER}:role/rekognition-service-sns-role",
+                "SnsTopicArn" : "arn:aws:sns:{REGION}:{ACCOUNT-NUMBER}:SfnRekognitionVideoCatalogWorkflowStack-rekognitionNotificationstopic5A634F86-H287ejWtZ07P"
+              },
+              "Video" : {
+                "S3Object" : {
+                  "Bucket" : "videos-for-processing-{ACCOUNT-NUMBER}-{REGION}",
+                  "Name.$" : "$.Key"
+                }
+              }
+            },
+            "Resource" : "arn:aws:states:::aws-sdk:rekognition:startLabelDetection",
+            "ResultPath" : "$.Rekognition",
+            "Type" : "Task"
+          },
+          "Update Label Detection Status" : {
+            "Next" : "Write Rekognition Label Detection Results to File",
+            "Parameters" : {
+              "ExpressionAttributeValues" : {
+                ":processingStatus" : {
+                  "S.$" : "$.Results.JobStatus"
+                }
+              },
+              "Key" : {
+                "jobid" : {
+                  "S.$" : "$.Rekognition.JobId"
+                },
+                "video-name" : {
+                  "S.$" : "$.Key"
+                }
+              },
+              "TableName" : "rekognition-job-tracker",
+              "UpdateExpression" : "SET processingStatus = :processingStatus"
+            },
+            "Resource" : "arn:aws:states:::dynamodb:updateItem",
+            "ResultPath" : "$.DynamoDBResult",
+            "Type" : "Task"
+          },
+          "Wait for LabelDetection Callback" : {
+            "Next" : "GetLabelDetection",
+            "Parameters" : {
+              "Item" : {
+                "Key" : {
+                  "S.$" : "$.Key"
+                },
+                "jobName" : {
+                  "S" : "Label Detection"
+                },
+                "jobid" : {
+                  "S.$" : "$.Rekognition.JobId"
+                },
+                "processingStatus" : {
+                  "S" : "processing"
+                },
+                "taskToken" : {
+                  "S.$" : "$$.Task.Token"
+                },
+                "video-name" : {
+                  "S.$" : "$.Key"
+                }
+              },
+              "TableName" : "rekognition-job-tracker"
+            },
+            "Resource" : "arn:aws:states:::aws-sdk:dynamodb:putItem.waitForTaskToken",
+            "ResultPath" : "$.DynamoDBResult",
+            "Type" : "Task"
+          },
+          "Write Rekognition Label Detection Results to File" : {
+            "End" : true,
+            "OutputPath" : "$.Payload",
+            "Parameters" : {
+              "FunctionName" : "arn:aws:lambda:{REGION}:{ACCOUNT-NUMBER}:function:SfnRekognitionVideoCatalogW-writelabeldataA5C834F5-EQEl6JfPKjtk",
+              "Payload" : {
+                "Key.$" : "$.Key",
+                "Results.$" : "$.Results",
+                "executionId.$" : "$$.Execution.Name",
+                "prefix" : "labels"
+              }
+            },
+            "Resource" : "arn:aws:states:::lambda:invoke",
+            "Retry" : [ {
+              "BackoffRate" : 2,
+              "ErrorEquals" : [ "Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.SdkClientException", "Lambda.TooManyRequestsException" ],
+              "IntervalSeconds" : 2,
+              "MaxAttempts" : 6
+            } ],
+            "Type" : "Task"
+          }
+        }
+      },
+      "ItemReader" : {
+        "Parameters" : {
+          "Bucket" : "videos-for-processing-{ACCOUNT-NUMBER}-{REGION}"
+        },
+        "ReaderConfig" : { },
+        "Resource" : "arn:aws:states:::s3:listObjectsV2"
+      },
+      "Label" : "LabelDetectionMap",
+      "MaxConcurrency" : 10,
+      "Next" : "Create/Update VideoContentCatalog",
+      "Type" : "Map"
+    },
+    "Move Proccessed Files" : {
+      "End" : true,
+      "ItemBatcher" : {
+        "MaxItemsPerBatch" : 10
+      },
+      "ItemProcessor" : {
+        "ProcessorConfig" : {
+          "ExecutionType" : "EXPRESS",
+          "Mode" : "DISTRIBUTED"
+        },
+        "StartAt" : "MoveProcessedFiles",
+        "States" : {
+          "MoveProcessedFiles" : {
+            "End" : true,
+            "OutputPath" : "$.Payload",
+            "Parameters" : {
+              "FunctionName" : "arn:aws:lambda:{REGION}:{ACCOUNT-NUMBER}:function:SfnRekognitionVideoCatalo-moveprocessedfiles4AF94D-emKXaTIvaC92",
+              "Payload" : {
+                "Bucket" : "videos-for-processing-{ACCOUNT-NUMBER}-{REGION}",
+                "Items.$" : "$.Items",
+                "executionId.$" : "$$.Execution.Name"
+              }
+            },
+            "Resource" : "arn:aws:states:::lambda:invoke",
+            "Retry" : [ {
+              "BackoffRate" : 2,
+              "ErrorEquals" : [ "Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.SdkClientException", "Lambda.TooManyRequestsException" ],
+              "IntervalSeconds" : 2,
+              "MaxAttempts" : 6
+            } ],
+            "Type" : "Task"
+          }
+        }
+      },
+      "ItemReader" : {
+        "Parameters" : {
+          "Bucket" : "videos-for-processing-{ACCOUNT-NUMBER}-{REGION}"
+        },
+        "Resource" : "arn:aws:states:::s3:listObjectsV2"
+      },
+      "Label" : "MoveProccessedFiles",
+      "MaxConcurrency" : 1000,
+      "Type" : "Map"
+    },
+    "Segment Detection Map" : {
+      "ItemProcessor" : {
+        "ProcessorConfig" : {
+          "ExecutionType" : "STANDARD",
+          "Mode" : "DISTRIBUTED"
+        },
+        "StartAt" : "StartSegmentDetection",
+        "States" : {
+          "GetSegmentDetection" : {
+            "Next" : "Update Segment Detection Status",
+            "Parameters" : {
+              "JobId.$" : "$.Rekognition.JobId",
+              "MaxResults" : 1000
+            },
+            "Resource" : "arn:aws:states:::aws-sdk:rekognition:getSegmentDetection",
+            "ResultPath" : "$.Results",
+            "Type" : "Task"
+          },
+          "StartSegmentDetection" : {
+            "Next" : "Wait for SegmentDetection Callback",
+            "Parameters" : {
+              "Filters" : {
+                "ShotFilter" : {
+                  "MinSegmentConfidence" : 95
+                },
+                "TechnicalCueFilter" : {
+                  "BlackFrame" : {
+                    "MaxPixelThreshold" : 0.2,
+                    "MinCoveragePercentage" : 99
+                  },
+                  "MinSegmentConfidence" : 95
+                }
+              },
+              "NotificationChannel" : {
+                "RoleArn" : "arn:aws:iam::{ACCOUNT-NUMBER}:role/rekognition-service-sns-role",
+                "SnsTopicArn" : "arn:aws:sns:{REGION}:{ACCOUNT-NUMBER}:SfnRekognitionVideoCatalogWorkflowStack-rekognitionNotificationstopic5A634F86-H287ejWtZ07P"
+              },
+              "SegmentTypes" : [ "SHOT", "TECHNICAL_CUE" ],
+              "Video" : {
+                "S3Object" : {
+                  "Bucket" : "videos-for-processing-{ACCOUNT-NUMBER}-{REGION}",
+                  "Name.$" : "$.Key"
+                }
+              }
+            },
+            "Resource" : "arn:aws:states:::aws-sdk:rekognition:startSegmentDetection",
+            "ResultPath" : "$.Rekognition",
+            "Type" : "Task"
+          },
+          "Update Segment Detection Status" : {
+            "Next" : "Write Rekognition Segmet Results to File",
+            "Parameters" : {
+              "ExpressionAttributeValues" : {
+                ":processingStatus" : {
+                  "S.$" : "$.Results.JobStatus"
+                }
+              },
+              "Key" : {
+                "jobid" : {
+                  "S.$" : "$.Rekognition.JobId"
+                },
+                "video-name" : {
+                  "S.$" : "$.Key"
+                }
+              },
+              "TableName" : "rekognition-job-tracker",
+              "UpdateExpression" : "SET processingStatus = :processingStatus"
+            },
+            "Resource" : "arn:aws:states:::dynamodb:updateItem",
+            "ResultPath" : "$.DynamoDBResult",
+            "Type" : "Task"
+          },
+          "Wait for SegmentDetection Callback" : {
+            "Next" : "GetSegmentDetection",
+            "Parameters" : {
+              "Item" : {
+                "Key" : {
+                  "S.$" : "$.Key"
+                },
+                "jobName" : {
+                  "S" : "Segment Detection"
+                },
+                "jobid" : {
+                  "S.$" : "$.Rekognition.JobId"
+                },
+                "processingStatus" : {
+                  "S" : "processing"
+                },
+                "taskToken" : {
+                  "S.$" : "$$.Task.Token"
+                },
+                "video-name" : {
+                  "S.$" : "$.Key"
+                }
+              },
+              "TableName" : "rekognition-job-tracker"
+            },
+            "Resource" : "arn:aws:states:::aws-sdk:dynamodb:putItem.waitForTaskToken",
+            "ResultPath" : "$.DynamoDBResult",
+            "Type" : "Task"
+          },
+          "Write Rekognition Segmet Results to File" : {
+            "End" : true,
+            "OutputPath" : "$.Payload",
+            "Parameters" : {
+              "FunctionName" : "arn:aws:lambda:{REGION}:{ACCOUNT-NUMBER}:function:SfnRekognitionVideoCatalo-writesegmentdata81110913-m8N3Gpg2MqRv",
+              "Payload" : {
+                "Key.$" : "$.Key",
+                "Results.$" : "$.Results",
+                "executionId.$" : "$$.Execution.Name",
+                "prefix" : "segments"
+              }
+            },
+            "Resource" : "arn:aws:states:::lambda:invoke",
+            "Retry" : [ {
+              "BackoffRate" : 2,
+              "ErrorEquals" : [ "Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.SdkClientException", "Lambda.TooManyRequestsException" ],
+              "IntervalSeconds" : 2,
+              "MaxAttempts" : 6
+            } ],
+            "Type" : "Task"
+          }
+        }
+      },
+      "ItemReader" : {
+        "Parameters" : {
+          "Bucket" : "videos-for-processing-{ACCOUNT-NUMBER}-{REGION}"
+        },
+        "Resource" : "arn:aws:states:::s3:listObjectsV2"
+      },
+      "Label" : "SegmentDetectionMap",
+      "MaxConcurrency" : 10,
+      "Next" : "Label Detection Map",
+      "Type" : "Map"
+    }
+  }
+}
