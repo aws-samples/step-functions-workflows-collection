@@ -87,30 +87,4 @@ export class ChildStateMachine extends Construct {
         });
         this.Arn = childStateMachine.attrArn;
     }
-
-    // /**
-    //  * Utility method to create Lambda blueprint
-    //  * @param scope
-    //  * @param id
-    //  * @param handler
-    //  * @param table
-    //  */
-    // createLambda(scope:Construct, id:string, handler:string, table:dynamodb.Table){
-    //
-    //     const fn = new NodejsFunction(scope, id, {
-    //         runtime: lambda.Runtime.NODEJS_16_X,
-    //         entry: join('lambdas', handler),
-    //         bundling: {
-    //             externalModules: ['aws-sdk'], // Use the 'aws-sdk' available in the Lambda runtime
-    //         },
-    //         environment: {
-    //             TABLE_NAME: table.tableName
-    //         },
-    //     });
-    //
-    //     // Give Lambda permissions to read and write data from the DynamoDB table
-    //     table.grantReadWriteData(fn);
-    //
-    //     return fn;
-    // }
 }
