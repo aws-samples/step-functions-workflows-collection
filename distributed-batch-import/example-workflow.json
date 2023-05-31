@@ -1,0 +1,86 @@
+{
+  "title": "Distributed Batch Import",
+  "description": "Reads a json file from S3 and saves its contents in batches to a DynamoDB table.",
+  "language": "",
+  "simplicity": "1 - Fundamental",
+  "usecase": "Performant data import",
+  "type": "Standard",
+  "diagram": "/resources/statemachine.png",
+  "videoId": "",
+  "level": "200",
+  "framework": "SAM",
+  "services": ["s3", "step-functions", "dynamodb", "event-bridge"],
+  "introBox": {
+    "headline": "How it works",
+    "text": [
+      "When a .json file prefixed with create/ is uploaded to the created S3 bucket, an event that the file has been created will be sent to EventBridge's default bus.",
+      "This workflow is triggered when the .json file is created and will read the file's content, which is expected to be an array in batches of 10.",
+      "Each batch is executed in parallel by creating its own state machine in express mode & can be mapped to the desired format before each object is saved in DynamoDB"
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": [
+      "1. Create a new folder called 'create' in the S3 bucket named '{STACK_NAME}-incoming-files'.",
+      "2. Upload the './resource/organization-import.json' file to the S3 bucket to trigger the state machine."
+    ]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": [
+      "1. Delete the stack: <code>sam delete</code>.",
+      "2. Delete the S3 bucket: <code>aws s3 rb s3://{stack-name}-incoming-files --force</code>."
+    ]
+  },
+  "deploy": {
+    "text": ["sam deploy --guided"]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/distributed-batch-import/",
+      "templateDir": "distributed-batch-import",
+      "templateFile": "template.yaml",
+      "ASL": "state-machine/create-organization.asl.yaml"
+    },
+    "payloads": [
+      {
+        "headline": "organization-import.json",
+        "payloadURL": "https://raw.githubusercontent.com/aws-samples/step-functions-workflows-collection/main/distributed-batch-import/resources/organization-import.json"
+      }
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "The AWS Step Functions Workshop",
+        "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+      },
+      {
+        "text": "Intrinsic functions",
+        "link": "https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-intrinsic-functions.html"
+      },
+      {
+        "text": "Amazon S3 Event Notifications",
+        "link": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/NotificationHowTo.html"
+      },
+      {
+        "text": "What is Amazon DynamoDB?",
+        "link": "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Introduction.html"
+      },
+      {
+        "text": "DynamoDB BatchWriteItem",
+        "link": "https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchWriteItem.html"
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Stefan Karlsson",
+      "image": "https://static.stefan-karlsson.se/images/me.jpg",
+      "bio": "Development lead with a passion for bleeding edge technology",
+      "linkedin": "successstefan",
+      "twitter": "st3kar"
+    }
+  ]
+}

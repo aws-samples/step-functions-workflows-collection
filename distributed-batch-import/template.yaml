@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Step Functions Workflow - Distributed Batch Import
+
+Resources:
+  # ---------------------------------------------------------
+  # S3 bucket that will receive the .json file(s) to import #
+  # ---------------------------------------------------------
+  IncomingFilesBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${AWS::StackName}-incoming-files
+      AccessControl: Private
+      NotificationConfiguration:
+        EventBridgeConfiguration:
+          EventBridgeEnabled: true
+
+  # ----------------------------------------------------------
+  # Step Functions workflow that orchestrate the import      #
+  # ----------------------------------------------------------
+  StateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: state-machine/create-organization.asl.yaml
+      DefinitionSubstitutions:
+        DynamoDBTable: !Ref DynamoDBTable
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref DynamoDBTable
+        - S3ReadPolicy:
+            BucketName: !Ref IncomingFilesBucket
+        - Statement: 
+            - Effect: Allow
+              Action:
+                - states:StartExecution
+              Resource: '*'
+        - CloudWatchLogsFullAccess
+      Events:
+        EventBridgeEvent:
+          Type: EventBridgeRule
+          Properties:
+            EventBusName: default
+            Pattern:
+              source:
+                - aws.s3
+              detail-type:
+                - Object Created
+              detail:
+                bucket:
+                  name:
+                    - !Ref IncomingFilesBucket
+                object:
+                  key:
+                    # Only trigger the workflow when a .json file is created in the create/ folder
+                    - suffix: .json
+                    - prefix: 'create/' 
+
+  # ---------------------------------------------------------
+  # Table that persist the content of the .json file(s)     # 
+  # ---------------------------------------------------------
+  DynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
