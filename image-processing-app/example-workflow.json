@@ -1,0 +1,76 @@
+{
+  "title": "Image Processing App",
+  "description": "A workflow to fetch the ids, pull the images, combine them and store it in a bucket. Finally the zip file is created for all the images",
+  "language": "",
+  "simplicity": "3 - Application",
+  "usecase": "",
+  "type": "Standard",
+  "diagram": "/resources/statemachine.png",
+  "videoId": "",
+  "level": "200",
+  "framework": "CDK",
+  "services": [
+    "s3",
+    "Lambda",
+    "DynamoDB",
+    "IAM"
+  ],
+  "introBox": {
+    "headline": "How it works",
+    "text": [
+      "This workflow submits an AWS Batch job. In its normal state the job is asynchronous. The state machine submits the job to the AWS Batch service and waits for the job to complete before sending a Notify Success message to an Amazon SNS topic.",
+      "This is done by making use of Step Functions `.sync` execution pattern"
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": [
+      "See the GitHub repo for detailed testing instructions."
+    ]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": [
+      "1. Delete the stack: <code>cdk destroy</code>."
+    ]
+  },
+  "deploy": {
+    "text": [
+      "1. npm install - to install the required libraries.
+      2. `cdk synth` - emits the synthesized CloudFormation template. 
+      3. `cdk diff`  - compare deployed stack with current state 
+      4. `cdk deploy`- deploy this stack to your default AWS account/region"
+    ]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/image-processsing-app/",
+      "templateDir": "synchronous-job",
+      "ASL": "statemachine/statemachine.asl.json"
+    },
+    "payloads": [
+      {
+        "headline": "",
+        "payloadURL": ""
+      }
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "The AWS Step Functions Workshop",
+        "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Deepak Srinivasan",
+      "image": "link-to-your-photo.jpg",
+      "bio": "Deepak Srinivasan is a Cloud Application Architect with AWS Professional Services. He offers a wealth of expertise in assisting customers with their cloud infrastructure needs, including application optimization and serverless solutions.",
+      "linkedin": "https://www.linkedin.com/in/deepaksrinivasan27/",
+      "twitter": "@deepsrinivasan"
+    }
+  ]
+}
