@@ -1,0 +1,69 @@
+{
+    "title": "Webhook provider with AWS Step functions",
+    "description": "A webhook provider is a service or system that offers the capability to send outgoing webhook notifications to external systems or applications. A webhook is an HTTP callback that sends a notification to a predefined URL (endpoint) when a specific event or trigger occurs. Webhooks allow real-time communication and data exchange between different systems or services.",
+    "language": "",
+    "simplicity": "2 - Pattern",
+    "usecase": "Webhook providers are commonly used in scenarios, such as:\n1. Integration with third-party services.\n2. Real-time data synchronization.\n3. Automation and event-driven workflows",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "200",
+    "framework": "SAM",
+    "services": ["sqs","lambda","dynamodb,eventbridge"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+       "When an event that matches the configured filter conditions is triggered,\nthe step function handles the flow of retrieving event data and validates if the customer has set up a webhook subscription for the event.\nIf a valid subscription exists, it prepares the webhook call, queues the call, and updates the webhook call entry in DynamoDB. \nThe queue entry triggers a lambda function that calls the webhook. The retry interval and count along with backoff settings can be configured."
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/webhook-provider/",
+        "templateDir":"webhook-provider",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Subha Venugopal",
+          "image": "https://d6im48gnkrshd.cloudfront.net/public/subha.jpg",
+          "bio": "Subha is a Sr.Solution Architect at AWS.\nShe is passionate about improving healthcare delivery and making it accessible to all 🚀💙.",
+          "linkedin": "https://www.linkedin.com/in/subhavivek/"
+           
+        }
+      ]
+  }
+   

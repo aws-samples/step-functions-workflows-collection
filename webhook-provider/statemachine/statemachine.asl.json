@@ -1,0 +1,152 @@
+{
+  "Comment": "A state machine implementing a webhook provider ",
+  "StartAt": "Get webhooks for customer and event",
+  "States": {
+    "Get webhooks for customer and event": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:getItem",
+      "Parameters": {
+        "TableName": "${WebHookTable}",
+        "Key": {
+          "pk": {
+            "S.$": "States.Format('webhook_{}_{}.{}', $.detail.customerId, $.source, $.detail.status)"
+          },
+          "type": {
+            "S": "webhook"
+          }
+        }
+      },
+      "Next": "Validate if webhook subscription exists",
+      "ResultPath": "$.webhookData"
+    },
+    "Validate if webhook subscription exists": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "And": [
+            {
+              "Variable": "$.webhookData.Item",
+              "IsPresent": true
+            },
+            {
+              "Variable": "$.webhookData.Item.pk.S",
+              "IsPresent": true
+            },
+            {
+              "Variable": "$.webhookData.Item.signingToken.S",
+              "IsPresent": true
+            },
+            {
+              "Variable": "$.webhookData.Item.url.S",
+              "IsPresent": true
+            }
+          ],
+          "Next": "Prepare webhook call"
+        }
+      ],
+      "Default": "SkipExecution"
+    }, 
+    "Prepare webhook call": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "${PrepareWebHookCallFunctionArn}"
+      },
+      "Next": "Queue webhook call",
+      "ResultPath": "$.webhookCallData",
+      "ResultSelector": {
+        "id.$": "$.Payload.id",
+        "payload.$": "$.Payload.payload",
+        "url.$": "$.Payload.url",
+        "token.$": "$.Payload.token"
+
+      }
+    },
+    "Queue webhook call": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sqs:sendMessage.waitForTaskToken",
+      "Parameters": {
+        "QueueUrl": "${QueueUrl}",
+        "MessageBody": {
+          "url.$": "$.webhookCallData.url",
+          "token.$":  "$.webhookCallData.token",
+          "payload.$": "$.webhookCallData.payload",
+          "taskToken.$": "$$.Task.Token",
+          "id.$":"$.webhookCallData.id"
+
+        }
+      },
+      "HeartbeatSeconds": 3600,
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 60,
+          "MaxAttempts": 2
+        }
+      ],
+      "Next": "Update WebhookCall",
+      "ResultPath": "$.webhookCallResult",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Transform Error",
+          "ResultPath": "$.webhookCallResult"
+        }
+      ]
+    },
+    "Transform Error": {
+      "Type": "Pass",
+      "Next": "Update WebhookCall",
+      "ResultPath": "$.webhookCallResult",
+      "Parameters": {
+        "status": "failed",
+        "payload": "",
+        "output": {
+          "Error.$": "$.webhookCallResult.Error",
+          "Cause.$": "$.webhookCallResult.Cause"
+        }
+      }
+    },
+    "Update WebhookCall": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:updateItem",
+      "Parameters": {
+        "TableName": "${WebHookTable}",
+        "Key": {
+          "pk": {
+            "S.$": "$.webhookCallData.id"
+          },
+          "type": {
+            "S": "webhookcall"
+          }
+        },
+        "UpdateExpression": "SET #status = :status, #output = :output",
+        "ExpressionAttributeValues": {
+          ":status": {
+            "S.$": "$.webhookCallResult.status"
+          },
+          ":output": {
+            "S.$": "States.JsonToString($.webhookCallResult.output)"
+          }
+        },
+        "ExpressionAttributeNames": {
+          "#status": "status",
+          "#output": "output"
+        }
+      },
+      "End": true
+    },
+  
+    "SkipExecution": {
+      "Type": "Pass",
+      "End": true,
+      "Comment": "no webhook subscription for this customer and event type"
+    }
+  }
+}
