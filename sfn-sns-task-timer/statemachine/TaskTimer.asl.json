@@ -1,0 +1,97 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "CalculateTaskExpiry",
+  "States": {
+    "CalculateTaskExpiry": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "${CalculateTimeDiff}"
+      },
+      "Next": "CheckForValidExpiryDate"
+    },
+    "CheckForValidExpiryDate": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.expirydate",
+          "NumericLessThanEquals": 0,
+          "Next": "InvalidTaskExpiry"
+        }
+      ],
+      "Default": "ValidTaskExpiryDate"
+    },
+    "ValidTaskExpiryDate": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "${SendNotificationSNSTopic}",
+        "Message": {
+          "Message": "Valid Task Expiry Date, going to invoke child state machine."
+        }
+      },
+      "Next": "InvokeTimeboundedChildTasks",
+      "ResultPath": null
+    },
+    "InvokeTimeboundedChildTasks": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters": {
+        "StateMachineArn": "${TimeBoundedTasks}",
+        "Input": {
+          "body.$": "$",
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        }
+      },
+      "TimeoutSecondsPath": "$.expirydate",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.Timeout"
+          ],
+          "Next": "FailedChildTaskExecution"
+        }
+      ],
+      "Next": "SuccessfullChildTaskExecution"
+    },
+    "FailedChildTaskExecution": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "${SendNotificationSNSTopic}",
+        "Message": {
+          "Message": "Child Task execution failed."
+        }
+      },
+      "Next": "SomeRollBackTask"
+    },
+    "SuccessfullChildTaskExecution": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "${SendNotificationSNSTopic}",
+        "Message": {
+          "Message": "Child Tasks executed successfully!"
+        }
+      },
+      "End": true
+    },
+    "SomeRollBackTask": {
+      "Type": "Pass",
+      "End": true
+    },
+    "InvalidTaskExpiry": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "${SendNotificationSNSTopic}",
+        "Message": {
+          "message": "Expiry Date is older than Current Date"
+        }
+      },
+      "End": true
+    }
+  }
+}
