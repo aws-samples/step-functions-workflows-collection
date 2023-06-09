@@ -1,0 +1,110 @@
+{
+  "StartAt": "Create S3 Bucket",
+  "States": {
+    "Create S3 Bucket": {
+      "Next": "Get Cheque IDs",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Type": "Task",
+      "ResultPath": "$.BucketName",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:569294346996:function:BucketCreation",
+        "Payload": {
+          "token.$": "$$"
+        }
+      }
+    },
+    "Get Cheque IDs": {
+      "Next": "Map State",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Type": "Task",
+      "ResultPath": "$.ChequesList",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:569294346996:function:GetChequeIDs",
+        "Payload.$": "$"
+      }
+    },
+    "Map State": {
+      "Type": "Map",
+      "ResultPath": "$.ChequesImagesList",
+      "Next": "Generate Zip File",
+      "Iterator": {
+        "StartAt": "Generate Cheque Images",
+        "States": {
+          "Generate Cheque Images": {
+            "End": true,
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "Lambda.ServiceException",
+                  "Lambda.AWSLambdaException",
+                  "Lambda.SdkClientException"
+                ],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 6,
+                "BackoffRate": 2
+              }
+            ],
+            "Type": "Task",
+            "ResultPath": "$.ChequesImages",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+              "FunctionName": "arn:aws:lambda:us-east-1:569294346996:function:GetChequeImages",
+              "Payload": {
+                "token.$": "$$",
+                "input.$": "$.id"
+              }
+            }
+          }
+        }
+      },
+      "ItemsPath": "$.ChequesList.Payload.cheques",
+      "MaxConcurrency": 5
+    },
+    "Generate Zip File": {
+      "End": true,
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Type": "Task",
+      "ResultPath": "$.ZipFile",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:569294346996:function:ZipImages",
+        "Payload.$": "$"
+      }
+    }
+  }
+}

@@ -1,0 +1,211 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  sam-webhook-provider
+
+  Sample SAM Template for  webhook-provider
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Tracing: Active
+  Api:
+    TracingEnabled: True
+Parameters:
+  Stage:
+    Type: String
+    Default: 'dev'
+  EventSource:
+    Type: String
+    Default: order
+  EventBusName:
+    Type: String
+    Default: eCommBus
+  SigningTokenKmsKey:
+    Type: String
+    Default: 9367b0de-6cb5-48aa-830c-cbe01bb82cbd
+
+Resources:
+ 
+  EventBus: 
+    Type: AWS::Events::EventBus
+    Properties: 
+        Name: !Ref EventBusName
+  
+  WebHookCallQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: 60
+
+  WebHookTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: type
+          AttributeType: S
+        - AttributeName: customerId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: type
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: gsi_sk
+          KeySchema:
+            - AttributeName: type
+              KeyType: HASH
+            - AttributeName: customerId
+              KeyType: RANGE
+          Projection: 
+            ProjectionType: INCLUDE
+            NonKeyAttributes: 
+              - pk
+              - createts
+              - payload
+              - status
+              - callbackURL
+              - response
+        
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+
+  WebHookProviderStateMachine:
+    Type: AWS::Serverless::StateMachine 
+    # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      DefinitionUri: statemachine/statemachine.asl.json
+      DefinitionSubstitutions:
+ 
+        CallWebHookFunctionArn: !GetAtt CallWebHookFunction.Arn
+        PrepareWebHookCallFunctionArn: !GetAtt PrepareWebHookCallFunction.Arn
+        DDBPutItem: !Sub arn:${AWS::Partition}:states:::dynamodb:putItem
+        WebHookTable: !Ref WebHookTable
+        QueueUrl: !Ref WebHookCallQueue
+         
+      Events:
+        EventBridgeRule:
+          Type: EventBridgeRule
+          Properties:
+            EventBusName: !Ref EventBus
+            Pattern:
+              source:
+                - !Ref EventSource
+              detail-type: #Add the events that you are interested in.
+                - order.created
+                - order.shipped
+                - order.picked
+                - order.packed
+                - order.received
+
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+
+        - LambdaInvokePolicy:
+            FunctionName: !Ref CallWebHookFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref PrepareWebHookCallFunction
+        - DynamoDBCrudPolicy:
+            TableName: !Ref WebHookTable
+        - SQSSendMessagePolicy:
+            QueueName:  !GetAtt WebHookCallQueue.QueueName
+
+
+  CallWebHookFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/call-webhook/
+      Handler: app.lambdaHandler
+      Runtime: nodejs18.x
+      Architectures:
+        - x86_64
+      EventInvokeConfig:
+        MaximumRetryAttempts: 0
+      Policies:
+        - Statement:
+          - Sid: StateStatusPermission
+            Effect: Allow
+            Action:
+              - states:SendTaskSuccess
+              - states:SendTaskFailure
+            Resource: '*'
+      Events:
+        SQSEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt WebHookCallQueue.Arn
+            BatchSize: 10
+
+  PrepareWebHookCallFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/prepare-webhook/
+      Handler: app.lambdaHandler
+      Runtime: nodejs18.x
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          WEBHOOK_TABLE: !Ref WebHookTable
+          KMS_KEY: !Ref SigningTokenKmsKey
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref WebHookTable
+        - KMSDecryptPolicy:
+            KeyId: !Ref SigningTokenKmsKey
+
+  AddSubscriptionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/add-subscription/
+      Handler: app.lambdaHandler
+      Runtime: nodejs18.x
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          WEBHOOK_TABLE: !Ref WebHookTable      
+          KMS_KEY: !Ref SigningTokenKmsKey
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref WebHookTable
+        - KMSEncryptPolicy:
+            KeyId: !Ref SigningTokenKmsKey
+    
+
+
+Outputs:
+  # StockTradingStateMachineHourlyTradingSchedule is an implicit Schedule event rule created out of Events key under Serverless::StateMachine
+  # Find out more about other implicit resources you can reference within SAM
+  # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-specification-generated-resources.html
+  WebHookProviderStateMachineArn:
+    Description: "WebHook state machine ARN"
+    Value: !Ref WebHookProviderStateMachine
+  WebHookProviderStateMachineRole:
+    Description: "IAM Role created for WebHook Provider state machine based on the specified SAM Policy Templates"
+    Value: !GetAtt WebHookProviderStateMachineRole.Arn
+  WebHookTableArn:
+    Description: "WebHook Table Arn"
+    Value: !GetAtt WebHookTable.Arn
+  EventBus:
+    Description: "Event Bus Arn"
+    Value: !GetAtt EventBus.Arn
+  CallWebHookFunction:
+    Description: call webhook  function name
+    Value: !Ref CallWebHookFunction
+  PrepareWebHookCallFunction:
+    Description: prepare webhook  function name
+    Value: !Ref PrepareWebHookCallFunction
+  AddSubscriptionFunction:
+    Description: Add Subscription function name
+    Value: !Ref AddSubscriptionFunction
+  SQSQueueUrl:
+    Description: SQS Queue URL
+    Value: !Ref WebHookCallQueue

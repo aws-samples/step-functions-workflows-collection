@@ -12,7 +12,10 @@
           "timeout_occurred": {
             "BOOL": "false"
           },
-          "processes_completed": {
+          "successful_processes": {
+            "L": []
+          },
+          "failed_processes": {
             "L": []
           }
         }
@@ -26,50 +29,41 @@
       },
       "Branches": [
         {
-          "StartAt": "Get Process1 Completion Status",
+          "StartAt": "Mock Process 1",
           "States": {
-            "Get Process1 Completion Status": {
-              "Type": "Pass",
-              "Next": "Check If Process1 Completed",
-              "Result": {
-                "Completed": false
+            "Mock Process 1": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "OutputPath": "$.Payload",
+              "Parameters": {
+                "Payload.$": "$",
+                "FunctionName": "arn:aws:lambda:us-east-1:625787456381:function:${LambdaFunctionName}:$LATEST"
               },
-              "Comment": "This is a placeholder. Can be replaced with pretty much anythng that needs to be polled.",
-              "ResultPath": "$.QueryResult"
-            },
-            "Wait Before Getting Process 1 Status": {
-              "Type": "Wait",
-              "Seconds": 5,
-              "Next": "Get Process1 Completion Status"
-            },
-            "Check If Process1 Completed": {
-              "Type": "Choice",
-              "Choices": [
+              "Retry": [
                 {
-                  "Or": [
-                    {
-                      "And": [
-                        {
-                          "Variable": "$$.Execution.Input.Process1ToComplete",
-                          "IsPresent": true
-                        },
-                        {
-                          "Variable": "$$.Execution.Input.Process1ToComplete",
-                          "BooleanEquals": true
-                        }
-                      ]
-                    },
-                    {
-                      "Variable": "$.QueryResult.Completed",
-                      "BooleanEquals": true
-                    }
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
                   ],
-                  "Next": "Update Process1 Completion"
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 6,
+                  "BackoffRate": 2
                 }
               ],
-              "Default": "Wait Before Getting Process 1 Status"
+              "Next": "Update Process1 Success",
+              "Catch": [
+                {
+                  "ErrorEquals": [
+                    "States.ALL"
+                  ],
+                  "Next": "Update Process1 Failure",
+                  "ResultPath": "$.error"
+                }
+              ]
             },
-            "Update Process1 Completion": {
+            "Update Process1 Failure": {
               "Type": "Task",
               "Resource": "arn:aws:states:::dynamodb:updateItem",
               "Parameters": {
@@ -79,7 +73,28 @@
                     "S.$": "$$.Execution.Id"
                   }
                 },
-                "UpdateExpression": "SET processes_completed = list_append(processes_completed, :proc)",
+                "UpdateExpression": "SET failed_processes = list_append(failed_processes, :proc)",
+                "ExpressionAttributeValues": {
+                  ":proc": {
+                    "L": [
+                      "Process1"
+                    ]
+                  }
+                }
+              },
+              "Next": "Get Process Completion Statuses1"
+            },
+            "Update Process1 Success": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::dynamodb:updateItem",
+              "Parameters": {
+                "TableName": "${DDBTable}",
+                "Key": {
+                  "id": {
+                    "S.$": "$$.Execution.Id"
+                  }
+                },
+                "UpdateExpression": "SET successful_processes = list_append(successful_processes, :proc)",
                 "ExpressionAttributeValues": {
                   ":proc": {
                     "L": [
@@ -99,7 +114,8 @@
                   "id": {
                     "S.$": "$$.Execution.Id"
                   }
-                }
+                },
+                "ConsistentRead": true
               },
               "Next": "Count Processes 1"
             },
@@ -107,7 +123,7 @@
               "Type": "Pass",
               "Next": "Check If Quorum Met 1",
               "Parameters": {
-                "completed_processes_count.$": "States.ArrayLength($.Item.processes_completed.L)"
+                "completed_processes_count.$": "States.ArrayLength($.Item.successful_processes.L)"
               }
             },
             "Check If Quorum Met 1": {
@@ -133,50 +149,41 @@
           }
         },
         {
-          "StartAt": "Get Process2 Completion Status",
+          "StartAt": "Mock Process 2",
           "States": {
-            "Get Process2 Completion Status": {
-              "Type": "Pass",
-              "Next": "Check If Process2 Completed",
-              "Result": {
-                "Completed": false
+            "Mock Process 2": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "OutputPath": "$.Payload",
+              "Parameters": {
+                "Payload.$": "$",
+                "FunctionName": "arn:aws:lambda:us-east-1:625787456381:function:${LambdaFunctionName}:$LATEST"
               },
-              "Comment": "This is a placeholder. Can be replaced with pretty much anythng that needs to be polled.",
-              "ResultPath": "$.QueryResult"
-            },
-            "Wait Before Getting Process 2 Status": {
-              "Type": "Wait",
-              "Seconds": 5,
-              "Next": "Get Process2 Completion Status"
-            },
-            "Check If Process2 Completed": {
-              "Type": "Choice",
-              "Choices": [
+              "Retry": [
                 {
-                  "Or": [
-                    {
-                      "And": [
-                        {
-                          "Variable": "$$.Execution.Input.Process2ToComplete",
-                          "IsPresent": true
-                        },
-                        {
-                          "Variable": "$$.Execution.Input.Process2ToComplete",
-                          "BooleanEquals": true
-                        }
-                      ]
-                    },
-                    {
-                      "Variable": "$.QueryResult.Completed",
-                      "BooleanEquals": true
-                    }
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
                   ],
-                  "Next": "Update Process2 Completion"
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 6,
+                  "BackoffRate": 2
                 }
               ],
-              "Default": "Wait Before Getting Process 2 Status"
+              "Next": "Update Process2 Success",
+              "Catch": [
+                {
+                  "ErrorEquals": [
+                    "States.ALL"
+                  ],
+                  "Next": "Update Process2 Failure",
+                  "ResultPath": "$.error"
+                }
+              ]
             },
-            "Update Process2 Completion": {
+            "Update Process2 Failure": {
               "Type": "Task",
               "Resource": "arn:aws:states:::dynamodb:updateItem",
               "Parameters": {
@@ -186,7 +193,28 @@
                     "S.$": "$$.Execution.Id"
                   }
                 },
-                "UpdateExpression": "SET processes_completed = list_append(processes_completed, :proc)",
+                "UpdateExpression": "SET failed_processes = list_append(failed_processes, :proc)",
+                "ExpressionAttributeValues": {
+                  ":proc": {
+                    "L": [
+                      "Process2"
+                    ]
+                  }
+                }
+              },
+              "Next": "Get Process Completion Statuses2"
+            },
+            "Update Process2 Success": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::dynamodb:updateItem",
+              "Parameters": {
+                "TableName": "${DDBTable}",
+                "Key": {
+                  "id": {
+                    "S.$": "$$.Execution.Id"
+                  }
+                },
+                "UpdateExpression": "SET successful_processes = list_append(successful_processes, :proc)",
                 "ExpressionAttributeValues": {
                   ":proc": {
                     "L": [
@@ -206,7 +234,8 @@
                   "id": {
                     "S.$": "$$.Execution.Id"
                   }
-                }
+                },
+                "ConsistentRead": true
               },
               "Next": "Count Processes 2"
             },
@@ -214,7 +243,7 @@
               "Type": "Pass",
               "Next": "Check If Quorum Met 2",
               "Parameters": {
-                "completed_processes_count.$": "States.ArrayLength($.Item.processes_completed.L)"
+                "completed_processes_count.$": "States.ArrayLength($.Item.successful_processes.L)"
               }
             },
             "Check If Quorum Met 2": {
@@ -240,50 +269,41 @@
           }
         },
         {
-          "StartAt": "Get Process3 Completion Status",
+          "StartAt": "Mock Process 3",
           "States": {
-            "Get Process3 Completion Status": {
-              "Type": "Pass",
-              "Next": "Check If Process3 Completed",
-              "Result": {
-                "Completed": false
+            "Mock Process 3": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "OutputPath": "$.Payload",
+              "Parameters": {
+                "Payload.$": "$",
+                "FunctionName": "arn:aws:lambda:us-east-1:625787456381:function:${LambdaFunctionName}:$LATEST"
               },
-              "Comment": "This is a placeholder. Can be replaced with pretty much anythng that needs to be polled.",
-              "ResultPath": "$.QueryResult"
-            },
-            "Wait Before Getting Process 3 Status": {
-              "Type": "Wait",
-              "Seconds": 5,
-              "Next": "Get Process3 Completion Status"
-            },
-            "Check If Process3 Completed": {
-              "Type": "Choice",
-              "Choices": [
+              "Retry": [
                 {
-                  "Or": [
-                    {
-                      "And": [
-                        {
-                          "Variable": "$$.Execution.Input.Process3ToComplete",
-                          "IsPresent": true
-                        },
-                        {
-                          "Variable": "$$.Execution.Input.Process3ToComplete",
-                          "BooleanEquals": true
-                        }
-                      ]
-                    },
-                    {
-                      "Variable": "$.QueryResult.Completed",
-                      "BooleanEquals": true
-                    }
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
                   ],
-                  "Next": "Update Process3 Completion"
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 6,
+                  "BackoffRate": 2
                 }
               ],
-              "Default": "Wait Before Getting Process 3 Status"
+              "Next": "Update Process3 Success",
+              "Catch": [
+                {
+                  "ErrorEquals": [
+                    "States.ALL"
+                  ],
+                  "Next": "Update Process3 Failure",
+                  "ResultPath": "$.error"
+                }
+              ]
             },
-            "Update Process3 Completion": {
+            "Update Process3 Failure": {
               "Type": "Task",
               "Resource": "arn:aws:states:::dynamodb:updateItem",
               "Parameters": {
@@ -293,7 +313,28 @@
                     "S.$": "$$.Execution.Id"
                   }
                 },
-                "UpdateExpression": "SET processes_completed = list_append(processes_completed, :proc)",
+                "UpdateExpression": "SET failed_processes = list_append(failed_processes, :proc)",
+                "ExpressionAttributeValues": {
+                  ":proc": {
+                    "L": [
+                      "Process3"
+                    ]
+                  }
+                }
+              },
+              "Next": "Get Process Completion Statuses3"
+            },
+            "Update Process3 Success": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::dynamodb:updateItem",
+              "Parameters": {
+                "TableName": "${DDBTable}",
+                "Key": {
+                  "id": {
+                    "S.$": "$$.Execution.Id"
+                  }
+                },
+                "UpdateExpression": "SET successful_processes = list_append(successful_processes, :proc)",
                 "ExpressionAttributeValues": {
                   ":proc": {
                     "L": [
@@ -313,18 +354,19 @@
                   "id": {
                     "S.$": "$$.Execution.Id"
                   }
-                }
+                },
+                "ConsistentRead": true
               },
               "Next": "Count Processes 3"
             },
             "Count Processes 3": {
               "Type": "Pass",
-              "Next": "Check if Quorum Met 3",
+              "Next": "Check If Quorum Met 3",
               "Parameters": {
-                "completed_processes_count.$": "States.ArrayLength($.Item.processes_completed.L)"
+                "completed_processes_count.$": "States.ArrayLength($.Item.successful_processes.L)"
               }
             },
-            "Check if Quorum Met 3": {
+            "Check If Quorum Met 3": {
               "Type": "Choice",
               "Choices": [
                 {
@@ -351,7 +393,7 @@
           "States": {
             "TimeoutWait": {
               "Type": "Wait",
-              "Seconds": 15,
+              "Seconds": 5,
               "Next": "Update Process Ran out of time"
             },
             "Update Process Ran out of time": {
@@ -400,11 +442,61 @@
     },
     "Next Step When Quorum is met": {
       "Type": "Pass",
+      "Next": "Update \"Ran Out of time\" to False (if needed)"
+    },
+    "Update \"Ran Out of time\" to False (if needed)": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:updateItem",
+      "Parameters": {
+        "TableName": "${DDBTable}",
+        "Key": {
+          "id": {
+            "S.$": "$$.Execution.Id"
+          }
+        },
+        "UpdateExpression": "SET timeout_occurred = :false_value",
+        "ConditionExpression": "(timeout_occurred = :true_value) and (size(successful_processes) >= :quorum_value)",
+        "ExpressionAttributeValues": {
+          ":false_value": {
+            "BOOL": false
+          },
+          ":true_value": {
+            "BOOL": true
+          },
+          ":quorum_value": {
+            "N.$": "States.Format('{}',$$.Execution.Input.quorum)"
+          }
+        }
+      },
+      "Next": "Get Process Completion Status",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "DynamoDB.ConditionalCheckFailedException"
+          ],
+          "Next": "Get Process Completion Status",
+          "Comment": "This is the usual scenario. There are race conditions when the timeout could be set to true, but processes might have completed. Hence this update is in place."
+        }
+      ],
+      "Comment": "There are race conditions when processes finish just at the time of timeout. To ensure the DynamoDB item does not hold contradictory information that Quorum has been met, but that time out has occurred, we are setting the timeout to False, when quorum is met. This step updates the timeout field to false, if it is set to true and number of processes successfully completed meets quorum"
+    },
+    "Get Process Completion Status": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:getItem",
+      "Parameters": {
+        "TableName": "${DDBTable}",
+        "Key": {
+          "id": {
+            "S.$": "$$.Execution.Id"
+          }
+        },
+        "ConsistentRead": true
+      },
       "End": true
     },
     "Next Step if Process Ran out of time": {
       "Type": "Pass",
-      "End": true
+      "Next": "Update \"Ran Out of time\" to False (if needed)"
     }
   }
 }

@@ -1,0 +1,71 @@
+{
+    "title": "Account Vending Machine",
+    "description": "Automate the creation of new AWS accounts in your AWS Organizations with a CloudFormation template that includes your standard basline configuration",
+    "language": "",
+    "simplicity": "3 - Application",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "300",
+    "framework": "SAM",
+    "services": ["sfn","organizations"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "This workflow automate the creation of new AWS account within a new/existing Organizational Unit. It takes a CloudFormation template as input and deploys it in the new AWS account.",
+        "The CloudFormation template is supposed to include any standard baseline configuration and guardrails that you would typically deploy as part of new AWS accounts."
+
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/account-vending-machine/",
+        "templateDir":"account-vending-machine",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Ahmad Aboushady",
+          "image": "https://serverlessland.com/assets/images/resources/contributors/ext-ahmad-aboushady.jpg",
+          "bio": "Senior Technical Account Manager, AWS",
+          "linkedin": "https://www.linkedin.com/in/aboushady/",
+          "twitter": ""
+        }
+      ]
+  }
+  

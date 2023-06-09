@@ -1,0 +1,79 @@
+{
+    "title": "Bulk Video Analysis with AWS Step Functions using Distributed Map State",
+    "description": "This sample project demonstrates using Step Functions Distributed Map for bulk analysis of Videos with Amazon Rekognition.",
+    "language": "",
+    "simplicity": "3 - Application",
+    "usecase": "Ability to identify and extract content within a video - people, objects, emotions \n Identify segments witin a video and align with content \n Create a queryable repository: \n1. To pull content and segment data for ad insertion \n2. Identify videos with similar content for playlist generation",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "200",
+    "framework": "CDK",
+    "services": ["rekognition","lambda","sns","dynamodb","glue","s3"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "In this project, Step Functions uses a state machine that leverages Distributed Map State for bulk analysis processing of videos with the use of Amazon Rekognition Video.",
+        "Distributed Map mode allows you to specify an s3 bucket as a source, in this example, acting as a queue for Amazon Rekognition Video analysis.",
+        "Amazon Rekognition Video supports a maximum of 20 concurrent jobs per account, the distributed map mode allows you to configure your concurrency so that you can avoid hitting thresholds, all the while knowing your vidoes will be processed.",
+        "DynamoDb is leveraged to keep track of rekognition jobs and can be used to enhance the workflow application.",
+        "Rekognition outputs are written out to an s3 bucket as CSV files through the use of Lambdas. The output files are then consumed by a Glue crawler to populate a video content data catalog."
+
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>cdk destroy SfnRekognitionVideoCatalogWorkflowStack</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "1. Bootstrap CDK, if needed: <code>cdk bootstrap aws://{your-aws-account-number}/{your-aws-region}</code>",
+        "2. Deploy the stack: <code>cdk deploy</code>"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/synchronous-job/",
+        "templateDir":"sfn-rekognition-video-catalog-workflow/sfn_rekognition_video_catalog_workflow",
+        "templateFile": "sfn_rekognition_video_catalog_workflow.py",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "AWS Step Functions - Developer Guide - Using Map State in Distributed Mode",
+          "link": "https://docs.aws.amazon.com/step-functions/latest/dg/concepts-asl-use-map-state-distributed.html"
+        },
+        {
+          "text": "Amazon Rekognition Video",
+          "link": "https://docs.aws.amazon.com/rekognition/latest/dg/video.html"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Anthony Caruso",
+          "image": "https://drive.google.com/file/d/1SVGn5j9s-V0-gTTmTlMQAWk2PwoDqVrT/view?usp=share_link",
+          "bio": "Anthony is a Solutions Architect at AWS. Anthony is passionate about serverless and event-driven-architectures, building innovative solutions and making them accessible to all. \n",
+          "linkedin": "anthonycaruso82"
+          
+        }
+      ]
+  }
+  

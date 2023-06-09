@@ -1,0 +1,62 @@
+StartAt: Read S3 file
+Comment: Distributed batch import from S3 into DynamoDB
+States:
+  Read S3 file:
+    Type: Map
+    ItemReader:
+      Resource: arn:aws:states:::s3:getObject
+      ReaderConfig:
+        InputType: JSON
+      Parameters:
+        Bucket.$: $.detail.bucket.name
+        Key.$: $.detail.object.key
+    ItemsPath: $.Items
+    ResultSelector:
+      RequestItems:
+        ${DynamoDBTable}.$: $
+    ItemBatcher:
+      MaxInputBytesPerBatch: 131072
+      MaxItemsPerBatch: 10
+    MaxConcurrency: 10
+    ItemProcessor:
+      ProcessorConfig:
+        Mode: DISTRIBUTED
+        ExecutionType: EXPRESS
+      StartAt: GetRequestItems
+      States:
+        GetRequestItems:
+            Type: Map
+            Next: BatchWriteItem
+            ItemsPath: $.Items
+            ResultSelector:
+              RequestItems:
+                ${DynamoDBTable}.$: $
+            ItemProcessor:
+              StartAt: GetRequestItem
+              States:
+                GetRequestItem:
+                  Type: Pass
+                  End: true
+                  Parameters:
+                    PutRequest:
+                      Item:
+                        PK: 
+                          S.$: States.UUID()
+                        SK: 
+                          S: organization
+                        name:
+                          S.$: $.name
+                        org_nr:
+                          S.$: $.organization_number
+                        _et: # entity type 
+                          S: organization 
+                        _ct: # creation time
+                          S.$: $$.State.EnteredTime
+        BatchWriteItem:
+          Type: Task
+          Parameters:
+            RequestItems.$: $.RequestItems
+          Resource: arn:aws:states:::aws-sdk:dynamodb:batchWriteItem
+          End: true
+    End: true
+    Label: CreateOrganization

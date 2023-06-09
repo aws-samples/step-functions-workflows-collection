@@ -1,0 +1,9 @@
+
+  [{"EventBusName": "<eventbusname>", 
+                  "Source": "<source>", 
+                  "DetailType": "eventType", 
+                  "Detail": "{   \"id\": \"65000\",  \"type\": \"order\",   \"customerId\": \"10000\", \"status\": \"shipped\",  \"transactionTime\": \"1000450\"  }"
+}]
+
+
+                 

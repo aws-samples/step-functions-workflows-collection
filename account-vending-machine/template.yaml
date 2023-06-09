@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Account Vending Workflow
+Resources:
+##########################################################################
+#  Step function state machine IAM Role                                  #
+##########################################################################
+  SFRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "states.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: SFPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: 
+                  - "organizations:listRoots"
+                  - "organizations:createOrganizationalUnit"
+                  - "organizations:createAccount"
+                  - "organizations:describeCreateAccountStatus"
+                  - "organizations:moveAccount"
+                  - "organizations:listOrganizationalUnitsForParent"
+                  - "cloudformation:createStack"
+                  - "sts:AssumeRole"
+                Resource: '*'           
+  ##########################################################################
+  #  Step function state machine                                           #
+  ##########################################################################
+  AccountVendingStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name: AccountVendingStateMachine
+      DefinitionUri: statemachines/statemachine.asl.json
+      Role: !GetAtt SFRole.Arn
+
+
+Outputs:
+  AccountVendingStateMachineArn:
+    Description: "Account Vending State machine ARN"
+    Value: !Ref AccountVendingStateMachine
+    
