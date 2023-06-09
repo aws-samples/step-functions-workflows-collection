@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  A Step Functions Standard Workflow that triggers a Lambda function synchronously which in turn triggers another function asynchronously.
+  A Step Functions Standard Workflow that is used as a Task timer to complete user dependent task within a timestamp
 Resources:
 ##########################################################################
 #   SNS Topic                                                            #

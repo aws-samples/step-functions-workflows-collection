@@ -2,7 +2,7 @@
     "title": "Step Function Task Timer with an expiry date",
     "description": "Step Function Task Timer with an expiry date",
     "language": "",
-    "simplicity": "1 - Fundamental",
+    "simplicity": "3 - Application",
     "usecase": "",
     "type": "Standard",
     "diagram":"/resources/statemachine.png",
