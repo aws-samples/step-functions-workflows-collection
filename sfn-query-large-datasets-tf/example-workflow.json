@@ -1,0 +1,73 @@
+{
+  "title": "Query large datasets (Amazon Athena, Amazon S3, AWS Glue, Amazon SNS)",
+  "description": "This workflow demonstrates how to ingest a large data set in Amazon S3 and partition it through AWS Glue Crawlers, then execute Amazon Athena queries against that partition. Deploying this sample project creates an AWS Step Functions state machine, an Amazon S3 Bucket, an AWS Glue crawler, and an Amazon SNS topic.",
+  "language": "Python",
+  "simplicity": "1 - Fundamental",
+  "usecase": "",
+  "type": "Standard",
+  "diagram": "/resources/statemachine.png",
+  "videoId": "",
+  "level": "100",
+  "framework": "Terraform",
+  "services": [
+    "stepfunctions",
+    "glue",
+    "s3",
+    "athena",
+    "sns"
+  ],
+  "introBox": {
+    "headline": "How it works",
+    "text": [
+      "In this project, the Step Functions state machine invokes an AWS Glue crawler that partitions a large dataset in Amazon S3. Once the AWS Glue crawler returns a success message, the workflow executes Athena queries against that partition. Once query execution is successfully complete, an Amazon SNS notification is sent to an Amazon SNS topic."
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": [
+      "See the GitHub repo for detailed testing instructions."
+    ]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": [
+      "1. Delete the stack: <code>terraform destroy</code>."
+    ]
+  },
+  "deploy": {
+    "text": [
+      "terraform init",
+      "terraform apply"
+    ]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/sfn-query-large-datasets-tf/",
+      "templateDir": "sfn-query-large-datasets-tf",
+      "templateFile": "main.tf",
+      "ASL": "statemachine/statemachine.asl.json"
+    },
+    "payloads": [
+      {
+        "headline": "",
+        "payloadURL": ""
+      }
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "The AWS Step Functions Workshop",
+        "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Itziar Olivera Goicolea",
+      "bio": "Itziar is a Technical Account Manager at AWS from Iberia (EMEA).",
+      "linkedin": "itziar-olivera-goicolea-a36438174"
+    }
+  ]
+}
