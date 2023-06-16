@@ -54,7 +54,9 @@ The EMR Serverless job, in this example is a simple Pyspark script that:
 You can test the step function following these steps: 
 * head to the AWS console
 * run the step function in us-east-1
-* look at the output directory in the bucket, containing the output parquet files
+* head to the EMR serverless application, reporting a job being submitted and executed
+* head to the output directory in the S3 bucket, containing the output parquet files
+
 
 ## Cleanup
  
