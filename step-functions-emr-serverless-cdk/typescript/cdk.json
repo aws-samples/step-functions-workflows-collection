@@ -1,5 +1,5 @@
 {
-  "app": "npx ts-node --prefer-ts-exts bin/typescript.ts",
+  "app": "npx ts-node --prefer-ts-exts bin/step-functions-emr-serverless-cdk.ts",
   "watch": {
     "include": [
       "**"

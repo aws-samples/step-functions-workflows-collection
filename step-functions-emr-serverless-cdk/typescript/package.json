@@ -1,8 +1,8 @@
 {
-  "name": "typescript",
+  "name": "step-functions-emr-serverless-cdk",
   "version": "0.1.0",
   "bin": {
-    "typescript": "bin/typescript.js"
+    "typescript": "bin/step-functions-emr-serverless-cdk.js"
   },
   "scripts": {
     "build": "tsc",

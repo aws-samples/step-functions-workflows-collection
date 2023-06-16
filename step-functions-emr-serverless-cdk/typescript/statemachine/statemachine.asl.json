@@ -1,0 +1,101 @@
+{
+    "StartAt": "StartState",
+    "States": {
+      "StartState": {
+        "Type": "Pass",
+        "Next": "start-job-EMR"
+      },
+      "start-job-EMR": {
+        "Next": "get-status-EMR",
+        "Type": "Task",
+        "ResultPath": "$.Job.Input",
+        "Resource": "arn:aws:states:::aws-sdk:emrserverless:startJobRun",
+        "Parameters": {
+          "ApplicationId": "00fato59nr6jd10p",
+          "ClientToken.$": "States.UUID()",
+          "ExecutionRoleArn": "arn:aws:iam::556369392635:role/StepFunctionsEMRServerlessStack-emrRole4931764A-8YOBIOX00A7",
+          "JobDriver": {
+            "SparkSubmit": {
+              "EntryPoint": "s3://stepfunctionsemrserverlessstack-bucket43879c71-enxb5kcrhkel/emr_scripts/spark_main.py",
+              "EntryPointArguments": [
+                "s3://stepfunctionsemrserverlessstack-bucket43879c71-enxb5kcrhkel/input_data/BTCGBP.csv",
+                "s3://stepfunctionsemrserverlessstack-bucket43879c71-enxb5kcrhkel/output"
+              ],
+              "SparkSubmitParameters": "--conf spark.hadoop.hive.metastore.client.factory.class=com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory"
+            }
+          }
+        }
+      },
+      "get-status-EMR": {
+        "Next": "check-job-success",
+        "Type": "Task",
+        "ResultPath": "$.Job.Status",
+        "Resource": "arn:aws:states:::aws-sdk:emrserverless:getJobRun",
+        "Parameters": {
+          "ApplicationId": "00fato59nr6jd10p",
+          "JobRunId.$": "$.Job.Input.JobRunId"
+        }
+      },
+      "wait": {
+        "Type": "Wait",
+        "Seconds": 20,
+        "Next": "get-status-EMR"
+      },
+      "check-job-success": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "And": [
+              {
+                "Variable": "$.Job.Status",
+                "IsPresent": true
+              },
+              {
+                "Or": [
+                  {
+                    "Variable": "$.Job.Status.JobRun.State",
+                    "StringEquals": "SUCCESS"
+                  }
+                ]
+              }
+            ],
+            "Next": "complete"
+          }
+        ],
+        "Default": "check-job-failure"
+      },
+      "check-job-failure": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "And": [
+              {
+                "Variable": "$.Job.Status",
+                "IsPresent": true
+              },
+              {
+                "Or": [
+                  {
+                    "Variable": "$.Job.Status.JobRun.State",
+                    "StringEquals": "CANCELLED"
+                  },
+                  {
+                    "Variable": "$.Job.Status.JobRun.State",
+                    "StringEquals": "FAILED"
+                  }
+                ]
+              }
+            ],
+            "Next": "failed"
+          }
+        ],
+        "Default": "wait"
+      },
+      "failed": {
+        "Type": "Fail"
+      },
+      "complete": {
+        "Type": "Succeed"
+      }
+    }
+  }
