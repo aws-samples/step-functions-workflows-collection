@@ -1,0 +1,214 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  A Step Functions Standard Workflow that is used as a Task timer to complete user dependent task within a timestamp
+Resources:
+##########################################################################
+#   SNS Topic                                                            #
+##########################################################################
+  SendNotificationSNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: SendNotifications
+      TopicName: SendNotifications
+  SNSSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: KINDLY_REPLACE_THIS_WITH_THE_ENDPOINT_TYPE
+      Protocol: KINDLY_REPLACE_THIS_WITH_YOUR_PROTOCOL
+      TopicArn: !Ref 'SendNotificationSNSTopic'
+##########################################################################
+#   PARENT STEP FUNCTION                                                 #
+##########################################################################
+  TaskTimer:
+    Type: AWS::Serverless::StateMachine
+    DependsOn:
+        - TaskTimerStatesExecutionRole
+        - TaskTimerStateMachineLogGroup
+        - SendNotificationSNSTopic
+    Properties:
+      DefinitionUri: statemachine/TaskTimer.asl.json
+      DefinitionSubstitutions:
+        CalculateTimeDiff: !GetAtt CalculateTimeDiff.Arn
+        SendNotificationSNSTopic: !GetAtt SendNotificationSNSTopic.TopicArn
+        TimeBoundedTasks: !GetAtt TimeBoundedTasks.Arn
+      Role:
+        Fn::GetAtt: [ TaskTimerStatesExecutionRole, Arn ]
+      Logging:
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt TaskTimerStateMachineLogGroup.Arn
+        IncludeExecutionData: true
+        Level: 'ALL'
+##########################################################################
+#   CHILD STEP FUNCTION                                                  #
+##########################################################################
+  TimeBoundedTasks:
+    Type: AWS::Serverless::StateMachine
+    DependsOn:
+        - TimeBoundedTasksStatesExecutionRole
+        - TimeBoundedTasksStateMachineLogGroup
+    Properties:
+      DefinitionUri: statemachine/TimeBoundedTasks.asl.json
+      DefinitionSubstitutions:
+        SomeUserDependentTask: !GetAtt SomeUserDependentTask.Arn
+      Role:
+        Fn::GetAtt: [ TimeBoundedTasksStatesExecutionRole, Arn ]
+      Logging:
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt TimeBoundedTasksStateMachineLogGroup.Arn
+        IncludeExecutionData: true
+        Level: 'ALL'
+##########################################################################
+#  Lambda functions                                                      #
+##########################################################################
+  CalculateTimeDiff:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/CalculateTimeDiff/
+      Handler: CalculateTimeDiff.lambda_handler
+      Runtime: python3.10
+      Timeout: 900
+      Policies: 
+        - CloudWatchPutMetricPolicy: {}
+  SomeUserDependentTask:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/SomeUserDependentTask/
+      Handler: SomeUserDependentTask.lambda_handler
+      Runtime: python3.10
+      Timeout: 900
+      Policies: 
+        - CloudWatchPutMetricPolicy: {}
+##########################################################################
+#  STEP FUNCTION LOG GROUP                                               #
+##########################################################################
+  TaskTimerStateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Join [ "/", [ "stepfunctions", CalculateTimeDiff]]
+  TimeBoundedTasksStateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Join [ "/", [ "stepfunctions", SomeUserDependentTask]]
+##########################################################################
+#   Roles                                                                #
+##########################################################################
+  TaskTimerStatesExecutionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - !Sub states.${AWS::Region}.amazonaws.com
+            Action: "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        - PolicyName: SNSAccess
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Resource:
+                  - !Ref SendNotificationSNSTopic
+                Action:
+                  - sns:Publish
+        - PolicyName: LambdaExecute
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "lambda:InvokeFunction"
+                Resource: 
+                  - !GetAtt CalculateTimeDiff.Arn
+        - PolicyName: ChildStateMachineExecution
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Resource:
+                  - !GetAtt TimeBoundedTasks.Arn
+                Action:
+                  - "states:StartExecution"
+        - PolicyName: EBrule
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Resource:
+                  - !Sub arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/StepFunctionsGetEventsForStepFunctionsExecutionRule
+                Action:
+                  - "events:PutTargets"
+                  - "events:PutRule"
+                  - "events:DescribeRule"
+        - PolicyName: LogPermissions
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "logs:CreateLogDelivery"
+                  - "logs:GetLogDelivery"
+                  - "logs:UpdateLogDelivery"
+                  - "logs:DeleteLogDelivery"
+                  - "logs:ListLogDeliveries"
+                  - "logs:PutLogEvents"
+                  - "logs:PutResourcePolicy"
+                  - "logs:DescribeResourcePolicies"
+                  - "logs:DescribeLogGroups"
+                Resource: "*"
+  TimeBoundedTasksStatesExecutionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - !Sub states.${AWS::Region}.amazonaws.com
+            Action: "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        - PolicyName: LambdaExecute
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "lambda:InvokeFunction"
+                Resource: 
+                  - !GetAtt SomeUserDependentTask.Arn
+        -  PolicyName: LogPermissions
+           PolicyDocument:
+             Version: "2012-10-17"
+             Statement:
+              - Effect: Allow
+                Action:
+                  - "logs:CreateLogDelivery"
+                  - "logs:GetLogDelivery"
+                  - "logs:UpdateLogDelivery"
+                  - "logs:DeleteLogDelivery"
+                  - "logs:ListLogDeliveries"
+                  - "logs:PutLogEvents"
+                  - "logs:PutResourcePolicy"
+                  - "logs:DescribeResourcePolicies"
+                  - "logs:DescribeLogGroups"
+                Resource: "*"                                  
+##########################################################################
+#   Outputs                                                              #
+##########################################################################
+Outputs:
+  TaskTimer:
+    Value: !Ref TaskTimer
+    Description: TaskTimer Arn
+  TimeBoundedTasks:
+    Value: !Ref TimeBoundedTasks
+    Description: TimeBoundedTasks Arn    
+  SendNotification:
+    Value: !Ref SendNotificationSNSTopic
+    Description: TaskTimer Arn

@@ -1,0 +1,29 @@
+{
+    "Comment": "Customer Data Share state machine",
+    "StartAt": "Some_Time_Bounded_Task",
+    "States": {
+      "Some_Time_Bounded_Task": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "OutputPath": "$.Payload",
+        "Parameters": {
+          "Payload.$": "$",
+          "FunctionName": "${SomeUserDependentTask}"
+        },
+        "Retry": [
+          {
+            "ErrorEquals": [
+              "Lambda.ServiceException",
+              "Lambda.AWSLambdaException",
+              "Lambda.SdkClientException",
+              "Lambda.TooManyRequestsException"
+            ],
+            "IntervalSeconds": 2,
+            "MaxAttempts": 6,
+            "BackoffRate": 2
+          }
+        ],
+        "End": true
+      }
+    }
+  }

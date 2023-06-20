@@ -1,0 +1,68 @@
+{
+    "title": "Step Function Task Timer with an expiry date",
+    "description": "Step Function Task Timer with an expiry date",
+    "language": "",
+    "simplicity": "3 - Application",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "100",
+    "framework": "SAM",
+    "services": ["stepfunctions","lambda","sns"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "This workflow describes a scenario where an end user wants to complete few tasks that are user input dependent, within a timestamp."
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/sfns-sns-task-timer/",
+        "templateDir":"sfns-sns-task-timer",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/TaskTimer.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": "{\"expirydate\":\"2023-06-09T04:13:00Z\"}"
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+      {
+        "name": "Saborni Bhattacharya",
+        "image": "https://drive.google.com/file/d/1AZFquOkafEQRUlrT4hKOtIbt4Cq66SHd/view?usp=sharing",
+        "bio": "I am Saborni Bhattacharya and I love making technical contents on my YouTube channel - https://www.youtube.com/channel/UCpYl6SiNRBfcZoi4EKqIwog. Here is my blog link as well - https://learnandexplorewithsab.blogspot.com/",
+        "linkedin": "https://www.linkedin.com/in/saborni-bhattacharya-5b523812a/"
+      }
+    ]
+  }
+  
