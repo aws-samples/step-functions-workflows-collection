@@ -51,7 +51,7 @@ The child state machine in this sample project updates backend information when 
 1. Deploy the State Machine via CDK using the instructions above.
 1. Start an execution of the parent state machine. You should be able to trace the parent workflow from start to finish including the child workflow illustrating the update to backend systems.
 
-![image](./resources/parentStatemachine.png)
+![image](./resources/parentStateMachine.png)
 ![image](./resources/childStateMachine.png)
 
 ## Cleanup
