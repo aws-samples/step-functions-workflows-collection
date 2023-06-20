@@ -1,0 +1,106 @@
+{
+    "Comment": "An example of the Amazon States Language for running jobs on Amazon EMR",
+    "StartAt": "Create an EMR cluster",
+    "States": {
+      "Create an EMR cluster": {
+        "Type": "Task",
+        "Resource": "arn:${Partition}:states:::elasticmapreduce:createCluster.sync",
+        "Parameters": {
+          "Name": "ExampleCluster",
+          "VisibleToAllUsers": true,
+          "ReleaseLabel": "emr-5.26.0",
+          "Applications": [
+            { "Name": "Hive" }
+          ],
+          "ServiceRole": "${emrServiceRole}",
+          "JobFlowRole": "${emrEc2InstanceProfile}",
+          "LogUri": "s3://${emrS3LogBucket}/logs/",
+          "Instances": {
+            "KeepJobFlowAliveWhenNoSteps": true,
+            "InstanceFleets": [
+              {
+                "Name": "MyMasterFleet",
+                "InstanceFleetType": "MASTER",
+                "TargetOnDemandCapacity": 1,
+                "InstanceTypeConfigs": [
+                  {
+                    "InstanceType": "m5.xlarge"
+                  }
+                ]
+              },
+              {
+                "Name": "MyCoreFleet",
+                "InstanceFleetType": "CORE",
+                "TargetOnDemandCapacity": 1,
+                "InstanceTypeConfigs": [
+                  {
+                    "InstanceType": "m5.xlarge"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "ResultPath": "$.cluster",
+        "Next": "Run first step"
+      },
+      "Run first step": {
+        "Type": "Task",
+        "Resource": "arn:${Partition}:states:::elasticmapreduce:addStep.sync",
+        "Parameters": {
+          "ClusterId.$": "$.cluster.ClusterId",
+          "Step": {
+            "Name": "My first EMR step",
+            "ActionOnFailure": "CONTINUE",
+            "HadoopJarStep": {
+              "Jar": "command-runner.jar",
+              "Args": ["${commandArguments1}", "${commandArguments2}", "${commandArguments3}"]
+            }
+          }
+        },
+        "Retry" : [
+          {
+            "ErrorEquals": [ "States.ALL" ],
+            "IntervalSeconds": 1,
+            "MaxAttempts": 3,
+            "BackoffRate": 2.0
+          }
+        ],
+        "ResultPath": "$.firstStep",
+        "Next": "Run second step"
+      },
+      "Run second step": {
+        "Type": "Task",
+        "Resource": "arn:${Partition}:states:::elasticmapreduce:addStep.sync",
+        "Parameters": {
+          "ClusterId.$": "$.cluster.ClusterId",
+          "Step": {
+            "Name": "My second EMR step",
+            "ActionOnFailure": "CONTINUE",
+            "HadoopJarStep": {
+              "Jar": "command-runner.jar",
+              "Args": ["${commandArguments1}", "${commandArguments2}", "${commandArguments3}"]
+            }
+          }
+        },
+        "Retry" : [
+          {
+            "ErrorEquals": [ "States.ALL" ],
+            "IntervalSeconds": 1,
+            "MaxAttempts": 3,
+            "BackoffRate": 2.0
+          }
+        ],
+        "ResultPath": "$.secondStep",
+        "Next": "Terminate Cluster"
+      },
+      "Terminate Cluster": {
+        "Type": "Task",
+        "Resource": "arn:${Partition}:states:::elasticmapreduce:terminateCluster",
+        "Parameters": {
+          "ClusterId.$": "$.cluster.ClusterId"
+        },
+        "End": true
+      }
+    }
+  }

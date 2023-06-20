@@ -1,0 +1,74 @@
+{
+    "title": "Manage an Amazon EMR Job",
+    "description": "Use Step Functions to Manage Amazon EMR Jobs",
+    "language": "Python",
+    "simplicity": "1 - Fundamental",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "100",
+    "framework": "CDK",
+    "services": ["emr", "step functions"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "This workflow shows how to automate an Amazon EMR job using AWS Step Functions. The workflow creates an Amazon EMR cluster, adds multiple steps and runs them, and then terminates the cluster. The Amazon EMR task is called synchronously and the state machine waits for the task to succeed or fail. After the two steps are run on the EMR cluster, the cluster is terminated. This allows users to process and analyze data with minimal code.",
+        "The AWS Cloud Development Kit (CDK) code creates all of the resources needed to run this workflow, including Identity and Access Management (IAM) roles and policies, a Simple Storage Service (S3) bucket to store EMR logs, and the State Machine for managing the EMR job."
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repository for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>cdk destroy</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "<code>cdk deploy</code>"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/manage-emr-job-cdk/",
+        "templateDir":"manage-emr-job-cdk/manage_emr_job",
+        "templateFile": "manage_emr_job_stack.py",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        },
+        {
+          "text": "ETL on Amazon EMR Workshop",
+          "link": "https://catalog.us-east-1.prod.workshops.aws/workshops/c86bd131-f6bf-4e8f-b798-58fd450d3c44/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Aditi Agarwal",
+          "image": "https://drive.google.com/file/d/1pNt-F0EZaY7Lh4xnNLWKLcwkFAJhAXSr/view?usp=sharing",
+          "bio": "Aditi Agarwal is a Cloud Consultant at Amazon Web Services (AWS).",
+          "linkedin": "https://www.linkedin.com/in/aditi-agarwal1/",
+          "twitter": "twitter-handle"
+        }
+    ]
+}
+  
