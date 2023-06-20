@@ -24,7 +24,7 @@
     "@aws-sdk/client-dynamodb": "^3.351.0",
     "@aws-sdk/client-sfn": "^3.350.0",
     "@aws-sdk/lib-dynamodb": "^3.216.0",
-    "aws-cdk-lib": "2.51.1",
+    "aws-cdk-lib": "2.80.0",
     "constructs": "^10.0.0",
     "source-map-support": "^0.5.21"
   }
