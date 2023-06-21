@@ -15,7 +15,7 @@
   "introBox": {
     "headline": "How it works",
     "text": [
-      "This workflow implements a simple job submission to Amazon EMR Serverless. The step function wait for job completeness before terminating/proceeding"
+      "This workflow implements a job submission to Amazon EMR Serverless. The step function check for the job status and wait for job completeness before terminating/proceeding"
     ]
   },
   "testing": {
@@ -32,8 +32,8 @@
   },
   "deploy": {
     "text": [
-      "1. Bootstrap CDK, if needed: <code>cdk bootstrap aws://{your-aws-account-number}/{your-aws-region}</code>",
-      "2. Deploy the stack: <code>cdk deploy</code>"
+      "1. Bootstrap CDK, if needed: cdk bootstrap aws://{your-aws-account-number}/{your-aws-region}",
+      "2. Deploy the stack: cdk deploy"
     ]
   },
   "gitHub": {
@@ -56,14 +56,22 @@
       {
         "text": "The AWS Step Functions Workshop",
         "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+      },
+      {
+          "text": "Open Source big data analytics with EMR serverless",
+          "link": "https://aws.amazon.com/emr/serverless/"
+      },
+      {
+          "text": "EMR serverless and step function blog post",
+          "link": "https://aws.amazon.com/blogs/big-data/run-a-data-processing-job-on-amazon-emr-serverless-with-aws-step-functions/"
       }
     ]
   },
   "authors": [
     {
       "name": "Andrea Filippo La Scola",
-      "image": "https://ik.imagekit.io/mgnfcerh4/avatars/avatar.jpg",
-      "bio": "Andrea Filippo is a Partner Solutions Architect at AWS who is passionate about serverless and modern data architectures.",
+      "image": "https://drive.google.com/file/d/15R74UBc2vvQA8bylAtnf3bSYTsms4o3F/view?usp=sharing",
+      "bio": "Andrea Filippo is a Partner Solutions Architect at AWS based in Italy, expertise in modern data architectures and solving problems with serverless technologies.",
       "linkedin": "andrea-la-scola"
     }
   ]
