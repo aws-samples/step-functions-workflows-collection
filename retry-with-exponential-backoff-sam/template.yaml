@@ -1,0 +1,36 @@
+
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Step Functions Workflow - retry-with-exponential-backoff-sam
+
+# Comment each resource section to explain usage
+Resources:
+  #Lambda Function
+  GenerateRandomResponsesLambda:
+      Type: 'AWS::Serverless::Function'
+      Properties:
+        CodeUri: lambda/
+        Description: "Function to generate random responses."
+        Handler: lambda_function.lambda_handler
+        PackageType: "Zip"
+        Runtime: "python3.10"
+
+  # State machine's execution role
+
+  # State machine
+  StateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/statemachine.asl.json
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - LambdaInvokePolicy:
+            FunctionName: !Ref GenerateRandomResponsesLambda
+      DefinitionSubstitutions:
+        generateRandomResponsesLambda: !Ref GenerateRandomResponsesLambda
+
+
+# List all common outputs for usage
+Outputs:
+  StateMachineARN:
+    Description: "State achine ARN"
+    Value: !Ref StateMachine

@@ -1,0 +1,68 @@
+{
+    "title": "Retry with Exponential Backoff",
+    "description": "Retry transient errors with Exponential Backoff",
+    "language": "",
+    "simplicity": "1 - Fundamental",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "100",
+    "framework": "SAM",
+    "services": ["lambda"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "The workflow invokes a Lambda function which produces random results. This step is configured to Retry for certain transient errors and fail for non recoverable errors."
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "You can test the workflow and view the results visually from the Step Functions console."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/retry-with-exponential-backoff-sam/",
+        "templateDir":"retry-with-exponential-backoff-sam",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Shannon Colavita",
+          "image": "https://phonetool.amazon.com/users/colavita",
+          "bio": "Senior Solutions Architect at AWS",
+          "linkedin": "https://www.linkedin.com/in/shannoncolavita/"
+        }
+      ]
+  }
+  

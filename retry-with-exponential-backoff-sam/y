@@ -1,0 +1,19 @@
+version = 0.1
+[y.deploy.parameters]
+stack_name = "retry-with-ex-backoff"
+resolve_s3 = true
+s3_prefix = "retry-with-ex-backoff"
+region = "eu-west-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+image_repositories = []
+
+[default.deploy.parameters]
+stack_name = "retry-with-ex-bo"
+resolve_s3 = true
+s3_prefix = "retry-with-ex-bo"
+region = "eu-west-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+disable_rollback = true
+image_repositories = []
