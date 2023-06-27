@@ -1,0 +1,133 @@
+{
+    "Comment": "Migration Workflow StateMachine",
+    "StartAt": "Read Input File",
+    "States": {
+      "Consolidate Migration": {
+        "Catch": [
+          {
+            "ErrorEquals": [
+              "ConsolidationError"
+            ],
+            "Next": "Migration Failed"
+          }
+        ],
+        "Next": "Publish Results",
+        "OutputPath": "$.Payload",
+        "Parameters": {
+          "FunctionName": "MigrateCSVToDDBDistribute-MigrationWorkflowConsoli-XfEZCwVAtxFM",
+          "Payload": {
+            "execution_name.$": "$$.Execution.Name",
+            "report.$": "$"
+          }
+        },
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "Retry": [
+          {
+            "BackoffRate": 2,
+            "ErrorEquals": [
+              "Lambda.ServiceException",
+              "Lambda.AWSLambdaException",
+              "Lambda.SdkClientException",
+              "Lambda.TooManyRequestsException"
+            ],
+            "IntervalSeconds": 2,
+            "MaxAttempts": 6
+          }
+        ],
+        "Type": "Task"
+      },
+      "Migration Complete": {
+        "End": true,
+        "Type": "Pass"
+      },
+      "Migration Failed": {
+        "Type": "Fail"
+      },
+      "Publish Results": {
+        "Next": "Migration Complete",
+        "Parameters": {
+          "Message.$": "$",
+          "TopicArn": "arn:aws:sns:us-east-1:572295176704:MigrateCSVToDDBDistributedMapStack-MigrationWorkflowPublishMigrationResultsED3B0CF2-M1xNC7B6b9Iq"
+        },
+        "Resource": "arn:aws:states:::sns:publish",
+        "ResultPath": "$.SnsPublish",
+        "Type": "Task"
+      },
+      "Read Input File": {
+        "Catch": [
+          {
+            "ErrorEquals": [
+              "States.ItemReaderFailed"
+            ],
+            "Next": "Migration Failed"
+          }
+        ],
+        "ItemBatcher": {
+          "BatchInput": {
+            "execution_name.$": "$$.Execution.Name"
+          },
+          "MaxInputBytesPerBatch": 262144,
+          "MaxItemsPerBatch": 100
+        },
+        "ItemProcessor": {
+          "ProcessorConfig": {
+            "ExecutionType": "STANDARD",
+            "Mode": "DISTRIBUTED"
+          },
+          "StartAt": "Validate, Transform, and Migrate Items",
+          "States": {
+            "Individual map process failed": {
+              "Type": "Fail"
+            },
+            "Validate, Transform, and Migrate Items": {
+              "Catch": [
+                {
+                  "ErrorEquals": [
+                    "MigrationError"
+                  ],
+                  "Next": "Individual map process failed"
+                }
+              ],
+              "End": true,
+              "OutputPath": "$.Payload",
+              "Parameters": {
+                "FunctionName": "MigrateCSVToDDBDistribute-MigrationWorkflowDataTra-cYgrlXsLCigq",
+                "Payload.$": "$"
+              },
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Retry": [
+                {
+                  "BackoffRate": 2,
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 6
+                }
+              ],
+              "Type": "Task"
+            }
+          }
+        },
+        "ItemReader": {
+          "Parameters": {
+            "Bucket.$": "$.bucket_name",
+            "Key.$": "$.file_key"
+          },
+          "ReaderConfig": {
+            "CSVHeaderLocation": "FIRST_ROW",
+            "InputType": "CSV"
+          },
+          "Resource": "arn:aws:states:::s3:getObject"
+        },
+        "Label": "ReadInputFile",
+        "MaxConcurrency": 100,
+        "Next": "Consolidate Migration",
+        "ToleratedFailurePercentage": 100,
+        "Type": "Map"
+      }
+    }
+  }
