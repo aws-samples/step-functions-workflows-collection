@@ -87,6 +87,10 @@ The application contains the minimum IAM resources required to run the workflow
 *Note: If the application is created without running the migrations, you incur standard data costs present in the Amazon S3 bucket and the 
 DynamoDb table created as part of this application.*
 
+Below is the high level architecture diagram
+
+![High level architecture diagram](./images/high_level_architecture.png)
+
 Below is the AWS Step Function workflow
 
 ![Step Function workflow definition](./images/stepfunctions_graph.png)
