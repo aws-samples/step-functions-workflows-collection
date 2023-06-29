@@ -1,0 +1,83 @@
+{
+    "title": "Migrate large CSV data sets to Amazon DynamoDB at scale using AWS Step Functions Distributed Map feature",
+    "description": "Customers do large scale migrations to Amazon DynamoDB all the time from CSV files. The migration process at times, can get non trivial due to the configurations involved, complex set up to read & transform data; making it time consuming. This gets even more challenging if the data set is large. To solve this problem, we show the readers how to use the Distributed Map feature of AWS Step Functions which extends support for orchestrating large-scale parallel workloads thereby achieving high concurrency",
+    "language": "",
+    "simplicity": "3 - Application",
+    "usecase": "Data Processing",
+    "type": "Standard",
+    "diagram":"/images/stepfunctions_graph.png",
+    "videoId": "",
+    "level": "300",
+    "framework": "CDK",
+    "services": ["AWS Step Functions","AWS Lambda" , "Amazon DynamoDB" , "Amazon S3", "Amazon Kinesis Data Firehose"],
+    "introBox": {
+      "headline": "Distributed Map - Migrate large CSV data sets to Amazon DynamoDB at scale",
+      "text": [
+        "In this workflow will use the Distributed Map feature of AWS Step Functions which extends support for orchestrating large-scale parallel workloads thereby achieving high concurrency to ingest CSV files at scale, transform meta data and customer data, and store it in Amazon DynamoDB"
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. cdk destroy"
+      ]
+    },
+    "deploy": {
+      "text": [
+        "1. Bootstrap CDK, if needed: <code>cdk bootstrap aws://{your-aws-account-number}/{your-aws-region}</code>",
+        "2. Deploy the stack: <code>cdk deploy</code>"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/migrate-csv-to-ddb-distributed-map-main/",
+        "templateDir":"migrate-csv-to-ddb-distributed-map-main",
+        "templateFile": "app.py",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        },
+        {
+          "text": "CDK Workshop",
+          "link": "https://cdkworkshop.com/"
+        },
+        {
+          "text": "Electric Vehicle Population Data",
+          "link": "https://data.wa.gov/api/views/f6w7-q2d2/rows.csv?accessType=DOWNLOAD"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Revanth Anireddy",
+          "image": "https://twitter.com/revanthreddy/photo",
+          "bio": "Principal Cloud Application Architect",
+          "linkedin": "revanth-anireddy-b7676616",
+          "twitter": "https://twitter.com/revanthreddy"
+        },
+        {
+          "name": "Praveen Marthala",
+          "image": "https://www.amazon.com/photos/shared/y2ToD8iaTGGlqxeDMgz91A.n3yKhZdK5vobqKkBL0SK7Q/gallery/ModLrQeXRl2WI8-IzbbBnA",
+          "bio": "Senior Database Consultant @ AWS",
+          "linkedin": "praveen-marthala"
+        }
+      ]
+  }
