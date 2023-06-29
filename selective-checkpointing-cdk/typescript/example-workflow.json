@@ -2,7 +2,7 @@
   "title": "Combine Standard and Express workflows to Optimize for Cost and Performance",
   "description": "Order Request Workflow with Nested Standard and Express State Machines",
   "language": "Typescript",
-  "simplicity": "1 - Workflow",
+  "simplicity": "2 - Pattern",
   "usecase": "",
   "type": "Standard",
   "diagram": "/resources/parentStateMachine.png",
