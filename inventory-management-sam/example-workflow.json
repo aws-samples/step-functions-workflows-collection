@@ -1,0 +1,75 @@
+{
+    "title": "Serverless Workflows for Real-time Inventory Management",
+    "description": "This sample Inventory Management Microservice demonstrates how to manage inventory levels by reserving inventory when a new order is received, alerts on low stock, and triggers purchase orders to replenish inventory",
+    "language": "",
+    "simplicity": "3 - Application",
+    "usecase": "",
+    "type": "Express",
+    "diagram":"/resources/inventory-management.png",
+    "videoId": "",
+    "level": "200",
+    "framework": "SAM",
+    "services": ["lambda", "sns", "sqs", "dynamodb", "sfn", "eventbridge"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "The sample Inventory Management Microservice consists of:",
+        "1. An Event Bridge Schedule which invokes a Lambda Function to send a `new-order-received` event every minute, to generate some sample data which would be sent by an Order Microservice.",
+        "2. An Event Bridge Rule handles the `new-order-received` event and persists it to an SQS Queue for durability.",
+        "3. A `reserve-stock` Lambda function polls the SQS Queue and starts the `reserve-stock` workflow.", 
+        "4. The `reserve-stock` workflow checks the Inventory DynamoDB table for the specified product and if the product status is `IN STOCK` and there is sufficient quantity, the workflow will reserve the stock, and if there isn't sufficient stock a notification will be sent and a Purchase Order will be auto created.",
+        "5. The `create-purchase-order` workflow is the target for the `create-purchase-order` event, which sends a purchase order email and waits for a callback. If the purchase order is `approved` the Inventory Table is updated for the specified product - the stock level is incremented by the purchase order amount and the product status is updated to `IN STOCK`.",
+        "6. The `check-inventory-level` workflow is initiated when there are changes in the Inventory Table. DynamoDB Streams is enabled on the Inventory table to continuously monitor inventory levels. If the inventory level falls below the threshold for a product, a `create-purchase-order` event is sent. The purchase order event is handled by an Event Bridge Rule which starts the create purchase order workflow. In parallel, this workflow checks if the stock level is zero for the product and if so, updates the product status to `OUT OF STOCK`."
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "Please see the github repo README for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam build",
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/inventory-management-sam/",
+        "templateDir":"inventory-management-sam",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/reserve-stock-statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Shannon Colavita",
+          "image": "https://phonetool.amazon.com/users/colavita",
+          "bio": "Senior Solutions Architect at AWS",
+          "linkedin": "https://www.linkedin.com/in/shannoncolavita/"
+        }
+      ]
+  }
+  
