@@ -1,8 +1,8 @@
-# Workflow title
+# Retry with Exponential Backoff
 
 This workflow demonstrates how to implement automatic retries with increasing delays to handle transient failures gracefully.
 
-Learn more about this workflow at Step Functions workflows collection: << Add the live URL here >>
+Learn more about this workflow at Step Functions workflows collection: https://serverlessland.com/workflows/retry-with-exponential-backoff
 
 For more information about error handling with Step Functions, please read the [Step Functions Developer Guide](https://docs.aws.amazon.com/step-functions/latest/dg/concepts-error-handling.html)
 
