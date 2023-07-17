@@ -1,0 +1,82 @@
+{
+  "title": "Celebrity Identifier",
+  "description": "Identify known celebrities from an image file and write corresponding file and celebrity identification values to DynamoDB without custom code.",
+  "language": "",
+  "simplicity": "3 - Application",
+  "usecase": "",
+  "type": "Standard",
+  "diagram": "/resources/statemachine.png",
+  "videoId": "",
+  "level": "200",
+  "framework": "SAM",
+  "services": [
+    "Rekognition",
+    "DyanmoDB",
+    "EventBridge"
+  ],
+  "introBox": {
+    "headline": "How it works",
+    "text": [
+      "This express workflow executes when an image file is uploaded to the created S3 bucket, regardless of prefix path. Once the file is copied, the S3 EventBridge event notifications feature will send an event to the default bus.",
+      "An EventBridge rule filters for object created events specific to the S3 bucket and then triggers the workflow.",
+      "1. The initial payload containing the S3 object location information is sent to the Amazon Rekognition service for analysis.",
+      "2. Rekognition will scan the image file and output 2 arrays containing information for celebrity and non-celebrity faces detected.",
+      "3. The workflow will then check, via a **choice state**, to see if any celebrities were detected. If not, then the workflow ends in a success and is complete.",
+      "4. If there are celebrity faces detected, the array of celebrity faces is sent to a **map state** where each array object will be processed.",
+      "5. Each object in the array contains information specific to a celebrity face, including the match confidence level. As the **map state** iterates through the array, each object will be checked against a confidence score greater than 90% through a choice state. If less, then that object of the array is no longer processed."
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": [
+      "See the GitHub repo for detailed testing instructions."
+    ]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": [
+      "1. Empty the files from the created S3 bucket."
+      "2. Delete the stack: <code>sam delete</code>."
+    ]
+  },
+  "deploy": {
+    "text": [
+      "sam deploy --guided"
+    ]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/celebrity-identifier-sam/",
+      "templateDir": "celebrity-identifier-sam",
+      "templateFile": "template.yaml",
+      "ASL": "statemachine/statemachine.asl.json"
+    },
+    "payloads": [
+      {
+        "headline": "",
+        "payloadURL": ""
+      }
+    ]
+  },
+  "resources": {
+    "headline": "Additional Resources",
+    "bullets": [
+      {
+        "text": "Try the new interactive Step Functions workshop",
+        "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+      },
+      {
+        "text": "Try the serverlesspresso workshop",
+        "link": "https://workshop.serverlesscoffee.com"
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Jesse Baker",
+      "image": "https://avatars.githubusercontent.com/jpb-Cloudy-McCloudFace",
+      "bio": "Jesse is a Solutions Architect for Amazon Web Services with a passion for modern application design using serverless services. Prior to working for AWS, Jesse was a Cloud Operations engineer for a global life sciences company.",
+      "linkedin": "jesse-baker-9727a410a"
+    }
+  ]
+}

@@ -39,7 +39,7 @@ Important: this application uses various AWS services and there are costs associ
 
 ## How it works
 
-This express workflow executes when an image file is uploaded to the created S3 bucket, regardless of prefix path. Once the file is copied, the S3 EventBridge event notifications feature will send an event to the default bus. An EventBridge rule filters for **objet created** events specific to the S3 bucket and then triggers the workflow.
+This express workflow executes when an image file is uploaded to the created S3 bucket, regardless of prefix path. Once the file is copied, the S3 EventBridge event notifications feature will send an event to the default bus. An EventBridge rule filters for **object created** events specific to the S3 bucket and then triggers the workflow.
 
 Workflow execution steps:
 

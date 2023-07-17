@@ -40,7 +40,7 @@ Resources:
     Type: AWS::Serverless::StateMachine
     Properties:
       Name: CelebrityIdentifier
-      DefinitionUri: statemachine/celebrityIdentifier.asl.json
+      DefinitionUri: statemachine/statemachine.asl.json
       DefinitionSubstitutions:
         Table: !Ref CelebrityTable
       Type: EXPRESS
