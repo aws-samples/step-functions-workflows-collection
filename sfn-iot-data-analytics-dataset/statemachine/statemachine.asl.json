@@ -1,0 +1,179 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "BatchPutMessage",
+  "States": {
+    "BatchPutMessage": {
+      "Type": "Task",
+      "Next": "CreateDataset",
+      "Parameters": {
+        "ChannelName": "${cfnChannel.channelName}",
+        "Messages": "Messages.$": "$.Messages"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:iotanalytics:batchPutMessage"
+    },
+    "CreateDataset": {
+      "Type": "Task",
+      "Next": "CreateDatasetContent",
+      "Parameters": {
+        "Actions": [
+          {
+            "ActionName": "myaction",
+            "QueryAction": {
+              "SqlQuery": "SELECT device_id, AVG(power_output) as average_power FROM windturbine GROUP BY device_id"
+            }
+          }
+        ],
+        "ContentDeliveryRules": [ 
+           { 
+              "Destination": { 
+                 "S3DestinationConfiguration": { 
+                    "Bucket": "${datasetBucket.bucketName}",
+                    "Key": "dataset/mydataset/!{iotanalytics:scheduleTime}/!{iotanalytics:versionId}.csv",
+                    "RoleArn": "${dataSetRole.roleArn}"
+                 }
+              }
+           }
+        ],
+        "DatasetName": "windturbine"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:iotanalytics:createDataset",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "IoTAnalytics.ResourceAlreadyExistsException"
+          ],
+          "Next": "CreateDatasetContent"
+        }
+      ]
+    },
+    "CreateDatasetContent": {
+      "Type": "Task",
+      "Next": "Wait for Dataset Content creation and Callback Token",
+      "Parameters": {
+        "DatasetName": "windturbine"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:iotanalytics:createDatasetContent"
+    },
+    "Wait for Dataset Content creation and Callback Token": {
+      "Next": "GetDatasetContent",
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:dynamodb:putItem.waitForTaskToken",
+      "Parameters": {
+        "TableName": "${checkpointTable.tableName}",
+        "Item": {
+          "PK1": {
+            "S.$": "$.VersionId"
+          },
+          "TT": {
+            "S.$": "$$.Task.Token"
+          },
+          "STATUS": {
+            "S": "PROCESSING"
+          }
+        }
+      },
+      "TimeoutSeconds": 1800
+    },
+    "GetDatasetContent": {
+      "Type": "Task",
+      "Next": "Put Content To S3",
+      "Parameters": {
+        "DatasetName": "windturbine"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:iotanalytics:getDatasetContent",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "IoTAnalytics.ResourceNotFoundException",
+            "InternalServerError"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 5,
+          "MaxAttempts": 10
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail"
+        }
+      ]
+    },
+    "Put Content To S3": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "${getDatasetFunction.functionName}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Map"
+    },
+    "Map": {
+      "Type": "Map",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "DISTRIBUTED",
+          "ExecutionType": "EXPRESS"
+        },
+        "StartAt": "DynamoDB PutItem",
+        "States": {
+          "DynamoDB PutItem": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::dynamodb:putItem",
+            "Parameters": {
+              "TableName": "${table.tableName}",
+              "Item": {
+                "PK1": {
+                  "S.$": "$.device_id"
+                },
+                "SK1": {
+                  "S.$": "$.device_id"
+                },
+                "PWR": {
+                  "S.$": "$.average_power"
+                }
+              }
+            },
+            "End": true
+          }
+        }
+      },
+      "Next": "Success",
+      "Label": "Map",
+      "MaxConcurrency": 100,
+      "ItemReader": {
+        "Resource": "arn:aws:states:::s3:getObject",
+        "ReaderConfig": {
+          "InputType": "CSV",
+          "CSVHeaderLocation": "FIRST_ROW"
+        },
+        "Parameters": {
+          "Bucket.$": "$.Bucket",
+          "Key.$": "$.Key"
+        }
+      }
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "Fail": {
+      "Type": "Fail"
+    }
+  }
+}
