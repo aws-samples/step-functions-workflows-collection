@@ -1,0 +1,97 @@
+{
+    "StartAt": "Get Items To Process",
+    "Comment": "Batch-Write items from Lambda Function into a DynamoDB Table",
+    "States": {
+      "Get Items To Process": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "OutputPath": "$.Payload",
+        "Parameters": {
+          "Payload.$": "$",
+          "FunctionName": "${LambdaFunctionARN}:$LATEST"
+        },
+        "Retry": [
+          {
+            "ErrorEquals": [
+              "Lambda.ServiceException",
+              "Lambda.AWSLambdaException",
+              "Lambda.SdkClientException",
+              "Lambda.TooManyRequestsException"
+            ],
+            "IntervalSeconds": 2,
+            "MaxAttempts": 6,
+            "BackoffRate": 2
+          }
+        ],
+        "Next": "Format Items for DDB BatchWriteItems API"
+      },
+      "Format Items for DDB BatchWriteItems API": {
+        "Type": "Map",
+        "ItemProcessor": {
+          "StartAt": "JSON Formatter",
+          "States": {
+            "JSON Formatter": {
+              "Type": "Pass",
+              "End": true,
+              "Parameters": {
+                "PutRequest": {
+                  "Item": {
+                    "${DynamoDBTable_PartitionKey}": {
+                      "S.$": "$.${DynamoDBTable_PartitionKey}"
+                    },
+                    "${DynamoDBTable_Attribute1}": {
+                      "S.$": "$.${DynamoDBTable_Attribute1}"
+                    },
+                    "${DynamoDBTable_Attribute2}": {
+                      "S.$": "$.${DynamoDBTable_Attribute2}"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "ProcessorConfig": {
+            "Mode": "INLINE"
+          }
+        },
+        "Next": "Batch Items and Write to DDB",
+        "ItemsPath": "$.Items"
+      },
+      "Batch Items and Write to DDB": {
+        "Type": "Map",
+        "ItemProcessor": {
+          "ProcessorConfig": {
+            "Mode": "DISTRIBUTED",
+            "ExecutionType": "EXPRESS"
+          },
+          "StartAt": "Transform input with Parameters",
+          "States": {
+            "Transform input with Parameters": {
+              "Type": "Pass",
+              "Next": "BatchWriteItem",
+              "InputPath": "$.Items",
+              "Parameters": {
+                "RequestItems": {
+                  "${DynamoDBTable_Name}.$": "$"
+                }
+              }
+            },
+            "BatchWriteItem": {
+              "Type": "Task",
+              "End": true,
+              "Parameters": {
+                "RequestItems.$": "$.RequestItems"
+              },
+              "Resource": "arn:aws:states:::aws-sdk:dynamodb:batchWriteItem"
+            }
+          }
+        },
+        "End": true,
+        "Label": "Map",
+        "MaxConcurrency": 1000,
+        "ItemBatcher": {
+          "MaxItemsPerBatch": 25
+        }
+      }
+    }
+  }
