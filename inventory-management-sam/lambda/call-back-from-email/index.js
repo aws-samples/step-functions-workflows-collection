@@ -1,4 +1,4 @@
-const { SFNClient, SendTaskSuccessCommand, SendTaskFailureCommand } = require("@aws-sdk/client-sfn");
+const { SFNClient, SendTaskSuccessCommand } = require("@aws-sdk/client-sfn");
 
 const client = new SFNClient();
 
@@ -14,14 +14,14 @@ exports.handler = async function(event, context) {
         };
         const command = new SendTaskSuccessCommand(input);
         await client.send(command);
-    } else if (action === "reject") {
+    } else if (action === "reject") {     
         const message = { "Status": "Rejected" };
-        
+            
         const input = { 
             taskToken: taskToken,
             output: JSON.stringify(message)
         };
-        const command = new SendTaskFailureCommand(input);
+        const command = new SendTaskSuccessCommand(input);
         await client.send(command);
     } else {
         const errorMessage = "Unrecognized action. Expected: approve, reject."

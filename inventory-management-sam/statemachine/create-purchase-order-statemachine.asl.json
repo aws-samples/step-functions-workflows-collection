@@ -38,7 +38,7 @@
               "TableName": "${InventoryTableName}",
               "Key": {
                 "id": {
-                  "S.$": "$.detail.productId"
+                  "S.$": "$$.Execution.Input.detail.productId"
                 }
               },
               "UpdateExpression": "SET #stock = #stock + :quantity, #status = :status",
@@ -48,7 +48,7 @@
                 },
               "ExpressionAttributeValues": {
                 ":quantity": {
-                  "N.$": "States.Format('{}', States.MathAdd($.detail.quantityRequested, $.detail.minPOAmount))"
+                  "N.$": "States.Format('{}', States.MathAdd($$.Execution.Input.detail.quantityRequested, $$.Execution.Input.detail.minPOAmount))"
                 },
                 ":status": {
                     "S"  : "IN STOCK"

@@ -14,7 +14,7 @@
         },
         "Check Stock Levels": {
             "Type": "Parallel",
-            "Next": "End",
+            "End": true,
             "Branches": [
                 {
                     "StartAt": "Check if Stock Level is below the threshold",
@@ -28,7 +28,7 @@
                                     "Next": "Send create-purchase-order event"
                                 }
                             ],
-                            "Default": "Pass State"
+                            "Default": "Pass not below threshold"
                         },
                         "Send create-purchase-order event": {
                             "Type": "Task",
@@ -47,9 +47,22 @@
                                     }
                                 ]
                             },
+                            "ResultPath": "$.sendEventResult",
+                            "Next": "Alert stock is below threshold"
+                        },
+                        "Alert stock is below threshold": {
+                            "Type": "Task",
+                            "Resource": "arn:aws:states:::sns:publish",
+                            "Parameters": {
+                                "TopicArn": "${InventoryManagementTopicArn}",
+                                "Subject": "Inventory level is below threshold",
+                                "Message": {
+                                    "message.$": "States.Format('Stock for product id {} is {} which is below the threshold of {}. A create-purchase-order event has been sent.', $.productId, $.stockNumeric, $.thresholdNumeric)"
+                                }
+                            },
                             "End": true
                         },
-                        "Pass State": {
+                        "Pass not below threshold": {
                             "Comment": "Nothing to do",
                             "Type": "Pass",
                             "End": true
@@ -90,6 +103,19 @@
                                     }
                                 }
                             },
+                            "ResultPath": "$.updateResult",
+                            "Next": "Alert stock is zero"
+                        },
+                        "Alert stock is zero": {
+                            "Type": "Task",
+                            "Resource": "arn:aws:states:::sns:publish",
+                            "Parameters": {
+                                "TopicArn": "${InventoryManagementTopicArn}",
+                                "Subject": "Inventory level is zero",
+                                "Message": {
+                                    "message.$": "States.Format('Stock for product id {} is 0. The product status has been updated to 'OUT OF STOCK'.', $.productId)"
+                                }
+                            },
                             "End": true
                         },
                         "Pass not zero": {
@@ -100,11 +126,6 @@
                     }
                 }
             ]
-        },
-        "End": {
-            "Comment": "Nothing to do",
-            "Type": "Pass",
-            "End": true
         }
     }
 }

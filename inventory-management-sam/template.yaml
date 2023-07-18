@@ -390,6 +390,9 @@ Resources:
             Stream: !GetAtt InventoryTable.StreamArn
             BatchSize: 10
             StartingPosition: TRIM_HORIZON
+            FilterCriteria:
+              Filters:
+                - Pattern: '{ "dynamodb": { "NewImage": { "status": { "S": ["IN STOCK"] } } } }' # we do not want to check ones we have updated to OUT OF STOCK
       Policies:
         - StepFunctionsExecutionPolicy: # Needed permission to start the workflow (Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html)
             StateMachineName: !GetAtt CheckInventoryLevelStateMachine.Name
@@ -419,9 +422,12 @@ Resources:
         - CloudWatchLogsFullAccess    
         - DynamoDBWritePolicy:
             TableName: !Ref InventoryTable
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt InventoryManagementTopic.TopicName
       DefinitionSubstitutions:
         InventoryEventBusName: !GetAtt InventoryEventBus.Name
         InventoryTableName: !Ref InventoryTable
+        InventoryManagementTopicArn: !Ref InventoryManagementTopic
 
 
 # List all common outputs for usage
