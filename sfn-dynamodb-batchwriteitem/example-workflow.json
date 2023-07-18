@@ -1,0 +1,76 @@
+{
+  "title": "Step Function to Batch-Write data to DynamoDB ",
+  "description": "This sample project demonstrates how to use Step Functions to transform and batch data and then write the data batch to DynamoDB Table",
+  "language": "Python",
+  "simplicity": "1 - Fundamental",
+  "usecase": "",
+  "type": "Standard",
+  "diagram": "/resources/statemachine.png",
+  "videoId": "",
+  "level": "100",
+  "framework": "SAM",
+  "services": [
+    "dynamodb",
+    "lambda",
+    "stepfunctions"
+  ],
+  "introBox": {
+    "headline": "How it works",
+    "text": [
+      "In this project, Step Functions uses a state machine to invoke a Lambda function to get the data to be written to DynamoDB Table. The Lambda function generates an array of JSON containing random sample data.",
+      "The first Map state converts the JSON array to BatchWriteItem compatible DynamoDB JSON Array. This data is the passed to Distributed Map State which performs batching of 25 items on data due to validation on BatchWriteItem API of DynamoDB."
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": [
+      "See the GitHub repo for detailed testing instructions."
+    ]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": [
+      "1. Delete the stack: <code>sam delete</code>."
+    ]
+  },
+  "deploy": {
+    "text": [
+      "sam deploy -g"
+    ]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/sfn-dynamodb-batchwriteitem/",
+      "templateDir": "sfn-dynamodb-batchwriteitem",
+      "templateFile": "template.yaml",
+      "ASL": "statemachine/statemachine.asl.json"
+    },
+    "payloads": [
+      {
+        "headline": "",
+        "payloadURL": ""
+      }
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "The AWS Step Functions Workshop",
+        "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+      },
+      {
+        "text": "DynamoDB BatchWriteItem API Reference",
+        "link": "https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchWriteItem.html"
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Udit Parikh",
+      "image": "https://drive.google.com/file/d/1SfEjQtLkPaOHC7JlfugR4OaUD0yNjHu6/view?usp=drivesdk",
+      "bio": "Udit is passionate about serverless & event-driven architectures.",
+      "linkedin": "https://www.linkedin.com/in/parikhudit"
+    }
+  ]
+}

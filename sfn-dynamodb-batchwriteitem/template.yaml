@@ -1,0 +1,63 @@
+
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: sfn-dynamodb-batchwriteitem - Sample SAM Template for sfn-dynamodb-batchwriteitem
+
+AWSTemplateFormatVersion: '2010-09-09'
+
+Resources:
+
+  ItemsGeneratorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: python3.10
+      CodeUri: src
+      Handler: lambda_function.lambda_handler
+      Environment:
+        Variables:
+          unique_id: 'id'
+          attribute_1: 'name'
+          attribute_2: 'rating'
+
+  DataStoreTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+         Name: id
+         Type: String
+      ProvisionedThroughput:
+         ReadCapacityUnits: 5
+         WriteCapacityUnits: 5
+
+  BatchWriterStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Type: 'STANDARD'
+      Name: DDBDataBatchWriterFlow
+      DefinitionUri: statemachine/statemachine.asl.json
+      DefinitionSubstitutions:
+        LambdaFunctionARN: !GetAtt ItemsGeneratorFunction.Arn
+        DynamoDBTable_Name: !Select [1, !Split ['/', !GetAtt DataStoreTable.Arn]]
+        # Same values as of Environment Variables in ItemsGeneratorFunction
+        DynamoDBTable_PartitionKey: 'id'
+        DynamoDBTable_Attribute1: 'name'
+        DynamoDBTable_Attribute2: 'rating'
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref ItemsGeneratorFunction
+        - DynamoDBWritePolicy:
+            TableName: !Ref DataStoreTable
+        - StepFunctionsExecutionPolicy:
+            StateMachineName: '*'
+
+Outputs:
+  ItemsGeneratorFunction:
+    Value: !GetAtt ItemsGeneratorFunction.Arn
+    Description: ARN of Data Generator Lamdba Function
+  DynamoDBTableName:
+    Value: !Select [1, !Split ['/', !GetAtt DataStoreTable.Arn]] 
+    Description: Name of Data Store DynamoDB Table
+  StepFunctionArn:
+    Value: !GetAtt BatchWriterStateMachine.Arn
+    Description: ARN of Step Function
