@@ -113,7 +113,7 @@
                                 "TopicArn": "${InventoryManagementTopicArn}",
                                 "Subject": "Inventory level is zero",
                                 "Message": {
-                                    "message.$": "States.Format('Stock for product id {} is 0. The product status has been updated to 'OUT OF STOCK'.', $.productId)"
+                                    "message.$": "States.Format('Stock for product id {} is 0. The product status has been updated to \"OUT OF STOCK\".', $.productId)"
                                 }
                             },
                             "End": true

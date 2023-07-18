@@ -439,3 +439,7 @@ Outputs:
   CallBackEmailLambdaUrl:
     Description: "Url for CallBackEmailLambda"
     Value: !GetAtt CallBackEmailLambdaUrl.FunctionUrl
+
+  InventoryReservationTableName:
+    Description: Inventory Reservation table name
+    Value: !Ref InventoryReservationTable  

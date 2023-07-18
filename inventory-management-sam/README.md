@@ -76,7 +76,12 @@ Invoke the `SendNewOrderReceivedLambda` by getting the lambda name from the outp
     
     aws lambda invoke --function-name $(aws cloudformation describe-stacks --stack-name <stack-name> --query "Stacks[*].Outputs[?OutputKey=='SendNewOrderReceivedLambdaName'].OutputValue" --output text) response.json
     ```
-The event will trigger the `reserve-stock` workflow which you can view from the [Step Functions console](https://console.aws.amazon.com/states/home). If there isn't enough stock the `create-purchase-order` will be triggered and the `check-inventory-level` workflow will be triggered for any updates to the Inventory Table.
+The event will trigger the `reserve-stock` workflow which you can view from the [Step Functions console](https://console.aws.amazon.com/states/home). If there is enough stock the reservation will be written to the Inventory Reservation Table. You can view the items in the DynamoDB table in the console or by using the below command:
+    ```bash
+    aws dynamodb scan --table-name $(aws cloudformation describe-stacks --stack-name <stack-name> --query "Stacks[*].Outputs[?OutputKey=='InventoryReservationTableName'].OutputValue" --output text)
+    ```
+
+If there isn't enough stock the `create-purchase-order` will be triggered and you will receive a Purchase Order request email. The `check-inventory-level` workflow will be triggered for any updates to the Inventory Table.
 
 
 ### If you would like to generate events every minute:

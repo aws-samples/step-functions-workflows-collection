@@ -9,28 +9,29 @@ const ebClient = new EventBridgeClient()
 const tableName = process.env.INVENTORY_TABLE
 const min = 1;
 const max = 200;
-exports.handler = async function(event, context) {
-    const products = await docClient.send(new ScanCommand({ TableName: tableName}));
-    // select a random product
-    const product = products.Items[Math.floor(Math.random() * products.Items.length)];
-    const order = {
-        orderId: v4(),
-        productId: product.id,
-        quantity: Math.floor(Math.random()  * (max - min + 1) + min)
-    }
+exports.handler = async function (event, context) {
+  const products = await docClient.send(new ScanCommand({ TableName: tableName }));
+  // select a random product
+  const product = products.Items[Math.floor(Math.random() * products.Items.length)];
+  const order = {
+    orderId: v4(),
+    productId: product.id,
+    quantity: Math.floor(Math.random() * (max - min + 1) + min)
+  }
 
-    const input = { 
-        Entries: [ 
-          { 
-            Time: new Date(),
-            Source: "com.orders",
-            DetailType: "new-order-received",
-            Detail: JSON.stringify(order),
-            EventBusName: process.env.EVENTBUS_NAME
-          },
-        ]
-      };
-      const command = new PutEventsCommand(input);
-      await ebClient.send(command);
- 
+  const input = {
+    Entries: [
+      {
+        Time: new Date(),
+        Source: "com.orders",
+        DetailType: "new-order-received",
+        Detail: JSON.stringify(order),
+        EventBusName: process.env.EVENTBUS_NAME
+      },
+    ]
+  };
+  const command = new PutEventsCommand(input);
+  await ebClient.send(command);
+  return "new-order-received event sent : " + JSON.stringify(order);
+
 };

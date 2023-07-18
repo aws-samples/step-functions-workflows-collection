@@ -104,7 +104,10 @@
               "Parameters": {
                 "TableName": "${InventoryReservationTableName}",
                 "Item": {
-                  "id": {
+                  "id": { 
+                    "S.$": "States.UUID()"
+                  },
+                  "orderId": { 
                     "S.$": "$.orderId"
                   },
                   "productId": {
