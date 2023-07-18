@@ -39,10 +39,10 @@ Important: this application uses various AWS services and there are costs associ
 ## How it works
 
 The sample Inventory Management Microservice consists of:
-1. An Event Bridge Schedule which invokes a Lambda Function to send a `new-order-received` event every minute, to generate some sample data which would be sent by an Order Microservice. This schedule is disabled initially, instructions on enabling it are in the Testing section below.
+1. An Event Bridge Schedule which invokes a Lambda Function to send a `new-order-received` event every minute, to generate some sample data which would be sent by a hypothetical Order Microservice. This schedule is disabled initially, instructions on enabling it are in the Testing section below.
 2. An Event Bridge Rule handles the `new-order-received` event and persists it to an SQS Queue for durability. 
 3. A `reserve-stock` Lambda function polls the SQS Queue and starts the `reserve-stock` workflow. 
-4. The `reserve-stock` workflow checks the Inventory DynamoDB table for the specified product and if the product status is `IN STOCK` and there is sufficient quantity, the workflow starts these steps in parallel:
+4. The `reserve-stock` workflow is an [Express workflow](https://docs.aws.amazon.com/step-functions/latest/dg/concepts-standard-vs-express.html) as it should execute in under 5 minutes. It checks the Inventory DynamoDB table for the specified product and if the product status is `IN STOCK` and there is sufficient quantity, the workflow starts these steps in parallel - demonstrating the [Choice](https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-choice-state.html) and [Parallel State](https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-parallel-state.html):
     1. The inventory level is updated.
     2. A `stock-reserved` event is sent, which the Order Microservice would handle and continue with order processing.
     3. The stock reservation is written to the `Inventory Reservation` table. 
@@ -52,9 +52,9 @@ The sample Inventory Management Microservice consists of:
         2. A `stock-unavailable` event is sent, which the Order Microservice would handle and hold order processing until the stock was available
         3. A stock unavailable notification is sent
     
-5. The `create-purchase-order` workflow is the target for the `create-purchase-order` event, which sends a purchase order email and waits for a callback. If the purchase order is `approved` the Inventory Table is updated for the specified product - the stock level is incremented by the purchase order amount and the product status is updated to `IN STOCK`.
+5. The `create-purchase-order` workflow is a [Standard workflow](https://docs.aws.amazon.com/step-functions/latest/dg/concepts-standard-vs-express.html) as it uses a [Callback](https://docs.aws.amazon.com/step-functions/latest/dg/connect-to-resource.html#connect-wait-token) which is not supported by Express workflows and it could take longer than 5 minutes to complete as it waits for a response. This workflow is the target for the `create-purchase-order` event, and it sends a purchase order email and waits for a callback. If the purchase order is `approved` the Inventory Table is updated for the specified product - the stock level is incremented by the purchase order amount and the product status is updated to `IN STOCK`.
 
-6. The `check-inventory-level` workflow is initiated when there are changes in the Inventory Table. DynamoDB Streams is enabled on the Inventory table to continuously monitor inventory levels. If the inventory level falls below the threshold for a product, a `create-purchase-order` event is sent. The purchase order event is handled by an Event Bridge Rule which starts the create purchase order workflow. In parallel, this workflow checks if the stock level is zero for the product and if so, updates the product status to `OUT OF STOCK`.
+6. The `check-inventory-level` workflow is initiated when there are changes in the Inventory Table. DynamoDB Streams is enabled on the Inventory table to continuously monitor inventory levels. A Lambda function processes the stream records and starts the `check-inventory-level` workflow which checks if the inventory level falls below the threshold for a product, and sends a `create-purchase-order` event. The purchase order event is handled by an Event Bridge Rule which starts the create purchase order workflow. In parallel, this workflow checks if the stock level is zero for the product and if so, updates the product status to `OUT OF STOCK` and sends an alert that the stock level is zero.
 
 ## Architecture Diagram
 ![image](./resources/inventory-management.png)
