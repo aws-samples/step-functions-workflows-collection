@@ -1,0 +1,88 @@
+{
+  "Comment": "Expense analysis state machine",
+  "StartAt": "DetectLabels",
+  "States": {
+    "DetectLabels": {
+      "Type": "Task",
+      "Parameters": {
+        "Image": {
+          "S3Object": {
+            "Bucket.$": "$.detail.bucket.name",
+            "Name.$": "$.detail.object.key"
+          }
+        }
+      },
+      "Resource": "arn:aws:states:::aws-sdk:rekognition:detectLabels",
+      "Next": "Check if receipt",
+      "ResultSelector": {
+        "receipt.$": "$.Labels[?(@.Name==Receipt)]"
+      }
+    },
+    "Check if receipt": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "And": [
+            {
+              "Variable": "$.receipt[0]",
+              "IsPresent": true
+            },
+            {
+              "Variable": "$.receipt[0].Confidence",
+              "NumericGreaterThanEquals": 80
+            }
+          ],
+          "Next": "AnalyzeExpense"
+        }
+      ],
+      "Default": "Fail"
+    },
+    "AnalyzeExpense": {
+      "Type": "Task",
+      "Next": "Record receipt in database",
+      "Parameters": {
+        "Document": {
+          "S3Object": {
+            "Bucket.$": "$$.Execution.Input.detail.bucket.name",
+            "Name.$": "$$.Execution.Input.detail.object.key"
+          }
+        }
+      },
+      "Resource": "arn:aws:states:::aws-sdk:textract:analyzeExpense",
+      "ResultSelector": {
+        "amountPaid.$": "$.ExpenseDocuments[0].SummaryFields[?(@.Type.Text==AMOUNT_PAID)].ValueDetection.Text",
+        "invoiceDate.$": "$.ExpenseDocuments[0].SummaryFields[?(@.Type.Text==INVOICE_RECEIPT_DATE)].ValueDetection.Text",
+        "vendorName.$": "$.ExpenseDocuments[0].SummaryFields[?(@.Type.Text==VENDOR_NAME)].ValueDetection.Text"
+      }
+    },
+    "Record receipt in database": {
+      "End": true,
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:updateItem",
+      "Parameters": {
+        "Key": {
+          "Id": {
+            "S.$": "$$.Execution.Input.detail.object.key"
+          }
+        },
+        "TableName": "textract-analyze-expense-tf-165212008084",
+        "ExpressionAttributeValues": {
+          ":invoiceDate": {
+            "S.$": "$.invoiceDate[0]"
+          },
+          ":amountPaid": {
+            "S.$": "$.amountPaid[0]"
+          },
+          ":vendorName": {
+            "S.$": "$.vendorName[0]"
+          }
+        },
+        "UpdateExpression": "SET amountPaid = :amountPaid, vendorName = :vendorName, invoiceDate = :invoiceDate"
+      }
+    },
+    "Fail": {
+      "Type": "Fail",
+      "Cause": "The image is not a receipt"
+    }
+  }
+}
