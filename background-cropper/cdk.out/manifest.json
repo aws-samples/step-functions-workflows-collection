@@ -1,0 +1,196 @@
+{
+  "version": "32.0.0",
+  "artifacts": {
+    "BackgroundCropperCdkStack.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "BackgroundCropperCdkStack.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "BackgroundCropperCdkStack": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://unknown-account/unknown-region",
+      "properties": {
+        "templateFile": "BackgroundCropperCdkStack.template.json",
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-${AWS::Region}",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-${AWS::Region}",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/2c298400c96047898f01ad6d95de16372bf252cf2b059879c6cdafe43999736e.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "BackgroundCropperCdkStack.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-${AWS::Region}",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "BackgroundCropperCdkStack.assets"
+      ],
+      "metadata": {
+        "/BackgroundCropperCdkStack/image-upload-2898/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "imageupload2898B34F94B1"
+          }
+        ],
+        "/BackgroundCropperCdkStack/image-upload-2898/Policy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "imageupload2898Policy66C5A8B8"
+          }
+        ],
+        "/BackgroundCropperCdkStack/image-upload-2898/AutoDeleteObjectsCustomResource/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "imageupload2898AutoDeleteObjectsCustomResource55705EEA"
+          }
+        ],
+        "/BackgroundCropperCdkStack/image-upload-2898/Notifications/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "imageupload2898Notifications5726C361"
+          }
+        ],
+        "/BackgroundCropperCdkStack/image-upload-2898/AllowBucketNotificationsToBackgroundCropperCdkStacktriggerstepfunctionC83C6B89": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "imageupload2898AllowBucketNotificationsToBackgroundCropperCdkStacktriggerstepfunctionC83C6B8963076668"
+          }
+        ],
+        "/BackgroundCropperCdkStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Role": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092"
+          }
+        ],
+        "/BackgroundCropperCdkStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Handler": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F"
+          }
+        ],
+        "/BackgroundCropperCdkStack/image-result-2898/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "imageresult28985DD4E7E3"
+          }
+        ],
+        "/BackgroundCropperCdkStack/image-result-2898/Policy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "imageresult2898Policy22053F44"
+          }
+        ],
+        "/BackgroundCropperCdkStack/image-result-2898/AutoDeleteObjectsCustomResource/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "imageresult2898AutoDeleteObjectsCustomResourceBB243237"
+          }
+        ],
+        "/BackgroundCropperCdkStack/lambdaRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "lambdaRoleC844FDB1"
+          }
+        ],
+        "/BackgroundCropperCdkStack/detect_labels/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "detectlabels80E53AC2"
+          }
+        ],
+        "/BackgroundCropperCdkStack/crop_image/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "cropimage392C997B"
+          }
+        ],
+        "/BackgroundCropperCdkStack/ImgCropperSFNLog/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ImgCropperSFNLog95C3F867"
+          }
+        ],
+        "/BackgroundCropperCdkStack/ImgCropperSFN/Role/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ImgCropperSFNRole3F818300"
+          }
+        ],
+        "/BackgroundCropperCdkStack/ImgCropperSFN/Role/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ImgCropperSFNRoleDefaultPolicyC8B576AE"
+          }
+        ],
+        "/BackgroundCropperCdkStack/ImgCropperSFN/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ImgCropperSFN5AD38B52"
+          }
+        ],
+        "/BackgroundCropperCdkStack/trigger_step_function/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "triggerstepfunctionFE409FEA"
+          }
+        ],
+        "/BackgroundCropperCdkStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC"
+          }
+        ],
+        "/BackgroundCropperCdkStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleDefaultPolicy2CF63D36"
+          }
+        ],
+        "/BackgroundCropperCdkStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BucketNotificationsHandler050a0587b7544547bf325f094a3db8347ECC3691"
+          }
+        ],
+        "/BackgroundCropperCdkStack/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/BackgroundCropperCdkStack/CDKMetadata/Condition": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadataAvailable"
+          }
+        ],
+        "/BackgroundCropperCdkStack/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/BackgroundCropperCdkStack/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "BackgroundCropperCdkStack"
+    },
+    "Tree": {
+      "type": "cdk:tree",
+      "properties": {
+        "file": "tree.json"
+      }
+    }
+  }
+}
