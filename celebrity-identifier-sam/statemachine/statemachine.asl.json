@@ -1,0 +1,90 @@
+{
+    "Comment": "Step Functions express workflow to identify celebrity faces in images",
+    "StartAt": "Recognize celebrities",
+    "States": {
+      "Recognize celebrities": {
+        "Type": "Task",
+        "Parameters": {
+          "Image": {
+            "S3Object": {
+              "Bucket.$": "$.detail.bucket.name",
+              "Name.$": "$.detail.object.key"
+            }
+          }
+        },
+        "Resource": "arn:aws:states:::aws-sdk:rekognition:recognizeCelebrities",
+        "Next": "Celebrities detected",
+        "ResultPath": "$.Rekognition"
+      },
+      "Celebrities detected": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "Variable": "$.Rekognition.CelebrityFaces[0]",
+            "IsPresent": true,
+            "Next": "Iterate list"
+          }
+        ],
+        "Default": "Nothing to process"
+      },
+      "Nothing to process": {
+        "Type": "Succeed"
+      },
+      "Iterate list": {
+        "Type": "Map",
+        "ItemProcessor": {
+          "ProcessorConfig": {
+            "Mode": "INLINE"
+          },
+          "StartAt": "Process high confidence",
+          "States": {
+            "Process high confidence": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.CelebrityFaces.MatchConfidence",
+                  "NumericGreaterThan": 90,
+                  "Next": "Write to database"
+                }
+              ],
+              "Default": "Low confidence"
+            },
+            "Low confidence": {
+              "Type": "Succeed"
+            },
+            "Write to database": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::dynamodb:putItem",
+              "Parameters": {
+                "TableName": "${Table}",
+                "Item": {
+                  "CelebID": {
+                    "S.$": "$.CelebrityFaces.Id"
+                  },
+                  "Name": {
+                    "S.$": "$.CelebrityFaces.Name"
+                  },
+                  "Time": {
+                    "S.$": "$.time"
+                  },
+                  "ObjectLocation": {
+                    "S.$": "States.Format('S3://{}/{}', $.bucket, $.key)"
+                  }
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        "End": true,
+        "ItemsPath": "$.Rekognition.CelebrityFaces",
+        "ItemSelector": {
+          "bucket.$": "$.detail.bucket.name",
+          "key.$": "$.detail.object.key",
+          "time.$": "$.time",
+          "CelebrityFaces.$": "$$.Map.Item.Value"
+        }
+      }
+    }
+  }
+  

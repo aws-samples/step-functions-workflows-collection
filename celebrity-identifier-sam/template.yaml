@@ -1,0 +1,100 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Celebrity facial recognition triggered by a jpeg upload to S3 that identifies the celebrity and records in DynamoDB as per a predefined threshold.
+
+Resources:
+  ImageSourceBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref UploadBucketName
+      NotificationConfiguration:
+        EventBridgeConfiguration:
+          EventBridgeEnabled: True
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+            BucketKeyEnabled: true
+
+  CelebrityTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions: 
+        - AttributeName: Name
+          AttributeType: S
+        - AttributeName: ObjectLocation
+          AttributeType: S
+      KeySchema: 
+        - AttributeName: Name
+          KeyType: HASH
+        - AttributeName: ObjectLocation
+          KeyType: RANGE
+
+  StateMachineLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+         LogGroupName: /aws/vendedlogs/CelebrityIdentifier-Logs
+
+  IdnetifierStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name: CelebrityIdentifier
+      DefinitionUri: statemachine/statemachine.asl.json
+      DefinitionSubstitutions:
+        Table: !Ref CelebrityTable
+      Type: EXPRESS
+      Logging:
+        Level: ALL
+        IncludeExecutionData: 'true'
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt StateMachineLogs.Arn
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName:
+              !Ref CelebrityTable
+        - S3ReadPolicy:
+            BucketName:
+              !Ref ImageSourceBucket
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action: 
+                - rekognition:RecognizeCelebrities
+                - rekognition:GetCelebrityInfo
+              Resource: '*'
+            - Effect: Allow
+              Action:
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: !GetAtt StateMachineLogs.Arn
+            - Effect: Allow
+              Action:
+                - logs:GetLogDelivery
+                - logs:UpdateLogDelivery
+                - logs:ListLogDeliveries
+                - logs:CreateLogDelivery
+                - logs:DescribeLogGroups
+                - logs:DescribeResourcePolicies
+                - logs:PutResourcePolicy
+              Resource: '*'
+      Events:
+        EventBridge:
+          Type: EventBridgeRule
+          Properties:
+            Pattern:
+              source:
+                - aws.s3
+              detail-type:
+                - Object Created
+              detail:
+                bucket:
+                  name:
+                    - !Ref ImageSourceBucket
+
+Parameters:
+  UploadBucketName:
+    Type: String
+    Description: Provide the name of a new bucket to be created for image uploads
+       
