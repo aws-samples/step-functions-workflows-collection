@@ -1,0 +1,42 @@
+[
+  {
+    "MessageId": "message01",
+    "Payload": "{\"timestamp\": \"20230707T09:30:00Z\", \"device_id\": \"siemens_wind_turbine_456\", \"message_type\": \"status_update\", \"component\": \"N/A\", \"status\": \"healthy\", \"severity\": \"normal\", \"type\": \"meter\", \"power_output\": 2150, \"wind_speed\": 12.5, \"location\": {\"latitude\": 52.52, \"longitude\": 13.405}}"
+  },
+  {
+    "MessageId": "message02",
+    "Payload": "{\"timestamp\": \"20230707T09:31:00Z\", \"device_id\": \"siemens_wind_turbine_456\", \"message_type\": \"status_update\", \"component\": \"N/A\", \"status\": \"healthy\", \"severity\": \"normal\", \"type\": \"meter\", \"power_output\": 2000, \"wind_speed\": 12, \"location\": {\"latitude\": 52.52, \"longitude\": 13.405}}"
+  },
+  {
+    "MessageId": "message03",
+    "Payload": "{\"timestamp\": \"20230707T09:32:00Z\", \"device_id\": \"siemens_wind_turbine_456\", \"message_type\": \"status_update\", \"component\": \"N/A\", \"status\": \"healthy\", \"severity\": \"normal\", \"type\": \"meter\", \"power_output\": 1030, \"wind_speed\": 6.1, \"location\": {\"latitude\": 52.52, \"longitude\": 13.405}}"
+  },
+  {
+    "MessageId": "message04",
+    "Payload": "{\"timestamp\": \"20230707T09:33:00Z\", \"device_id\": \"siemens_wind_turbine_456\", \"message_type\": \"status_update\", \"component\": \"N/A\", \"status\": \"healthy\", \"severity\": \"normal\", \"type\": \"meter\", \"power_output\": 1400, \"wind_speed\": 9, \"location\": {\"latitude\": 52.52, \"longitude\": 13.405}}"
+  },
+  {
+    "MessageId": "message05",
+    "Payload": "{\"timestamp\": \"20230707T09:34:00Z\", \"device_id\": \"siemens_wind_turbine_456\", \"message_type\": \"status_update\", \"component\": \"N/A\", \"status\": \"healthy\", \"severity\": \"normal\", \"type\": \"meter\", \"power_output\": 2230, \"wind_speed\": 13.5, \"location\": {\"latitude\": 52.52, \"longitude\": 13.405}}"
+  },
+  {
+    "MessageId": "message06",
+    "Payload": "{\"timestamp\": \"20230707T09:30:00Z\", \"device_id\": \"siemens_wind_turbine_457\", \"message_type\": \"status_update\", \"component\": \"N/A\", \"status\": \"healthy\", \"severity\": \"normal\", \"type\": \"meter\", \"power_output\": 2150, \"wind_speed\": 12.5, \"location\": {\"latitude\": 52.52, \"longitude\": 13.405}}"
+  },
+  {
+    "MessageId": "message07",
+    "Payload": "{\"timestamp\": \"20230707T09:31:00Z\", \"device_id\": \"siemens_wind_turbine_457\", \"message_type\": \"status_update\", \"component\": \"N/A\", \"status\": \"healthy\", \"severity\": \"normal\", \"type\": \"meter\", \"power_output\": 2000, \"wind_speed\": 12, \"location\": {\"latitude\": 52.52, \"longitude\": 13.405}}"
+  },
+  {
+    "MessageId": "message08",
+    "Payload": "{\"timestamp\": \"20230707T09:32:00Z\", \"device_id\": \"siemens_wind_turbine_457\", \"message_type\": \"status_update\", \"component\": \"N/A\", \"status\": \"healthy\", \"severity\": \"normal\", \"type\": \"meter\", \"power_output\": 1030, \"wind_speed\": 6.1, \"location\": {\"latitude\": 52.52, \"longitude\": 13.405}}"
+  },
+  {
+    "MessageId": "message09",
+    "Payload": "{\"timestamp\": \"20230707T09:33:00Z\", \"device_id\": \"siemens_wind_turbine_457\", \"message_type\": \"status_update\", \"component\": \"N/A\", \"status\": \"healthy\", \"severity\": \"normal\", \"type\": \"meter\", \"power_output\": 1400, \"wind_speed\": 9, \"location\": {\"latitude\": 52.52, \"longitude\": 13.405}}"
+  },
+  {
+    "MessageId": "message10`",
+    "Payload": "{\"timestamp\": \"20230707T09:34:00Z\", \"device_id\": \"siemens_wind_turbine_457\", \"message_type\": \"status_update\", \"component\": \"N/A\", \"status\": \"healthy\", \"severity\": \"normal\", \"type\": \"meter\", \"power_output\": 2230, \"wind_speed\": 13.5, \"location\": {\"latitude\": 52.52, \"longitude\": 13.405}}"
+  }
+]
