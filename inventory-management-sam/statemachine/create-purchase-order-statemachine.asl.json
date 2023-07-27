@@ -1,0 +1,66 @@
+{
+    "Comment": "Create Purchase Order",
+    "StartAt": "Send Purchase Order Email",
+    "States": {
+        "Send Purchase Order Email": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+            "Parameters": {
+                "FunctionName": "${SendPurchaseOrderEmailLambdaArn}",
+                "Payload":{  
+                    "taskToken.$": "$$.Task.Token",
+                    "productId.$": "$.detail.productId",
+                    "quantityRequested.$": "$.detail.quantityRequested",
+                    "minPOAmount.$": "$.detail.minPOAmount"
+                    }
+                },
+            "Next": "ManualApprovalChoiceState"
+      },
+      "ManualApprovalChoiceState": {
+        "Type": "Choice",
+        "Choices": [
+            {
+                "Variable": "$.Status",
+                "StringEquals": "Approved",
+                "Next": "Update Inventory"
+            },
+            {
+                "Variable": "$.Status",
+                "StringEquals": "Rejected",
+                "Next": "RejectedPassState"
+            }
+        ]
+        },
+        "Update Inventory": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::dynamodb:updateItem",
+            "Parameters": {
+              "TableName": "${InventoryTableName}",
+              "Key": {
+                "id": {
+                  "S.$": "$$.Execution.Input.detail.productId"
+                }
+              },
+              "UpdateExpression": "SET #stock = #stock + :quantity, #status = :status",
+              "ExpressionAttributeNames" : {
+                  "#stock": "stock",
+                  "#status": "status"
+                },
+              "ExpressionAttributeValues": {
+                ":quantity": {
+                  "N.$": "States.Format('{}', States.MathAdd($$.Execution.Input.detail.quantityRequested, $$.Execution.Input.detail.minPOAmount))"
+                },
+                ":status": {
+                    "S"  : "IN STOCK"
+                }
+              }
+            },
+            "End": true
+        },
+        "RejectedPassState": {
+            "Comment": "Implement your own rejected flow",
+            "Type": "Pass",
+            "End": true
+        }
+    }
+  }

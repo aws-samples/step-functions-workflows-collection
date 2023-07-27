@@ -1,0 +1,131 @@
+{
+    "Comment": "Check Inventory Levels",
+    "StartAt": "Format parameters",
+    "States": {
+        "Format parameters": {
+            "Type": "Pass",
+            "Parameters": {
+                "productId.$": "$.id.S",
+                "stockNumeric.$": "States.StringToJson($.stock.N)",
+                "thresholdNumeric.$": "States.StringToJson($.threshold.N)",
+                "minPOAmountNumeric.$": "States.StringToJson($.minPOAmount.N)"
+            },
+            "Next": "Check Stock Levels"
+        },
+        "Check Stock Levels": {
+            "Type": "Parallel",
+            "End": true,
+            "Branches": [
+                {
+                    "StartAt": "Check if Stock Level is below the threshold",
+                    "States": {
+                        "Check if Stock Level is below the threshold": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.stockNumeric",
+                                    "NumericLessThanEqualsPath": "$.thresholdNumeric",
+                                    "Next": "Send create-purchase-order event"
+                                }
+                            ],
+                            "Default": "Pass not below threshold"
+                        },
+                        "Send create-purchase-order event": {
+                            "Type": "Task",
+                            "Resource": "arn:aws:states:::events:putEvents",
+                            "Parameters": {
+                                "Entries": [
+                                    {
+                                        "Detail": {
+                                            "productId.$": "$.productId",
+                                            "minPOAmount.$": "$.minPOAmountNumeric",
+                                            "quantityRequested": 0
+                                        },
+                                        "DetailType": "create-purchase-order",
+                                        "EventBusName": "${InventoryEventBusName}",
+                                        "Source": "com.inventory"
+                                    }
+                                ]
+                            },
+                            "ResultPath": "$.sendEventResult",
+                            "Next": "Alert stock is below threshold"
+                        },
+                        "Alert stock is below threshold": {
+                            "Type": "Task",
+                            "Resource": "arn:aws:states:::sns:publish",
+                            "Parameters": {
+                                "TopicArn": "${InventoryManagementTopicArn}",
+                                "Subject": "Inventory level is below threshold",
+                                "Message": {
+                                    "message.$": "States.Format('Stock for product id {} is {} which is below the threshold of {}. A create-purchase-order event has been sent.', $.productId, $.stockNumeric, $.thresholdNumeric)"
+                                }
+                            },
+                            "End": true
+                        },
+                        "Pass not below threshold": {
+                            "Comment": "Nothing to do",
+                            "Type": "Pass",
+                            "End": true
+                        }
+                    }
+                },
+                {
+                    "StartAt": "Check if Stock Level is zero",
+                    "States": {
+                        "Check if Stock Level is zero": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.stockNumeric",
+                                    "NumericEquals": 0,
+                                    "Next": "Update product to OUT OF STOCK"
+                                }
+                            ],
+                            "Default": "Pass not zero"
+                        },
+                        "Update product to OUT OF STOCK": {
+                            "Type": "Task",
+                            "Resource": "arn:aws:states:::dynamodb:updateItem",
+                            "Parameters": {
+                                "TableName": "${InventoryTableName}",
+                                "Key": {
+                                    "id": {
+                                        "S.$": "$.productId"
+                                    }
+                                },
+                                "UpdateExpression": "SET #status = :status",
+                                "ExpressionAttributeNames": {
+                                    "#status": "status"
+                                },
+                                "ExpressionAttributeValues": {
+                                    ":status": {
+                                        "S": "OUT OF STOCK"
+                                    }
+                                }
+                            },
+                            "ResultPath": "$.updateResult",
+                            "Next": "Alert stock is zero"
+                        },
+                        "Alert stock is zero": {
+                            "Type": "Task",
+                            "Resource": "arn:aws:states:::sns:publish",
+                            "Parameters": {
+                                "TopicArn": "${InventoryManagementTopicArn}",
+                                "Subject": "Inventory level is zero",
+                                "Message": {
+                                    "message.$": "States.Format('Stock for product id {} is 0. The product status has been updated to \"OUT OF STOCK\".', $.productId)"
+                                }
+                            },
+                            "End": true
+                        },
+                        "Pass not zero": {
+                            "Comment": "Nothing to do",
+                            "Type": "Pass",
+                            "End": true
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

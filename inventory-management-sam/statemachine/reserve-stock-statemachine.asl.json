@@ -1,0 +1,204 @@
+{
+  "Comment": "Reserve stock for new order",
+  "StartAt": "DynamoDB GetItem",
+  "States": {
+    "DynamoDB GetItem": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:getItem",
+      "Parameters": {
+        "TableName": "${InventoryTableName}",
+        "Key": {
+          "id": {
+            "S.$": "$.productId"
+          }
+        }
+      },
+      "Next": "IN STOCK and Enough Stock?",
+      "ResultPath": "$.product",
+      "ResultSelector": {
+        "status.$": "$.Item.status.S",
+        "stockNumeric.$": "States.StringToJson($.Item.stock.N)",
+        "minPOAmountNumeric.$": "States.StringToJson($.Item.minPOAmount.N)"
+      }
+    },
+    "IN STOCK and Enough Stock?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "And": [
+            {
+              "Variable": "$.product.stockNumeric",
+              "NumericGreaterThanEqualsPath": "$.quantity"
+            },
+            {
+              "Variable": "$.product.status",
+              "StringEquals": "IN STOCK"
+            }
+          ],
+          "Next": "Reserve Stock"
+        }
+      ],
+      "Default": "Stock Unavailable"
+    },
+    "Reserve Stock": {
+      "Type": "Parallel",
+      "Next": "Pass",
+      "Branches": [
+         {
+          "StartAt": "Update stock",
+          "States": {
+            "Update stock": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::dynamodb:updateItem",
+              "Parameters": {
+                "TableName": "${InventoryTableName}",
+                "Key": {
+                  "id": {
+                    "S.$": "$.productId"
+                  }
+                },
+                "UpdateExpression": "SET #stock = #stock - :quantity",
+                "ExpressionAttributeNames" : {
+                    "#stock": "stock"
+                  },
+                "ExpressionAttributeValues": {
+                  ":quantity": {
+                    "N.$": "States.Format('{}', $.quantity)"
+                  }
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Send stock reserved event",
+          "States": {
+            "Send stock reserved event": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::events:putEvents",
+              "Parameters": {
+                "Entries": [
+                  {
+                    "Detail": {
+                      "productId.$": "$.productId",
+                      "orderId.$": "$.orderId",
+                      "requestedQuantity.$": "$.quantity"
+                    },
+                    "DetailType": "stock-reserved",
+                    "EventBusName": "${InventoryEventBusName}",
+                    "Source": "com.inventory"
+                  }
+                ]
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Write Item to InventoryReservationTable",
+          "States": {
+            "Write Item to InventoryReservationTable": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::dynamodb:putItem",
+              "Parameters": {
+                "TableName": "${InventoryReservationTableName}",
+                "Item": {
+                  "id": { 
+                    "S.$": "States.UUID()"
+                  },
+                  "orderId": { 
+                    "S.$": "$.orderId"
+                  },
+                  "productId": {
+                    "S.$": "$.productId"
+                  },
+                  "reservedQuantity": {
+                    "N.$": "States.Format('{}', $.quantity)"
+                  }
+                }
+              },
+              "End": true
+            }
+          }
+        }
+      ]
+    },
+    "Stock Unavailable": {
+      "Type": "Parallel",
+      "Next": "Pass",
+      "Branches": [
+        {
+          "StartAt": "Send create-purchase-order event",
+          "States": {
+            "Send create-purchase-order event": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::events:putEvents",
+              "Parameters": {
+                "Entries": [
+                  {
+                    "Detail": {
+                      "productId.$": "$.productId",
+                      "minPOAmount.$": "$.product.minPOAmountNumeric",
+                      "quantityRequested.$": "$.quantity"
+                    },
+                    "DetailType": "create-purchase-order",
+                    "EventBusName": "${InventoryEventBusName}",
+                    "Source": "com.inventory"
+                  }
+                ]
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Send stock unavailable event",
+          "States": {
+            "Send stock unavailable event": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::events:putEvents",
+              "Parameters": {
+                "Entries": [
+                  {
+                    "Detail": {
+                      "productId.$": "$.productId",
+                      "orderId.$": "$.orderId",
+                      "requestedQuantity.$": "$.quantity",
+                      "availableQuantity.$": "$.product.stockNumeric"
+                    },
+                    "DetailType": "stock-unavailable",
+                    "EventBusName": "${InventoryEventBusName}",
+                    "Source": "com.inventory"
+                  }
+                ]
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Send stock unavailable notification",
+          "States": {
+            "Send stock unavailable notification": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::sns:publish",
+              "Parameters": {
+                "TopicArn": "${InventoryManagementTopicArn}",
+                "Subject": "Stock unavailable",
+                "Message": {
+                  "message.$": "States.Format('Stock unavailable for order id {}, product id {}, quantity {}.', $.orderId, $.productId, $.quantity)"
+                }
+              },
+              "End": true
+            }
+          }
+        }
+      ]
+    },
+    "Pass": {
+      "Type": "Pass",
+      "End": true
+    }
+  }
+}

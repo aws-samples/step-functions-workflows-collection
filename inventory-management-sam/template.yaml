@@ -1,0 +1,445 @@
+
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Step Functions Workflow - inventory-management-sam
+
+Parameters:
+  # During deployment, this paramter will prompt for the email address for notifications and purchase order approvals.
+  InventoryManagementAdminEmail:
+    Type: String
+    Default: your-email-here@abc.com
+    Description: Enter email for notifications and purchase order approvals
+
+Resources:
+  #SNS Topic for notifications and purchase order approvals
+  InventoryManagementTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Endpoint: !Ref InventoryManagementAdminEmail
+          Protocol: email
+
+  #DynamoDB Inventory Reservation Table
+  InventoryReservationTable:
+    Type: AWS::Serverless::SimpleTable # More info about SimpleTable Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-simpletable.html
+    Properties:
+      PrimaryKey:
+        Name: id
+        Type: String
+
+  #DynamoDB Inventory Table with stream
+  InventoryTable:
+    Type: AWS::DynamoDB::Table
+    Properties: 
+      AttributeDefinitions: 
+        - AttributeName: id
+          AttributeType: S
+      KeySchema: 
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput: 
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+  
+  #Lambda to load inital inventory into the Inventory Table
+  LoadInitialInventoryLambda:
+    Type: AWS::Serverless::Function
+    Description: Lambda to load inital inventory into the Inventory Table
+    Properties:
+      CodeUri: lambda/create-initial-inventory
+      Handler: index.handler
+      MemorySize: 512
+      Architectures: ["arm64"]
+      Runtime: nodejs18.x
+      Timeout: 60
+      Policies:
+        - DynamoDBWritePolicy: # Needed permission to write to DynamoDB (Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html)
+            TableName: !Ref InventoryTable
+  
+  #Lambda to send new order received events
+  SendNewOrderReceivedLambda:
+    Type: AWS::Serverless::Function
+    Description: Lambda to send new order received events
+    Properties:
+      CodeUri: lambda/send-new-order-received-event
+      Handler: index.handler
+      MemorySize: 256
+      Architectures: ["arm64"]
+      Runtime: nodejs18.x
+      Timeout: 10
+      Environment:
+        Variables:
+          INVENTORY_TABLE: !Ref InventoryTable
+          EVENTBUS_NAME: !GetAtt InventoryEventBus.Name
+      Policies:
+        - DynamoDBReadPolicy: # Needed permission to read from DynamoDB (Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html)
+            TableName: !Ref InventoryTable
+        - EventBridgePutEventsPolicy: # Needed permission to send events
+            EventBusName: !GetAtt InventoryEventBus.Name
+
+  InitializeInventoryTable: #Function to run once to load some sample products into the Inventory Table
+    Type: Custom::InitFunction
+    DependsOn: InventoryTable
+    Properties:
+      ServiceToken:
+         Fn::GetAtt: [ LoadInitialInventoryLambda , "Arn" ]
+      DynamoTableName:
+        Ref: InventoryTable
+
+  #ReserveStock queue
+  ReserveStockQueue:
+    Type: AWS::SQS::Queue
+
+  #Policy to allow event bridge to send messages to the ReserveStock queue
+  ReserveStockQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    DependsOn: ReserveStockQueue
+    Properties:
+      Queues:
+        - !Ref ReserveStockQueue
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action:
+              - sqs:SendMessage
+            Resource: !GetAtt ReserveStockQueue.Arn
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !GetAtt NewOrderRule.Arn
+
+  #Inventory event bus
+  InventoryEventBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: inventory-event-bus  
+  
+  #Schedule role
+  OrderEventScheduleRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - scheduler.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: invoke-lambda
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'lambda:InvokeFunction'
+                Resource:
+                  - !GetAtt SendNewOrderReceivedLambda.Arn
+  
+  # Schedule that will run every minute to trigger an order event
+  OrderEventSchedule:
+    Type: AWS::Scheduler::Schedule
+    Properties:
+      Description: Schedule the runs every minute to trigger the send new order received lambda
+      FlexibleTimeWindow:
+        Mode: 'OFF'
+      State: DISABLED  
+      ScheduleExpression: 'rate(1 minutes)'
+      Target:
+        Arn: !GetAtt SendNewOrderReceivedLambda.Arn
+        RoleArn: !GetAtt OrderEventScheduleRole.Arn
+  
+  #Rule to send new orders to ReserveStock Queue
+  NewOrderRule: 
+    Type: AWS::Events::Rule
+    Properties: 
+      Name: "new-order-rule"
+      Description: "Rule for sending new orders to ReserveStock SQS queue"
+      EventBusName: !GetAtt InventoryEventBus.Name
+      EventPattern:
+        source:
+          - 'com.orders'
+        detail-type:
+          - 'new-order-received'
+      State: "ENABLED"
+      Targets: 
+        - Arn: !GetAtt ReserveStockQueue.Arn
+          Id: "ReserveStockQueue"
+
+  # Role to start create-purchase-order workflow
+  CreatePurchaseOrderRuleRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - events.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: start-sf-execution
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'states:StartExecution'
+                Resource:
+                  - !Ref CreatePurchaseOrderStateMachine
+
+  #Rule to send purchase orders to create-purchase-order workflow
+  PurchaseOrderRule: 
+    Type: AWS::Events::Rule
+    Properties: 
+      Name: "purchase-order-rule"
+      Description: "Rule for sending purchase orders to create-purchase-order workflow"
+      RoleArn: !GetAtt CreatePurchaseOrderRuleRole.Arn
+      EventBusName: !GetAtt InventoryEventBus.Name
+      EventPattern:
+        source:
+          - 'com.inventory'
+        detail-type:
+          - 'create-purchase-order'
+      State: "ENABLED"
+      Targets: 
+        - Arn: !Ref CreatePurchaseOrderStateMachine
+          Id: "CreatePurchaseOrderStateMachine"
+          RoleArn: !GetAtt CreatePurchaseOrderRuleRole.Arn
+
+  #Lambda to reserve stock for new orders received from the Reserve Stock queue
+  ReserveStockLambda:
+    Type: AWS::Serverless::Function
+    Description: Process orders from the ReserveStockQueue SQS and start the reserve stock Processing Step Function
+    Properties:
+      CodeUri: lambda/reserve-stock
+      Handler: index.handler
+      MemorySize: 256
+      Architectures: ["arm64"]
+      Runtime: nodejs18.x
+      Timeout: 30
+      Environment:
+        Variables:
+          STATEMACHINE_ARN: !Ref ReserveStockStateMachine
+      Events:
+        ProcessOrders:
+          Type: SQS
+          Properties: 
+            Queue: !GetAtt ReserveStockQueue.Arn
+            BatchSize: 10
+      Policies:
+        - StepFunctionsExecutionPolicy: # Needed permission to start the workflow (Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html)
+            StateMachineName: !GetAtt ReserveStockStateMachine.Name
+
+  # Cloudwatch log group for express ReserveStock state machine
+  ReserveStockStateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+
+  # Reserve Stock State machine
+  ReserveStockStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/reserve-stock-statemachine.asl.json
+      Type: EXPRESS
+      Logging: 
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt ReserveStockStateMachineLogGroup.Arn
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - DynamoDBCrudPolicy:
+            TableName: !Ref InventoryTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref InventoryReservationTable
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt InventoryManagementTopic.TopicName
+        - EventBridgePutEventsPolicy:
+            EventBusName: !GetAtt InventoryEventBus.Name
+        - CloudWatchLogsFullAccess    
+      DefinitionSubstitutions:
+        InventoryManagementTopicArn: !Ref InventoryManagementTopic
+        InventoryEventBusName: !GetAtt InventoryEventBus.Name
+        InventoryTableName: !Ref InventoryTable
+        InventoryReservationTableName: !Ref InventoryReservationTable
+  
+  # Create Purchase Order State Machine
+  CreatePurchaseOrderStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/create-purchase-order-statemachine.asl.json
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - LambdaInvokePolicy:
+            FunctionName: !Ref SendPurchaseOrderEmailLambda
+        - DynamoDBWritePolicy:
+            TableName: !Ref InventoryTable
+      DefinitionSubstitutions:
+        SendPurchaseOrderEmailLambdaArn: !Ref SendPurchaseOrderEmailLambda
+        InventoryTableName: !Ref InventoryTable
+
+  # CallBackEmailLambda role
+  CallBackEmailLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'              
+      Policies:
+        - PolicyName: send-task-call-back
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'states:SendTaskFailure'
+                  - 'states:SendTaskSuccess'
+                Resource:
+                  - !Ref CreatePurchaseOrderStateMachine
+
+  #Lambda to process responses from purchase order email and send call back to purchase order workflow
+  CallBackEmailLambda:    
+    Type: AWS::Serverless::Function
+    Description: Process responses from purchase order email and send call back to purchase order workflow
+    Properties:
+      CodeUri: lambda/call-back-from-email
+      Handler: index.handler
+      MemorySize: 256
+      Architectures: ["arm64"]
+      Runtime: nodejs18.x
+      Timeout: 30
+      Role: !GetAtt CallBackEmailLambdaRole.Arn
+
+  # Resource policy to allow * to invoke lambda via url
+  CallBackEmailLambdaResourcePolicy:
+    Type: AWS::Lambda::Permission
+    Properties: 
+      Action: lambda:InvokeFunctionUrl
+      FunctionName: !Ref CallBackEmailLambda
+      FunctionUrlAuthType: 'NONE'
+      Principal: '*'
+      
+  #Url for CallBackEmailLambda
+  CallBackEmailLambdaUrl:     
+    Type: AWS::Lambda::Url
+    Properties: 
+      AuthType: NONE
+      TargetFunctionArn: !Ref CallBackEmailLambda
+
+  #Paramter for url for Lambda to lookup up at runtime to resolve circular dependency
+  CallBackEmailLambdaUrlParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: CallBackEmailLambdaUrl
+      Type: String
+      Value: !GetAtt CallBackEmailLambdaUrl.FunctionUrl
+      Description: Paramter for url for Lambda
+
+  #Lambda to send purchase order email with callback urls
+  SendPurchaseOrderEmailLambda:
+    Type: AWS::Serverless::Function
+    Description: Lambda to send purchase order email with callback urls
+    Properties:
+      CodeUri: lambda/send-purchase-order-email
+      Handler: index.handler
+      MemorySize: 256
+      Architectures: ["arm64"]
+      Runtime: nodejs18.x
+      Timeout: 30
+      Environment:
+        Variables:
+          SNS_TOPIC: !Ref InventoryManagementTopic
+      Policies:
+        - SNSPublishMessagePolicy: # Needed permission to publish the message to SNS (Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html)
+            TopicName: !GetAtt InventoryManagementTopic.TopicName
+        - SSMParameterReadPolicy:
+            ParameterName: CallBackEmailLambdaUrl
+
+  #Lambda to send inventory changes from the Inventory table stream to the check-inventory-level workflow
+  ProcessInventoryStreamLambda:
+    Type: AWS::Serverless::Function
+    Description: Lambda to send inventory changes from the Inventory table stream to the check-inventory-level workflow
+    Properties:
+      CodeUri: lambda/process-inventory-stream
+      Handler: index.handler
+      MemorySize: 256
+      Architectures: ["arm64"]
+      Runtime: nodejs18.x
+      Timeout: 60
+      Environment:
+        Variables:
+          STATEMACHINE_ARN: !Ref CheckInventoryLevelStateMachine
+      Events:
+        ProcessOrders:
+          Type: DynamoDB
+          Properties: 
+            Stream: !GetAtt InventoryTable.StreamArn
+            BatchSize: 10
+            StartingPosition: TRIM_HORIZON
+            FilterCriteria:
+              Filters:
+                - Pattern: '{ "dynamodb": { "NewImage": { "status": { "S": ["IN STOCK"] } } } }' # we do not want to check ones we have updated to OUT OF STOCK
+      Policies:
+        - StepFunctionsExecutionPolicy: # Needed permission to start the workflow (Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html)
+            StateMachineName: !GetAtt CheckInventoryLevelStateMachine.Name
+        - DynamoDBStreamReadPolicy: # Needed permission to read from the stream    
+            TableName: !Ref InventoryTable
+            StreamName: !GetAtt InventoryTable.StreamArn
+
+# Cloudwatch log group for express CheckInventoryLevel state machine
+  CheckInventoryLevelStateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+
+# check-inventory-level State Machine
+  CheckInventoryLevelStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/check-inventory-level-statemachine.asl.json
+      Type: EXPRESS
+      Logging: 
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt CheckInventoryLevelStateMachineLogGroup.Arn
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - EventBridgePutEventsPolicy:
+            EventBusName: !GetAtt InventoryEventBus.Name
+        - CloudWatchLogsFullAccess    
+        - DynamoDBWritePolicy:
+            TableName: !Ref InventoryTable
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt InventoryManagementTopic.TopicName
+      DefinitionSubstitutions:
+        InventoryEventBusName: !GetAtt InventoryEventBus.Name
+        InventoryTableName: !Ref InventoryTable
+        InventoryManagementTopicArn: !Ref InventoryManagementTopic
+
+
+# List all common outputs for usage
+Outputs:
+  SendNewOrderReceivedLambdaName:
+    Description: Lambda to send new order received events
+    Value: !Ref SendNewOrderReceivedLambda
+
+  CallBackEmailLambdaUrl:
+    Description: "Url for CallBackEmailLambda"
+    Value: !GetAtt CallBackEmailLambdaUrl.FunctionUrl
+
+  InventoryReservationTableName:
+    Description: Inventory Reservation table name
+    Value: !Ref InventoryReservationTable  
