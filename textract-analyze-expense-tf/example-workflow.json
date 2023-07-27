@@ -1,0 +1,71 @@
+{
+    "title": "Expense Analysis Workflow",
+    "description": "This workflow demonstrates how to analyze the picture of an expense stored in Amazon S3 using the AnalyzeExpense API call of Amazon Textract. The extracted expense data will be persisted in DynamoDb.",
+    "language": "",
+    "simplicity": "3 - Application",
+    "usecase": "Data Processing",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "200",
+    "framework": "Terraform",
+    "services": ["textract","rekognition","s3","dynamodb"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "Uploading an image of a receipt in the provided S3 bucket will trigger the workflow.",
+        "The workflow uses Rekognition to detect if the image is a receipt; if the Receipt label is found and it has a Confidence greater than 80, then it uses Textract to analyze the expense",
+        "The extracted invoce data will be saved in DynamoDb"
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>terraform destroy</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "terraform init",
+        "terraform apply"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/textract-analyze-expense-tf/",
+        "templateDir":"textract-analyze-expense-tf",
+        "templateFile": "main.tf",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Lorenzo Micheli",
+          "image": "https://drive.google.com/file/d/1Vp6wNLo1zMVUCGiaEBgAIwwD6vd5DGdk/view?usp=sharing",
+          "bio": "Lorenzo is a Principal Cloud Architect in AWS Professional Services. He is passionate about Software Engineering, Serverless and Event-Driven Architectures.",
+          "linkedin": "lorenzomicheli"
+        }
+      ]
+  }
+  
