@@ -1,0 +1,61 @@
+{
+  "Comment": "Retrieve AWS Inventory",
+  "StartAt": "ListAccounts",
+  "States": {
+    "ListAccounts": {
+      "Type": "Task",
+      "Next": "MapAccounts",
+      "Parameters": {},
+      "Resource": "arn:aws:states:::aws-sdk:organizations:listAccounts"
+    },
+    "MapAccounts": {
+      "Type": "Map",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "DISTRIBUTED",
+          "ExecutionType": "STANDARD"
+        },
+        "StartAt": "Lambda Invoke",
+        "States": {
+          "Lambda Invoke": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "OutputPath": "$.Payload",
+            "Parameters": {
+              "Payload.$": "$",
+              "FunctionName": "${pythonFunction.functionName}"
+            },
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "Lambda.ServiceException",
+                  "Lambda.AWSLambdaException",
+                  "Lambda.SdkClientException",
+                  "Lambda.TooManyRequestsException"
+                ],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 6,
+                "BackoffRate": 2
+              }
+            ],
+            "End": true
+          }
+        }
+      },
+      "Label": "MapAccounts",
+      "MaxConcurrency": 10,
+      "ItemsPath": "$.Accounts",
+      "ResultSelector": {
+        "Clusters.$": "$[*][*]"
+      },
+      "ResultWriter": {
+        "Resource": "arn:aws:states:::s3:putObject",
+        "Parameters": {
+          "Bucket": "${inventoryBucket.bucketName}",
+          "Prefix": "data/"
+        }
+      },
+      "End": true
+    }
+  }
+}
