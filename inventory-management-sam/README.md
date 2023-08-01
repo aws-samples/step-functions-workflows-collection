@@ -47,10 +47,11 @@ The sample Inventory Management Microservice consists of:
     2. A `stock-reserved` event is sent, which the Order Microservice would handle and continue with order processing.
     3. The stock reservation is written to the `Inventory Reservation` table. 
 
+    
     If there isn't sufficient stock the workflow starts these steps in parallel:
-        1. A `create-purchase-order` event is sent.
-        2. A `stock-unavailable` event is sent, which the Order Microservice would handle and hold order processing until the stock was available
-        3. A stock unavailable notification is sent
+    1. A `create-purchase-order` event is sent.
+    2. A `stock-unavailable` event is sent, which the Order Microservice would handle and hold order processing until the stock was available
+    3. A stock unavailable notification is sent
     
 5. The `create-purchase-order` workflow is a [Standard workflow](https://docs.aws.amazon.com/step-functions/latest/dg/concepts-standard-vs-express.html) as it uses a [Callback](https://docs.aws.amazon.com/step-functions/latest/dg/connect-to-resource.html#connect-wait-token) which is not supported by Express workflows and it could take longer than 5 minutes to complete as it waits for a response. This workflow is the target for the `create-purchase-order` event, and it sends a purchase order email and waits for a callback. If the purchase order is `approved` the Inventory Table is updated for the specified product - the stock level is incremented by the purchase order amount and the product status is updated to `IN STOCK`.
 
@@ -72,14 +73,14 @@ The sample Inventory Management Microservice consists of:
 
 ### If you would like to test manually:
 Invoke the `SendNewOrderReceivedLambda` by getting the lambda name from the outputs after deployment or using (just substitute the stack name you used (default is `sam-app`)). This will generate an event containing a random product and quantity.
-    ```bash
-    
-    aws lambda invoke --function-name $(aws cloudformation describe-stacks --stack-name <stack-name> --query "Stacks[*].Outputs[?OutputKey=='SendNewOrderReceivedLambdaName'].OutputValue" --output text) response.json
-    ```
+```bash
+
+aws lambda invoke --function-name $(aws cloudformation describe-stacks --stack-name <stack-name> --query "Stacks[*].Outputs[?OutputKey=='SendNewOrderReceivedLambdaName'].OutputValue" --output text) response.json
+```
 The event will trigger the `reserve-stock` workflow which you can view from the [Step Functions console](https://console.aws.amazon.com/states/home). If there is enough stock the reservation will be written to the Inventory Reservation Table. You can view the items in the DynamoDB table in the console or by using the below command:
-    ```bash
-    aws dynamodb scan --table-name $(aws cloudformation describe-stacks --stack-name <stack-name> --query "Stacks[*].Outputs[?OutputKey=='InventoryReservationTableName'].OutputValue" --output text)
-    ```
+```bash
+aws dynamodb scan --table-name $(aws cloudformation describe-stacks --stack-name <stack-name> --query "Stacks[*].Outputs[?OutputKey=='InventoryReservationTableName'].OutputValue" --output text)
+```
 
 If there isn't enough stock the `create-purchase-order` will be triggered and you will receive a Purchase Order request email. The `check-inventory-level` workflow will be triggered for any updates to the Inventory Table.
 
