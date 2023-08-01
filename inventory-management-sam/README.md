@@ -2,7 +2,7 @@
 
 This sample Inventory Management Microservice demonstrates how to manage inventory levels by reserving inventory when a new order is received from an Orders Microservice, alerts on low stock, and triggers purchase orders to replenish inventory.
 
-Learn more about this workflow at Step Functions workflows collection: https://serverlessland.com/workflows/inventory-management
+Learn more about this workflow at Step Functions workflows collection: [https://serverlessland.com/workflows/inventory-management-sam](https://serverlessland.com/workflows/inventory-management-sam)
 
 Important: this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the [AWS Pricing page](https://aws.amazon.com/pricing/) for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
 
