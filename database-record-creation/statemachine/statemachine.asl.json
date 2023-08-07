@@ -1,0 +1,65 @@
+{
+  "StartAt": "Validate Task",
+  "States": {
+    "Validate Task": {
+      "Next": "Is Payload valid?",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-east-1:408676299532:function:408676299532-validateRecord-validate-lambda",
+        "Payload.$": "$"
+      }
+    },
+    "Is Payload valid?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.Payload.body.isValid",
+          "BooleanEquals": true,
+          "Next": "Create record"
+        }
+      ],
+      "Default": "Job Failed"
+    },
+    "Job Failed": {
+      "Type": "Fail",
+      "Error": "One or more fields are not valid",
+      "Cause": "Payload is not valid"
+    },
+    "Create record": {
+      "Next": "Job Succeed",
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:putItem",
+      "Parameters": {
+        "Item": {
+          "id": {
+            "S.$": "$.Payload.body.id"
+          },
+          "firstname": {
+            "S.$": "$.Payload.body.firstname"
+          },
+          "email": {
+            "S.$": "$.Payload.body.email"
+          }
+        },
+        "TableName": "408676299532-validateRecord-dynamo-table"
+      }
+    },
+    "Job Succeed": {
+      "Type": "Pass",
+      "End": true
+    }
+  }
+}

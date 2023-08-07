@@ -1,0 +1,69 @@
+{
+    "title": "Database Record Creation Workflow",
+    "description": "This application creates an Express Workflow which validate a JSON record before storing it into a DynamoDB table",
+    "language": "",
+    "simplicity": "2 - Patterns",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "200",
+    "framework": "CDK",
+    "services": ["dynamodb","lambda"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "This application creates an Express Workflow which validate a JSON record before storing it into a DynamoDB table"
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>cdk destroy</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "cdk deploy"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/database-record-creation/",
+        "templateDir":"database-record-creation",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Raffaele Garofalo",
+          "image": "https://serverlessland.com/assets/images/resources/contributors/raf.jpeg",
+          "bio": "Raffaele Garofalo (Raf) is a Senior Solutions Architect at AWS and member of the AWS Serverless TFC (Technical Field Community).",
+          "linkedin": "raffaeu",
+          "twitter": "raffaeu"
+        }
+      ]
+  }
+  
