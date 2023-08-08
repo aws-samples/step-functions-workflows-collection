@@ -1,0 +1,73 @@
+{
+    "title": "Generate Thumbnail Step Function Workflow",
+    "description": "Step Function Work Flow to generate Thumbnail from image.",
+    "language": "",
+    "simplicity": "3 - Application",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "100",
+    "framework": "SAM",
+    "services": ["s3", "stepfunctions", "lambda", "eventbridge"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "Upload image to source bucket and the work flow will generate thumbnail from the image with the desired size (default size is 100x100) and you can also configure eligible file types (default types are png and jpg.",
+        "S3 source bucket will trigger event that will be captured by event bridge rule and trigger step function that will call lambda functions to validate the file type and size and another function to generate the thumbnail and save in the resized bucket"
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/",
+        "templateDir":"generateThumbnail",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        },
+        {
+          "text": "Tutorial: Using an Amazon S3 trigger to create thumbnail images",
+          "link": "https://docs.aws.amazon.com/lambda/latest/dg/with-s3-tutorial.html"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Amir Tarek",
+          "image": "https://avatars.githubusercontent.com/u/139546908?v=4",
+          "bio": "Senior Technical Account Manager at AWS, helping people to keep things running.",
+          "linkedin": "amir-tarek"
+        }
+      ]
+  }
+  
