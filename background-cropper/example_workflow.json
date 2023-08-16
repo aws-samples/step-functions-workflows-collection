@@ -1,0 +1,74 @@
+{
+    "title": "Smart Image Cropper",
+    "description": "Automatically crop and center pictures of individuals",
+    "language": "",
+    "simplicity": "3 - Application",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"stepfunctions_graph.png",
+    "videoId": "",
+    "level": "300",
+    "framework": "CDK",
+    "services": ["sfn","lambda", "rekognition"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "This AWS Step Functions workflow automates the process of intelligently cropping pictures of individuals. Its main purpose is to crop around a picture of a person, removing any unnecessary background and focusing solely on the person in the image. The workflow is triggered whenever an image is uploaded to an S3 bucket. Once triggered, the image is retrieved and sent to Amazon Rekognition, where the detect_labels function is utilized to identify the objects within the image. If the function returns a person label, the image is cropped accordingly and saved to another S3 bucket."
+
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>cdk destroy</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "git clone https://github.com/aws-samples/step-functions-workflows-collection/",
+        "cd background-cropper-cdk"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/background-cropper-cdk/",
+        "templateDir":"background-cropper",
+        "templateFile": "background_cropper_cdk_stack.py"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+            "name": "Vi Nguyen",
+            "bio": "Associate Solutions Architect, AWS",
+            "linkedin": "",
+            "twitter": ""
+          },
+        {
+          "name": "Visakh Madathil",
+          "bio": "Associate Solutions Architect, AWS",
+          "linkedin": "",
+          "twitter": ""
+        }
+      ]
+  }
