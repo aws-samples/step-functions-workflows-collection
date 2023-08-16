@@ -1,0 +1,59 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "getimageMetadata",
+  "States": {
+    "getimageMetadata": {
+      "Type": "Task",
+      "Resource": "${getImageMetadataArn}",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "validateImage"
+    },
+    "validateImage": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$[0].isValidImage",
+          "NumericEquals": 1,
+          "Next": "thumbnailCreation"
+        }
+      ],
+      "Default": "notvalidImageFormat"
+    },
+    "thumbnailCreation": {
+      "Type": "Task",
+      "Resource": "${generateThumbnailArn}",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "InputPath": "$[1]",
+      "End": true
+    },
+    "notvalidImageFormat": {
+      "Type": "Fail",
+      "Cause": "Image is not in valid format or size!!",
+      "Error": "Image is not in valid format or size!!"
+    }
+  }
+}

@@ -1,0 +1,182 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: s3-eventbridge-stepfunctions-lambda-s3, generate thumbnail after validating image type and size
+
+Globals:
+  Function:
+    Runtime: python3.10
+    MemorySize: 512
+    Timeout: 5
+Parameters:
+  resourcePrefix:
+    Type: String 
+    Default: "generate-thumbnail"
+
+Resources:
+  SourceBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Sub "${resourcePrefix}-sourcebucket-${AWS::AccountId}-${AWS::Region}"
+      NotificationConfiguration:
+        EventBridgeConfiguration:
+          EventBridgeEnabled: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+    Metadata:
+      SamResourceId: SourceBucket
+  SourceBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+        Bucket: !Ref SourceBucket
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+            - Sid: HttpsOnly
+              Action: 's3:*'
+              Effect: Deny
+              Principal: '*'
+              Resource:
+                - !Join 
+                  - ''
+                  - - 'arn:aws:s3:::'
+                    - !Ref SourceBucket
+                    - /*
+                - !Join 
+                  - ''
+                  - - 'arn:aws:s3:::'
+                    - !Ref SourceBucket
+              Condition:
+                Bool:
+                  'aws:SecureTransport': false
+    Metadata:
+      SamResourceId: SourceBucketPolicy
+  
+  ResizedBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Sub "${SourceBucket}-resized"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+    Metadata:
+      SamResourceId: ResizedBucket
+  ResizedBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Sid: HttpsOnly
+            Action: 's3:*'
+            Effect: Deny
+            Principal: '*'
+            Resource:
+              - !Join 
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref ResizedBucket
+                  - /*
+              - !Join 
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref ResizedBucket
+            Condition:
+              Bool:
+                  aws:SecureTransport': false
+      Bucket: !Ref ResizedBucket
+    Metadata:
+      SamResourceId: ResizedBucketPolicy
+
+  generateThumbnail:
+      Type: AWS::Serverless::Function 
+      Properties:
+        CodeUri: lambda/generateThumbnail/
+        Handler: lambda_function.lambda_handler
+        Runtime: python3.10
+        Layers:
+          - !Ref PillowLambdaLayer
+        Description: "Function generating thumbnail and saving resized image in the resized bucket"
+        FunctionName: !Sub "${resourcePrefix}-generateThumbnail"
+        MemorySize: 2048
+      Connectors:
+        SourceBucketConnect:
+          Properties:
+            Destination:
+              Id: SourceBucket
+            Permissions:
+              - Read
+              - Write
+        ReizedBucketConnect:
+          Properties:
+            Destination:
+              Id: ResizedBucket
+            Permissions:
+              - Read
+              - Write
+
+  PillowLambdaLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: Pillow-Lambda-Layer
+      Description: Lambda Layer for the Pillow lib
+      ContentUri: lambda/generateThumbnail/layer/python.zip
+      CompatibleRuntimes:
+        - python3.10
+
+  getImageMetadata:
+      Type: AWS::Serverless::Function 
+      Properties:
+        CodeUri: lambda/getImageMetadata/
+        Handler: lambda_function.getimageMetadata
+        Runtime: python3.10
+        Description: "Function for validating image size and image type"
+        FunctionName: !Sub "${resourcePrefix}-getImageMetadata"
+        MemorySize: 2048
+
+  ThumbnailCreationStateMachine:
+      Type: AWS::Serverless::StateMachine
+      Properties:
+        Name: !Sub "${resourcePrefix}-statemachine"
+        DefinitionUri: ./statemachine/statemachine.asl.json
+        DefinitionSubstitutions:
+          getImageMetadataArn: !GetAtt getImageMetadata.Arn
+          generateThumbnailArn: !GetAtt  generateThumbnail.Arn
+        Policies:
+          - StepFunctionsExecutionPolicy: # Add IAM policy to the stepfunction execution role start child executions
+              StateMachineName: !Sub "${resourcePrefix}-statemachine"
+        Events:
+          EventBridgeEvent:
+            Type: EventBridgeRule
+            Properties:
+              EventBusName: default
+              Pattern:
+                source:
+                  - aws.s3
+                detail-type:
+                  - Object Created
+                detail:
+                  bucket:
+                    name:
+                      - !Ref SourceBucket
+
+  StepFunctionTogetImageMetadataFunctionConnector:
+      Type: AWS::Serverless::Connector 
+      Properties:
+        Source:
+          Id: ThumbnailCreationStateMachine
+        Destination:
+          Id: getImageMetadata
+        Permissions:
+          - Write
+
+  StepFunctionTogenerateThumbnailFunctionConnector:
+      Type: AWS::Serverless::Connector 
+      Properties:
+        Source:
+          Id: ThumbnailCreationStateMachine
+        Destination:
+          Id: generateThumbnail
+        Permissions:
+          - Write
