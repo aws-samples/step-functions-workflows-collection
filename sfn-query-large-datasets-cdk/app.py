@@ -5,6 +5,7 @@ import string
 import os
 from aws_cdk import (
     App,
+    Aspects,
     Environment,
     RemovalPolicy,
     Stack,
@@ -15,9 +16,12 @@ from aws_cdk import (
     aws_glue as glue,
     aws_athena as athena,
     aws_stepfunctions as sfn,
+    aws_logs as logs,
     CfnOutput as outputs
 )
 from constructs import Construct
+from cdk_nag import AwsSolutionsChecks, NagSuppressions
+
 
 class SfnQueryLargeDatasetsCdkStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
@@ -31,6 +35,8 @@ class SfnQueryLargeDatasetsCdkStack(Stack):
             bucket_name=f"stepfunctions-query-large-datasets-{random_string}",
             removal_policy=RemovalPolicy.DESTROY,
             auto_delete_objects=True,
+            block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
+            enforce_ssl=True,
         )
 
         # SNS KMS key
@@ -85,8 +91,9 @@ class SfnQueryLargeDatasetsCdkStack(Stack):
             targets=glue.CfnCrawler.TargetsProperty(s3_targets=[glue.CfnCrawler.S3TargetProperty(path="s3://aws-glue-datasets-us-east-1/examples/githubarchive/month/data/")]),
             configuration=json.dumps(crawler_configuration),
         )
-        glue_crawler.add_dependency(glue_db)
 
+        # Glue Table name is the last element of the s3 path. In this case "data".
+        glue_table = "s3://aws-glue-datasets-us-east-1/examples/githubarchive/month/data/".split('/')[-2]
 
         # Athena Workgroup
         athena_workgroup = athena.CfnWorkGroup(self, "workgroup_start_athena",
@@ -94,10 +101,28 @@ class SfnQueryLargeDatasetsCdkStack(Stack):
             state="ENABLED",
             work_group_configuration=athena.CfnWorkGroup.WorkGroupConfigurationProperty(
                 result_configuration=athena.CfnWorkGroup.ResultConfigurationProperty(
-                    output_location=f"s3://{s3_bucket.bucket_name}/result/")
+                    output_location=f"s3://{s3_bucket.bucket_name}/result/",
+                    encryption_configuration=athena.CfnWorkGroup.EncryptionConfigurationProperty(
+                        encryption_option="SSE_S3"
+                    )
+                )
             )
         )
         athena_workgroup.apply_removal_policy(RemovalPolicy.DESTROY)
+
+
+        # Step Functions State Machine Definition
+        state_machine_definition = ""
+        with open("./statemachine/statemachine.asl.json", encoding="utf8") as file_read:
+            state_machine_definition = file_read.read()
+
+
+        # Create a CloudWatch Logs log group
+        log_group = logs.LogGroup(self, "StateMachineLogGroup",
+            retention=logs.RetentionDays.ONE_WEEK,
+            log_group_name="state-machine-log-group",
+            removal_policy=RemovalPolicy.DESTROY,
+        )
 
 
         # IAM Roles and Policies for Step Functions
@@ -141,7 +166,21 @@ class SfnQueryLargeDatasetsCdkStack(Stack):
                         "s3:CreateBucket",
                         "s3:PutObject"
                     ],
-                    resources=["arn:aws:s3:::*"],
+                    resources=[
+                        s3_bucket.bucket_arn,
+                        f"{s3_bucket.bucket_arn}/result/*"
+                    ],
+                    effect=iam.Effect.ALLOW
+                ),
+                iam.PolicyStatement(
+                    actions=[
+                        "s3:ListBucket",
+                        "s3:GetObject"
+                    ],
+                    resources=[
+                        f"arn:aws:s3:::aws-glue-datasets-us-east-1",
+                        f"arn:aws:s3:::aws-glue-datasets-us-east-1/*",
+                    ],
                     effect=iam.Effect.ALLOW
                 ),
                 iam.PolicyStatement(
@@ -170,9 +209,9 @@ class SfnQueryLargeDatasetsCdkStack(Stack):
                     ],
                     resources=[
                         f"arn:aws:glue:{self.region}:{self.account}:catalog",
-                        f"arn:aws:glue:{self.region}:{self.account}:database/*",
-                        f"arn:aws:glue:{self.region}:{self.account}:table/*/*",
-                        f"arn:aws:glue:{self.region}:{self.account}:crawler/*"
+                        f"arn:aws:glue:{self.region}:{self.account}:database/{glue_db.database_input.name}",
+                        f"arn:aws:glue:{self.region}:{self.account}:table/{glue_db.database_input.name}/{glue_table}",
+                        f"arn:aws:glue:{self.region}:{self.account}:crawler/{glue_crawler.name}",
                     ],
                     effect=iam.Effect.ALLOW
                 )
@@ -180,13 +219,9 @@ class SfnQueryLargeDatasetsCdkStack(Stack):
         )
 
         state_machine_role.attach_inline_policy(athena_workflow_policy)
-
-
-        # Step Functions State Machine Definition
-        state_machine_definition = ""
-        with open("./statemachine/statemachine.asl.json", encoding="utf8") as file_read:
-            state_machine_definition = file_read.read()
-
+        state_machine_role.add_managed_policy( 
+            iam.ManagedPolicy.from_aws_managed_policy_name("CloudWatchLogsFullAccess"))
+        
 
         # Step Functions State Machine
         sfn_state_machine = sfn.CfnStateMachine(self, "sfn_athena",
@@ -198,8 +233,21 @@ class SfnQueryLargeDatasetsCdkStack(Stack):
                 "query_large_datasets_db": glue_db.database_input.name,
                 "topic_athena_updates": athena_updates_topic.topic_arn,
                 "glue_crawler_name": glue_crawler.name,
+                "glue_table": glue_table,
             },
-        )
+            logging_configuration={
+                "level": "ALL",
+                "includeExecutionData": True,
+                "destinations": [{
+                    "cloudWatchLogsLogGroup": {
+                        "logGroupArn": log_group.log_group_arn
+                    }
+                }]
+            },
+            tracing_configuration={
+                "enabled": True
+            }
+        )      
 
 
         # CloudFormation Outputs
@@ -208,7 +256,41 @@ class SfnQueryLargeDatasetsCdkStack(Stack):
         outputs(self, "aws_glue_crawler", value=glue_crawler.name)
 
 
+        # To demonstrate how suppressions work, I've added some suppressions and a justification for them
+        NagSuppressions.add_resource_suppressions(
+            [glue_crawler_role],
+            [{'id': 'AwsSolutions-IAM4', 
+              'reason': 'For Demo purposes the Managed Policy is sufficient'}]
+        )
+        NagSuppressions.add_resource_suppressions(
+            [glue_crawler],
+            [{'id': 'AwsSolutions-GL1', 
+              'reason': 'CloudWatch log encryption is not needed for Demo'}]
+        )
+        NagSuppressions.add_resource_suppressions(
+            [athena_workgroup],
+            [{'id': 'AwsSolutions-ATH1', 
+              'reason': 'Query results are encrypted by default, because of S3 Bucket settings'}]
+        )
+        NagSuppressions.add_resource_suppressions(
+            [s3_bucket],
+            [{'id': 'AwsSolutions-S1', 
+              'reason': 'For access logs I would recommend to create a separate S3 Bucket. Which does not make sense for this Demo'}]
+        )
+        NagSuppressions.add_resource_suppressions(
+            [state_machine_role],
+            [{'id': 'AwsSolutions-IAM4', 
+              'reason': 'Managed Policy is sufficient for Demo purposes'},
+             {'id': 'AwsSolutions-IAM5', 
+              'reason': 'S3 getObjects with wildcard is required for partioned athena queries'}]
+        )
+        NagSuppressions.add_resource_suppressions(
+            [athena_workflow_policy],
+            [{'id': 'AwsSolutions-IAM5', 
+              'reason': 'S3 getObjects with wildcard is required for partioned athena queries'}]
+        )
 
+        
 # Launch the stack
 app = App()
 
@@ -219,5 +301,7 @@ SfnQueryLargeDatasetsCdkStack(app, "SfnQueryLargeDatasets",
     #env=cdk.Environment(account='123456789012', region='us-east-1'),
     # For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html
     )
+
+Aspects.of(app).add(AwsSolutionsChecks(verbose=True))
 
 app.synth()

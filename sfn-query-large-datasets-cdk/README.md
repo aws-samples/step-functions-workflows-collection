@@ -94,6 +94,11 @@ To trigger the workflow in the console, navigate to Step Functions and then clic
     Enter a value: y
     ```
 
+## Additional Security Topics  
+For increased security, the cdk stack is extended with [CDK-NAG](https://pypi.org/project/cdk-nag/). This package does identifiy security and compliance issues in your stack and validates constructs by extending [AWS CDK Aspects](https://docs.aws.amazon.com/cdk/v2/guide/aspects.html). cdk-nag includes several rule sets (NagPacks) to validate your application against. As of this readme post, cdk-nag includes the [AWS Solutions](https://github.com/cdklabs/cdk-nag/blob/main/RULES.md#awssolutions), [HIPAA Security](https://github.com/cdklabs/cdk-nag/blob/main/RULES.md#hipaa-security), [NIST 800-53 rev 4](https://github.com/cdklabs/cdk-nag/blob/main/RULES.md#nist-800-53-rev-4), [NIST 800-53 rev 5](https://github.com/cdklabs/cdk-nag/blob/main/RULES.md#nist-800-53-rev-5), and [PCI DSS 3.2.1](https://github.com/cdklabs/cdk-nag/blob/main/RULES.md#pci-dss-321) NagPacks. You can pick and choose different NagPacks and apply as many as you wish to a given scope.
+
+Check out [this blog post](https://aws.amazon.com/blogs/devops/manage-application-security-and-compliance-with-the-aws-cloud-development-kit-and-cdk-nag/) for a guided overview!
+
 ## Want more?
 
 Check out more workflows on [ServerlessLand](https://serverlessland.com/workflows)

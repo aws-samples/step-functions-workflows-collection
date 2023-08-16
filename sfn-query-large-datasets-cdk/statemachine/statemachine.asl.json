@@ -38,7 +38,7 @@
     "Start an Athena query": {
       "Resource": "arn:aws:states:::athena:startQueryExecution.sync",
       "Parameters": {
-        "QueryString": "SELECT * FROM \"${query_large_datasets_db}\".\"data\" WHERE partition_0 = '2017' AND partition_1 = '01' AND partition_2 = '23' limit 5",
+        "QueryString": "SELECT * FROM \"${query_large_datasets_db}\".\"${glue_table}\" WHERE partition_0 = '2017' AND partition_1 = '01' AND partition_2 = '23' limit 5",
         "WorkGroup": "${aws_athena_workgroup}"
       },
       "Type": "Task",
