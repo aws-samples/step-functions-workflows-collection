@@ -1,5 +1,5 @@
 {
-    "title": "Generate Thumbnail Step Function Workflow",
+    "title": "Generate Thumbnail",
     "description": "Step Function Work Flow to generate Thumbnail from image.",
     "language": "",
     "simplicity": "3 - Application",
@@ -7,7 +7,7 @@
     "type": "Standard",
     "diagram":"/resources/statemachine.png",
     "videoId": "",
-    "level": "100",
+    "level": "200",
     "framework": "SAM",
     "services": ["s3", "stepfunctions", "lambda", "eventbridge"],
     "introBox": {
@@ -37,7 +37,7 @@
     "gitHub": {
       "template": {
         "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/",
-        "templateDir":"generateThumbnail",
+        "templateDir":"generate-thumbnail",
         "templateFile": "template.yaml",
         "ASL": "statemachine/statemachine.asl.json"
       },
