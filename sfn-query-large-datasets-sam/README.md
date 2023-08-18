@@ -15,7 +15,7 @@
 
 This workflow demonstrates how to ingest a large data set in Amazon S3 and partition it through AWS Glue Crawlers, then execute Amazon Athena queries against that partition. Deploying this sample project creates an AWS Step Functions state machine, an Amazon S3 Bucket, an AWS Glue crawler, and an Amazon SNS topic.
 
-In this project, the Step Functions state machine invokes an AWS Glue crawler that partitions a large dataset in Amazon S3. Once the AWS Glue crawler returns a success message, the workflow executes Athena queries against that partition. Once query execution is successfully complete, an Amazon SNS notification is sent to an Amazon SNS topic.
+In this project, the Step Functions state machine invokes an AWS Glue crawler that partitions a large dataset in Amazon S3. Once the AWS Glue crawler returns a success message, the workflow executes Athena queries against that partition. Once query execution is successfully complete, a notification is sent to an Amazon SNS topic.
 
 * An Amazon Athena query
 * An AWS Glue crawler
@@ -32,24 +32,19 @@ Important: this application uses various AWS services and there are costs associ
 * [Create an AWS account](https://portal.aws.amazon.com/gp/aws/developer/registration/index.html) if you do not already have one and log in. The IAM user that you use must have sufficient permissions to make necessary AWS service calls and manage AWS resources.
 * [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html) installed and configured
 * [Git Installed](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
-* [AWS Serverless Application Model](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) (AWS SAM) installed
+* [AWS Serverless Application Model CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) (AWS SAM CLI) installed
 
 ## Deployment Instructions
 
-1. If this is your first time using AWS CDK, bootstrap your [environment](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_bootstrap).
-    ```
-    cdk bootstrap aws://{your-aws-account-number}/{your-aws-region}
-    ```
-
-2. Create a new directory, navigate to that directory in a terminal and clone the GitHub repository:
+1. Create a new directory, navigate to that directory in a terminal and clone the GitHub repository:
     ``` 
     git clone https://github.com/aws-samples/step-functions-workflows-collection
     ```
 3. Change directory to the pattern directory:
     ```
-    cd sfn-query-large-datasets-cdk
+    cd sfn-query-large-datasets-sam
     ```
-4. From the command line, use AWS SAM to deploy the AWS resources for the workflow as specified in the template.yaml file:
+4. From the command line, use AWS SAM CLI to deploy the AWS resources for the workflow as specified in the template.yaml file:
     ```
     sam deploy --guided
     ```
@@ -60,7 +55,7 @@ Important: this application uses various AWS services and there are costs associ
 
     Once you have run `sam deploy --guided` mode once and saved arguments to a configuration file (samconfig.toml), you can use `sam deploy` in future to use these defaults.
 
-6. Note the outputs from the SAM deployment process. These contain the resource names and/or ARNs which are used for testing:
+6. Note the outputs from the SAM deployment process (also visible in CloudFormation Stack details). These contain the resource names and/or ARNs which are used for testing:
 
     * ```GlueCrawler```: Name of the Glue Crawler which is used.
     * ```BucketName```: Name of the bucket which is used for the Glue Database.
@@ -72,7 +67,7 @@ The workflow starts by initializing a state machine, and the first task in the s
 
 The Athena query is then initiated and runs until it is completed.
 
-Once the query is completed, the results are obtained and published to the SNS (Simple Notification Service) topic. SNS is a web service that allows users to send notifications from the cloud to various subscribers or endpoints, such as email, SMS, or mobile push notifications.
+Once the query is completed, the results are obtained and published to the SNS (Simple Notification Service) topic. Amazon SNS is a managed service that allows users to send notifications from the cloud to various subscribers or endpoints, such as email, SMS, or mobile push notifications.
 
 ## Image
 
@@ -83,7 +78,7 @@ Once the query is completed, the results are obtained and published to the SNS (
 
 Manually trigger the workflow via the Console or the AWS CLI.  The state machine ARN can be found as the ```state_machine_arn``` CloudFormation output and the state machine name can be found as ```state_machine_name``` in the CloudFormation output.
 
-To trigger the workflow in the console, navigate to Step Functions and then click the step function name from the list of State Machines.  In the Executions panel, click Start Execution.  Click Start Execution again in the popup (default input values can be ignored)
+To trigger the workflow in the console, navigate to Step Functions and then click the step function name from the list of State Machines.  In the Executions panel, click Start Execution.  Click Start Execution again in the popup (default input values can be ignored).
 
 ## Cleanup
  
@@ -105,7 +100,7 @@ To trigger the workflow in the console, navigate to Step Functions and then clic
 
 ## Want more?
 
-Check out more workflows on [ServerlessLand](https://serverlessland.com/workflows)
+Check out more workflows on [ServerlessLand](https://serverlessland.com/workflows).
   
 ----
 

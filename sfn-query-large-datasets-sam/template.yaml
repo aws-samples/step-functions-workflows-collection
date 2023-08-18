@@ -61,7 +61,7 @@ Resources:
     Properties:
       Name: !Sub 'log'
       State: 'ENABLED'
-      RecursiveDeleteOption: 'true'
+      RecursiveDeleteOption: true
       WorkGroupConfiguration:
         ResultConfiguration:
           OutputLocation: !Sub 's3://${S3QueryLargeDatasetsBucket}/result/'

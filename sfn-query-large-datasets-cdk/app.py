@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 import json
-import random
-import string
 import os
 from aws_cdk import (
     App,
@@ -27,12 +25,10 @@ class SfnQueryLargeDatasetsCdkStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        # Random string generation for suffixes
-        random_string = "".join(random.choices(string.ascii_lowercase, k=8))
 
         # S3 Bucket
         s3_bucket = s3.Bucket(self, "s3_query_large_datasets", 
-            bucket_name=f"stepfunctions-query-large-datasets-{random_string}",
+            bucket_name=f"stepfunctions-query-large-datasets",
             removal_policy=RemovalPolicy.DESTROY,
             auto_delete_objects=True,
             block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
@@ -54,7 +50,7 @@ class SfnQueryLargeDatasetsCdkStack(Stack):
             managed_policies=[
                 iam.ManagedPolicy.from_aws_managed_policy_name("service-role/AWSGlueServiceRole")
             ],
-            role_name=f"glue-crawler-role-{random_string}",
+            role_name=f"glue-crawler-role",
         )
 
         # Glue Database
@@ -69,7 +65,7 @@ class SfnQueryLargeDatasetsCdkStack(Stack):
                         )
                     )],
                 description="Database for large datasets",
-                name=f"query_large_datasets_db_{random_string}"
+                name=f"query_large_datasets_db"
             )
         )
 
@@ -86,7 +82,7 @@ class SfnQueryLargeDatasetsCdkStack(Stack):
         # Glue Crawler
         glue_crawler = glue.CfnCrawler(self, "start_athena_crawler",
             database_name=glue_db.database_input.name,
-            name=f"query_large_datasets_crawler-{random_string}",
+            name=f"query_large_datasets_crawler",
             role=glue_crawler_role.role_arn,
             targets=glue.CfnCrawler.TargetsProperty(s3_targets=[glue.CfnCrawler.S3TargetProperty(path="s3://aws-glue-datasets-us-east-1/examples/githubarchive/month/data/")]),
             configuration=json.dumps(crawler_configuration),
@@ -97,7 +93,7 @@ class SfnQueryLargeDatasetsCdkStack(Stack):
 
         # Athena Workgroup
         athena_workgroup = athena.CfnWorkGroup(self, "workgroup_start_athena",
-            name=f"log-{random_string}",
+            name=f"log",
             state="ENABLED",
             work_group_configuration=athena.CfnWorkGroup.WorkGroupConfigurationProperty(
                 result_configuration=athena.CfnWorkGroup.ResultConfigurationProperty(
@@ -118,7 +114,7 @@ class SfnQueryLargeDatasetsCdkStack(Stack):
 
 
         # Create a CloudWatch Logs log group
-        log_group = logs.LogGroup(self, "StateMachineLogGroup",
+        log_group = logs.LogGroup(self, "state_machine_log_group",
             retention=logs.RetentionDays.ONE_WEEK,
             log_group_name="state-machine-log-group",
             removal_policy=RemovalPolicy.DESTROY,
@@ -128,13 +124,13 @@ class SfnQueryLargeDatasetsCdkStack(Stack):
         # IAM Roles and Policies for Step Functions
         state_machine_role = iam.Role(self, "state_machine_role",
             assumed_by=iam.ServicePrincipal("states.amazonaws.com"),
-            role_name=f"query-large-datasets-{random_string}",
+            role_name=f"query-large-datasets",
         )
 
 
         # IAM Policy
         athena_workflow_policy = iam.Policy(self, "athena_workflow_policy",
-            policy_name=f"sfn-start-athena-policy-{random_string}",
+            policy_name=f"sfn-start-athena-policy",
             statements=[
                 iam.PolicyStatement(
                     actions=["sns:Publish"],
@@ -225,7 +221,7 @@ class SfnQueryLargeDatasetsCdkStack(Stack):
 
         # Step Functions State Machine
         sfn_state_machine = sfn.CfnStateMachine(self, "sfn_athena",
-            state_machine_name=f"state-machine-start-athena-{random_string}",
+            state_machine_name=f"state-machine-start-athena",
             role_arn=state_machine_role.role_arn,
             definition_string=state_machine_definition,
             definition_substitutions={
@@ -251,9 +247,9 @@ class SfnQueryLargeDatasetsCdkStack(Stack):
 
 
         # CloudFormation Outputs
-        outputs(self, "aws_sfn_state_machine", value=sfn_state_machine.ref)
+        outputs(self, "sfn_state_machine", value=sfn_state_machine.ref)
         outputs(self, "bucket_domain_name", value=s3_bucket.bucket_domain_name)
-        outputs(self, "aws_glue_crawler", value=glue_crawler.name)
+        outputs(self, "glue_crawler", value=glue_crawler.name)
 
 
         # To demonstrate how suppressions work, I've added some suppressions and a justification for them
@@ -282,12 +278,12 @@ class SfnQueryLargeDatasetsCdkStack(Stack):
             [{'id': 'AwsSolutions-IAM4', 
               'reason': 'Managed Policy is sufficient for Demo purposes'},
              {'id': 'AwsSolutions-IAM5', 
-              'reason': 'S3 getObjects with wildcard is required for partioned athena queries'}]
+              'reason': 'S3 getObjects with wildcard is required for partitioned athena queries'}]
         )
         NagSuppressions.add_resource_suppressions(
             [athena_workflow_policy],
             [{'id': 'AwsSolutions-IAM5', 
-              'reason': 'S3 getObjects with wildcard is required for partioned athena queries'}]
+              'reason': 'S3 getObjects with wildcard is required for partitioned athena queries'}]
         )
 
         
