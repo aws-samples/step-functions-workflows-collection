@@ -1,0 +1,67 @@
+{
+  "Comment": "An example demonstrates how to ingest a large data set in Amazon S3 and partition it through aws Glue Crawlers, then execute Amazon Athena queries against that partition.",
+  "StartAt": "Start Crawler",
+  "States": {
+    "Start Crawler": {
+      "Type": "Task",
+      "Next": "Get Crawler status",
+      "Parameters": {
+        "Name": "${glue_crawler_name}"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:glue:startCrawler"
+    },
+    "Get Crawler status": {
+      "Type": "Task",
+      "Parameters": {
+        "Name": "${glue_crawler_name}"
+
+      },
+      "Resource": "arn:aws:states:::aws-sdk:glue:getCrawler",
+      "Next": "Check Crawler status"
+    },
+    "Check Crawler status": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.Crawler.State",
+          "StringEquals": "RUNNING",
+          "Next": "Wait"
+        }
+      ],
+      "Default": "Start an Athena query"
+    },
+    "Wait": {
+      "Type": "Wait",
+      "Seconds": 30,
+      "Next": "Get Crawler status"
+    },
+    "Start an Athena query": {
+      "Resource": "arn:aws:states:::athena:startQueryExecution.sync",
+      "Parameters": {
+        "QueryString": "SELECT * FROM \"${query_large_datasets_db}\".\"${glue_table}\" WHERE partition_0 = '2017' AND partition_1 = '01' AND partition_2 = '23' limit 5",
+        "WorkGroup": "${aws_athena_workgroup}"
+      },
+      "Type": "Task",
+      "Next": "Get query results"
+    },
+    "Get query results": {
+      "Resource": "arn:aws:states:::athena:getQueryResults",
+      "Parameters": {
+        "QueryExecutionId.$": "$.QueryExecution.QueryExecutionId"
+      },
+      "Type": "Task",
+      "Next": "Send query results"
+    },
+    "Send query results": {
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "${topic_athena_updates}",
+        "Message": {
+          "Input.$": "$.ResultSet.Rows"
+        }
+      },
+      "Type": "Task",
+      "End": true
+    }
+  }
+}

@@ -1,0 +1,155 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Query large datasets (Amazon Athena, Amazon S3, AWS Glue, Amazon SNS)
+
+Resources:
+  S3QueryLargeDatasetsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'stepfunctions-query-large-datasets'
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  AthenaUpdatesTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: 'athena-updates-topic'
+      KmsMasterKeyId: 'alias/aws/sns'
+
+  GlueCrawlerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: 'glue.amazonaws.com'
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole'
+      RoleName: !Sub 'glue-crawler-role'
+
+  QueryLargeDatasetsDb:
+    Type: AWS::Glue::Database
+    Properties:
+      CatalogId: !Ref "AWS::AccountId"
+      DatabaseInput:
+        Name: !Sub 'query_large_datasets_db'
+        CreateTableDefaultPermissions:
+          - Permissions:
+              - 'ALL'
+            Principal:
+              DataLakePrincipalIdentifier: 'IAM_ALLOWED_PRINCIPALS'
+        Description: 'Database for large datasets'
+
+  StartAthenaCrawler:
+    Type: AWS::Glue::Crawler
+    Properties:
+      Role: !GetAtt GlueCrawlerRole.Arn
+      Targets:
+        S3Targets:
+          - Path: 's3://aws-glue-datasets-us-east-1/examples/githubarchive/month/data/'
+      Name: !Sub 'query_large_datasets_crawler'
+      DatabaseName: !Ref QueryLargeDatasetsDb
+      Configuration: !Sub '{"Version":1.0,"CrawlerOutput":{"Partitions":{"AddOrUpdateBehavior":"InheritFromTable"}},"Grouping":{"TableGroupingPolicy":"CombineCompatibleSchemas"}}'
+
+  AthenaWorkGroup:
+    Type: AWS::Athena::WorkGroup
+    Properties:
+      Name: !Sub 'log'
+      State: 'ENABLED'
+      RecursiveDeleteOption: true
+      WorkGroupConfiguration:
+        ResultConfiguration:
+          OutputLocation: !Sub 's3://${S3QueryLargeDatasetsBucket}/result/'
+
+  StateMachineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: 'states.amazonaws.com'
+            Action: 'sts:AssumeRole'
+      RoleName: !Sub 'query-large-datasets'
+      Policies:
+        - PolicyName: !Sub 'sfn-start-athena-policy'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: 'sns:Publish'
+                Resource: !Ref AthenaUpdatesTopic
+              - Effect: Allow
+                Action:
+                  - 'athena:getQueryResults'
+                  - 'athena:startQueryExecution'
+                  - 'athena:stopQueryExecution'
+                  - 'athena:getQueryExecution'
+                  - 'athena:getDataCatalog'
+                Resource:
+                  - !Sub 'arn:aws:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${AthenaWorkGroup}'
+                  - !Sub 'arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/${QueryLargeDatasetsDb}'
+              - Effect: Allow
+                Action:
+                  - 's3:GetBucketLocation'
+                  - 's3:GetObject'
+                  - 's3:ListBucket'
+                  - 's3:ListBucketMultipartUploads'
+                  - 's3:ListMultipartUploadParts'
+                  - 's3:AbortMultipartUpload'
+                  - 's3:CreateBucket'
+                  - 's3:PutObject'
+                Resource: 'arn:aws:s3:::*'
+              - Effect: Allow
+                Action:
+                  - 'glue:CreateDatabase'
+                  - 'glue:GetDatabase'
+                  - 'glue:GetDatabases'
+                  - 'glue:UpdateDatabase'
+                  - 'glue:DeleteDatabase'
+                  - 'glue:CreateTable'
+                  - 'glue:UpdateTable'
+                  - 'glue:GetTable'
+                  - 'glue:GetTables'
+                  - 'glue:DeleteTable'
+                  - 'glue:BatchDeleteTable'
+                  - 'glue:BatchCreatePartition'
+                  - 'glue:CreatePartition'
+                  - 'glue:UpdatePartition'
+                  - 'glue:GetPartition'
+                  - 'glue:GetPartitions'
+                  - 'glue:BatchGetPartition'
+                  - 'glue:DeletePartition'
+                  - 'glue:BatchDeletePartition'
+                  - 'glue:StartCrawler'
+                  - 'glue:GetCrawler'
+                Resource:
+                  - !Sub 'arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog'
+                  - !Sub 'arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/*'
+                  - !Sub 'arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/*/*'
+                  - !Sub 'arn:aws:glue:${AWS::Region}:${AWS::AccountId}:crawler/*'
+
+  AthenaStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/statemachine.asl.json
+      Role: !GetAtt StateMachineRole.Arn
+      DefinitionSubstitutions:
+        aws_athena_workgroup: !Ref AthenaWorkGroup
+        query_large_datasets_db: !Ref QueryLargeDatasetsDb
+        topic_athena_updates: !Ref AthenaUpdatesTopic
+        glue_crawler_name: !Ref StartAthenaCrawler
+
+Outputs:
+  SfnStateMachine:
+    Value: !Ref AthenaStateMachine
+  BucketName:
+    Value: !GetAtt S3QueryLargeDatasetsBucket.Name
+  GlueCrawler:
+    Value: !Ref StartAthenaCrawler

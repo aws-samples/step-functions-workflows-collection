@@ -1,0 +1,78 @@
+{
+  "title": "Query large datasets (Amazon Athena, Amazon S3, AWS Glue, Amazon SNS)",
+  "description": "This workflow demonstrates how to ingest a large data set in Amazon S3 and partition it through AWS Glue Crawlers, then execute Amazon Athena queries against that partition. Deploying this sample project creates an AWS Step Functions state machine, an Amazon S3 Bucket, an AWS Glue crawler, and an Amazon SNS topic.",
+  "language": "Python",
+  "simplicity": "2 - Pattern",
+  "usecase": "",
+  "type": "Standard",
+  "diagram": "/resources/statemachine.png",
+  "videoId": "",
+  "level": "200",
+  "framework": "SAM",
+  "services": [
+    "stepfunctions",
+    "glue",
+    "s3",
+    "athena",
+    "sns"
+  ],
+  "introBox": {
+    "headline": "How it works",
+    "text": [
+      "In this project, the Step Functions state machine invokes an AWS Glue crawler that partitions a large dataset in Amazon S3. Once the AWS Glue crawler returns a success message, the workflow executes Athena queries against that partition. Once query execution is successfully complete, an Amazon SNS notification is sent to an Amazon SNS topic."
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": [
+      "See the GitHub repo for detailed testing instructions."
+    ]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": [
+      "Delete the stack: <code>sam delete</code>"
+    ]
+  },
+  "deploy": {
+    "text": [
+      "sam deploy --guided"
+    ]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/sfn-query-large-datasets-sam/",
+      "templateDir": "sfn-query-large-datasets-sam",
+      "templateFile": "template.yaml",
+      "ASL": "statemachine/statemachine.asl.json",
+      "definition": "resources/statemachine.png"
+    },
+    "payloads": [
+      {
+        "headline": "",
+        "payloadURL": ""
+      }
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "Try AWS Step Functions Workshop",
+        "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+      },
+      {
+        "text": "Serverlesspresso workshop, what else?",
+        "link": "https://workshop.serverlesscoffee.com/"
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Pajtim Matoshi",
+      "image": "https://avatars.githubusercontent.com/u/22615165?v=4",
+      "bio": "Pajtim is a Solutions Architect @ Amazon Web Services based in Zürich, Switzerland.",
+      "linkedin": "pmatoshi"
+    }
+  ]
+}
