@@ -86,34 +86,6 @@ resource "aws_glue_catalog_database" "query_large_datasets_db" {
   name = "query_large_datasets_db_${random_string.random.result}"
 }
 
-resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
-  name          = "log"
-  database_name = aws_glue_catalog_database.query_large_datasets_db.name
-  table_type = "EXTERNAL_TABLE"
-  parameters = {
-    "classification" = "csv"
-  }
-  storage_descriptor {
-    location = "s3://${aws_s3_bucket.s3_query_large_datasets.bucket}/log/"
-    input_format = "org.apache.hadoop.mapred.TextInputFormat"
-    output_format = "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
-    ser_de_info {
-      name = "log"
-      serialization_library = "org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe"
-      parameters = {
-        "field.delim" = ","
-      }
-    }
-    columns {
-      name = "year"
-      type = "bigint"
-    }
-    columns {
-      name = "grade"
-      type = "string"
-    }
-  }
-}
 
 resource "aws_athena_workgroup" "workgroup_start_athena" {
   name  = "log-${random_string.random.result}"
