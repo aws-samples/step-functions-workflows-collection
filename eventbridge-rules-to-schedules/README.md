@@ -11,7 +11,7 @@ It processes rules using Lambda ("Process Rules") and maps over each rule to cre
 
   
 
-This workflow can transfer up to **260000 schedules** in single state machine run before reaching the [execution history limit](https://docs.aws.amazon.com/step-functions/latest/dg/limits-overview.html#service-limits-state-machine-executions). It has a max concurrency of **50** Schedules creation (which is CreateSchedule API [request rate limit](https://docs.aws.amazon.com/scheduler/latest/UserGuide/scheduler-quotas.html)). It also handles pagination with **NextToken**.
+This workflow can transfer up to **260000 scheduled rules** in single state machine run before reaching the [execution history limit](https://docs.aws.amazon.com/step-functions/latest/dg/limits-overview.html#service-limits-state-machine-executions). It has a max concurrency of **50** Schedules creation (which is CreateSchedule API [request rate limit](https://docs.aws.amazon.com/scheduler/latest/UserGuide/scheduler-quotas.html)). It also handles pagination with **NextToken**.
 
   
 
@@ -95,7 +95,7 @@ The step function workflow takes JSON input and uses Lambda function to convert 
 
     The Amazon Resource Name (ARN) of the IAM role to be used for the schedule.
     
-    **Note:** This parameter is required if `Rules` or `RulesS3Uri` does not mention `ScheduleRoleArn` for at least one of the rules. If all dictionaries in `Rules` contain `ScheduleRoleArn`, then `ScheduleRoleArn` at the root level is not required. If any dictionaries in `Rules` or `RulesS3Uri` does not have it, then it becomes required at the root level.
+    **Note:** This parameter is required if `Rules` or `RulesS3Uri` does not mention `ScheduleRoleArn` for at least one of the rules. If all dictionaries in `Rules` contain `ScheduleRoleArn`, then `ScheduleRoleArn` at the root level is not required. If any dictionaries in `Rules` or `RulesS3Uri` does not have it, then it becomes required at the root level. Make sure that that role has permissions to invoke the target. Check the sample role permissions [here](https://docs.aws.amazon.com/scheduler/latest/UserGuide/managing-targets-templated.html#managing-targets-templated-sqs)
 
 - **RuleState** *(string)* – The state of the rule.
     
@@ -398,6 +398,7 @@ Sample JSON file on S3:
 - For each target under a rule, a new schedule will be created. This means that if you have multiple targets associated with a single rule, each target will have its own separate schedule.
 - If a rule has only one target, the schedule name will be the same as the rule name. In this scenario, where there's a one-to-one relationship between the rule and its target, the schedule will directly adopt the rule's name unless specified using `ScheduleName` in `Rules` or `RulesS3Uri`.
 - When a rule has multiple targets, the schedule name will be formed by combining the rule name with an index number. The index number corresponds to the position of the target within the rule's list of targets. For example: EventBridge Rule 'MyLambdaRule' has 3 targets. Hence, corresponding schedules are as follows: MyLambdaRule-0, MyLambdaRule-1, MyLambdaRule-2.
+- `ScheduleRoleArn` - Make sure that the role has permissions to invoke the target. Check the sample permissions [here](https://docs.aws.amazon.com/scheduler/latest/UserGuide/managing-targets-templated.html#managing-targets-templated-sqs)
 
 
 

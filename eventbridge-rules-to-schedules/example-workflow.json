@@ -16,7 +16,7 @@
         "This workflow processes EventBridge rules with ScheduleExpression using Lambda function and maps over each rule to create corresponding schedules using the AWS SDK CreateSchedule.",
         "It can enable, disable, or preserve rule states based on input.",
         "It can also enable or disable the new schedule.",
-        "The workflow handles up to 260000 rules with max concurrency of 50.",
+        "The workflow handles up to 260000 scheduled rules with max concurrency of 50.",
         "It also handles pagination with NextToken.",
         "Please check the GitHub repo for the payload format."
       ]
