@@ -1,20 +1,21 @@
+# Query large datasets (Amazon Athena, Amazon S3, AWS Glue, Amazon SNS)
 
-Name
-Query large datasets
-Resources
-Athena Workgroup: AthenaWorkgroup
-State Machine: AthenaStateMachine
-SNS Topic: SNSTopic
-S3 Bucket: DataBucket
-Glue Database: GlueDatabase
-Glue Crawler: GlueCrawler 
+**Resources used**  
 
-
-# Start an Athena query
+| Resource Type | Name    |
+|------------------|--------------------|
+| Athena Workgroup | AthenaWorkgroup    |
+| State Machine    | AthenaStateMachine |
+| SNS Topic        | SNSTopic           |
+| S3 Bucket        | DataBucket         |
+| Glue Database    | GlueDatabase       |
+| Glue Crawler     | GlueCrawler        |  
+  
+## Start an Athena query
 
 This workflow demonstrates how to ingest a large data set in Amazon S3 and partition it through AWS Glue Crawlers, then execute Amazon Athena queries against that partition. Deploying this sample project creates an AWS Step Functions state machine, an Amazon S3 Bucket, an AWS Glue crawler, and an Amazon SNS topic.
 
-In this project, the Step Functions state machine invokes an AWS Glue crawler that partitions a large dataset in Amazon S3. Once the AWS Glue crawler returns a success message, the workflow executes Athena queries against that partition. Once query execution is successfully complete, an Amazon SNS notification is sent to an Amazon SNS topic.
+In this project, the Step Functions state machine invokes an AWS Glue crawler that partitions a large dataset in Amazon S3. Once the AWS Glue crawler returns a success message, the workflow executes Athena queries against that partition. Once query execution is successfully complete, a notification is sent to an Amazon SNS topic.
 
 * An Amazon Athena query
 * An AWS Glue crawler
@@ -31,7 +32,7 @@ Important: this application uses various AWS services and there are costs associ
 * [Create an AWS account](https://portal.aws.amazon.com/gp/aws/developer/registration/index.html) if you do not already have one and log in. The IAM user that you use must have sufficient permissions to make necessary AWS service calls and manage AWS resources.
 * [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html) installed and configured
 * [Git Installed](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
-* [AWS Serverless Application Model](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) (AWS SAM) installed
+* [Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli?in=terraform/aws-get-started) installed
 
 ## Deployment Instructions
 
@@ -56,7 +57,7 @@ The workflow starts by initializing a state machine, and the first task in the s
 
 The Athena query is then initiated and runs until it is completed.
 
-Once the query is completed, the results are obtained and published to the SNS (Simple Notification Service) topic. SNS is a web service that allows users to send notifications from the cloud to various subscribers or endpoints, such as email, SMS, or mobile push notifications.
+Once the query is completed, the results are obtained and published to the SNS (Simple Notification Service) topic. Amazon SNS is a managed service that allows users to send notifications from the cloud to various subscribers or endpoints, such as email, SMS, or mobile push notifications.
 
 ## Image
 
@@ -84,6 +85,6 @@ To trigger the workflow in the console, navigate to Step Functions and then clic
     Enter a value: Yes
     ```
 ----
-Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
 SPDX-License-Identifier: MIT-0
