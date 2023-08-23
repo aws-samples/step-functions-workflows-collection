@@ -1,0 +1,91 @@
+{
+    "title": "EventBridge Rules to EventBridge Scheduler Migration",
+    "description": "A simple workflow to automate the migration of EventBridge Rules to EventBridge Scheduler",
+    "language": "Python",
+    "simplicity": "3 - Application",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "200",
+    "framework": "SAM",
+    "services": ["eventbridge", "stepfunctions","lambda"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "This workflow processes EventBridge rules with ScheduleExpression using Lambda function and maps over each rule to create corresponding schedules using the AWS SDK CreateSchedule.",
+        "It can enable, disable, or preserve rule states based on input.",
+        "It can also enable or disable the new schedule.",
+        "The workflow handles up to 260000 rules with max concurrency of 50.",
+        "It also handles pagination with NextToken.",
+        "Please check the GitHub repo for the payload format."
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/eventbridge-rules-to-schedules/",
+        "templateDir":"eventbridge-rules-to-schedules",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "EventBridge Rules",
+          "link": "https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-create-rule-schedule.html"
+        },
+        {
+          "text": "EventBridge Scheduler",
+          "link": "https://docs.aws.amazon.com/scheduler/latest/UserGuide/what-is-scheduler.html"
+        },
+        {
+          "text": "EventBridge Rules vs EventBridge Scheduler",
+          "link": "https://aws.amazon.com/blogs/compute/introducing-amazon-eventbridge-scheduler"
+        },
+        {
+          "text": "EventBridge Rules Target Types",
+          "link": "https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-targets.html"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Jigar Gajjar",
+          "image": "https://media.licdn.com/dms/image/D5603AQFeO43xamQpMQ/profile-displayphoto-shrink_800_800/0/1682325715106?e=1698278400&v=beta&t=qO5Tx32zoZ90ZJAEHyP0GPvFtVUqy_CgTLHWCi44qPY",
+          "bio": "Cloud Engineer at Amazon Web Services (AWS) specializing in serverless solutions, with a strong expertise in Python. I am recognized as an API Gateway SME and have a knack for architecting serverless cloud solutions.",
+          "linkedin": "jigargajjar"
+        },
+        {
+          "name": "Sindhu Siddalingamurthy",
+          "image": "",
+          "bio": "Cloud Engineer at Amazon Web Services (AWS)",
+          "linkedin": "grsindhu"
+        }
+      ]
+  }
+  

@@ -1,0 +1,86 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  EventBridgeRuleToSchedule
+  
+  This template deploys a step function and a lambda function to transfer EventBridge Rule to Schedule
+
+Resources:
+
+  # Lambda Function - to process rules and create schedule params
+  ProcessRulesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.11
+      MemorySize: 1024
+      Timeout: 900
+      Policies:
+        - Statement:
+            # Allow lambda function to read rules from S3 bucket
+            - Sid: S3GetObject
+              Effect: Allow
+              Action:
+                - s3:GetObject
+              Resource: 'arn:aws:s3:::*/*'
+            # Allow Lambda function to list rules, list targets, and describe a rule
+            - Sid: EventBridgeRules
+              Effect: Allow
+              Action:
+                - events:ListRules
+                - events:DescribeRule
+                - events:ListTargetsByRule
+              Resource: !Sub 'arn:aws:events:*:${AWS::AccountId}:rule/*'
+
+  # Step Function - to orchestrate migrating rules to schedules
+  RuleToScheduleStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/statemachine.asl.json # State Machine Definition
+      DefinitionSubstitutions:
+        ProcessRulesFunctionArn: !GetAtt ProcessRulesFunction.Arn # Referring lambda function ARN in the state machine definition
+      Policies:
+        - Statement:
+            # Allow Step Function to invoke Lambda function to get the parameters for creating schedule
+            - Sid: InvokeLambdaFunction
+              Effect: Allow
+              Action:
+                - lambda:InvokeFunction
+              Resource: !GetAtt ProcessRulesFunction.Arn
+            # Allow Step Function to Create Schedule
+            - Sid: CreateSchedule
+              Effect: Allow
+              Action:
+                - scheduler:CreateSchedule
+              Resource: !Sub 'arn:aws:scheduler:*:${AWS::AccountId}:schedule/*'
+            # Allow Step Function to Enable or Disable Event Bridge Rule
+            - Sid: EnableAndDisableRule
+              Effect: Allow
+              Action:
+                - events:EnableRule
+                - events:DisableRule
+              Resource: !Sub 'arn:aws:events:*:${AWS::AccountId}:rule/*'
+            # Allow Step Function Distributed Map state to invoke child step function execution
+            - Sid: DistributedMapState
+              Effect: Allow
+              Action:
+                - states:StartExecution
+              Resource: !Sub arn:aws:states:*:${AWS::AccountId}:stateMachine:*
+            # Allow Step Function to create the schedule by passing the role from the input
+            - Sid: IAMPassRole
+              Effect: Allow
+              Action:
+                - iam:PassRole
+              Resource: !Sub arn:aws:iam::${AWS::AccountId}:role/*
+
+
+Outputs:
+  # Displaying Lambda Function ARN
+  ProcessRulesFunction:
+    Description: "Lambda function that helps step function to create schedule parameters"
+    Value: !GetAtt ProcessRulesFunction.Arn
+  # Displaying Step Function ARN
+  RuleToScheduleStateMachine:
+    Description: "Step function that processes rules and creates schedules"
+    Value: !GetAtt RuleToScheduleStateMachine.Arn
