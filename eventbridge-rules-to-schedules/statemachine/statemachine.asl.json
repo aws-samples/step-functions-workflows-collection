@@ -1,0 +1,126 @@
+{
+  "Comment": "This workflow transfers EventBridge Rules to Schedules",
+  "StartAt": "Process Rules",
+  "States": {
+    "Process Rules": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "${ProcessRulesFunctionArn}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "ResultPath": "$.ProcessRules",
+      "Next": "for Rule in Rules",
+      "ResultSelector": {
+        "Lambda.$": "$.Payload"
+      }
+    },
+    "for Rule in Rules": {
+      "Type": "Map",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "DISTRIBUTED",
+          "ExecutionType": "STANDARD"
+        },
+        "StartAt": "CreateSchedule",
+        "States": {
+          "CreateSchedule": {
+            "Type": "Task",
+            "Parameters": {
+              "Name.$": "$.Name",
+              "FlexibleTimeWindow.$": "$.FlexibleTimeWindow",
+              "ScheduleExpression.$": "$.ScheduleExpression",
+              "Target.$": "$.Target",
+              "Description.$": "$.Description",
+              "State.$": "$.State",
+              "GroupName.$": "$.GroupName"
+            },
+            "Resource": "arn:aws:states:::aws-sdk:scheduler:createSchedule",
+            "ResultPath": null,
+            "Next": "Check RuleState"
+          },
+          "Check RuleState": {
+            "Type": "Choice",
+            "Choices": [
+              {
+                "Variable": "$.RuleState",
+                "StringEquals": "DISABLED",
+                "Next": "DisableRule"
+              },
+              {
+                "Variable": "$.RuleState",
+                "StringEquals": "ENABLED",
+                "Next": "EnableRule"
+              }
+            ],
+            "Default": "No Modification"
+          },
+          "DisableRule": {
+            "Type": "Task",
+            "End": true,
+            "Parameters": {
+              "Name.$": "$.RuleName"
+            },
+            "Resource": "arn:aws:states:::aws-sdk:eventbridge:disableRule"
+          },
+          "No Modification": {
+            "Type": "Pass",
+            "End": true
+          },
+          "EnableRule": {
+            "Type": "Task",
+            "End": true,
+            "Parameters": {
+              "Name.$": "$.RuleName"
+            },
+            "Resource": "arn:aws:states:::aws-sdk:eventbridge:enableRule"
+          }
+        }
+      },
+      "ItemsPath": "$.ProcessRules.Lambda.ParamsList",
+      "Next": "Check NextToken",
+      "Label": "forRuleinRules",
+      "MaxConcurrency": 50,
+      "ItemSelector": {
+        "Name.$": "$$.Map.Item.Value.Name",
+        "FlexibleTimeWindow.$": "$$.Map.Item.Value.FlexibleTimeWindow",
+        "ScheduleExpression.$": "$$.Map.Item.Value.ScheduleExpression",
+        "Target.$": "$$.Map.Item.Value.Target",
+        "Description.$": "$$.Map.Item.Value.Description",
+        "State.$": "$$.Map.Item.Value.State",
+        "RuleState.$": "$$.Map.Item.Value.RuleState",
+        "GroupName.$": "$$.Map.Item.Value.ScheduleGroup",
+        "RuleName.$": "$$.Map.Item.Value.RuleName"
+      },
+      "ResultPath": null
+    },
+    "Check NextToken": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.ProcessRules.Lambda.NextToken",
+          "IsPresent": true,
+          "Next": "Process Rules"
+        }
+      ],
+      "Default": "Pass"
+    },
+    "Pass": {
+      "Type": "Pass",
+      "End": true
+    }
+  }
+}
