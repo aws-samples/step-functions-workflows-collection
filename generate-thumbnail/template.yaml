@@ -24,6 +24,43 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
+  MyLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: MyLambdaFunction
+      Handler: index.handler
+      CodeUri: lambda/
+      Runtime: nodejs14.x
+
+  MyEventBridgeRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventBusName: default
+      EventPattern:
+        source:
+          - aws.s3
+        detail-type:
+          - Object Created
+        detail:
+          bucket:
+            name:
+              - abc
+          object:
+            key:
+              - xyz
+
+  MyEventBridgeTargetConfigurations:
+    Type: "AWS-Events"
+    Properties:
+      Rule: !Ref MyEventBridgeRule
+      Targets:
+        -
+          Arn: !GetAtt [MyLambdaFunction, Arn]
+          InputTransformer:
+            InputPathsMap:
+              bucket: "$.detail.bucket.name"
+              key: "$.detail.object.key"
+            InputTemplate: '{"bucket": <bucket>, "key": <key>}'
     Metadata:
       SamResourceId: SourceBucket
   SourceBucketPolicy:
