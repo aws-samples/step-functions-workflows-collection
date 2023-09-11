@@ -1,0 +1,231 @@
+{
+  "Comment": "Checkout Processing Workflow",
+  "StartAt": "Set Order, Payment and Shipping Status",
+  "States": {
+    "Set Order, Payment and Shipping Status": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:putItem",
+      "Parameters": {
+        "TableName": "${DynamoName}",
+        "Item": {
+          "cart_id": {
+            "S.$": "$.CartId"
+          },
+          "email": {
+            "S.$": "$.Email"
+          },
+          "address": {
+            "S.$": "$.Address"
+          },
+          "orange": {
+            "S.$": "$.Orange"
+          },
+          "banana": {
+            "S.$": "$.Banana"
+          },
+          "lemon": {
+            "S.$": "$.Lemon"
+          },
+          "total_cost": {
+            "S.$": "$.total_cost"
+          },
+          "order_status": {
+            "S": "pending"
+          },
+          "payment_status": {
+            "S": "pending"
+          },
+          "shipping_status": {
+            "S": "pending"
+          }
+        }
+      },
+      "Next": "Third Party Payment Service HTTPS Endpoint",
+      "ResultPath": "$.taskresult"
+    },
+    "Third Party Payment Service HTTPS Endpoint": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::apigateway:invoke.waitForTaskToken",
+      "Parameters": {
+        "ApiEndpoint": "${ApiGateWayEndpoint}",
+        "Method": "POST",
+        "Path": "/dev/checkout/payment",
+        "RequestBody": {
+          "Payload.$": "$",
+          "MyTaskToken.$": "$$.Task.Token"
+        }
+      },
+      "Next": "Payment Validation"
+    },
+    "Payment Validation": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.Status",
+          "StringEquals": "PaymentFailed",
+          "Next": "Set Payment Status: Unsuccessful"
+        }
+      ],
+      "Default": "Set Payment Status: Successful"
+    },
+    "Set Payment Status: Unsuccessful": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:updateItem",
+      "Parameters": {
+        "TableName": "${DynamoName}",
+        "Key": {
+          "cart_id": {
+            "S.$": "$.CartId"
+          }
+        },
+        "UpdateExpression": "SET payment_status = :myValueRef",
+        "ExpressionAttributeValues": {
+          ":myValueRef": {
+            "S": "Successful"
+          }
+        }
+      },
+      "Next": "Send PaymentFailed Event to Notification Bus",
+      "ResultPath": null
+    },
+    "Send PaymentFailed Event to Notification Bus": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::events:putEvents",
+      "Parameters": {
+        "Entries": [
+          {
+            "Detail": {
+              "cart_id.$": "$.CartId",
+              "Time.$": "$$.State.EnteredTime"
+            },
+            "DetailType": "PaymentFailed",
+            "EventBusName": "${EventBusName}",
+            "Source": "CheckoutWorkflow"
+          }
+        ]
+      },
+      "End": true
+    },
+    "Set Payment Status: Successful": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:updateItem",
+      "Parameters": {
+        "TableName": "${DynamoName}",
+        "Key": {
+          "cart_id": {
+            "S.$": "$.CartId"
+          }
+        },
+        "UpdateExpression": "SET payment_status = :myValueRef",
+        "ExpressionAttributeValues": {
+          ":myValueRef": {
+            "S": "Successful"
+          }
+        }
+      },
+      "Next": "Third Party Shipping Service HTTPS Endpoint",
+      "ResultPath": null
+    },
+    "Third Party Shipping Service HTTPS Endpoint": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::apigateway:invoke.waitForTaskToken",
+      "Parameters": {
+        "ApiEndpoint": "${ApiGateWayEndpoint}",
+        "Method": "POST",
+        "Path": "/dev/checkout/shipping",
+        "RequestBody": {
+          "Payload.$": "$",
+          "MyTaskToken.$": "$$.Task.Token"
+        }
+      },
+      "Next": "Shipping Validation"
+    },
+    "Shipping Validation": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.Status",
+          "StringEquals": "ShippingFailed",
+          "Next": "Set Shipping Status: Unsuccessful"
+        }
+      ],
+      "Default": "Set Shipping Status: Successful"
+    },
+    "Set Shipping Status: Successful": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:updateItem",
+      "Parameters": {
+        "TableName": "${DynamoName}",
+        "Key": {
+          "cart_id": {
+            "S.$": "$.CartId"
+          }
+        },
+        "UpdateExpression": "SET shipping_status = :myValueRef",
+        "ExpressionAttributeValues": {
+          ":myValueRef": {
+            "S": "Successful"
+          }
+        }
+      },
+      "Next": "Send ShippingSuccessful Event to Notification Bus",
+      "ResultPath": null
+    },
+    "Set Shipping Status: Unsuccessful": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:updateItem",
+      "Parameters": {
+        "TableName": "${DynamoName}",
+        "Key": {
+          "cart_id": {
+            "S.$": "$.CartId"
+          }
+        },
+        "UpdateExpression": "SET shipping_status = :myValueRef",
+        "ExpressionAttributeValues": {
+          ":myValueRef": {
+            "S": "Unsuccessful"
+          }
+        }
+      },
+      "Next": "Send ShippingFailed Event to Notification Bus",
+      "ResultPath": null
+    },
+    "Send ShippingFailed Event to Notification Bus": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::events:putEvents",
+      "Parameters": {
+        "Entries": [
+          {
+            "Detail": {
+              "cart_id.$": "$.CartId",
+              "Time.$": "$$.State.EnteredTime"
+            },
+            "DetailType": "ShippingFailed",
+            "EventBusName": "${EventBusName}",
+            "Source": "CheckoutWorkflow"
+          }
+        ]
+      },
+      "End": true
+    },
+    "Send ShippingSuccessful Event to Notification Bus": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::events:putEvents",
+      "Parameters": {
+        "Entries": [
+          {
+            "Detail": {
+              "cart_id.$": "$.CartId",
+              "Time.$": "$$.State.EnteredTime"
+            },
+            "DetailType": "ShippingSuccessful",
+            "EventBusName": "${EventBusName}",
+            "Source": "CheckoutWorkflow"
+          }
+        ]
+      },
+      "End": true
+    }
+  }
+}

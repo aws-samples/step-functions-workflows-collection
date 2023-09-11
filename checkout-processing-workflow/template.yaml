@@ -1,0 +1,209 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: SAM Template for deploying the Checkout Processing Workflow
+Resources:
+  CheckoutStateMachine:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      Name: !Sub ${AWS::StackName}-CheckoutProcessingWorkflow
+      DefinitionUri: statemachine/checkout_workflow.asl.json
+      DefinitionSubstitutions:
+        PaymentServiceEndpointArn: !GetAtt PaymentServiceEndpoint.Arn
+        ShippingServiceEndpointArn: !GetAtt ShippingServiceEndpoint.Arn
+        ApiGateWayEndpoint: !Sub "${ApiGatewayApi}.execute-api.${AWS::Region}.amazonaws.com"
+        DynamoName: !Sub ${AWS::StackName}-OrderTable
+        EventBusName : !Sub ${AWS::StackName}-notification-bus
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+      - LambdaInvokePolicy:
+          FunctionName: !Ref PaymentServiceEndpoint
+      - LambdaInvokePolicy:
+          FunctionName: !Ref ShippingServiceEndpoint
+      - arn:aws:iam::aws:policy/CloudWatchFullAccess
+      - arn:aws-cn:iam::aws:policy/CloudWatchEventsFullAccess
+      - arn:aws-cn:iam::aws:policy/AmazonAPIGatewayInvokeFullAccess
+      - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+      - arn:aws:iam::aws:policy/AmazonEventBridgeFullAccess
+
+
+  # Create Checkout API 
+  ApiGatewayApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub ${AWS::StackName}-CheckoutAPI
+      StageName: dev
+  
+  # Create DynamoDB to store orders data
+  OrderTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${AWS::StackName}-OrderTable
+      AttributeDefinitions:
+        - AttributeName: cart_id
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: cart_id
+          KeyType: HASH
+    
+  # Third Party Payment Endpoint Function
+  # Invoked from API Gateway /checkout/payment POST request
+  PaymentServiceEndpoint:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-PaymentServiceEndpoint
+      Handler: PaymentServiceEndpoint.lambda_handler
+      Runtime: python3.10
+      CodeUri: functions/PaymentServiceEndpoint/
+      Description: 'Function that process the payment api call and returns successful or unsuccessful'
+      MemorySize: 128
+      Timeout: 3
+      Policies:
+        - arn:aws:iam::aws:policy/CloudWatchFullAccess
+        - arn:aws-cn:iam::aws:policy/CloudWatchEventsFullAccess
+        - arn:aws-us-gov:iam::aws:policy/AWSStepFunctionsFullAccess
+      RuntimeManagementConfig:
+        UpdateRuntimeOn: Auto
+      Events:
+        ApiPOST:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayApi
+            Path: /checkout/payment
+            Method: POST
+  
+  # Third Party Shipping Endpoint Function
+  # Invoked from API Gateway /checkout/shipping POST request
+  ShippingServiceEndpoint:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-ShippingServiceEndpoint
+      Handler: ShippingServiceEndpoint.lambda_handler
+      Runtime: python3.10
+      CodeUri: functions/ShippingServiceEndpoint/
+      Description: 'Function that process the shipping api call and returns successful or unsuccessful'
+      MemorySize: 128
+      Timeout: 3
+      Policies:
+        - arn:aws:iam::aws:policy/CloudWatchFullAccess
+        - arn:aws-cn:iam::aws:policy/CloudWatchEventsFullAccess
+        - arn:aws-us-gov:iam::aws:policy/AWSStepFunctionsFullAccess
+      RuntimeManagementConfig:
+        UpdateRuntimeOn: Auto
+      Events:
+        ApiPOST:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayApi
+            Path: /checkout/shipping
+            Method: POST
+  
+  # Create Event Bus to push notification to users
+  EventBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: !Sub ${AWS::StackName}-notification-bus
+  
+  # Payment Failed Rule
+  PaymentFailedEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventBusName: !Sub ${AWS::StackName}-notification-bus
+      EventPattern:
+        source:
+          - CheckoutWorkflow
+        detail-type:
+          - PaymentFailed
+      Name: !Sub ${AWS::StackName}-NotificationSevice-OrderService-PaymentFailed
+      State: ENABLED
+      Targets:
+        - Id: NotificationSevice-OrderService-PaymentFailed-135135
+          Arn: !GetAtt EmailQueue.Arn
+    DependsOn:
+      - EventBus
+
+  # Shipping Failed Rule
+  ShippingFailedEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventBusName: !Sub ${AWS::StackName}-notification-bus
+      EventPattern:
+        source:
+          - CheckoutWorkflow
+        detail-type:
+          - ShippingFailed
+      Name: !Sub ${AWS::StackName}-NotificationSevice-OrderService-ShipFailed
+      State: ENABLED
+      Targets:
+        - Id: NotificationSevice-OrderService-ShipFailed-1235
+          Arn: !GetAtt EmailQueue.Arn
+    DependsOn:
+      - EventBus
+
+  # Shipping Successful Rule
+  ShippingSuccessEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventBusName: !Sub ${AWS::StackName}-notification-bus
+      EventPattern:
+        source:
+          - CheckoutWorkflow
+        detail-type:
+          - ShippingSuccessful
+      Name: !Sub ${AWS::StackName}-NotificationSevice-OrderService-ShipSuccessful
+      State: ENABLED
+      Targets:
+        - Id: NotificationSevice-OrderService-ShipSuccessful-325235
+          Arn: !GetAtt EmailQueue.Arn
+    DependsOn:
+      - EventBus
+
+  # SQS Queue
+  EmailQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${AWS::StackName}-EmailQueue
+      SqsManagedSseEnabled: false
+      
+  # Policy to allow EventBridge to invoke SQS
+  EventBridgeToToSqsPolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      PolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: events.amazonaws.com
+          Action: SQS:SendMessage
+          Resource:  !GetAtt EmailQueue.Arn
+      Queues:
+       - !Ref EmailQueue
+      
+  # Lambda Function to notify users based on events polled from SQS
+  NotifyUserFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-NotifyUserFunction
+      Handler: NotifyUserFunction.lambda_handler
+      Runtime: python3.10
+      CodeUri: functions/NotifyUserFunction/
+      Description: 'Function polls events from SQS and email to users via SES'
+      MemorySize: 128
+      Timeout: 3
+      Policies:
+        - arn:aws-cn:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonSQSFullAccess
+        - arn:aws:iam::aws:policy/AmazonSESFullAccess
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+      RuntimeManagementConfig:
+        UpdateRuntimeOn: Auto
+      Environment:
+        Variables:
+          TABLE_NAME: !Sub ${AWS::StackName}-OrderTable
+      Events:
+        Queue:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt EmailQueue.Arn
+            BatchSize: 1
+
+
