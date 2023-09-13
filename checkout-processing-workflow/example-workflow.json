@@ -1,0 +1,71 @@
+{
+    "title": "Event Driven Checkout Processing Workflow",
+    "description": "Integrate workflow with event driven architectures",
+    "language": "",
+    "simplicity": "2 - Pattern",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/workflow_diagram.png",
+    "videoId": "",
+    "level": "300",
+    "framework": "SAM",
+    "services": ["Step Functions","EventBridge", "Lambda", "DynamoDB", "SQS", "API Gateway"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "This example demonstrates how AWS Step Functions workflows can integrate with events in an event-driven architecture.",
+        "The example implements a checkout processing workflow that simulates a series of steps that an order must go through before notifying the result to the user.",
+        "Here, the checkout process workflow includes a payment validation step and a shipping validation step that are orchestrated using AWS Step Functions",
+        "Based on the success or failure of these validations, the checkout process workflow will emit an event to the Notification service that will notify the user whether the order has been confirmed or not."
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/checkout-processing-workflow/",
+        "templateDir":"checkout-processing-workflow",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/checkout_workflow.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Peh Jing Xiang",
+          "image": "profile-pic.jpg",
+          "bio": "Jing Xiang is a Solutions Architect at AWS based in Singapore",
+          "linkedin": "www.linkedin.com/in/jing-xiang-peh"
+        }
+      ]
+  }
+  
