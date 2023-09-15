@@ -13,10 +13,10 @@
     "introBox": {
       "headline": "How it works",
       "text": [
-        "This workflow is triggered by a HTTP POST request to an API Gateway endpoint.",
+        "This pattern demonstrates how you can use a streaming Lambda, exposed over HTTP using a Function URL, to receive live updates from an asynchronous workflow.",
+        "The workflow is triggered by a HTTP POST request to an API Gateway endpoint.",
         "This endpoint triggers an asynchronous execution of a Step Functions Express workflow and returns the ExecutionARN for the execution and a Lambda Function URL.",
-        "The ExecutionARN can be supplied to the Lambda Function URL as a query parameter via a HTTP GET request to enable the client to receive streaming results in JSON Lines format as the asynchronous workflow progresses.",
-        "This pattern demonstrates how you can use a streaming Lambda, exposed over HTTP using a Function URL, to receive live updates from an asynchronous workflow."
+        "The ExecutionARN can be supplied to the Lambda Function URL as a query parameter via a HTTP GET request to enable the client to receive streaming results in JSON Lines format as the asynchronous workflow progresses."
       ]
     },
     "testing": {
