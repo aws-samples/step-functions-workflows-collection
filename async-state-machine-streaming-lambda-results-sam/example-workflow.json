@@ -38,8 +38,8 @@
     },
     "gitHub": {
       "template": {
-        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/async-state-machine-streaming-lambda-results/",
-        "templateDir":"async-state-machine-streaming-lambda-results",
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/async-state-machine-streaming-lambda-results-sam/",
+        "templateDir":"async-state-machine-streaming-lambda-results-sam",
         "templateFile": "template.yaml",
         "ASL": "statemachine/statemachine.asl.json"
       },
