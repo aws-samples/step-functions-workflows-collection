@@ -1,0 +1,104 @@
+{
+  "Comment": "A workflow pattern which uses DynamoDB and a streaming lambda function URL to send realtime notifications to clients.",
+  "StartAt": "SplitExeArn",
+  "States": {
+    "SplitExeArn": {
+      "Type": "Pass",
+      "Next": "FormatExeArnAndGenerateResults",
+      "Parameters": {
+        "workflow.$": "States.ArrayGetItem(States.StringSplit($$.Execution.Id, ':'), 6)",
+        "uuid1.$": "States.ArrayGetItem(States.StringSplit($$.Execution.Id, ':'), 7)",
+        "uuid2.$": "States.ArrayGetItem(States.StringSplit($$.Execution.Id, ':'), 8)"
+      },
+      "ResultPath": "$.arn"
+    },
+    "FormatExeArnAndGenerateResults": {
+      "Type": "Pass",
+      "Parameters": {
+        "formattedExeArn.$": "States.Format('{}:{}:{}', $.arn.workflow, $.arn.uuid1, $.arn.uuid2)",
+        "resultItems.$": "States.ArrayRange(1,5,1)"
+      },
+      "Next": "SimulatedProcessing"
+    },
+    "SimulatedProcessing": {
+      "Type": "Map",
+      "ItemsPath": "$.resultItems",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "INLINE"
+        },
+        "StartAt": "ProcessResults",
+        "States": {
+          "ProcessResults": {
+            "Type": "Wait",
+            "Seconds": 7,
+            "Next": "LastResult"
+          },
+          "LastResult": {
+            "Type": "Choice",
+            "Choices": [
+              {
+                "Variable": "$.index",
+                "NumericEqualsPath": "$.lastItemIndex",
+                "Next": "SendFinalResult"
+              }
+            ],
+            "Default": "SendResult"
+          },
+          "SendFinalResult": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::dynamodb:putItem",
+            "Parameters": {
+              "TableName": "${DDBReponseTableName}",
+              "Item": {
+                "ExecutionArn": {
+                  "S.$": "$.formattedExeArn"
+                },
+                "ResultTimestamp": {
+                  "S.$": "$$.State.EnteredTime"
+                },
+                "Result": {
+                  "S.$": "States.Format('This is simulated result {}', $.index)"
+                },
+                "${FinalResultFieldName}": {
+                  "BOOL" : true
+                }
+              }
+            },
+            "ResultPath": null,
+            "End": true
+          },
+          "SendResult": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::dynamodb:putItem",
+            "Parameters": {
+              "TableName": "${DDBReponseTableName}",
+              "Item": {
+                "ExecutionArn": {
+                  "S.$": "$.formattedExeArn"
+                },
+                "ResultTimestamp": {
+                  "S.$": "$$.State.EnteredTime"
+                },
+                "Result": {
+                  "S.$": "States.Format('This is simulated result {}', $.index)"
+                }
+              }
+            },
+            "ResultPath": null,
+            "End": true
+          }
+        }
+      },
+      "ResultPath": "$.results",
+      "ItemSelector": {
+        "formattedExeArn.$": "$.formattedExeArn",
+        "value.$": "$$.Map.Item.Value",
+        "index.$": "$$.Map.Item.Index",
+        "lastItemIndex.$": "States.MathAdd(States.ArrayLength($.resultItems), -1)"
+      },
+      "End": true,
+      "MaxConcurrency": 1
+    }
+  }
+}

@@ -1,0 +1,223 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: A workflow pattern for Async results from an Express Step Functions State Machine using a Lambda Function URL.
+
+Parameters:
+  LambdaTimeout:
+    Type: Number
+    Description: (Required) Timeout in seconds for the streaming results lambda
+    Default: 60
+  LambdaTimeoutBuffer:
+    Type: Number
+    Description: (Required) Min Lambda time remaining before timeout (ms)
+    Default: 5000
+  DDBPollingWaitMs:
+    Type: Number
+    Description: (Required) Min Lambda time remaining before timeout (ms)
+    Default: 2000  
+  FinalResultFieldName:
+    Type: String
+    Description: (Required) The field name that signifies the final processing result
+    Default: FinalResult
+  LogRetention:
+    Type: Number
+    Description: (Required) Default number of days to retain logs
+    Default: 1
+
+Resources:
+  StreamingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: streaming_function/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Timeout: !Ref LambdaTimeout
+      MemorySize: 128
+      AutoPublishAlias: live
+      Environment:
+        Variables:
+          DDBTableName: !Ref ResponseDDBTable
+          DDBPollingWaitMs: !Ref DDBPollingWaitMs
+          FinalResultFieldName: !Ref FinalResultFieldName
+      FunctionUrlConfig:
+        AuthType: AWS_IAM
+        InvokeMode: RESPONSE_STREAM
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ResponseDDBTable         
+  
+  StreamingFunctionLogsGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${StreamingFunction}"
+      RetentionInDays: !Ref LogRetention
+  
+  MyFunctionUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !Ref StreamingFunction
+      AuthType: AWS_IAM
+      InvokeMode: RESPONSE_STREAM       
+  
+  ExampleWorkflowCloudWatchLogsGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /async-workflow/step-functions
+      RetentionInDays: !Ref LogRetention
+
+  ExampleWorkflow:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Type: EXPRESS
+      DefinitionUri: statemachine/statemachine.asl.json
+      DefinitionSubstitutions:        
+        DDBReponseTableName: !Ref ResponseDDBTable
+        FinalResultFieldName: !Ref FinalResultFieldName
+      Logging:        
+        IncludeExecutionData: True
+        Level: ALL # ALL | ERROR | FATAL | OFF
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt ExampleWorkflowCloudWatchLogsGroup.Arn
+      Tracing:
+        Enabled: true
+      Policies: 
+        - DynamoDBWritePolicy:
+            TableName: !Ref ResponseDDBTable         
+        - Version: 2012-10-17
+          Statement:
+            - Effect: Allow
+              Action: # see https://docs.aws.amazon.com/step-functions/latest/dg/cw-logs.html
+                - logs:CreateLogDelivery
+                - logs:GetLogDelivery
+                - logs:UpdateLogDelivery
+                - logs:DeleteLogDelivery
+                - logs:ListLogDeliveries
+                - logs:PutResourcePolicy
+                - logs:DescribeResourcePolicies
+                - logs:DescribeLogGroups
+              Resource: "*"
+    DependsOn: 
+      - ExampleWorkflowCloudWatchLogsGroup
+
+  GlobalAPIGatewayCloudWatchRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+
+  GlobalAPIGatewayAccountConfig:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn: !GetAtt GlobalAPIGatewayCloudWatchRole.Arn
+
+  RestApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: live
+      EndpointConfiguration:
+        Type: REGIONAL
+      MethodSettings:
+        - LoggingLevel: INFO
+          ResourcePath: "/*" # allows for logging on any resource
+          HttpMethod: "*" # allows for logging on any method
+      AccessLogSetting:
+        DestinationArn: !GetAtt RestApiAccessCloudWatchLogsGroup.Arn
+        Format: "$context.identity.sourceIp $context.identity.caller $context.identity.user [$context.requestTime] $context.httpMethod $context.resourcePath $context.protocol $context.status $context.responseLength $context.requestId"
+      TracingEnabled: True
+      DefinitionBody:
+        "Fn::Transform":
+          Name: "AWS::Include"
+          Parameters:
+            Location: "api/api.yaml"
+
+  RestApiRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: StartAndListSFNExec
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: 
+                  - states:StartExecution
+                  - states:ListExecutions                  
+                Resource: !GetAtt ExampleWorkflow.Arn
+        - PolicyName: DescribeSFNExecution
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - states:DescribeExecution                  
+                Resource: !Sub "arn:${AWS::Partition}:states:${AWS::Region}:${AWS::AccountId}:execution:${ExampleWorkflow.Name}:*"
+        - PolicyName: AllowCWLogging
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                  - logs:PutLogEvents
+                  - logs:GetLogEvents
+                  - logs:FilterLogEvents
+                Resource: "*"
+
+  RestApiAccessCloudWatchLogsGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /async-workflow/api-gateway-rest-access
+      RetentionInDays: !Ref LogRetention
+
+  ResponseDDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties: 
+      AttributeDefinitions: 
+        - AttributeName: ExecutionArn
+          AttributeType: S
+        - AttributeName: ResultTimestamp
+          AttributeType: S
+      KeySchema: 
+        - AttributeName: ExecutionArn
+          KeyType: HASH
+        - AttributeName: ResultTimestamp
+          KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+Outputs:
+  StreamingFunction:
+    Description: "Streaming Lambda Function ARN"
+    Value: !GetAtt StreamingFunction.Arn
+  StreamingFunctionURL:
+    Description: "Streaming Lambda Function URL"
+    Value: !GetAtt MyFunctionUrl.FunctionUrl
+  RestApiEndpoint:
+    Description: "API Gateway endpoint"
+    Value: !Sub "https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/live"
+  ResultDDBTable:
+    Description: "DynamoDB Result Item Table"
+    Value: !Ref ResponseDDBTable
