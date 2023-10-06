@@ -1,0 +1,74 @@
+{
+    "title": "Bedrock Blog Generator",
+    "description": "Use Generative AI to build a blog post",
+    "language": "nodejs",
+    "simplicity": "3 - Application",
+    "usecase": "",
+    "type": "Express",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "300",
+    "framework": "SAM",
+    "services": ["bedrock","lambda","sns","s3"],
+    "introBox": {
+      "headline": "Bedrock Blog Generator",
+      "text": [
+        "Leverage Generative AI to take a simple prompt and generate an entire blog article with an image that is delivered directly to your email.  This workflow uses Amazon Bedrock, Lambda, and S3 to generate content, store it for processing, and delivers a download link via signedURL. The entire process takes about 40 secs and creates Markdown and HTML files."
+
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for running the workflow and detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam build && sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/bedrock-blog-generator",
+        "templateDir":"bedrock-blog-generator",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/statemachine.asl.yaml"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "Amazon Bedrock Is Now Generally Available",
+          "link": "https://aws.amazon.com/blogs/aws/amazon-bedrock-is-now-generally-available-build-and-scale-generative-ai-applications-with-foundation-models/"
+        },
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Jacob Cravinho",
+          "image": "https://drive.google.com/file/d/1ZY-5R7iA33Y7tUDCyLNgb95a9_ciW7WM/view?usp=sharing",
+          "bio": "Jacob is a Sr. Solutions Architect who loves a challenge & is always in search of the next great meal!",
+          "linkedin": "jacob-cravinho",
+          "twitter": ""
+        }
+      ]
+  }
+  
