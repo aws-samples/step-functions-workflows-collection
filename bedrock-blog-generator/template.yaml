@@ -1,0 +1,129 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  bedrock-blog-generator
+
+  Sample SAM Template for creating and blog with image with a single prompt
+
+Parameters:
+  # During deployment, this paramter will prompt for the email address of a reviewer.
+  CustomerEmail:
+    Type: String
+    Default: your-email-here@az.com
+    Description: Enter email for notification
+
+Globals:
+  Function:
+    MemorySize: 2560 #Change to 1.5x end file size
+    Architectures: ["arm64"]
+    Runtime: nodejs18.x
+    Timeout: 300
+    Environment:
+      Variables:
+        S3_BUCKET: !Ref ContentBucket
+
+Resources:
+##########################################################################
+#   State Machine                                                        #
+##########################################################################
+  # Cloudwatch log group for express workflow
+  StateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+
+  BedrockBlogStateMachine:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      Name: BedrockBlogGenerator
+      DefinitionUri: statemachine/statemachine.asl.yaml
+      Type: EXPRESS
+      Logging: 
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt StateMachineLogGroup.Arn
+      DefinitionSubstitutions:
+        BuildBlogLambda: !Ref BuildBlog
+        GenTextLambda: !Ref GenText
+        GenImageLambda: !Ref GenImage
+        SNSNotification: !Ref NotificationTopic
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - LambdaInvokePolicy:
+            FunctionName: !Ref BuildBlog
+        - LambdaInvokePolicy:
+            FunctionName: !Ref GenText
+        - LambdaInvokePolicy:
+            FunctionName: !Ref GenImage
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt NotificationTopic.TopicName
+        - CloudWatchLogsFullAccess
+
+##########################################################################
+#   S3 Bucket                                                            #
+##########################################################################
+  ContentBucket:
+    Type: AWS::S3::Bucket
+
+##########################################################################
+#   SNS Topics                                                           #
+##########################################################################
+  NotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Endpoint: !Ref CustomerEmail
+          Protocol: email
+
+##########################################################################
+#   Lambda Function                                                      #
+##########################################################################
+  BuildBlog:
+    Type: AWS::Serverless::Function
+    Description: Take genAI content and stitch together the blog
+    Properties:
+      CodeUri: functions/
+      Handler: build_blog.handler
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref ContentBucket
+        - S3WritePolicy: 
+            BucketName: !Ref ContentBucket
+
+  GenText:
+    Type: AWS::Serverless::Function
+    Description: Prompt to markdown blog text generation
+    Properties:
+      CodeUri: functions/
+      Handler: gen_text.handler
+      Policies:
+        - S3WritePolicy: 
+            BucketName: !Ref ContentBucket
+        - Statement: # Needed to call Bedrock
+          - Sid: AllowInvokeModels
+            Effect: Allow
+            Action:
+            - bedrock:InvokeModel
+            Resource: '*'
+
+  GenImage:
+    Type: AWS::Serverless::Function
+    Description: Prompt to image generation
+    Properties:
+      CodeUri: functions/
+      Handler: gen_image.handler
+      Policies:
+        - S3WritePolicy: 
+            BucketName: !Ref ContentBucket
+        - Statement: # Needed to call Bedrock
+          - Sid: AllowInvokeModels
+            Effect: Allow
+            Action:
+            - bedrock:InvokeModel
+            Resource: '*'
+##########################################################################
+#   Outputs                                                             #
+##########################################################################
+Outputs:
+  ContentBucket:
+    Description: "S3 bucket name"
+    Value: !Ref ContentBucket

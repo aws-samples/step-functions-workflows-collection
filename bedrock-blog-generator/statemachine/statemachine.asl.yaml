@@ -1,0 +1,34 @@
+Comment: Blog Generator using Amazon Bedrock
+StartAt: Bedrock Text
+States:
+  Bedrock Text:
+    Type: Task
+    Resource: arn:aws:states:::lambda:invoke
+    OutputPath: $.Payload
+    Parameters:
+      Payload.$: $
+      FunctionName: ${GenTextLambda}
+    Next: Bedrock Image
+  Bedrock Image:
+    Type: Task
+    Resource: arn:aws:states:::lambda:invoke
+    OutputPath: $.Payload
+    Parameters:
+      Payload.$: $
+      FunctionName: ${GenImageLambda}
+    Next: Build Blog
+  Build Blog:
+    Type: Task
+    Resource: arn:aws:states:::lambda:invoke
+    OutputPath: $.Payload
+    Parameters:
+      Payload.$: $
+      FunctionName: ${BuildBlogLambda}
+    Next: Complete Notification
+  Complete Notification:
+    Type: Task
+    Resource: arn:aws:states:::sns:publish
+    Parameters:
+      Message.$: $
+      TopicArn: ${SNSNotification}
+    End: true
