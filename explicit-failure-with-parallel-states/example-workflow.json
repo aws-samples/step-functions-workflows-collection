@@ -1,0 +1,69 @@
+{
+    "title": "Explicit Failure for errors caught when running concurrent tasks in parallel state",
+    "description": "This workflow demonstrates an explicit failure when running concurrent tasks in Parallel state.",
+    "language": "",
+    "simplicity": "2 - Pattern",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "200",
+    "framework": "SAM",
+    "services": ["lambda"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "This workflow demonstrates an explicit failure when running concurrent tasks in Parallel state.",
+        "The objective is to mark the execution as a failure whenever a branch encounters an error while also ensuring all branches within the Parallel state completes."
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/explicit-failure-with-parallel-states/",
+        "templateDir":"explicit-failure-with-parallel-states",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Peh Jing Xiang",
+          "image": "/resources/profile-pic.jpg",
+          "bio": "Jing Xiang is a Solutions Architect at AWS based in Singapore",
+          "linkedin": "www.linkedin.com/in/jing-xiang-peh"
+        }
+      ]
+  }
+  

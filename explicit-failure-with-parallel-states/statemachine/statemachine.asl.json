@@ -1,0 +1,75 @@
+{
+  "StartAt": "Parallel",
+  "States": {
+    "Parallel": {
+      "Type": "Parallel",
+      "Next": "Aggregrate Results",
+      "Branches": [
+        {
+          "StartAt": "success state",
+          "States": {
+            "success state": {
+              "Type": "Task",
+              "Resource": "${getSuccessFunctionArn}",
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "quick fail",
+          "States": {
+            "quick fail": {
+              "Type": "Task",
+              "Resource": "${getQuickFailFunctionArn}",
+              "Catch": [
+                {
+                  "ErrorEquals": [
+                    "States.ALL"
+                  ],
+                  "Next": "handle failure",
+                  "ResultPath": "$.error"
+                }
+              ],
+              "End": true
+            },
+            "handle failure": {
+              "Type": "Pass",
+              "End": true
+            }
+          }
+        }
+      ]
+    },
+    "Aggregrate Results": {
+      "Type": "Pass",
+      "Next": "Evaluate Results"
+    },
+    "Evaluate Results": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Or": [
+            {
+              "Variable": "$[0].error",
+              "IsPresent": true
+            },
+            {
+              "Variable": "$[1].error",
+              "IsPresent": true
+            }
+          ],
+          "Next": "Fail"
+        }
+      ],
+      "Default": "Success"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "Fail": {
+      "Type": "Fail",
+      "ErrorPath": "$[1].error.Error",
+      "CausePath": "$[1].error.Cause"
+    }
+  }
+}
