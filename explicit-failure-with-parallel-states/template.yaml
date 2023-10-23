@@ -1,0 +1,60 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: SAM Template for deploying the Explicit Failure for errors caught in parallel states Workflow
+Resources:
+  ExplicitFailureInParallelStatesWorkflow:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      Name: !Sub ${AWS::StackName}-ExplicitFailureInParallelStatesWorkflow
+      DefinitionUri: statemachine/statemachine.asl.json
+      DefinitionSubstitutions:
+        getSuccessFunctionArn: !GetAtt SuccessFunction.Arn
+        getQuickFailFunctionArn: !GetAtt QuickFailFunction.Arn
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+      - LambdaInvokePolicy:
+          FunctionName: !Ref SuccessFunction
+      - LambdaInvokePolicy:
+          FunctionName: !Ref QuickFailFunction
+      - arn:aws:iam::aws:policy/CloudWatchFullAccess
+
+  SuccessFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-SuccessFunction
+      Handler: SuccessFunction.lambda_handler
+      Runtime: python3.10
+      CodeUri: functions/SuccessFunction/
+      Description: 'Function returns a successful output'
+      MemorySize: 128
+      Timeout: 3
+      Policies:
+        - arn:aws-us-gov:iam::aws:policy/AWSStepFunctionsFullAccess
+      RuntimeManagementConfig:
+        UpdateRuntimeOn: Auto
+  
+  successFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${SuccessFunction}
+  
+  QuickFailFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-QuickFailFunction
+      Handler: QuickFailFunction.lambda_handler
+      Runtime: python3.10
+      CodeUri: functions/QuickFailFunction/
+      Description: 'Function returns an error'
+      MemorySize: 128
+      Timeout: 3
+      Policies:
+        - arn:aws-us-gov:iam::aws:policy/AWSStepFunctionsFullAccess
+      RuntimeManagementConfig:
+        UpdateRuntimeOn: Auto
+  
+  QuickFailFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${QuickFailFunction}
+  
+  
