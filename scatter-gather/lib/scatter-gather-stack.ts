@@ -12,11 +12,11 @@ export class ScatterGatherStack extends cdk.Stack {
     super(scope, id, props);
 
     // Change this if you require a different number of responders
-    const RESPONDER_COUNT = 5;
-    const quoteResponders:string[] = new Array(RESPONDER_COUNT);
+    const PROVIDER_COUNT = 5;
+    const quoteProviderFunctionNames:string[] = new Array(PROVIDER_COUNT);
 
     // Create the required number of responder lambdas
-    for (let i = 1; i <= RESPONDER_COUNT; i++){
+    for (let i = 1; i <= PROVIDER_COUNT; i++){
 
       // Lambda function representing a single responder (e.g. quote look-up)
       const quoteResponder = new lambda.Function(this, 'QuoteResponder_' + i.toString(), {
@@ -26,8 +26,8 @@ export class ScatterGatherStack extends cdk.Stack {
         environment: { 'RESPONDER_ID': i.toString()}
       });
 
-      // Add the responder lambda function name to the list of responder lambda functions
-      quoteResponders.push(quoteResponder.functionName);
+      // Add the responder lambda function name to the array of responder lambda functions for later use
+      quoteProviderFunctionNames[i - 1] = quoteResponder.functionName;
     }
 
      // Get a single quote by invoking the lambda function passed in from the Map function as 'quoteProvider'.
@@ -91,9 +91,13 @@ export class ScatterGatherStack extends cdk.Stack {
       resources: ['*']
     }));
 
-    // create an output object which defined value and exportName
+    // For convenience, create an output object with a sample request message
+    const outputJson = JSON.stringify({
+      requestDescription: "Flight LHR - JFK, 01/01/2025",
+      quoteProviders: quoteProviderFunctionNames});
+
     new cdk.CfnOutput(this, "testRequest", {
-      value: "Hello, world!",
+      value: outputJson,
       exportName: "testRequest",
     });
 
