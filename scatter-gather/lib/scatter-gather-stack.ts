@@ -79,7 +79,7 @@ export class ScatterGatherStack extends cdk.Stack {
 
      // Step function definition
      const stateMachine = new sfn.StateMachine(this, 'StateMachine', {
-      definition: getAllQuotes.next(ddbPutItemTask),
+      definitionBody: sfn.DefinitionBody.fromChainable(getAllQuotes.next(ddbPutItemTask)),
       timeout: cdk.Duration.minutes(5)
     });
 

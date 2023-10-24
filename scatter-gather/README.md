@@ -1,16 +1,16 @@
 # Implement a Scatter-Gather pattern with a Map state and save the results to Amazon DynamoDB
 
-This workflow demonstrates an implementation of the [Scatter-Gather pattern](https://www.enterpriseintegrationpatterns.com/patterns/messaging/BroadcastAggregate.html) using a Map state to call a set of Lambda functions. The Scatter-Gather pattern 'broadcasts' a request message to a set of responders, then aggregates the results. A typical use case would be getting a quotation for e.g. a flight from a number of different organisations. In this case the responders are modelled as AWS Lambda functions.
+This workflow demonstrates an implementation of the [Scatter-Gather pattern](https://www.enterpriseintegrationpatterns.com/patterns/messaging/BroadcastAggregate.html) using a Map state to call a set of Lambda functions. The Scatter-Gather pattern 'broadcasts' a request message to a set of responders, then aggregates the results. A typical use case would be getting a quotation for e.g. a flight from a number of different providers. In this case the responders are modelled as AWS Lambda functions.
 
 The sample project creates the following:
-* A user-specified number of AWS Lambda functions to respond to the request. For simplicity they all have the same implementation, but in practice they would differ.
-* An Amazon DynamoDB table to store the aggregated result.
-* An AWS Step Functions state machine using a Map state to implement the Scatter-Gather pattern.
+* A user-specified number of **AWS Lambda functions** to respond to the request. For simplicity they all have the same implementation, but in practice they would differ.
+* An **Amazon DynamoDB** table to store the aggregated result.
+* An **AWS Step Functions** state machine that uses a Map state to implement the Scatter-Gather pattern.
 
-Conceptually this looks like:
+Conceptually this looks like this:
 ![image](./resources/scatter-gather-concept.png)
 
-Important: this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the [AWS Pricing page](https://aws.amazon.com/pricing/) for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
+**Important:** this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the [AWS Pricing page](https://aws.amazon.com/pricing/) for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
 
 ## Requirements
 
@@ -38,7 +38,7 @@ Important: this application uses various AWS services and there are costs associ
     npm install
     npm run build
     ```
-5. From the command line, use CDK to deploy the AWS resources for the workflow. Replace **InsertYourEmailAddressHere** with your own email address. This will create an email subscription to the SNS topic that will be built by this sample project. 
+5. From the command line, use CDK to deploy the AWS resources for the workflow.
     ```
     cdk deploy
     ```
@@ -50,10 +50,9 @@ Important: this application uses various AWS services and there are costs associ
 
 ## How it works
 
-1. Messages are sent to an an SQS queue that resides in the AWS account.
-2. When the state machine is executed, it will invoke a Lambda function that will call receiveMessage API to read the messages in the SQS queue, and then send the messages receieved to the next state. 
-3. The state machine will check if there are any messages to process according to the output of the Lambda function. If there are no messages to process, the state machine will finish with a succeed state.
-4. If there are messages to process, the state machine's map state will iterate over each message received to save it to dynamoDB, remove it from the SQS queue, and finally publish it to an SNS topic. SNS will send an email to the user containing the content of the message. Once all messages are proccessed, the state machine will finish with a succeed state. 
+1. When the state machine is executed, it will invoke a 'recipient list' of AWS Lambda functions (specified in the request message) passing in the request details.
+2. The response from each AWS Lambda function will be aggregated into a single message that illustrates the various 'quotes' that were received for the request. 
+3. The aggregated response will be stored in an Amazon DynamoDB table. 
 
 ## Image
 ![image](./resources/stepfunctions_graph.png)
@@ -77,7 +76,7 @@ Important: this application uses various AWS services and there are costs associ
     ```
 1. During the prompts:
     ```bash
-        Are you sure you want to delete: MapStateCdkStack (y/n)? Y
+        Are you sure you want to delete: ScatterGatherCdkStack (y/n)? Y
     ```
 ----
 Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
