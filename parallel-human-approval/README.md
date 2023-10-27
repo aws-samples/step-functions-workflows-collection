@@ -10,9 +10,9 @@ Important: this application uses various AWS services and there are costs associ
 
 Some examples:
 
-* while onboarding of an employee, there might be many steps which needs to be run in parallel and independently with approvals from different people. 
+* During onboarding of an employee, there might be many steps which need to be run in parallel and independently. Each step might require approval from different people. 
 * During the hiring process, there might be panel interview process and each interviewer enters their feedbacks independently and approve the hiring of interviewee or not.
-* In the matrix organisations, there might be employees who report to multiple managers at the same time. While requesting a vacation, the approval request might be sent in parallel to multiple managers.
+* In the matrix organisations, there might be employees who report to multiple managers at the same time. To get the approval for vacation, the request might be sent to multiple managers in parallel.
 
 
 
