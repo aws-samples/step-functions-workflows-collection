@@ -31,12 +31,6 @@ Resources:
         TopicArn2: !Ref Approver2SNS
         TopicArn3: !Ref Approver3SNS
       Type: STANDARD
-      #Logging:
-      #  Destinations:
-      #    - CloudWatchLogsLogGroup:
-      #        LogGroupArn: !GetAtt StateMachineLogGroup.Arn
-      #  IncludeExecutionData: false
-      #  Level: 'ALL'
       Policies:
         - SNSPublishMessagePolicy:
             TopicName: !GetAtt Approver1SNS.TopicName
@@ -47,7 +41,7 @@ Resources:
 
 
 ##########################################################################
-#  SNS Topics                                                       #
+#  SNS Topics                                                            #
 ##########################################################################
   Approver1SNS:
     Type: AWS::SNS::Topic
@@ -69,15 +63,7 @@ Resources:
       TopicName: 'Approver3'
       Subscription:
         - Endpoint: !Ref Approver3SNSEmailAddress
-          Protocol: email     
-
-##########################################################################
-#  STEP FUNCTION LOG GROUP                                               #
-##########################################################################
-#  StateMachineLogGroup:
-#    Type: AWS::Logs::LogGroup
-#    Properties:
-#      LogGroupName: !Join [ "/", [ "stepfunctions", StateMachineParallelHumanAproval]]
+          Protocol: email
             
 ##########################################################################
 #   Outputs                                                              #
