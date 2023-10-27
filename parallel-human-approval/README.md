@@ -1,10 +1,20 @@
 # Parallel Human Approval Process
 
+There are some cases, in which approvals from multiple people are required to complete the whole process. In a parallel approval workflow, each person’s approval is individual and is needed separately. 
+
 This pattern allows you to integrate parallel human approval process into your workflows. The task sends a message to three SNS topic which send a notification to a human reviewer or approver by email for example. The workflow then waits until the approver completes their review. Depending on the review outcome the workflow finishes.
 
 Learn more about this workflow at Step Functions workflows collection: [Parallel Human Approval](https://serverlessland.com/workflows/parallel-human-approval)
 
 Important: this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the [AWS Pricing page](https://aws.amazon.com/pricing/) for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
+
+Some examples:
+
+* while onboarding of an employee, there might be many steps which needs to be run in parallel and independently with approvals from different people. 
+* During the hiring process, there might be panel interview process and each interviewer enters their feedbacks independently and approve the hiring of interviewee or not.
+* In the matrix organisations, there might be employees who report to multiple managers at the same time. While requesting a vacation, the approval request might be sent in parallel to multiple managers.
+
+
 
 ## Requirements
 
