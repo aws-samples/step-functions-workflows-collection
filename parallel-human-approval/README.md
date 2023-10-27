@@ -1,6 +1,6 @@
 # Parallel Human Approval Process
 
-There are some cases, in which approvals from multiple people are required to complete the whole process. In a parallel approval workflow, each person’s approval is individual and is needed separately. 
+There are some cases, in which approvals from multiple people are required to complete the whole process. In a parallel approval workflow, each person’s approval is individual and is required separately. 
 
 This pattern allows you to integrate parallel human approval process into your workflows. The task sends a message to three SNS topic which send a notification to a human reviewer or approver by email for example. The workflow then waits until the approver completes their review. Depending on the review outcome the workflow finishes.
 
