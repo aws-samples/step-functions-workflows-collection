@@ -12,13 +12,12 @@
               "Type": "Task",
               "Resource": "arn:aws:states:::sns:publish.waitForTaskToken",
               "Parameters": {
-                "TopicArn": "${TopicArn1}",
+                "TopicArn": "arn:aws:sns:eu-central-1:341648752667:Approver1",
                 "Message": {
                   "token.$": "$$.Task.Token",
                   "message.$": "$"
                 }
               },
-              "ResultPath": "$.approvalStatus",
               "End": true
             }
           }
@@ -30,7 +29,7 @@
               "Type": "Task",
               "Resource": "arn:aws:states:::sns:publish.waitForTaskToken",
               "Parameters": {
-                "TopicArn": "${TopicArn2}",
+                "TopicArn": "arn:aws:sns:eu-central-1:341648752667:Approver2",
                 "Message": {
                   "token.$": "$$.Task.Token",
                   "message.$": "$"
@@ -47,7 +46,7 @@
               "Type": "Task",
               "Resource": "arn:aws:states:::sns:publish.waitForTaskToken",
               "Parameters": {
-                "TopicArn": "${TopicArn3}",
+                "TopicArn": "arn:aws:sns:eu-central-1:341648752667:Approver3",
                 "Message": {
                   "token.$": "$$.Task.Token",
                   "message.$": "$"
