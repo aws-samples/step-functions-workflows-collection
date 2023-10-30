@@ -6,15 +6,12 @@ This pattern allows you to integrate parallel human approval process into your w
 
 Learn more about this workflow at Step Functions workflows collection: [Parallel Human Approval](https://serverlessland.com/workflows/parallel-human-approval)
 
-Important: this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the [AWS Pricing page](https://aws.amazon.com/pricing/) for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
-
 Some examples:
-
 * During onboarding of an employee, there might be many steps which need to be run in parallel and independently. Each step might require approval from different people. 
 * During the hiring process, there might be panel interview process and each interviewer enters their feedbacks independently and approve the hiring of interviewee or not.
 * In the matrix organisations, there might be employees who report to multiple managers at the same time. To get the approval for vacation, the request might be sent to multiple managers in parallel.
 
-
+Important: this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the [AWS Pricing page](https://aws.amazon.com/pricing/) for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
 
 ## Requirements
 
