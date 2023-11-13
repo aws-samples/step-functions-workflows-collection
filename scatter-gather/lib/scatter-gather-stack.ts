@@ -5,6 +5,7 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as sfn from "aws-cdk-lib/aws-stepfunctions";
 import * as tasks from "aws-cdk-lib/aws-stepfunctions-tasks";
 import { Construct } from 'constructs';
+import { get } from 'http';
 
 
 export class ScatterGatherStack extends cdk.Stack {
@@ -30,35 +31,55 @@ export class ScatterGatherStack extends cdk.Stack {
       quoteProviderFunctionNames[i - 1] = quoteResponder.functionName;
     }
 
-     // Get a single quote by invoking the lambda function passed in from the Map function as 'quoteProvider'.
-     // This requires a custom state because dynamic function names are not supported by the LambdaInvoke construct
-     const getQuote = new sfn.CustomState(this, "Get quote", {
-      stateJson: {
-          Type: "Task",
-          Resource: "arn:aws:states:::lambda:invoke",
-          OutputPath: "$.Payload",
-          Parameters:  {
-            "FunctionName.$": "$.quoteProvider",
-            "Payload": {
-              "requestDescription.$": "$.requestDescription"
-            }},
-        }
-      });
-      
-    // Create a map function with the list of responder lambda functions to iterate over
-    const getAllQuotes = new sfn.Map(this, "Get all quotes", {
-      itemsPath: "$.quoteProviders",
-      resultPath: "$",
-      resultSelector: {
+    // Create a MapState, Iterator and ErrorHandler as a CustomState. This could be done in smaller, more CDK-friendly chunks, but there is 
+    // an outstanding CDK bug that prevents the correct chaining of the ErrorHandler (https://github.com/aws/aws-cdk/issues/25798)
+    const getQuotes = new sfn.CustomState(this, "Get quotes", {
+    stateJson: {
+      "Type": "Map",
+      "ResultPath": "$",
+      "Next": "Save quotes to DynamoDB",
+      "Parameters": {
+        "requestDescription.$": "$.requestDescription",
+        "quoteProvider.$": "$$.Map.Item.Value"
+      },
+      "ResultSelector": {
         "requestId.$": "States.UUID()",
         "quotes.$": "$"
       },
-      parameters: {
-        "requestDescription.$": "$.requestDescription",
-        "quoteProvider.$": "$$.Map.Item.Value"       
+      "Iterator": {
+        "StartAt": "Get quote",
+        "States": {
+          "Get quote": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "OutputPath": "$.Payload",
+            "Parameters": {
+              "FunctionName.$": "$.quoteProvider",
+              "Payload": {
+                "requestDescription.$": "$.requestDescription"
+              }
+            },
+            "Catch": [
+              {
+                "ErrorEquals": [
+                  "States.ALL"
+                ],
+                "Next": "ErrorHandler"
+              }
+            ],
+            "End": true
+          },
+          "ErrorHandler": {
+            "Type": "Pass",
+            "Parameters": {
+              "quote.$": "$"
+            },
+            "End": true
+          }
+        }
       },
-    }).iterator(getQuote);
-
+      "ItemsPath": "$.quoteProviders"
+    }});
    
     // Create DynamoDB table to keep track of quotes requested and received
     const quoteTable = new dynamodb.Table(this, 'Quotes', {
@@ -77,14 +98,14 @@ export class ScatterGatherStack extends cdk.Stack {
       }
     });
 
-     // Step function definition
+     // Step function definition combining the MapState and the DynamoDB PutItem
      const stateMachine = new sfn.StateMachine(this, 'StateMachine', {
-      definitionBody: sfn.DefinitionBody.fromChainable(getAllQuotes.next(ddbPutItemTask)),
+      definitionBody: sfn.DefinitionBody.fromChainable(getQuotes.next(ddbPutItemTask)),
       timeout: cdk.Duration.minutes(5)
     });
 
     // We need to manually grant permission to invoke lambdas to the step function execution role
-    // (this would be done automatically if using the LambdaInvoke construct)
+    // (this would be done automatically if using the LambdaInvoke CDK class, but we cannot do this because of the dynamic lambda function name)
     stateMachine.addToRolePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
       actions: ['lambda:InvokeFunction'],
