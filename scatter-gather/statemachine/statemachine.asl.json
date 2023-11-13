@@ -1,0 +1,68 @@
+{
+  "StartAt": "Get quotes",
+  "States": {
+    "Get quotes": {
+      "Next": "Save quotes to DynamoDB",
+      "Type": "Map",
+      "ResultPath": "$",
+      "Parameters": {
+        "requestDescription.$": "$.requestDescription",
+        "quoteProvider.$": "$$.Map.Item.Value"
+      },
+      "ResultSelector": {
+        "requestId.$": "States.UUID()",
+        "quotes.$": "$"
+      },
+      "Iterator": {
+        "StartAt": "Get quote",
+        "States": {
+          "Get quote": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "OutputPath": "$.Payload",
+            "Parameters": {
+              "FunctionName.$": "$.quoteProvider",
+              "Payload": {
+                "requestDescription.$": "$.requestDescription"
+              }
+            },
+            "Catch": [
+              {
+                "ErrorEquals": [
+                  "States.ALL"
+                ],
+                "Next": "ErrorHandler"
+              }
+            ],
+            "End": true
+          },
+          "ErrorHandler": {
+            "Type": "Pass",
+            "Parameters": {
+              "quote.$": "$"
+            },
+            "End": true
+          }
+        }
+      },
+      "ItemsPath": "$.quoteProviders"
+    },
+    "Save quotes to DynamoDB": {
+      "End": true,
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:putItem",
+      "Parameters": {
+        "Item": {
+          "requestId": {
+            "S.$": "$.requestId"
+          },
+          "quotes": {
+            "S.$": "States.JsonToString($.quotes)"
+          }
+        },
+        "TableName": "ScatterGatherStack-Quotes4DCFF1CF-M5K0TUIFX7XN"
+      }
+    }
+  },
+  "TimeoutSeconds": 300
+}

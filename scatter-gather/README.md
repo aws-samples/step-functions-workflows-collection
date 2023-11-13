@@ -3,7 +3,7 @@
 This workflow demonstrates an implementation of the [Scatter-Gather pattern](https://www.enterpriseintegrationpatterns.com/patterns/messaging/BroadcastAggregate.html) using a Map state to call a set of Lambda functions. The Scatter-Gather pattern 'broadcasts' a request message to a set of responders, then aggregates the results. A typical use case would be getting a quotation for e.g. a flight from a number of different providers. In this case the responders are modelled as AWS Lambda functions.
 
 The sample project creates the following:
-* A user-specified number of **AWS Lambda functions** to respond to the request. For simplicity they all have the same implementation, but in practice they would differ.
+* A user-specified number of **AWS Lambda functions** to respond to the request. For simplicity they all have the same implementation, but in practice they could differ.
 * An **Amazon DynamoDB** table to store the aggregated result.
 * An **AWS Step Functions** state machine that uses a Map state to implement the Scatter-Gather pattern.
 
