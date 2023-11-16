@@ -1,0 +1,46 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  workflow-dynamic-retries-and-error-handling
+
+  SAM Template that deploys a workflow sample showcasing a dynamic retry and error handling system.
+
+Resources:
+  ErrorRetryStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/statemachine.asl.json
+      DefinitionSubstitutions:
+        WorkloadFunctionArn: !GetAtt WorkloadFunction.Arn
+        ErrorHandlerFunctionArn: !GetAtt ErrorHandlerFunction.Arn
+      Policies: 
+        - LambdaInvokePolicy:
+            FunctionName: !Ref WorkloadFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref ErrorHandlerFunction
+
+  WorkloadFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/rate_failer/
+      Handler: app.lambda_handler
+      Runtime: python3.10
+      Architectures:
+        - x86_64
+
+  ErrorHandlerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/error_handler/
+      Handler: app.lambda_handler
+      Runtime: python3.10
+      Architectures:
+        - x86_64
+
+Outputs:
+  ErrorRetryStateMachineArn:
+    Description: "Dynamic Error/Retry State machine ARN"
+    Value: !Ref ErrorRetryStateMachine
+  ErrorRetryStateMachineRoleArn:
+    Description: "IAM Role created for Dynamic Error/Retry state machine based on the specified SAM Policy Templates"
+    Value: !GetAtt ErrorRetryStateMachineRole.Arn

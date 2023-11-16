@@ -1,0 +1,70 @@
+{
+    "title": "Dynamic retry and error handling",
+    "description": "Control number of retries at runtime per request",
+    "language": "",
+    "simplicity": "2 - Pattern",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/stepfunctions_graph.png",
+    "videoId": "",
+    "level": "400",
+    "framework": "SAM",
+    "services": ["lambda"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "This workflow executes a business logic Lambda function, with the number of retries configurable at runtime. It receives the number of retries wrapped around the function payload, and uses it to control the workflow execution.",
+        "This is done using Input and Output processing with intrinsic functions."
+
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/workflow-dynamic-retries-and-error-handling",
+        "templateDir":"workflow-dynamic-retries-and-error-handling",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Svetozar Miucin",
+          "image": "https://github.com/svetozarm/version_controlled_photo/blob/3f9432e633d3b5b8ff3916ae2ed2765bc8ad59b2/avatar-serverlessland.jpg?raw=true",
+          "bio": "Startup Solutions Architect at AWS, helping Fintech startups thrive in the cloud. Previously engineer and architect across industries, and long time academic researcher (now doctor).",
+          "linkedin": "svetozar-miucin"
+        }
+      ]
+  }
+  
