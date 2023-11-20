@@ -1,0 +1,976 @@
+{
+  "version": "tree-0.1",
+  "tree": {
+    "id": "App",
+    "path": "",
+    "children": {
+      "FileProcessingWorkflowCdkStack": {
+        "id": "FileProcessingWorkflowCdkStack",
+        "path": "FileProcessingWorkflowCdkStack",
+        "children": {
+          "SourceBucket": {
+            "id": "SourceBucket",
+            "path": "FileProcessingWorkflowCdkStack/SourceBucket",
+            "children": {
+              "Resource": {
+                "id": "Resource",
+                "path": "FileProcessingWorkflowCdkStack/SourceBucket/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::S3::Bucket",
+                  "aws:cdk:cloudformation:props": {
+                    "bucketName": "fileprocessingworkflowstore.capstonesource.demo.v92223-1"
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_s3.CfnBucket",
+                  "version": "2.90.0"
+                }
+              },
+              "Notifications": {
+                "id": "Notifications",
+                "path": "FileProcessingWorkflowCdkStack/SourceBucket/Notifications",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "FileProcessingWorkflowCdkStack/SourceBucket/Notifications/Resource",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.CfnResource",
+                      "version": "2.90.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "constructs.Construct",
+                  "version": "10.2.70"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_s3.Bucket",
+              "version": "2.90.0"
+            }
+          },
+          "BucketNotificationsHandler050a0587b7544547bf325f094a3db834": {
+            "id": "BucketNotificationsHandler050a0587b7544547bf325f094a3db834",
+            "path": "FileProcessingWorkflowCdkStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834",
+            "children": {
+              "Role": {
+                "id": "Role",
+                "path": "FileProcessingWorkflowCdkStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role",
+                "children": {
+                  "ImportRole": {
+                    "id": "ImportRole",
+                    "path": "FileProcessingWorkflowCdkStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/ImportRole",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.Resource",
+                      "version": "2.90.0"
+                    }
+                  },
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "FileProcessingWorkflowCdkStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                      "aws:cdk:cloudformation:props": {
+                        "assumeRolePolicyDocument": {
+                          "Statement": [
+                            {
+                              "Action": "sts:AssumeRole",
+                              "Effect": "Allow",
+                              "Principal": {
+                                "Service": "lambda.amazonaws.com"
+                              }
+                            }
+                          ],
+                          "Version": "2012-10-17"
+                        },
+                        "managedPolicyArns": [
+                          {
+                            "Fn::Join": [
+                              "",
+                              [
+                                "arn:",
+                                {
+                                  "Ref": "AWS::Partition"
+                                },
+                                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_iam.CfnRole",
+                      "version": "2.90.0"
+                    }
+                  },
+                  "DefaultPolicy": {
+                    "id": "DefaultPolicy",
+                    "path": "FileProcessingWorkflowCdkStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/DefaultPolicy",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "FileProcessingWorkflowCdkStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/DefaultPolicy/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::IAM::Policy",
+                          "aws:cdk:cloudformation:props": {
+                            "policyDocument": {
+                              "Statement": [
+                                {
+                                  "Action": "s3:PutBucketNotification",
+                                  "Effect": "Allow",
+                                  "Resource": "*"
+                                }
+                              ],
+                              "Version": "2012-10-17"
+                            },
+                            "policyName": "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleDefaultPolicy2CF63D36",
+                            "roles": [
+                              {
+                                "Ref": "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC"
+                              }
+                            ]
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_iam.CfnPolicy",
+                          "version": "2.90.0"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_iam.Policy",
+                      "version": "2.90.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_iam.Role",
+                  "version": "2.90.0"
+                }
+              },
+              "Resource": {
+                "id": "Resource",
+                "path": "FileProcessingWorkflowCdkStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Resource",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.CfnResource",
+                  "version": "2.90.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "constructs.Construct",
+              "version": "10.2.70"
+            }
+          },
+          "DestinationBucket": {
+            "id": "DestinationBucket",
+            "path": "FileProcessingWorkflowCdkStack/DestinationBucket",
+            "children": {
+              "Resource": {
+                "id": "Resource",
+                "path": "FileProcessingWorkflowCdkStack/DestinationBucket/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::S3::Bucket",
+                  "aws:cdk:cloudformation:props": {
+                    "bucketName": "fileprocessingworkflowstore.capstonedestination.demo.v92223-1"
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_s3.CfnBucket",
+                  "version": "2.90.0"
+                }
+              },
+              "Notifications": {
+                "id": "Notifications",
+                "path": "FileProcessingWorkflowCdkStack/DestinationBucket/Notifications",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "FileProcessingWorkflowCdkStack/DestinationBucket/Notifications/Resource",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.CfnResource",
+                      "version": "2.90.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "constructs.Construct",
+                  "version": "10.2.70"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_s3.Bucket",
+              "version": "2.90.0"
+            }
+          },
+          "CapstoneLambdaBasicRole": {
+            "id": "CapstoneLambdaBasicRole",
+            "path": "FileProcessingWorkflowCdkStack/CapstoneLambdaBasicRole",
+            "children": {
+              "ImportCapstoneLambdaBasicRole": {
+                "id": "ImportCapstoneLambdaBasicRole",
+                "path": "FileProcessingWorkflowCdkStack/CapstoneLambdaBasicRole/ImportCapstoneLambdaBasicRole",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.Resource",
+                  "version": "2.90.0"
+                }
+              },
+              "Resource": {
+                "id": "Resource",
+                "path": "FileProcessingWorkflowCdkStack/CapstoneLambdaBasicRole/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                  "aws:cdk:cloudformation:props": {
+                    "assumeRolePolicyDocument": {
+                      "Statement": [
+                        {
+                          "Action": "sts:AssumeRole",
+                          "Effect": "Allow",
+                          "Principal": {
+                            "Service": "lambda.amazonaws.com"
+                          }
+                        }
+                      ],
+                      "Version": "2012-10-17"
+                    },
+                    "managedPolicyArns": [
+                      {
+                        "Fn::Join": [
+                          "",
+                          [
+                            "arn:",
+                            {
+                              "Ref": "AWS::Partition"
+                            },
+                            ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                          ]
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_iam.CfnRole",
+                  "version": "2.90.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_iam.Role",
+              "version": "2.90.0"
+            }
+          },
+          "CapstoneLambdaS3Role": {
+            "id": "CapstoneLambdaS3Role",
+            "path": "FileProcessingWorkflowCdkStack/CapstoneLambdaS3Role",
+            "children": {
+              "ImportCapstoneLambdaS3Role": {
+                "id": "ImportCapstoneLambdaS3Role",
+                "path": "FileProcessingWorkflowCdkStack/CapstoneLambdaS3Role/ImportCapstoneLambdaS3Role",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.Resource",
+                  "version": "2.90.0"
+                }
+              },
+              "Resource": {
+                "id": "Resource",
+                "path": "FileProcessingWorkflowCdkStack/CapstoneLambdaS3Role/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                  "aws:cdk:cloudformation:props": {
+                    "assumeRolePolicyDocument": {
+                      "Statement": [
+                        {
+                          "Action": "sts:AssumeRole",
+                          "Effect": "Allow",
+                          "Principal": {
+                            "Service": "lambda.amazonaws.com"
+                          }
+                        }
+                      ],
+                      "Version": "2012-10-17"
+                    },
+                    "managedPolicyArns": [
+                      {
+                        "Fn::Join": [
+                          "",
+                          [
+                            "arn:",
+                            {
+                              "Ref": "AWS::Partition"
+                            },
+                            ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                          ]
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_iam.CfnRole",
+                  "version": "2.90.0"
+                }
+              },
+              "DefaultPolicy": {
+                "id": "DefaultPolicy",
+                "path": "FileProcessingWorkflowCdkStack/CapstoneLambdaS3Role/DefaultPolicy",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "FileProcessingWorkflowCdkStack/CapstoneLambdaS3Role/DefaultPolicy/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::IAM::Policy",
+                      "aws:cdk:cloudformation:props": {
+                        "policyDocument": {
+                          "Statement": [
+                            {
+                              "Action": "s3:*",
+                              "Effect": "Allow",
+                              "Resource": [
+                                {
+                                  "Fn::Join": [
+                                    "",
+                                    [
+                                      {
+                                        "Fn::GetAtt": [
+                                          "DestinationBucket4BECDB47",
+                                          "Arn"
+                                        ]
+                                      },
+                                      "/*"
+                                    ]
+                                  ]
+                                },
+                                {
+                                  "Fn::Join": [
+                                    "",
+                                    [
+                                      {
+                                        "Fn::GetAtt": [
+                                          "SourceBucketDDD2130A",
+                                          "Arn"
+                                        ]
+                                      },
+                                      "/*"
+                                    ]
+                                  ]
+                                }
+                              ]
+                            }
+                          ],
+                          "Version": "2012-10-17"
+                        },
+                        "policyName": "CapstoneLambdaS3RoleDefaultPolicy1184F0D0",
+                        "roles": [
+                          {
+                            "Ref": "CapstoneLambdaS3RoleEED11A27"
+                          }
+                        ]
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_iam.CfnPolicy",
+                      "version": "2.90.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_iam.Policy",
+                  "version": "2.90.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_iam.Role",
+              "version": "2.90.0"
+            }
+          },
+          "FileTypeHandler": {
+            "id": "FileTypeHandler",
+            "path": "FileProcessingWorkflowCdkStack/FileTypeHandler",
+            "children": {
+              "Code": {
+                "id": "Code",
+                "path": "FileProcessingWorkflowCdkStack/FileTypeHandler/Code",
+                "children": {
+                  "Stage": {
+                    "id": "Stage",
+                    "path": "FileProcessingWorkflowCdkStack/FileTypeHandler/Code/Stage",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.AssetStaging",
+                      "version": "2.90.0"
+                    }
+                  },
+                  "AssetBucket": {
+                    "id": "AssetBucket",
+                    "path": "FileProcessingWorkflowCdkStack/FileTypeHandler/Code/AssetBucket",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_s3.BucketBase",
+                      "version": "2.90.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_s3_assets.Asset",
+                  "version": "2.90.0"
+                }
+              },
+              "Resource": {
+                "id": "Resource",
+                "path": "FileProcessingWorkflowCdkStack/FileTypeHandler/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::Lambda::Function",
+                  "aws:cdk:cloudformation:props": {
+                    "code": {
+                      "s3Bucket": {
+                        "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+                      },
+                      "s3Key": "e2ed196842194f9e10be4d4014a4788b2e18f8d57959d7d061ae987749efdcc7.zip"
+                    },
+                    "handler": "fileType.lambda_handler",
+                    "role": {
+                      "Fn::GetAtt": [
+                        "CapstoneLambdaBasicRoleD59C1950",
+                        "Arn"
+                      ]
+                    },
+                    "runtime": "python3.8"
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_lambda.CfnFunction",
+                  "version": "2.90.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_lambda.Function",
+              "version": "2.90.0"
+            }
+          },
+          "FileHandlerXML": {
+            "id": "FileHandlerXML",
+            "path": "FileProcessingWorkflowCdkStack/FileHandlerXML",
+            "children": {
+              "Code": {
+                "id": "Code",
+                "path": "FileProcessingWorkflowCdkStack/FileHandlerXML/Code",
+                "children": {
+                  "Stage": {
+                    "id": "Stage",
+                    "path": "FileProcessingWorkflowCdkStack/FileHandlerXML/Code/Stage",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.AssetStaging",
+                      "version": "2.90.0"
+                    }
+                  },
+                  "AssetBucket": {
+                    "id": "AssetBucket",
+                    "path": "FileProcessingWorkflowCdkStack/FileHandlerXML/Code/AssetBucket",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_s3.BucketBase",
+                      "version": "2.90.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_s3_assets.Asset",
+                  "version": "2.90.0"
+                }
+              },
+              "Resource": {
+                "id": "Resource",
+                "path": "FileProcessingWorkflowCdkStack/FileHandlerXML/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::Lambda::Function",
+                  "aws:cdk:cloudformation:props": {
+                    "code": {
+                      "s3Bucket": {
+                        "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+                      },
+                      "s3Key": "e2ed196842194f9e10be4d4014a4788b2e18f8d57959d7d061ae987749efdcc7.zip"
+                    },
+                    "environment": {
+                      "variables": {
+                        "destination_bucket_name": "fileprocessingworkflowstore.capstonedestination.demo.v92223-1"
+                      }
+                    },
+                    "handler": "fileProcessorXML.lambda_handler",
+                    "role": {
+                      "Fn::GetAtt": [
+                        "CapstoneLambdaS3RoleEED11A27",
+                        "Arn"
+                      ]
+                    },
+                    "runtime": "python3.8"
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_lambda.CfnFunction",
+                  "version": "2.90.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_lambda.Function",
+              "version": "2.90.0"
+            }
+          },
+          "FileHandlerJSON": {
+            "id": "FileHandlerJSON",
+            "path": "FileProcessingWorkflowCdkStack/FileHandlerJSON",
+            "children": {
+              "Code": {
+                "id": "Code",
+                "path": "FileProcessingWorkflowCdkStack/FileHandlerJSON/Code",
+                "children": {
+                  "Stage": {
+                    "id": "Stage",
+                    "path": "FileProcessingWorkflowCdkStack/FileHandlerJSON/Code/Stage",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.AssetStaging",
+                      "version": "2.90.0"
+                    }
+                  },
+                  "AssetBucket": {
+                    "id": "AssetBucket",
+                    "path": "FileProcessingWorkflowCdkStack/FileHandlerJSON/Code/AssetBucket",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_s3.BucketBase",
+                      "version": "2.90.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_s3_assets.Asset",
+                  "version": "2.90.0"
+                }
+              },
+              "Resource": {
+                "id": "Resource",
+                "path": "FileProcessingWorkflowCdkStack/FileHandlerJSON/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::Lambda::Function",
+                  "aws:cdk:cloudformation:props": {
+                    "code": {
+                      "s3Bucket": {
+                        "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+                      },
+                      "s3Key": "e2ed196842194f9e10be4d4014a4788b2e18f8d57959d7d061ae987749efdcc7.zip"
+                    },
+                    "environment": {
+                      "variables": {
+                        "destination_bucket_name": "fileprocessingworkflowstore.capstonedestination.demo.v92223-1"
+                      }
+                    },
+                    "handler": "fileProcessorJSON.lambda_handler",
+                    "role": {
+                      "Fn::GetAtt": [
+                        "CapstoneLambdaS3RoleEED11A27",
+                        "Arn"
+                      ]
+                    },
+                    "runtime": "python3.8"
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_lambda.CfnFunction",
+                  "version": "2.90.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_lambda.Function",
+              "version": "2.90.0"
+            }
+          },
+          "StepFunctionExecutionRole": {
+            "id": "StepFunctionExecutionRole",
+            "path": "FileProcessingWorkflowCdkStack/StepFunctionExecutionRole",
+            "children": {
+              "ImportStepFunctionExecutionRole": {
+                "id": "ImportStepFunctionExecutionRole",
+                "path": "FileProcessingWorkflowCdkStack/StepFunctionExecutionRole/ImportStepFunctionExecutionRole",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.Resource",
+                  "version": "2.90.0"
+                }
+              },
+              "Resource": {
+                "id": "Resource",
+                "path": "FileProcessingWorkflowCdkStack/StepFunctionExecutionRole/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                  "aws:cdk:cloudformation:props": {
+                    "assumeRolePolicyDocument": {
+                      "Statement": [
+                        {
+                          "Action": "sts:AssumeRole",
+                          "Effect": "Allow",
+                          "Principal": {
+                            "Service": "states.amazonaws.com"
+                          }
+                        }
+                      ],
+                      "Version": "2012-10-17"
+                    },
+                    "managedPolicyArns": [
+                      {
+                        "Fn::Join": [
+                          "",
+                          [
+                            "arn:",
+                            {
+                              "Ref": "AWS::Partition"
+                            },
+                            ":iam::aws:policy/CloudWatchLogsFullAccess"
+                          ]
+                        ]
+                      },
+                      {
+                        "Fn::Join": [
+                          "",
+                          [
+                            "arn:",
+                            {
+                              "Ref": "AWS::Partition"
+                            },
+                            ":iam::aws:policy/AWSXrayWriteOnlyAccess"
+                          ]
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_iam.CfnRole",
+                  "version": "2.90.0"
+                }
+              },
+              "DefaultPolicy": {
+                "id": "DefaultPolicy",
+                "path": "FileProcessingWorkflowCdkStack/StepFunctionExecutionRole/DefaultPolicy",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "FileProcessingWorkflowCdkStack/StepFunctionExecutionRole/DefaultPolicy/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::IAM::Policy",
+                      "aws:cdk:cloudformation:props": {
+                        "policyDocument": {
+                          "Statement": [
+                            {
+                              "Action": "lambda:InvokeFunction",
+                              "Effect": "Allow",
+                              "Resource": [
+                                {
+                                  "Fn::GetAtt": [
+                                    "FileHandlerJSON164C82DF",
+                                    "Arn"
+                                  ]
+                                },
+                                {
+                                  "Fn::GetAtt": [
+                                    "FileHandlerXML63F6F969",
+                                    "Arn"
+                                  ]
+                                },
+                                {
+                                  "Fn::GetAtt": [
+                                    "FileTypeHandlerC472B58F",
+                                    "Arn"
+                                  ]
+                                }
+                              ]
+                            }
+                          ],
+                          "Version": "2012-10-17"
+                        },
+                        "policyName": "StepFunctionExecutionRoleDefaultPolicy208E546A",
+                        "roles": [
+                          {
+                            "Ref": "StepFunctionExecutionRoleC2E82F18"
+                          }
+                        ]
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_iam.CfnPolicy",
+                      "version": "2.90.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_iam.Policy",
+                  "version": "2.90.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_iam.Role",
+              "version": "2.90.0"
+            }
+          },
+          "FileProcessorStateMachine": {
+            "id": "FileProcessorStateMachine",
+            "path": "FileProcessingWorkflowCdkStack/FileProcessorStateMachine",
+            "children": {
+              "Resource": {
+                "id": "Resource",
+                "path": "FileProcessingWorkflowCdkStack/FileProcessorStateMachine/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::StepFunctions::StateMachine",
+                  "aws:cdk:cloudformation:props": {
+                    "definitionString": {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "{\n  \"Comment\": \"A description of my state machine\",\n  \"StartAt\": \"FileGateway\",\n  \"States\": {\n    \"FileGateway\": {\n      \"Type\": \"Task\",\n      \"Resource\": \"arn:aws:states:::lambda:invoke\",\n      \"OutputPath\": \"$.Payload\",\n      \"Parameters\": {\n        \"Payload.$\": \"$\",\n        \"FunctionName\": \"",
+                          {
+                            "Fn::GetAtt": [
+                              "FileTypeHandlerC472B58F",
+                              "Arn"
+                            ]
+                          },
+                          "\"\n      },\n      \"Retry\": [\n        {\n          \"ErrorEquals\": [\n            \"Lambda.ServiceException\",\n            \"Lambda.AWSLambdaException\",\n            \"Lambda.SdkClientException\",\n            \"Lambda.TooManyRequestsException\"\n          ],\n          \"IntervalSeconds\": 2,\n          \"MaxAttempts\": 6,\n          \"BackoffRate\": 2\n        }\n      ],\n      \"Next\": \"FileFactory\"\n    },\n    \"FileFactory\": {\n      \"Type\": \"Choice\",\n      \"Choices\": [\n        {\n          \"Variable\": \"$.body.file_type\",\n          \"StringEquals\": \"JSON\",\n          \"Next\": \"JsonHandler\"\n        },\n        {\n          \"Variable\": \"$.body.file_type\",\n          \"StringEquals\": \"XML\",\n          \"Next\": \"XMLHandler\"\n        }\n      ],\n      \"Default\": \"Pass\"\n    },\n    \"JsonHandler\": {\n      \"Type\": \"Task\",\n      \"Resource\": \"arn:aws:states:::lambda:invoke\",\n      \"OutputPath\": \"$.Payload\",\n      \"Parameters\": {\n        \"Payload.$\": \"$\",\n        \"FunctionName\": \"",
+                          {
+                            "Fn::GetAtt": [
+                              "FileHandlerJSON164C82DF",
+                              "Arn"
+                            ]
+                          },
+                          "\"\n      },\n      \"Retry\": [\n        {\n          \"ErrorEquals\": [\n            \"Lambda.ServiceException\",\n            \"Lambda.AWSLambdaException\",\n            \"Lambda.SdkClientException\",\n            \"Lambda.TooManyRequestsException\"\n          ],\n          \"IntervalSeconds\": 2,\n          \"MaxAttempts\": 6,\n          \"BackoffRate\": 2\n        }\n      ],\n      \"End\": true\n    },\n    \"Pass\": {\n      \"Type\": \"Pass\",\n      \"End\": true\n    },\n    \"XMLHandler\": {\n      \"Type\": \"Task\",\n      \"Resource\": \"arn:aws:states:::lambda:invoke\",\n      \"OutputPath\": \"$.Payload\",\n      \"Parameters\": {\n        \"Payload.$\": \"$\",\n        \"FunctionName\": \"",
+                          {
+                            "Fn::GetAtt": [
+                              "FileHandlerXML63F6F969",
+                              "Arn"
+                            ]
+                          },
+                          "\"\n      },\n      \"Retry\": [\n        {\n          \"ErrorEquals\": [\n            \"Lambda.ServiceException\",\n            \"Lambda.AWSLambdaException\",\n            \"Lambda.SdkClientException\",\n            \"Lambda.TooManyRequestsException\"\n          ],\n          \"IntervalSeconds\": 2,\n          \"MaxAttempts\": 6,\n          \"BackoffRate\": 2\n        }\n      ],\n      \"End\": true\n    }\n  }\n}"
+                        ]
+                      ]
+                    },
+                    "roleArn": {
+                      "Fn::GetAtt": [
+                        "StepFunctionExecutionRoleC2E82F18",
+                        "Arn"
+                      ]
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_stepfunctions.CfnStateMachine",
+                  "version": "2.90.0"
+                }
+              },
+              "EventsRole": {
+                "id": "EventsRole",
+                "path": "FileProcessingWorkflowCdkStack/FileProcessorStateMachine/EventsRole",
+                "children": {
+                  "ImportEventsRole": {
+                    "id": "ImportEventsRole",
+                    "path": "FileProcessingWorkflowCdkStack/FileProcessorStateMachine/EventsRole/ImportEventsRole",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.Resource",
+                      "version": "2.90.0"
+                    }
+                  },
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "FileProcessingWorkflowCdkStack/FileProcessorStateMachine/EventsRole/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                      "aws:cdk:cloudformation:props": {
+                        "assumeRolePolicyDocument": {
+                          "Statement": [
+                            {
+                              "Action": "sts:AssumeRole",
+                              "Effect": "Allow",
+                              "Principal": {
+                                "Service": "events.amazonaws.com"
+                              }
+                            }
+                          ],
+                          "Version": "2012-10-17"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_iam.CfnRole",
+                      "version": "2.90.0"
+                    }
+                  },
+                  "DefaultPolicy": {
+                    "id": "DefaultPolicy",
+                    "path": "FileProcessingWorkflowCdkStack/FileProcessorStateMachine/EventsRole/DefaultPolicy",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "FileProcessingWorkflowCdkStack/FileProcessorStateMachine/EventsRole/DefaultPolicy/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::IAM::Policy",
+                          "aws:cdk:cloudformation:props": {
+                            "policyDocument": {
+                              "Statement": [
+                                {
+                                  "Action": "states:StartExecution",
+                                  "Effect": "Allow",
+                                  "Resource": {
+                                    "Ref": "FileProcessorStateMachineB6008575"
+                                  }
+                                }
+                              ],
+                              "Version": "2012-10-17"
+                            },
+                            "policyName": "FileProcessorStateMachineEventsRoleDefaultPolicyC4801462",
+                            "roles": [
+                              {
+                                "Ref": "FileProcessorStateMachineEventsRole9004104A"
+                              }
+                            ]
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_iam.CfnPolicy",
+                          "version": "2.90.0"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_iam.Policy",
+                      "version": "2.90.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_iam.Role",
+                  "version": "2.90.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_stepfunctions.StateMachine",
+              "version": "2.90.0"
+            }
+          },
+          "MonitorS3ObjectCreated": {
+            "id": "MonitorS3ObjectCreated",
+            "path": "FileProcessingWorkflowCdkStack/MonitorS3ObjectCreated",
+            "children": {
+              "Resource": {
+                "id": "Resource",
+                "path": "FileProcessingWorkflowCdkStack/MonitorS3ObjectCreated/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::Events::Rule",
+                  "aws:cdk:cloudformation:props": {
+                    "eventPattern": {
+                      "detail": {
+                        "bucket": {
+                          "name": [
+                            {
+                              "Ref": "SourceBucketDDD2130A"
+                            }
+                          ]
+                        }
+                      },
+                      "detail-type": [
+                        "Object Created"
+                      ],
+                      "source": [
+                        "aws.s3"
+                      ]
+                    },
+                    "state": "ENABLED",
+                    "targets": [
+                      {
+                        "id": "Target0",
+                        "arn": {
+                          "Ref": "FileProcessorStateMachineB6008575"
+                        },
+                        "roleArn": {
+                          "Fn::GetAtt": [
+                            "FileProcessorStateMachineEventsRole9004104A",
+                            "Arn"
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_events.CfnRule",
+                  "version": "2.90.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_events.Rule",
+              "version": "2.90.0"
+            }
+          },
+          "CDKMetadata": {
+            "id": "CDKMetadata",
+            "path": "FileProcessingWorkflowCdkStack/CDKMetadata",
+            "children": {
+              "Default": {
+                "id": "Default",
+                "path": "FileProcessingWorkflowCdkStack/CDKMetadata/Default",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.CfnResource",
+                  "version": "2.90.0"
+                }
+              },
+              "Condition": {
+                "id": "Condition",
+                "path": "FileProcessingWorkflowCdkStack/CDKMetadata/Condition",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.CfnCondition",
+                  "version": "2.90.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "constructs.Construct",
+              "version": "10.2.70"
+            }
+          },
+          "BootstrapVersion": {
+            "id": "BootstrapVersion",
+            "path": "FileProcessingWorkflowCdkStack/BootstrapVersion",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.CfnParameter",
+              "version": "2.90.0"
+            }
+          },
+          "CheckBootstrapVersion": {
+            "id": "CheckBootstrapVersion",
+            "path": "FileProcessingWorkflowCdkStack/CheckBootstrapVersion",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.CfnRule",
+              "version": "2.90.0"
+            }
+          }
+        },
+        "constructInfo": {
+          "fqn": "aws-cdk-lib.Stack",
+          "version": "2.90.0"
+        }
+      },
+      "Tree": {
+        "id": "Tree",
+        "path": "Tree",
+        "constructInfo": {
+          "fqn": "constructs.Construct",
+          "version": "10.2.70"
+        }
+      }
+    },
+    "constructInfo": {
+      "fqn": "aws-cdk-lib.App",
+      "version": "2.90.0"
+    }
+  }
+}

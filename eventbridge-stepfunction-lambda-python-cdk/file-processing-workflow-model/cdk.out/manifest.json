@@ -1,0 +1,184 @@
+{
+  "version": "33.0.0",
+  "artifacts": {
+    "FileProcessingWorkflowCdkStack.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "FileProcessingWorkflowCdkStack.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "FileProcessingWorkflowCdkStack": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://unknown-account/unknown-region",
+      "properties": {
+        "templateFile": "FileProcessingWorkflowCdkStack.template.json",
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-${AWS::Region}",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-${AWS::Region}",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/f7e08dd9fc0cf7624cb7ea45fc173e71993ce44e26812b8f9e35783026356ccb.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "FileProcessingWorkflowCdkStack.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-${AWS::Region}",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "FileProcessingWorkflowCdkStack.assets"
+      ],
+      "metadata": {
+        "/FileProcessingWorkflowCdkStack/SourceBucket/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SourceBucketDDD2130A"
+          }
+        ],
+        "/FileProcessingWorkflowCdkStack/SourceBucket/Notifications/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SourceBucketNotifications0A6F2084"
+          }
+        ],
+        "/FileProcessingWorkflowCdkStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC"
+          }
+        ],
+        "/FileProcessingWorkflowCdkStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleDefaultPolicy2CF63D36"
+          }
+        ],
+        "/FileProcessingWorkflowCdkStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BucketNotificationsHandler050a0587b7544547bf325f094a3db8347ECC3691"
+          }
+        ],
+        "/FileProcessingWorkflowCdkStack/DestinationBucket/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DestinationBucket4BECDB47"
+          }
+        ],
+        "/FileProcessingWorkflowCdkStack/DestinationBucket/Notifications/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DestinationBucketNotifications265E1BA5"
+          }
+        ],
+        "/FileProcessingWorkflowCdkStack/CapstoneLambdaBasicRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CapstoneLambdaBasicRoleD59C1950"
+          }
+        ],
+        "/FileProcessingWorkflowCdkStack/CapstoneLambdaS3Role/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CapstoneLambdaS3RoleEED11A27"
+          }
+        ],
+        "/FileProcessingWorkflowCdkStack/CapstoneLambdaS3Role/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CapstoneLambdaS3RoleDefaultPolicy1184F0D0"
+          }
+        ],
+        "/FileProcessingWorkflowCdkStack/FileTypeHandler/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FileTypeHandlerC472B58F"
+          }
+        ],
+        "/FileProcessingWorkflowCdkStack/FileHandlerXML/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FileHandlerXML63F6F969"
+          }
+        ],
+        "/FileProcessingWorkflowCdkStack/FileHandlerJSON/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FileHandlerJSON164C82DF"
+          }
+        ],
+        "/FileProcessingWorkflowCdkStack/StepFunctionExecutionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StepFunctionExecutionRoleC2E82F18"
+          }
+        ],
+        "/FileProcessingWorkflowCdkStack/StepFunctionExecutionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StepFunctionExecutionRoleDefaultPolicy208E546A"
+          }
+        ],
+        "/FileProcessingWorkflowCdkStack/FileProcessorStateMachine/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FileProcessorStateMachineB6008575"
+          }
+        ],
+        "/FileProcessingWorkflowCdkStack/FileProcessorStateMachine/EventsRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FileProcessorStateMachineEventsRole9004104A"
+          }
+        ],
+        "/FileProcessingWorkflowCdkStack/FileProcessorStateMachine/EventsRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FileProcessorStateMachineEventsRoleDefaultPolicyC4801462"
+          }
+        ],
+        "/FileProcessingWorkflowCdkStack/MonitorS3ObjectCreated/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MonitorS3ObjectCreated11DABA68"
+          }
+        ],
+        "/FileProcessingWorkflowCdkStack/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/FileProcessingWorkflowCdkStack/CDKMetadata/Condition": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadataAvailable"
+          }
+        ],
+        "/FileProcessingWorkflowCdkStack/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/FileProcessingWorkflowCdkStack/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "FileProcessingWorkflowCdkStack"
+    },
+    "Tree": {
+      "type": "cdk:tree",
+      "properties": {
+        "file": "tree.json"
+      }
+    }
+  }
+}
