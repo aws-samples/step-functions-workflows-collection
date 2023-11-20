@@ -1,7 +1,6 @@
 {
     "title": "File processing Workflow",
-    "description": "This sample project shows handling of file processing workloads following the eventdriven microservice pattern. Deploying this sample project will create 2 S3 buckets,
-           Eventbridge rules, one stepfunction 3 lambdas and a couple of roles for working successfully",
+    "description": "This sample project shows handling of file processing workloads following the eventdriven microservice pattern. Deploying this sample project will create 2 S3 buckets, Eventbridge rules, one stepfunction 3 lambdas and a couple of roles for working successfully",
     "language": "Python",
     "simplicity": "2 - Patterns",
     "usecase": "",
