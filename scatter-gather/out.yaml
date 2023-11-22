@@ -1,0 +1,252 @@
+Resources:
+  QuoteResponder1ServiceRole60C93223:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+    Metadata:
+      aws:cdk:path: ScatterGatherStack/QuoteResponder_1/ServiceRole/Resource
+  QuoteResponder1E7DF2198:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: cdk-hnb659fds-assets-097181543829-us-east-2
+        S3Key: c4e86b310ade55ecb18cf791c52d59f62c392388b3b17cb1c80e64aac8fe1a58.zip
+      Environment:
+        Variables:
+          RESPONDER_ID: "1"
+      Handler: quote-responder.handler
+      Role:
+        Fn::GetAtt:
+          - QuoteResponder1ServiceRole60C93223
+          - Arn
+      Runtime: nodejs18.x
+    DependsOn:
+      - QuoteResponder1ServiceRole60C93223
+    Metadata:
+      aws:cdk:path: ScatterGatherStack/QuoteResponder_1/Resource
+      aws:asset:path: asset.c4e86b310ade55ecb18cf791c52d59f62c392388b3b17cb1c80e64aac8fe1a58
+      aws:asset:is-bundled: false
+      aws:asset:property: Code
+  QuoteResponder2ServiceRole8602CD03:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+    Metadata:
+      aws:cdk:path: ScatterGatherStack/QuoteResponder_2/ServiceRole/Resource
+  QuoteResponder2B67FC96B:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: cdk-hnb659fds-assets-097181543829-us-east-2
+        S3Key: c4e86b310ade55ecb18cf791c52d59f62c392388b3b17cb1c80e64aac8fe1a58.zip
+      Environment:
+        Variables:
+          RESPONDER_ID: "2"
+      Handler: quote-responder.handler
+      Role:
+        Fn::GetAtt:
+          - QuoteResponder2ServiceRole8602CD03
+          - Arn
+      Runtime: nodejs18.x
+    DependsOn:
+      - QuoteResponder2ServiceRole8602CD03
+    Metadata:
+      aws:cdk:path: ScatterGatherStack/QuoteResponder_2/Resource
+      aws:asset:path: asset.c4e86b310ade55ecb18cf791c52d59f62c392388b3b17cb1c80e64aac8fe1a58
+      aws:asset:is-bundled: false
+      aws:asset:property: Code
+  QuoteResponder3ServiceRole28800967:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+    Metadata:
+      aws:cdk:path: ScatterGatherStack/QuoteResponder_3/ServiceRole/Resource
+  QuoteResponder399B5AD1E:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: cdk-hnb659fds-assets-097181543829-us-east-2
+        S3Key: c4e86b310ade55ecb18cf791c52d59f62c392388b3b17cb1c80e64aac8fe1a58.zip
+      Environment:
+        Variables:
+          RESPONDER_ID: "3"
+      Handler: quote-responder.handler
+      Role:
+        Fn::GetAtt:
+          - QuoteResponder3ServiceRole28800967
+          - Arn
+      Runtime: nodejs18.x
+    DependsOn:
+      - QuoteResponder3ServiceRole28800967
+    Metadata:
+      aws:cdk:path: ScatterGatherStack/QuoteResponder_3/Resource
+      aws:asset:path: asset.c4e86b310ade55ecb18cf791c52d59f62c392388b3b17cb1c80e64aac8fe1a58
+      aws:asset:is-bundled: false
+      aws:asset:property: Code
+  QuoteResponder4ServiceRoleE482D62C:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+    Metadata:
+      aws:cdk:path: ScatterGatherStack/QuoteResponder_4/ServiceRole/Resource
+  QuoteResponder43F449DD8:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: cdk-hnb659fds-assets-097181543829-us-east-2
+        S3Key: c4e86b310ade55ecb18cf791c52d59f62c392388b3b17cb1c80e64aac8fe1a58.zip
+      Environment:
+        Variables:
+          RESPONDER_ID: "4"
+      Handler: quote-responder.handler
+      Role:
+        Fn::GetAtt:
+          - QuoteResponder4ServiceRoleE482D62C
+          - Arn
+      Runtime: nodejs18.x
+    DependsOn:
+      - QuoteResponder4ServiceRoleE482D62C
+    Metadata:
+      aws:cdk:path: ScatterGatherStack/QuoteResponder_4/Resource
+      aws:asset:path: asset.c4e86b310ade55ecb18cf791c52d59f62c392388b3b17cb1c80e64aac8fe1a58
+      aws:asset:is-bundled: false
+      aws:asset:property: Code
+  QuoteResponder5ServiceRoleF59D9C46:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+    Metadata:
+      aws:cdk:path: ScatterGatherStack/QuoteResponder_5/ServiceRole/Resource
+  QuoteResponder5C4ED5D8F:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: cdk-hnb659fds-assets-097181543829-us-east-2
+        S3Key: c4e86b310ade55ecb18cf791c52d59f62c392388b3b17cb1c80e64aac8fe1a58.zip
+      Environment:
+        Variables:
+          RESPONDER_ID: "5"
+      Handler: quote-responder.handler
+      Role:
+        Fn::GetAtt:
+          - QuoteResponder5ServiceRoleF59D9C46
+          - Arn
+      Runtime: nodejs18.x
+    DependsOn:
+      - QuoteResponder5ServiceRoleF59D9C46
+    Metadata:
+      aws:cdk:path: ScatterGatherStack/QuoteResponder_5/Resource
+      aws:asset:path: asset.c4e86b310ade55ecb18cf791c52d59f62c392388b3b17cb1c80e64aac8fe1a58
+      aws:asset:is-bundled: false
+      aws:asset:property: Code
+  StateMachineRoleB840431D:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: states.amazonaws.com
+        Version: "2012-10-17"
+    Metadata:
+      aws:cdk:path: ScatterGatherStack/StateMachine/Role/Resource
+  StateMachine2E01A3A5:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      DefinitionString: '{"StartAt":"Get all quotes","States":{"Get all quotes":{"Type":"Map","End":true,"Parameters":{"quoteProvider.$":"$$.Map.Item.Value","requestDescription.$":"$.requestDescription"},"Iterator":{"StartAt":"Get quote","States":{"Get quote":{"End":true,"Type":"Task","Resource":"arn:aws:states:::lambda:invoke","Parameters":{"FunctionName.$":"$.quoteProvider","Payload":{"requestDescription.$":"$.requestDescription"}},"ResultSelector":{"Quote.$":"$.Payload"}}}},"ItemsPath":"$.quoteProviders"}},"TimeoutSeconds":300}'
+      RoleArn:
+        Fn::GetAtt:
+          - StateMachineRoleB840431D
+          - Arn
+    DependsOn:
+      - StateMachineRoleB840431D
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+    Metadata:
+      aws:cdk:path: ScatterGatherStack/StateMachine/Resource
+  CDKMetadata:
+    Type: AWS::CDK::Metadata
+    Properties:
+      Analytics: v2:deflate64:H4sIAAAAAAAA/01PSw6CMBA9i/thBI0HUBN3bPAAZCiDlk9LnFYXTe9uQU1cvV/mvcwOi7zAfEMvyVQ7ZKNuMFwdqQGSVYeRpqYlDBdvlNPWwLkzPx5B04ShsiMv9oIRZF+TCDvB4wJJ48mrgd2JhEEcz933XDCcvTg7pTnHUNIMKytJ3bVZK/91jFCxWP9QDGt1Cm/a3NbpbxDB2Jaxl+1zl+Mh/dWL1tnDG6cnxuqDbzvGJBP0AAAA
+    Metadata:
+      aws:cdk:path: ScatterGatherStack/CDKMetadata/Default
+Parameters:
+  BootstrapVersion:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /cdk-bootstrap/hnb659fds/version
+    Description: Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]
+Rules:
+  CheckBootstrapVersion:
+    Assertions:
+      - Assert:
+          Fn::Not:
+            - Fn::Contains:
+                - - "1"
+                  - "2"
+                  - "3"
+                  - "4"
+                  - "5"
+                - Ref: BootstrapVersion
+        AssertDescription: CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI.
+
