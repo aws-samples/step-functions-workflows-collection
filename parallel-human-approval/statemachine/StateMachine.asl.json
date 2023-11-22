@@ -1,0 +1,77 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Parallel",
+  "States": {
+    "Parallel": {
+      "Type": "Parallel",
+      "Branches": [
+        {
+          "StartAt": "SNS Publish to Approver 1",
+          "States": {
+            "SNS Publish to Approver 1": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::sns:publish.waitForTaskToken",
+              "Parameters": {
+                "TopicArn": "arn:aws:sns:eu-central-1:341648752667:Approver1",
+                "Message": {
+                  "token.$": "$$.Task.Token",
+                  "message.$": "$"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "SNS Publish to Approver2",
+          "States": {
+            "SNS Publish to Approver2": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::sns:publish.waitForTaskToken",
+              "Parameters": {
+                "TopicArn": "arn:aws:sns:eu-central-1:341648752667:Approver2",
+                "Message": {
+                  "token.$": "$$.Task.Token",
+                  "message.$": "$"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "SNS Publish to Approver3",
+          "States": {
+            "SNS Publish to Approver3": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::sns:publish.waitForTaskToken",
+              "Parameters": {
+                "TopicArn": "arn:aws:sns:eu-central-1:341648752667:Approver3",
+                "Message": {
+                  "token.$": "$$.Task.Token",
+                  "message.$": "$"
+                }
+              },
+              "End": true
+            }
+          }
+        }
+      ],
+      "Next": "Success",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail"
+        }
+      ]
+    },
+    "Fail": {
+      "Type": "Fail"
+    },
+    "Success": {
+      "Type": "Succeed"
+    }
+  }
+}

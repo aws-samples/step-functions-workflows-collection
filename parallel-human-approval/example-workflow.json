@@ -1,0 +1,70 @@
+{
+    "title": "Parallel Human Approval Process",
+    "description": "Create a parallel Task for multiple approvals",
+    "language": "",
+    "simplicity": "2 - Pattern",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "200",
+    "framework": "SAM",
+    "services": ["sns"],
+    "introBox": {
+      "headline": "Parallel Human Approval Process",
+      "text": [
+        "This application will create a State Machine, an SNS topic. The State Machine will send three Task Tokens to different approvers via SNS and wait for task to be completed. After all approvers approve the task with send-task-success, the execution ends up with Success State. If any of them rejects by using send-task-failure, then the execution ends up with Fail State."
+
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/parallel-human-approval-process/",
+        "templateDir":"parallel-human-approval-process",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/StateMachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Serda Kasaci Yildirim",
+          "image": "https://drive.google.com/file/d/1rzVS1hrIMdqy6P9i7-o7OBLNc0xY0FVB/view?usp=sharing",
+          "bio": "Serda is a Solutions Architect at Amazon Web Services (AWS) based in Vienna, Austria.",
+          "linkedin": "serdakasaci",
+          "twitter": ""
+        }
+      ]
+  }
+  
