@@ -1,0 +1,74 @@
+{
+    "title": "Serverlessly generate video content summary with Amazon Bedrock",
+    "description": "Meeting recordings uploaded through a UI trigger an AWS event, leading to transcription by Amazon Transcribe and summarization using AI21 Lab's Jurassic-2 Ultra model, with results stored in DynamoDB and accessible via the UI.",
+    "language": "Typescript,Python",
+    "simplicity": "3 - Application",
+    "usecase": "",
+    "type": "Standard",
+    "diagram": [
+        "/resources/bedrock-transcribe-workfloww.png"
+    ],
+    "videoId": "",
+    "level": "300",
+    "framework": "CDK",
+    "services": [
+        "Amazon Bedrock",
+        "AWS Step Functions",
+        "Amazon CloudFront",
+        "Amazon Transcribe"
+    ],
+    "introBox": {
+        "headline": "How it works",
+        "text": [
+            "The step function for the transcoding workflow orchestrates the AWS Elemental MediaConvert service process:",
+            "In this use case, users upload a video via a UI. This UI is hosted on an S3 bucket and delivered through Amazon CloudFront.",
+            "When a video is uploaded, it triggers an AWS account event. Amazon EventBridge captures this event. The system either transcodes the video for Amazon Transcribe or directly feeds it if already compatible.",
+            "Both trancode and bedrock workflow are orchestrated by AWS Step Functions state machine, check the Github repo for more information"
+        ]
+    },
+    "cleanup": {
+        "headline": "Cleanup",
+        "text": [
+            "Empty all S3 buckets",
+            "Delete the stack: <code>cdk destroy --all</code>."
+        ]
+    },
+    "deploy": {
+        "text": [
+            "<code>cdk deploy --all</code>"
+        ]
+    },
+    "gitHub": {
+        "template": {
+            "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/serverless-bedrock-video-content-summary/",
+            "templateDir": "serverless-bedrock-video-content-summary"
+        },
+        "payloads": [
+            {
+                "headline": "",
+                "payloadURL": ""
+            }
+        ]
+    },
+    "resources": {
+        "headline": "Additional Resources",
+        "bullets": [
+            "https://aws.amazon.com/bedrock/titan/?gclid=CjwKCAiAsIGrBhAAEiwAEzMlC2GSrdSUf9pxrcjBmLL6Nwv4dGrEZcGQTvJzVQldKys9om0UJRENmxoCLbcQAvD_BwE&trk=fc80ff15-2333-44d6-b942-ac55ffa29b7d&sc_channel=ps&ef_id=CjwKCAiAsIGrBhAAEiwAEzMlC2GSrdSUf9pxrcjBmLL6Nwv4dGrEZcGQTvJzVQldKys9om0UJRENmxoCLbcQAvD_BwE:G:s&s_kwcid=AL!4422!3!655649172381!e!!g!!amazon%20bedrock!19966640379!149336804778",
+            "https://aws.amazon.com/pm/transcribe/?gclid=CjwKCAiAsIGrBhAAEiwAEzMlC3wUxDxX2S--25-QEcVjoLRVWzAFHufxH9x0hhxKxelgGU6jSAOSzBoCf6cQAvD_BwE&trk=5201f5f7-bf8b-4a2d-b097-1e900426c1d2&sc_channel=ps&ef_id=CjwKCAiAsIGrBhAAEiwAEzMlC3wUxDxX2S--25-QEcVjoLRVWzAFHufxH9x0hhxKxelgGU6jSAOSzBoCf6cQAvD_BwE:G:s&s_kwcid=AL!4422!3!652937811575!e!!g!!amazon%20transcribe!19909696445!152804588132"
+        ]
+    },
+    "authors": [
+        {
+            "name": "Stan Fan",
+            "image": "https://avatars.githubusercontent.com/u/58756168?v=4",
+            "bio": "Stan Fan is a Solutions Architect at Amazon Web Services (AWS) based Sydney, Australia.",
+            "linkedin": "hongyi-fan-05101992"
+        },
+        {
+            "name": "Akhil Jain",
+            "image": "https://avatars.githubusercontent.com/u/88995214?v=4",
+            "bio": "Akhil Jain is a Cloud DevOps Engineer and a Serverless Enthusiast at Amazon Web Services (AWS) based out of Sydney, Australia.",
+            "linkedin": "jainakhil93"
+        }
+    ]
+}
