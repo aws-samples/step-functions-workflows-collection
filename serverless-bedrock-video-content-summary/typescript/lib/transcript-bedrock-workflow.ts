@@ -35,7 +35,7 @@ export class TranscriptBedrockWorkflowStack extends cdk.Stack {
 		const bedrockParameter = new ssm.StringParameter(this, 'BedrockLLMName', {
 			parameterName: '/vod/shared/bedrock-llm-name',
 			description: 'Bedrock LLM name',
-			stringValue: 'ai21.j2-ultra-v1,'
+			stringValue: 'ai21.j2-ultra-v1'
 		});
 
 		// Define a policy statement for S3 access
