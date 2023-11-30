@@ -14,7 +14,7 @@ Resources:
 #   STEP FUNCTION                                                        #
 ##########################################################################
 
-  StateMachineBedrockInvoke:
+  StateMachineBedrockInvokeModel:
     Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
     Properties:
       DefinitionUri: statemachine/StateMachine.asl.json
@@ -24,3 +24,6 @@ Resources:
 #   Outputs                                                              #
 ##########################################################################
 Outputs:
+  StateMachineBedrockInvokeModel:
+    Description: "BedrockInvokeModel State machine ARN"
+    Value: !Ref StateMachineBedrockInvokeModel
