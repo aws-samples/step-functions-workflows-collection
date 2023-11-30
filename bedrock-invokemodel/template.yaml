@@ -14,15 +14,11 @@ Resources:
 #   STEP FUNCTION                                                        #
 ##########################################################################
 
-  StateMachineParallelHumanAproval:
+  StateMachineBedrockInvoke:
     Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
     Properties:
       DefinitionUri: statemachine/StateMachine.asl.json
       Type: STANDARD
-      Policies:
-        - InvokeModelPolicy:
-            Arn: !Ref InvokeBedrock
-
             
 ##########################################################################
 #   Outputs                                                              #
