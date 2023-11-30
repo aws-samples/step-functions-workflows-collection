@@ -19,6 +19,13 @@ Resources:
     Properties:
       DefinitionUri: statemachine/StateMachine.asl.json
       Type: STANDARD
+      Policies:
+        - Version: '2012-10-17' # Policy Document
+          Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource: !Ref ModelId 
             
 ##########################################################################
 #   Outputs                                                              #
