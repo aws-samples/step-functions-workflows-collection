@@ -42,14 +42,25 @@ Important: this application uses various AWS services and there are costs associ
 
 ![image](./resources/statemachine.png)
 
-1. Send your prompt as input. 
-3. Step Functions will invoke the selected model on Amazon Bedrock.
+1. Send your prompt and model ID as input.
+    ```
+    {
+      "prompt": "where is the largest city",
+      "modelID": "arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-v2"
+    }    
+    ```
+2. Step Functions will invoke the selected model on Amazon Bedrock.
 
 ## Testing
 
 1. Navigate to the AWS Step Functions console and select the `bedrock-invokemodel` workflow.
 2. Select `Start Execution` and use the following JSON data as input.
-   "prompt": "where is the largest city in the world?"
+   ```
+    {
+      "prompt": "where is the largest city",
+      "modelID": "arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-v2"
+    }    
+    ```
 3. Select `Start Execution`
 4. Observe the task in the Step Functions console.
 
