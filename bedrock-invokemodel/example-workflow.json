@@ -1,0 +1,70 @@
+{
+    "title": "Invoke Bedrock Model from AWS Step Functions Workflow",
+    "description": "A Step Functions Workflow for invoking LLM Model on Amazon Bedrock",
+    "language": "",
+    "simplicity": "2 - Pattern",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "200",
+    "framework": "SAM",
+    "services": ["sns"],
+    "introBox": {
+      "headline": "Invoke Bedrock Model from AWS Step Functions Workflow",
+      "text": [
+        "This application will create a State Machine. The State Machine invokes Amazon Bedrock Model based on the given model."
+
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/bedrock-invokeModel/",
+        "templateDir":"bedrock-invokemodel",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/StateMachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Serda Kasaci Yildirim",
+          "image": "https://drive.google.com/file/d/1rzVS1hrIMdqy6P9i7-o7OBLNc0xY0FVB/view?usp=sharing",
+          "bio": "Serda is a Solutions Architect at Amazon Web Services (AWS) based in Vienna, Austria.",
+          "linkedin": "serdakasaci",
+          "twitter": ""
+        }
+      ]
+  }
+  
