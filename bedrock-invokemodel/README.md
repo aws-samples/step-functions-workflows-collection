@@ -45,8 +45,8 @@ Important: this application uses various AWS services and there are costs associ
 1. Send your prompt and model ID as input.
     ```
     {
-      "prompt": "where is the largest city",
-      "modelID": "arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-v2"
+      "prompt": "YOUR-PROMPT",
+      "modelID": "ARN-OF-BEDROCK-MODEL"
     }    
     ```
 2. Step Functions will invoke the selected model on Amazon Bedrock.
