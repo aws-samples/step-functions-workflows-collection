@@ -19,7 +19,7 @@ Resources:
             - Effect: Allow
               Action:
                 - bedrock:InvokeModel
-              Resource: !Ref ModelId 
+              Resource: "arn:aws:bedrock:*::foundation-model/*"
             
 ##########################################################################
 #   Outputs                                                              #
