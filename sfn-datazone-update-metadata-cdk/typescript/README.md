@@ -2,9 +2,9 @@
 
 This workflow is an example on how to update Amazon Datazone [Metadata-forms](https://docs.aws.amazon.com/datazone/latest/userguide/create-metadata-form.html) for Amazon DataZone Assets programmatically.
 
-Amazon DataZone metadata forms are simple forms to augment additional business context to the asset metadata in the catalog. The values of metadata forms are usually updated manually by technical or non technical Data users.
+Amazon DataZone metadata forms are simple forms to augment additional business context to the asset metadata in the catalog. The values of metadata forms are usually updated manually by technical or non-technical Data users.
 
-In some cases it might be useful to update programmatically the metadata forms values, for example in response of events coming from external systems (for Example: after a data quality job run is completed).
+In some cases, it might be useful to update programmatically the metadata forms values, for example in response to events coming from external systems (for Example: after a data quality job run is completed).
 
 The step function lists the assets in DataZone(in a specific Domain/Project), looking for  assets that match an input tableArn (other matching rules can be added/modified modifying the step function).
 After finding the Assets, the step function calls the Amazon DataZone APIs to update the values of a metadata form. The updated values and the formId are passed as input in the step function execution.
@@ -50,7 +50,7 @@ Here you can find an example of the step function input:
     ```
     npx cdk deploy --parameters dataZoneDomainId=<value> --parameters dataZoneProjectId=<value>
     ```
-4. The lambda function in the step functions should already have the right permissions set. Additionally, you need to add the newly created Lambda Role to your DataZone project user base.
+4. The lambda function in the step functions already have the right permissions set. Additionally, you need to add the newly created Lambda Role to your DataZone project user base.
   
 
 ## How it works
