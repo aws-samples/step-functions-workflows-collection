@@ -1,0 +1,74 @@
+{
+  "title": "Amazon DataZone Update Metadata",
+  "description": "Use step functions to update The business metadata catalog in Amazon DataZone",
+  "language": "Typescript",
+  "simplicity": "2 - Pattern",
+  "usecase": "",
+  "type": "Standard",
+  "diagram": "/resources/statemachine.png",
+  "videoId": "",
+  "level": "200",
+  "framework": "CDK",
+  "services": [
+    "sfn", "datazone", "stepfunctions"
+  ],
+  "introBox": {
+    "headline": "How it works",
+    "text": [
+      "This workflow implements a step function that can be used to programmatically update metadata-form values for an Amazon DataZone business metadata catalog"
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": [
+      "See the GitHub repo for detailed testing instructions."
+    ]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": [
+      "1. Delete the stack: <code>cdk destroy</code>."
+    ]
+  },
+  "deploy": {
+    "text": [
+      "1. Bootstrap CDK, if needed: cdk bootstrap aws://{your-aws-account-number}/{your-aws-region}",
+      "2. Deploy the stack: npx cdk deploy --parameters dataZoneDomainId=<value> --parameters dataZoneProjectId=<value>"
+    ]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/sfn-datazone-update-metadata-cdk",
+      "templateDir": "sfn-datazone-update-metadata-cdk",
+      "templateFile": "sfn-datazone-update-metadata-cdk-stack.ts",
+      "ASL": "statemachine/statemachine.asl.json"
+    },
+    "payloads": [
+      {
+        "headline": "",
+        "payloadURL": ""
+      }
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "Amazon DataZone",
+        "link": "https://aws.amazon.com/datazone/"
+      },
+      {
+          "text": "Data Governance workshop",
+          "link": "https://catalog.us-east-1.prod.workshops.aws/workshops/1bf9302a-862c-4e21-9e45-c81fa055643b/en-US"
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Andrea Filippo La Scola",
+      "image": "https://drive.google.com/file/d/15R74UBc2vvQA8bylAtnf3bSYTsms4o3F/view?usp=sharing",
+      "bio": "Andrea Filippo is a Partner Solutions Architect at AWS based in Italy working on modern data architectures and solving problems with serverless technologies.",
+      "linkedin": "andrea-la-scola"
+    }
+  ]
+}
