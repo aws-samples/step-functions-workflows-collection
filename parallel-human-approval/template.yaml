@@ -1,0 +1,80 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  A Step Functions Workflow for parallel Human Approval Process
+
+Parameters:
+  Approver1SNSEmailAddress:
+    Type: String
+    Default: approver@example.com
+    Description: Enter the email address that will receive review notifications.
+  Approver2SNSEmailAddress:
+    Type: String
+    Default: approver@example.com
+    Description: Enter the email address that will receive review notifications.
+  Approver3SNSEmailAddress:
+    Type: String
+    Default: approver@example.com
+    Description: Enter the email address that will receive review notifications.
+  
+Resources:
+##########################################################################
+#   STEP FUNCTION                                                        #
+##########################################################################
+
+  StateMachineParallelHumanAproval:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      DefinitionUri: statemachine/StateMachine.asl.json
+      DefinitionSubstitutions:
+        TopicArn1: !Ref Approver1SNS
+        TopicArn2: !Ref Approver2SNS
+        TopicArn3: !Ref Approver3SNS
+      Type: STANDARD
+      Policies:
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt Approver1SNS.TopicName
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt Approver2SNS.TopicName
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt Approver3SNS.TopicName
+
+
+##########################################################################
+#  SNS Topics                                                            #
+##########################################################################
+  Approver1SNS:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: 'Approver1'
+      Subscription:
+        - Endpoint: !Ref Approver1SNSEmailAddress
+          Protocol: email
+  Approver2SNS:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: 'Approver2'
+      Subscription:
+        - Endpoint: !Ref Approver2SNSEmailAddress
+          Protocol: email
+  Approver3SNS:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: 'Approver3'
+      Subscription:
+        - Endpoint: !Ref Approver3SNSEmailAddress
+          Protocol: email
+            
+##########################################################################
+#   Outputs                                                              #
+##########################################################################
+Outputs:
+  Approver1SNS:
+    Value: !Ref Approver1SNS
+    Description: Approver1SNS Arn
+  Approver2SNS:
+    Value: !Ref Approver2SNS
+    Description: Approver2SNS Arn
+  Approver3SNS:
+    Value: !Ref Approver3SNS
+    Description: Approver3SNS Arn
