@@ -1,0 +1,65 @@
+{
+    "Comment": "A description of my state machine",
+    "StartAt": "Invoke Async API & Wait For CallBack",
+    "States": {
+      "Invoke Async API & Wait For CallBack": {
+        "Type": "Task",
+        "Resource": "${SQSSendMessageAction}",
+        "Parameters": {
+          "QueueUrl": "${SQSQueueURL}",
+          "MessageBody": {
+            "taskToken.$": "$$.Task.Token",
+            "payload.$": "$$.Execution.Input"
+          }
+        },
+        "Next": "Check Response Status",
+        "TimeoutSeconds": 300,
+        "Catch": [
+          {
+            "ErrorEquals": [
+              "States.Timeout",
+              "States.TaskFailed"
+            ],
+            "Next": "SNS Publish - Send Error Notification"
+          }
+        ]
+      },
+      "Check Response Status": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "Variable": "$.status",
+            "NumericEquals": 200,
+            "Next": "SNS Publish - Send Success Notification"
+          }
+        ],
+        "Default": "SNS Publish - Send Error Notification"
+      },
+      "SNS Publish - Send Success Notification": {
+        "Type": "Task",
+        "Resource": "${SNSTopicPublishAction}",
+        "Parameters": {
+          "TopicArn": "${SNSTopicARN}",
+          "Message": {
+            "status": 200,
+            "message": "API Executed Successfully",
+            "body": ""
+          }
+        },
+        "End": true
+      },
+      "SNS Publish - Send Error Notification": {
+        "Type": "Task",
+        "Resource": "${SNSTopicPublishAction}",
+        "Parameters": {
+          "TopicArn": "${SNSTopicARN}",
+          "Message": {
+            "status": 500,
+            "message": "API Failed",
+            "body": ""
+          }
+        },
+        "End": true
+      }
+    }
+  }

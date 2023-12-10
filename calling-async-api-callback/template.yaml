@@ -1,0 +1,151 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  This workflow is a sample usage of AWS Step Functions to invoke Asynchronous API using waitForTaskToken feature
+  
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 30
+
+Resources:
+  DLQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: workflow_requestorDLQ
+  RequestorQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: workflow_requestorQueue
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt DLQueue.Arn
+        maxReceiveCount: 1
+
+  WorkflowExternalAsyncAPISimulator:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      DefinitionUri: statemachine/workflow_ExternalAsyncAPISimulator.asl.json
+      DefinitionSubstitutions:
+        LambdaActionAction: !Sub arn:${AWS::Partition}:states:::lambda:invoke
+        CallbackSystemLambdaFunctionARN: !Ref WorkflowCallbackSimulator
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - LambdaInvokePolicy:
+            FunctionName: !Ref WorkflowCallbackSimulator
+
+  WorkflowAsyncAPICallbackPattern:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      DefinitionUri: statemachine/workflow_AsyncAPICallbackPattern.asl.json
+      DefinitionSubstitutions:
+        SQSSendMessageAction: !Sub arn:${AWS::Partition}:states:::sqs:sendMessage.waitForTaskToken
+        SQSQueueURL: !Ref RequestorQueue
+        SNSTopicARN: !Ref WorkflowAsyncAPIResponseTopic
+        SNSTopicPublishAction: !Sub arn:${AWS::Partition}:states:::sns:publish
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt RequestorQueue.QueueName
+        - SNSCrudPolicy:
+            TopicName: !GetAtt WorkflowAsyncAPIResponseTopic.TopicName
+
+  WorkflowAsyncAPIResponseTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: workflow_AsyncAPIResponseTopic
+      DisplayName: Workflow Async API Response Topic
+  
+  WorkflowResponseLogger:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/workflow_responseLogger/
+      Description: ''
+      MemorySize: 128
+      Timeout: 3
+      Handler: index.handler
+      Runtime: nodejs20.x
+      Architectures:
+        - x86_64
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: !Sub arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:*
+      Events:
+        SNS:
+          Type: SNS
+          Properties:
+            Topic:
+              Ref: WorkflowAsyncAPIResponseTopic
+  WorkflowRequestorQueueConsumer:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/workflow_requestorQueueConsumer/
+      Description: ''
+      MemorySize: 128
+      Timeout: 3
+      Handler: index.handler
+      Runtime: nodejs20.x
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          AWS_REGION_ID: !Sub ${AWS::Region}
+          STATE_MACHINE_ARN: !Ref WorkflowExternalAsyncAPISimulator
+      Policies:
+        - SQSPollerPolicy:
+            QueueName: !GetAtt RequestorQueue.QueueName
+        - StepFunctionsExecutionPolicy:
+            StateMachineName: !GetAtt WorkflowExternalAsyncAPISimulator.Name
+        - Statement:
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: !Sub arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:*
+      Events:
+        SQS1:
+          Type: SQS
+          Properties:
+            Queue:
+              Fn::GetAtt:
+                - RequestorQueue
+                - Arn
+            BatchSize: 10
+
+  WorkflowCallbackSimulator:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/workflow_callbackSimulator/
+      Description: ''
+      MemorySize: 128
+      Timeout: 3
+      Handler: index.handler
+      Runtime: nodejs20.x
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          AWS_REGION_ID: !Sub ${AWS::Region}
+      Policies:
+        - Statement:
+            - Sid: SendTaskSuccessAndFailureToStepFunctions
+              Effect: Allow
+              Action:
+                - states:SendTaskSuccess
+                - states:SendTaskFailure
+              Resource: '*'
+        - Statement:
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: !Sub arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:*
+
+Outputs:
+  WorkflowAsyncAPICallbackPatternArn:
+    Description: "workflow_AsyncAPICallbackPattern the main state machine that will be used as the starting point"
+    Value: !Ref WorkflowAsyncAPICallbackPattern
