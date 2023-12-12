@@ -1,0 +1,100 @@
+{
+  "StartAt": "Start State",
+  "States": {
+    "Start State": {
+      "Type": "Pass",
+      "Next": "Find assets"
+    },
+    "Find assets": {
+      "Next": "Check Assets Found",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ClientExecutionTimeoutException",
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:::function:${fn_find_assets}",
+        "Payload.$": "$.Payload"
+      }
+    },
+    "Check Assets Found": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.Payload.assets",
+          "IsPresent": true,
+          "Next": "Iterate Assets"
+        }
+      ],
+      "Default": "Failed"
+    },
+    "Failed": {
+      "Type": "Fail"
+    },
+    "Iterate Assets": {
+      "Type": "Map",
+      "End": true,
+      "Parameters": {
+        "event.$": "$.Payload.event",
+        "asset.$": "$$.Map.Item.Value"
+      },
+      "Iterator": {
+        "StartAt": "Update metadata form for Asset",
+        "States": {
+          "Update metadata form for Asset": {
+            "Next": "Publish Asset Metadata Revision",
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "Lambda.ClientExecutionTimeoutException",
+                  "Lambda.ServiceException",
+                  "Lambda.AWSLambdaException",
+                  "Lambda.SdkClientException"
+                ],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 6,
+                "BackoffRate": 2
+              }
+            ],
+            "Type": "Task",
+            "Resource": "arn:aws:lambda:::function:${fn_update_metadata}"
+          },
+          "Publish Asset Metadata Revision": {
+            "End": true,
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "Lambda.ClientExecutionTimeoutException",
+                  "Lambda.ServiceException",
+                  "Lambda.AWSLambdaException",
+                  "Lambda.SdkClientException"
+                ],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 6,
+                "BackoffRate": 2
+              }
+            ],
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+              "FunctionName": "arn:aws:lambda:::function:${fn_publish_asset}",
+              "Payload.$": "$"
+            }
+          }
+        }
+      },
+      "ItemsPath": "$.Payload.assets",
+      "MaxConcurrency": 1
+    }
+  }
+}
