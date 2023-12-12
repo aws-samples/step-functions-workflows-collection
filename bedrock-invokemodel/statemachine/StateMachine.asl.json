@@ -1,0 +1,18 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Bedrock InvokeModel",
+  "States": {
+    "Bedrock InvokeModel": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::bedrock:invokeModel",
+      "Parameters": {
+        "Body": {
+          "prompt.$": "States.Format('\n\nHuman: {}\n\nAssistant:', $.prompt)",
+          "max_tokens_to_sample": 200
+        },
+        "ModelId.$": "$.modelID"
+      },
+      "End": true
+    }
+  }
+}

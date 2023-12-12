@@ -1,0 +1,30 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  A Step Functions Workflow for invoking LLM Model on Amazon Bedrock
+  
+Resources:
+##########################################################################
+#   STEP FUNCTION                                                        #
+##########################################################################
+
+  StateMachineBedrockInvokeModel:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      DefinitionUri: statemachine/StateMachine.asl.json
+      Type: STANDARD
+      Policies:
+        - Version: '2012-10-17' # Policy Document
+          Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource: "arn:aws:bedrock:*::foundation-model/*"
+            
+##########################################################################
+#   Outputs                                                              #
+##########################################################################
+Outputs:
+  StateMachineBedrockInvokeModel:
+    Description: "BedrockInvokeModel State machine ARN"
+    Value: !Ref StateMachineBedrockInvokeModel
