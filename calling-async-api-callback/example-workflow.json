@@ -1,0 +1,77 @@
+{
+    "title": "Calling Asynchronous API with Callbacks",
+    "description": "This workflow is a sample usage of AWS Step Functions to invoke Asynchronous API whether this API is provided by an internal or external system, then pause the state machine and wait for this system to complete processing and call your workflow back when it is done.",
+    "language": "",
+    "simplicity": "2 - Pattern",
+    "usecase": "Calling internal or external asynchronous API",
+    "type": "Standard",
+    "diagram":"/resources/call-async-api-callback-graph.png",
+    "videoId": "",
+    "level": "200",
+    "framework": "SAM",
+    "services": ["lambda","sns"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "1. When the state machine get executed, it will send the API payload to Amazon SQS to be consumed by AWS Lambda function which will call the Async API.",
+        "2. The SQS send message step is configured to wait for callback in order to resume the state machine execution. This is configured by using the <a href='https://docs.aws.amazon.com/step-functions/latest/dg/connect-to-resource.html#connect-wait-token'>waitForTaskToken</a> functionality."
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/calling-async-api-callback/",
+        "templateDir":"calling-async-api-callback",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/workflow_AsyncAPICallbackPattern.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "Wait for a Callback with the Task Token",
+          "link": "https://docs.aws.amazon.com/step-functions/latest/dg/connect-to-resource.html#connect-wait-token"
+        },
+        {
+          "text": "Invoking asynchronous external APIs with AWS Step Functions",
+          "link": "https://aws.amazon.com/blogs/architecture/invoking-asynchronous-external-apis-with-aws-step-functions/"
+        },
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Hossam Ebrahim",
+          "image": "https://drive.google.com/file/d/1i37jQRV6vDaLhQJZapLg0CD2AuYeNTS_/view?usp=sharing",
+          "bio": "Hossam Ebrahim is a Solutions Architect at Amazon Web Services, based out of London, UK. With more than 13 years of working experience in software engineering including architecting, designing, and developing enterprise solutions, Hossam is helping AWS customers in their cloud adoption journey. Outside of work he enjoys spending time with his family, and watching movies.",
+          "linkedin": "hossam-ebrahim-86166029"
+        }
+      ]
+  }
+  

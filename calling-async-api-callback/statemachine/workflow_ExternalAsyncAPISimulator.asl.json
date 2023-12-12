@@ -1,0 +1,33 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Wait -  Simulate External Processing Time",
+  "States": {
+    "Wait -  Simulate External Processing Time": {
+      "Type": "Wait",
+      "Next": "Callback the System",
+      "SecondsPath": "$.payload.waitTime"
+    },
+    "Callback the System": {
+      "Type": "Task",
+      "Resource": "${LambdaActionAction}",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "${CallbackSystemLambdaFunctionARN}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "End": true
+    }
+  }
+}
