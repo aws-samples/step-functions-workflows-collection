@@ -1,6 +1,6 @@
 # sagemaker-endpoint-maintainer
 
-This workflow showcases how StepFunctions can provide a LowCode method to cleaning up idle resources. Data Scientists often deploy endpoints on large instances, this method demonstrates auto-maintenance by cleaning up underutilized resources. 
+This workflow showcases how StepFunctions can provide a LowCode method to cleaning up idle resources. Data Scientists often deploy endpoints on large instances, this method demonstrates auto-maintenance by cleaning up underutilized resources. There are four ways to execute Sagemaker Inferencing, Realtime Inference, Async Inference, Batch Inference and Serverless Inference. In this workflow we are focusing on maintenance of Realtime Inference Endpoints. 
 
 Important: this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the [AWS Pricing page](https://aws.amazon.com/pricing/) for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
 
