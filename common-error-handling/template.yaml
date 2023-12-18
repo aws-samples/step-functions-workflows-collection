@@ -1,0 +1,113 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  common-error-sfn
+
+  Sample SAM Template for common-error-sfn
+Resources:
+  CommonErrorOption1StateMachine:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      DefinitionUri: statemachine/common_error_option1.asl.json
+      DefinitionSubstitutions:
+        OddFunctionArn: !GetAtt OddFunction.Arn
+        EvenFunctionArn: !GetAtt EvenFunction.Arn
+        NumberFunctionArn: !GetAtt NumberFunction.Arn
+        CommonErrorOption1FunctionArn: !GetAtt CommonErrorOption1Function.Arn
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+      - LambdaInvokePolicy:
+          FunctionName: !Ref OddFunction
+      - LambdaInvokePolicy:
+          FunctionName: !Ref NumberFunction
+      - LambdaInvokePolicy:
+          FunctionName: !Ref EvenFunction
+      - LambdaInvokePolicy:
+          FunctionName: !Ref CommonErrorOption1Function
+
+  CommonErrorOption2StateMachine:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      DefinitionUri: statemachine/common_error_option2.asl.json
+      DefinitionSubstitutions:
+        OddFunctionArn: !GetAtt OddFunction.Arn
+        EvenFunctionArn: !GetAtt EvenFunction.Arn
+        NumberFunctionArn: !GetAtt NumberFunction.Arn
+        CommonErrorOption2FunctionArn: !GetAtt CommonErrorOption2Function.Arn
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+      - LambdaInvokePolicy:
+          FunctionName: !Ref OddFunction
+      - LambdaInvokePolicy:
+          FunctionName: !Ref NumberFunction
+      - LambdaInvokePolicy:
+          FunctionName: !Ref EvenFunction
+      - LambdaInvokePolicy:
+          FunctionName: !Ref CommonErrorOption2Function
+
+
+  OddFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: functions/odd/
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Architectures:
+      - x86_64
+
+  NumberFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/number/
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Architectures:
+      - x86_64
+
+  EvenFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/even/
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Architectures:
+      - x86_64
+  CommonErrorOption1Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/common_error_option1/
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Architectures:
+      - x86_64
+      Policies:
+        - arn:aws:iam::aws:policy/AWSStepFunctionsFullAccess
+  CommonErrorOption2Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/common_error_option2/
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Architectures:
+      - x86_64
+      Policies:
+        - arn:aws:iam::aws:policy/AWSStepFunctionsFullAccess
+    Connectors:
+      SFNCon:
+        Properties:
+          Destination: 
+            Id: CommonErrorOption2StateMachine
+          Permissions:
+            - Read
+
+Outputs:
+  CommonErrorOption1StateMachineArn:
+    Description: CommonError State machine ARN
+    Value: !Ref CommonErrorOption1StateMachine
+  CommonErrorOption2StateMachineArn:
+    Description: CommonError State machine ARN
+    Value: !Ref CommonErrorOption2StateMachine
+Globals:
+  Function:
+    Tracing: Active
+    # You can add LoggingConfig parameters such as the Logformat, Log Group, and SystemLogLevel or ApplicationLogLevel. Learn more here https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html#sam-function-loggingconfig.
+    LoggingConfig:
+      LogFormat: JSON
