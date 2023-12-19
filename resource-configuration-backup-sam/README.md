@@ -178,11 +178,12 @@ Example data:
             "associationState": {
                 "state": "associated",
                 "statusMessage": null
-           ...
+            }
+           "etc": "..."
          }
-         ...
+         "etc": "..."
         ]
-       ...
+       "etc": "..."
     }
     ```
     
