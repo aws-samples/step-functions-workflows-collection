@@ -1,0 +1,122 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "EventSource",
+  "States": {
+    "EventSource": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "And": [
+            {
+              "Variable": "$.source",
+              "StringEquals": "aws.cloudwatch"
+            },
+            {
+              "Variable": "$.detail.configuration.metrics[0].metricStat.metric.namespace",
+              "StringEquals": "AWS/SageMaker"
+            },
+            {
+              "Or": [
+                {
+                  "Variable": "$.detail.state.value",
+                  "StringEquals": "ALARM"
+                },
+                {
+                  "Variable": "$.detail.state.value",
+                  "StringEquals": " INSUFFICIENT_DATA"
+                }
+              ]
+            }
+          ],
+          "Next": "DeleteEndpoint"
+        },
+        {
+          "Variable": "$.source",
+          "StringEquals": "aws.sagemaker",
+          "Next": "SagemakerEventType"
+        }
+      ],
+      "Default": "OtherCalls"
+    },
+    "SagemakerEventType": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "And": [
+            {
+              "Variable": "$.detail.EndpointStatus",
+              "StringEquals": "DELETED"
+            }
+          ],
+          "Next": "DeleteAlarms"
+        },
+        {
+          "And": [
+            {
+              "Variable": "$.detail.EndpointStatus",
+              "StringEquals": "IN_SERVICE"
+            },
+            {
+              "Variable": "$.detail.Tags.auto-maintain",
+              "StringEquals": "true"
+            }
+          ],
+          "Next": "Wait"
+        }
+      ],
+      "Default": "OtherCalls"
+    },
+    "Wait": {
+      "Type": "Wait",
+      "Seconds": 300,
+      "Next": "PutMetricAlarm"
+    },
+    "PutMetricAlarm": {
+      "Type": "Task",
+      "Parameters": {
+        "AlarmName.$": "$.detail.EndpointName",
+        "Namespace": "AWS/SageMaker",
+        "MetricName": "Invocations",
+        "Dimensions": [
+          {
+            "Name": "EndpointName",
+            "Value.$": "$.detail.EndpointName"
+          },
+          {
+            "Name": "VariantName",
+            "Value": "AllTraffic"
+          }
+        ],
+        "ComparisonOperator": "LessThanOrEqualToThreshold",
+        "DatapointsToAlarm": 3,
+        "EvaluationPeriods": 3,
+        "Period": 300,
+        "Statistic": "Maximum",
+        "Threshold": 0,
+        "TreatMissingData": "breaching"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:cloudwatch:putMetricAlarm",
+      "End": true
+    },
+    "DeleteAlarms": {
+      "Type": "Task",
+      "Parameters": {
+        "AlarmNames.$": "States.Array($.detail.EndpointName)"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:cloudwatch:deleteAlarms",
+      "End": true
+    },
+    "DeleteEndpoint": {
+      "Type": "Task",
+      "End": true,
+      "Parameters": {
+        "EndpointName.$": "$.detail.alarmName"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:sagemaker:deleteEndpoint"
+    },
+    "OtherCalls": {
+      "Type": "Pass",
+      "End": true
+    }
+  }
+}
