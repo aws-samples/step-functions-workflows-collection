@@ -37,7 +37,7 @@
     },
     "gitHub": {
       "template": {
-        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/configuration-backup-sam/",
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/resource-configuration-backup-sam/",
         "templateDir":"configuration-backup-sam",
         "templateFile": "template.yaml",
         "ASL": "statemachine/statemachine.asl.json"
