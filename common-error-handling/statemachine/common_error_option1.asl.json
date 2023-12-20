@@ -1,0 +1,76 @@
+{
+    "Comment": "A state machine that shows the challenges with defining common error handling",
+    "StartAt": "Number Lambda",
+    "States": {
+      "Odd Lambda": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "ResultPath": "$.oddLambda",
+        "Parameters": {
+          "Payload.$": "$",
+          "FunctionName": "${OddFunctionArn}" 
+        },
+        "Next": "Even Lambda",
+        "Catch": [
+          {
+            "ErrorEquals": [
+              "States.ALL"
+            ],
+            "Comment": "send to common error handler",
+            "Next": "Common Error Handler",
+            "ResultPath": "$.oddLambdaFailure"
+          }
+        ]
+      },
+      "Common Error Handler": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "ResultPath": "$.commonErrorLambda",
+        "Parameters": {
+            "FunctionName": "${CommonErrorOption1FunctionArn}",
+            "Payload.$": "$"  
+        },
+        "End": true
+      },
+      "Even Lambda": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "ResultPath": "$.evenLambda",
+        "Parameters": {
+          "Payload.$": "$",
+          "FunctionName": "${EvenFunctionArn}"
+        },
+        "End": true,
+        "Catch": [
+          {
+            "ErrorEquals": [
+              "States.ALL"
+            ],
+            "Comment": "send to common error handler",
+            "Next": "Common Error Handler",
+            "ResultPath": "$.evenLambdaFailure"
+          }
+        ]
+      },
+      "Number Lambda": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "ResultPath": "$.numberLambda",
+        "Parameters": {
+          "Payload.$": "$",
+          "FunctionName": "${NumberFunctionArn}"
+        },
+        "Next": "Odd Lambda",
+        "Catch": [
+          {
+            "ErrorEquals": [
+              "States.ALL"
+            ],
+            "Comment": "send to common error handler",
+            "Next": "Common Error Handler",
+            "ResultPath": "$.numberLambdaFailure"
+          }
+        ]
+      }
+    }
+  }

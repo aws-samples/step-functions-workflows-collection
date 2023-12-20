@@ -1,0 +1,69 @@
+{
+    "title": "Common Error Handling",
+    "description": "Catch error from multiple states with a single common error handling state",
+    "language": "Python",
+    "simplicity": "2 - Pattern",
+    "usecase": "Error handling",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "200",
+    "framework": "SAM",
+    "services": ["lambda"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "These example Step Functions show how to use a common error reporting task within a Step Function. People often want to use a single common error reporting task within their Step Function so that they don't have to duplicate the functionality across many different states. The challenge with this approach is that while that common error reporting task can get the error message from whatever state failed, it doesn't actually get the name of the state that failed. This is a challenge if you have two dozen different Lambda functions, and you're not sure which one caused the error. These example workflows work around this problem in two different ways."
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/common-error-handling/",
+        "templateDir":"common-error-handling",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/common_error_option1.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Adam Wagner",
+          "image": "https://serverlessland.com/assets/images/resources/contributors/adam.jpg",
+          "bio": "Principal Serverless Solutions Architect at AWS.",
+          "linkedin": "adam-wagner-4bb412",
+          "mastodon": "https://hachyderm.io/@oathead"
+        }
+      ]
+  }
+  
