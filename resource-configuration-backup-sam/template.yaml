@@ -1,0 +1,115 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  A general purpose AWS Step Functions Workflow to gather Resource specific configuration data from an AWS Config Aggregator and stores it in a new Amazon S3 Bucket.
+  This solution requires an AWS Config Aggregator to already be setup and active.
+
+
+Resources:
+##########################################################################
+#   State Machine (Express, Uses provided asl.json definition file)      #
+##########################################################################
+  StateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/statemachine.asl.json
+      Role: !GetAtt StateMachineExecutionRole.Arn
+      Type: EXPRESS
+      Logging:
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt StateMachineLogGroup.Arn
+        IncludeExecutionData: true
+        Level: 'ALL'
+
+##########################################################################
+#  CloudWatch Log Group  (90 Day Retention)                              #
+##########################################################################
+  StateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Join [ "/", [ "stepfunctions", !Ref AWS::StackName, "StateMachine"]]
+      RetentionInDays: 90
+
+##########################################################################
+#  S3   (Private Bucket with AES256 SSE)                                 #
+##########################################################################
+  S3StorageBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption: 
+        ServerSideEncryptionConfiguration: 
+        - ServerSideEncryptionByDefault:
+            SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+##########################################################################
+#   Role (to call AWS Config, Write to CloudWatch Logs, Write to S3)     #
+##########################################################################             
+  StateMachineExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - !Sub states.${AWS::Region}.amazonaws.com
+            Action: "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        - PolicyName: StateMachineExecution
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Resource:
+                  - !Sub ${S3StorageBucket.Arn}/*
+                Action:
+                  - s3:PutObject
+              - Effect: Allow
+                Resource:
+                  - !Sub arn:${AWS::Partition}:config:${AWS::Region}:${AWS::AccountId}:config-aggregator/*
+                Action:
+                  - config:ListAggregateDiscoveredResources
+                  - config:BatchGetAggregateResourceConfig
+        -  PolicyName: LogPermissions
+           PolicyDocument:
+             Version: "2012-10-17"
+             Statement:
+              - Effect: Allow
+                Action:
+                  - logs:*
+                  - cloudwatch:*
+                Resource: "*"
+
+                  
+
+Outputs:
+  StateMachineArn:
+    Value: !GetAtt StateMachine.Arn
+    Description: ARN of the State Machine
+  StateMachineLogGroupName:
+    Value: !Ref StateMachineLogGroup
+    Description: Name of the CloudWatch Log Group
+  S3BucketName:
+    Value: !Ref S3StorageBucket
+    Description: Name of the existing S3 Bucket to allow writing to
+  LogGroupName:
+    Value: !Ref StateMachineLogGroup
+    Description: Name of the CloudWatch Log Group
+
+  
+##########################################################################
+# Example JSON input payload (for use with the AWS Step Function UI)
+# {
+#   "ResourceTypesToLookup": ["AWS::EC2::VPC", "AWS::Route53Resolver::ResolverRule", "AWS::ElasticLoadBalancingV2::LoadBalancer"],
+#   "ConfigAggregatorName": "aggregator-name",
+#   "PaginationLimit": 100,
+#   "S3BucketName": "bucket-name"
+# }
+##########################################################################

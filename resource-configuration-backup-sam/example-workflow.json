@@ -1,0 +1,70 @@
+{
+    "title": "Configuration Backup",
+    "description": "Configuration backup Workflow based on Resource Types",
+    "language": "",
+    "simplicity": "2 - Pattern",
+    "usecase": "",
+    "type": "Express",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "200",
+    "framework": "SAM",
+    "services": ["config","s3"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "This low-code workflow uses AWS SDK integrations to call AWS Config and Amazon S3 APIs when gathering and storing Resource Type specific configuration data, based on the supplied input.",
+        "This solution requires an AWS Config Aggregator to already be setup and active."
+
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/resource-configuration-backup-sam/",
+        "templateDir":"resource-configuration-backup-sam",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Shehryar Abbasi",
+          "image": "https://github.com/ShehryarAbbasi.png",
+          "bio": "Senior DevOps Cloud Architect at AWS. Providing consultation and guidance to enterprises on their cloud journey. Experienced in the areas of operational excellence, platform engineering, automation, self-service, and modern architecture patterns.",
+          "linkedin": "https://www.linkedin.com/in/shehryarabbasi"
+        }
+      ]
+  }
+  

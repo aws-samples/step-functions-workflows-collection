@@ -1,0 +1,177 @@
+{
+    "Comment": "State Machine Workflow to gather and save Resource specific configuration data",
+    "StartAt": "InputMapping",
+    "States": {
+      "InputMapping": {
+        "Type": "Map",
+        "ItemProcessor": {
+          "ProcessorConfig": {
+            "Mode": "INLINE"
+          },
+          "StartAt": "ListAggregateDiscoveredResources",
+          "States": {
+            "ListAggregateDiscoveredResources": {
+              "Type": "Task",
+              "Next": "MapResolverRulesAndAssociations",
+              "Parameters": {
+                "ConfigurationAggregatorName.$": "$$.Execution.Input.ConfigAggregatorName",
+                "ResourceType.$": "$",
+                "Limit.$": "$$.Execution.Input.PaginationLimit"
+              },
+              "Resource": "arn:aws:states:::aws-sdk:config:listAggregateDiscoveredResources",
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "States.Timeout",
+                    "States.TaskFailed"
+                  ],
+                  "BackoffRate": 2,
+                  "IntervalSeconds": 5,
+                  "MaxAttempts": 20,
+                  "Comment": "Retry Handler"
+                }
+              ]
+            },
+            "MapResolverRulesAndAssociations": {
+              "Type": "Map",
+              "ItemProcessor": {
+                "ProcessorConfig": {
+                  "Mode": "INLINE"
+                },
+                "StartAt": "BatchGetAggregateResourceConfig",
+                "States": {
+                  "BatchGetAggregateResourceConfig": {
+                    "Type": "Task",
+                    "Next": "WriteToS3WithResourceNameOrResourceId",
+                    "Parameters": {
+                      "ConfigurationAggregatorName.$": "$$.Execution.Input.ConfigAggregatorName",
+                      "ResourceIdentifiers": [
+                        {
+                          "ResourceId.$": "$.ResourceId",
+                          "ResourceType.$": "$.ResourceType",
+                          "SourceAccountId.$": "$.SourceAccountId",
+                          "SourceRegion.$": "$.SourceRegion"
+                        }
+                      ]
+                    },
+                    "Resource": "arn:aws:states:::aws-sdk:config:batchGetAggregateResourceConfig",
+                    "Retry": [
+                      {
+                        "ErrorEquals": [
+                          "States.Timeout",
+                          "States.TaskFailed"
+                        ],
+                        "BackoffRate": 2,
+                        "IntervalSeconds": 5,
+                        "MaxAttempts": 20,
+                        "Comment": "Retry Handler"
+                      }
+                    ],
+                    "OutputPath": "$.BaseConfigurationItems[0]"
+                  },
+                  "WriteToS3WithResourceNameOrResourceId": {
+                    "Type": "Choice",
+                    "Choices": [
+                      {
+                        "Variable": "$.ResourceName",
+                        "IsPresent": true,
+                        "Next": "PutObjectUsingResourceName"
+                      }
+                    ],
+                    "Default": "PutObjectUsingResourceId"
+                  },
+                  "PutObjectUsingResourceName": {
+                    "Type": "Task",
+                    "Parameters": {
+                      "Body.$": "$",
+                      "Bucket.$": "$$.Execution.Input.S3BucketName",
+                      "Key.$": "States.Format('{}/{}/{}/{}/{}/{}/{}.json', 'config-snapshots-by-date', States.ArrayGetItem(States.StringSplit($$.Execution.StartTime, 'T'), 0), $.AccountId, $.AwsRegion, States.ArrayGetItem(States.StringSplit($.ResourceType, '::'), 1), States.ArrayGetItem(States.StringSplit($.ResourceType, '::'), 2), $.ResourceName)"
+                    },
+                    "Resource": "arn:aws:states:::aws-sdk:s3:putObject",
+                    "Retry": [
+                      {
+                        "ErrorEquals": [
+                          "States.TaskFailed"
+                        ],
+                        "BackoffRate": 2,
+                        "IntervalSeconds": 2,
+                        "MaxAttempts": 3,
+                        "Comment": "Retry Handler",
+                        "JitterStrategy": "FULL"
+                      }
+                    ],
+                    "End": true
+                  },
+                  "PutObjectUsingResourceId": {
+                    "Type": "Task",
+                    "Parameters": {
+                      "Body.$": "$",
+                      "Bucket.$": "$$.Execution.Input.S3BucketName",
+                      "Key.$": "States.Format('{}/{}/{}/{}/{}/{}/{}.json', 'config-snapshots-by-date', States.ArrayGetItem(States.StringSplit($$.Execution.StartTime, 'T'), 0), $.AccountId, $.AwsRegion, States.ArrayGetItem(States.StringSplit($.ResourceType, '::'), 1), States.ArrayGetItem(States.StringSplit($.ResourceType, '::'), 2), $.ResourceId)"
+                    },
+                    "Resource": "arn:aws:states:::aws-sdk:s3:putObject",
+                    "Retry": [
+                      {
+                        "ErrorEquals": [
+                          "States.TaskFailed"
+                        ],
+                        "BackoffRate": 2,
+                        "IntervalSeconds": 2,
+                        "MaxAttempts": 3,
+                        "Comment": "Retry Handler",
+                        "JitterStrategy": "FULL"
+                      }
+                    ],
+                    "ResultPath": null,
+                    "End": true
+                  }
+                }
+              },
+              "ItemsPath": "$.ResourceIdentifiers",
+              "ResultPath": null,
+              "Next": "Choice"
+            },
+            "Choice": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.NextToken",
+                  "IsPresent": true,
+                  "Next": "ListAggregateDiscoveredResources-Pagination"
+                }
+              ],
+              "Default": "Success"
+            },
+            "ListAggregateDiscoveredResources-Pagination": {
+              "Type": "Task",
+              "Parameters": {
+                "ConfigurationAggregatorName.$": "$$.Execution.Input.ConfigAggregatorName",
+                "ResourceType.$": "$.ResourceIdentifiers[0].ResourceType",
+                "NextToken.$": "$.NextToken",
+                "Limit.$": "$$.Execution.Input.PaginationLimit"
+              },
+              "Resource": "arn:aws:states:::aws-sdk:config:listAggregateDiscoveredResources",
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "States.Timeout",
+                    "States.TaskFailed"
+                  ],
+                  "BackoffRate": 2,
+                  "IntervalSeconds": 5,
+                  "MaxAttempts": 20,
+                  "Comment": "Retry Handler"
+                }
+              ],
+              "Next": "MapResolverRulesAndAssociations"
+            },
+            "Success": {
+              "Type": "Succeed"
+            }
+          }
+        },
+        "ItemsPath": "$.ResourceTypesToLookup",
+        "End": true
+      }
+    }
+  }
