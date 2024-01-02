@@ -22,6 +22,14 @@ Important: this application uses various AWS services and there are costs associ
     ```
     cd lambda-orchestration-sam
     ```
+1. Fix an indentition issue in the template.yaml file
+    ```
+    on line 50: BuySellRecommendLog
+    ```
+1. Build it
+    ```
+    sam build
+    ```
 1. From the command line, use AWS SAM to deploy the AWS resources for the workflow as specified in the template.yaml file:
     ```
     sam deploy --guided
