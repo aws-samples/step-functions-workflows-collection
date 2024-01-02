@@ -47,7 +47,7 @@ Resources:
       RetentionInDays: 1
       LogGroupName: !Sub "/aws/lambda/${ResourcePrefix}-check-stock-fn"
   
-    BuySellRecommendLog:
+  BuySellRecommendLog:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 1
