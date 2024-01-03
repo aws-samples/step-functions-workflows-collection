@@ -64,7 +64,9 @@ This Sample Deploy json files from `ressources/assets` folder into the S3 Bucket
 Run this command to create a high number of files before deployment
 
 ```shell
-    cd resources/assets && for i in {1..100}; do cp example1.json "example$i.json"; done
+    cd resources/assets && for i in {1..100000}; do cp example1.json "example$i.json"; done
+
+     aws s3 sync . s3://<S3-Bucket-Name>
 ```
 
 This step function demonstrates oprimized treatment of s3 objects with native service integrations:

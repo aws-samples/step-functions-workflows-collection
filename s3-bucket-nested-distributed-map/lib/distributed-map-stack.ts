@@ -18,14 +18,9 @@ export class DistributedMapStack extends Stack {
       autoDeleteObjects: true
     });
 
-    new BucketDeployment(this, "S3AssetLocalUpload", {
-      sources: [Source.asset('./resources/assets')],
-      destinationBucket: inputBucket,
-    });
-
     const distributedMap = new CustomState(this, 'S3 Distributed Map State Machine', {
       stateJson: {
-        MaxConcurrency: 100,
+        MaxConcurrency: 1000,
         ToleratedFailurePercentage: 100,
         OutputPath: null,
         Type: "Map",
@@ -38,7 +33,7 @@ export class DistributedMapStack extends Stack {
           }
         ],
         ItemBatcher: {
-          MaxItemsPerBatch: 2,
+          MaxItemsPerBatch: 10,
         },
         ItemProcessor: {
           ProcessorConfig: {
@@ -48,7 +43,7 @@ export class DistributedMapStack extends Stack {
           StartAt: "ProcessObjects",
           States: {
             ProcessObjects: {
-              MaxConcurrency: 300,
+              MaxConcurrency: 1000,
               ToleratedFailurePercentage: 100,
               ItemsPath: "$.Items",
               ResultPath: null,
@@ -64,7 +59,7 @@ export class DistributedMapStack extends Stack {
                 }
               ],
               ItemBatcher: {
-                MaxItemsPerBatch: 1,
+                MaxItemsPerBatch: 10,
               },
               ItemProcessor: {
                 ProcessorConfig: {
