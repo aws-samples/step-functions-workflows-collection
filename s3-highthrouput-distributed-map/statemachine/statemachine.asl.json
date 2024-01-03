@@ -3,7 +3,7 @@
   "States":{
      "S3 Distributed Map State Machine":{
         "Next":"Fail",
-        "MaxConcurrency":300,
+        "MaxConcurrency":1000,
         "ToleratedFailurePercentage":100,
         "OutputPath":null,
         "Type":"Map",
@@ -16,7 +16,7 @@
            }
         ],
         "ItemBatcher":{
-           "MaxItemsPerBatch":300
+           "MaxItemsPerBatch":10
         },
         "ItemProcessor":{
            "ProcessorConfig":{
@@ -26,7 +26,7 @@
            "StartAt":"ProcessObjects",
            "States":{
               "ProcessObjects":{
-                 "MaxConcurrency":100,
+                 "MaxConcurrency":1000,
                  "ToleratedFailurePercentage":100,
                  "ItemsPath":"$.Items",
                  "ResultPath":null,
@@ -42,7 +42,7 @@
                     }
                  ],
                  "ItemBatcher":{
-                    "MaxItemsPerBatch":30
+                    "MaxItemsPerBatch":10
                  },
                  "ItemProcessor":{
                     "ProcessorConfig":{
