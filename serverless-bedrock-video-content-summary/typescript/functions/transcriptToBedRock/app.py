@@ -85,7 +85,7 @@ def lambda_handler(event, context):
     # Convert the response body from JSON bytes to a python dictionary
     response_body_bedrock = json.loads(response.get('body').read())
     
-     # The response from the model now mapped to the answer
+    # The response from the model now mapped to the answer
     summary_answer_bedrock = response_body_bedrock.get('completions')[0].get('data').get('text')
     
 
