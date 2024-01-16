@@ -49,7 +49,7 @@
     },
     "resources": {
         "headline": "Additional Resources",
-        "bullets": [
+        "bullets": [{
             "title:"Amazon Titan",
 "link:"https://aws.amazon.com/bedrock/titan/"
         ]
