@@ -13,7 +13,7 @@
     "framework": "CDK",
     "services": [
         "Amazon Bedrock",
-        "AWS Step Functions",
+        "sfn",
         "cloudfront",
         "transcribe"
     ],
