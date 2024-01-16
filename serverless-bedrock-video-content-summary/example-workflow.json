@@ -14,7 +14,7 @@
     "services": [
         "Amazon Bedrock",
         "AWS Step Functions",
-        "Amazon CloudFront",
+        "cloudfront",
         "transcribe"
     ],
     "introBox": {
