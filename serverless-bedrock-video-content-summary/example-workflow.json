@@ -51,7 +51,7 @@
         "headline": "Additional Resources",
         "bullets": [
             "title:"Amazon Titan",
-            "https://aws.amazon.com/pm/transcribe/?gclid=CjwKCAiAsIGrBhAAEiwAEzMlC3wUxDxX2S--25-QEcVjoLRVWzAFHufxH9x0hhxKxelgGU6jSAOSzBoCf6cQAvD_BwE&trk=5201f5f7-bf8b-4a2d-b097-1e900426c1d2&sc_channel=ps&ef_id=CjwKCAiAsIGrBhAAEiwAEzMlC3wUxDxX2S--25-QEcVjoLRVWzAFHufxH9x0hhxKxelgGU6jSAOSzBoCf6cQAvD_BwE:G:s&s_kwcid=AL!4422!3!652937811575!e!!g!!amazon%20transcribe!19909696445!152804588132"
+"link:"https://aws.amazon.com/bedrock/titan/"
         ]
     },
     "authors": [
