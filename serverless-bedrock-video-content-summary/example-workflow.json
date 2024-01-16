@@ -22,7 +22,6 @@
         "text": [
             "The step function for the transcoding workflow orchestrates the AWS Elemental MediaConvert service process:",
             "In this use case, users upload a video via a UI. This UI is hosted on an S3 bucket and delivered through Amazon CloudFront.",
-            "When a video is uploaded, it triggers an AWS account event. Amazon EventBridge captures this event. The system either transcodes the video for Amazon Transcribe or directly feeds it if already compatible.",
             "Both trancode and bedrock workflow are orchestrated by AWS Step Functions state machine, check the Github repo for more information"
         ]
     },
