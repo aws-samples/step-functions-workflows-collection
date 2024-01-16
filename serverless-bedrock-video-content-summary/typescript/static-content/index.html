@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>File Uploader</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        header, footer {
+            padding: 10px;
+            background-color: #333;
+            color: white;
+            width: 100%;
+            text-align: center;
+        }
+
+        footer {
+            position: relative;
+            bottom: -10;
+        }
+
+        #progress-bar-container {
+            width: 50%;
+            background-color: #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        #progress-bar {
+            height: 20px;
+            background-color: #4CAF50;
+            width: 0%;
+            line-height: 20px; /* Center the text vertically */
+            color: white;
+        }
+
+        #video-response-container {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+        }
+        
+        form {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>File Uploader</h1>
+</header>
+
+<div class="container">
+    <form id="upload-form">
+        <input id="file-upload" type="file" accept="video/*" />
+        <button type="submit">Upload Video</button>
+    </form>
+
+    <div id="progress-bar-container">
+        <div id="progress-bar"></div>
+    </div>
+    <!-- Add this inside your <div class="container"> element -->
+    <div id="query-form">
+        <input id="video-id-input" type="text" placeholder="Enter Video ID" />
+        <button id="query-button">Get Video Description</button>
+    </div>
+
+    <!-- Optionally, add an element to display the video description -->
+    <div id="video-description-container">
+        <p id="video-description"></p>
+    </div>
+    <div id="video-response-container">
+        <p id="video-response"></p>
+    </div>
+  
+</div>
+
+<footer>
+    <p>2023 AWS Serverless</p>
+</footer>
+
+<script src="upload-script.js"></script>
+</body>
+</html>
+
