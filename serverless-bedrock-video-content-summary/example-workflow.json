@@ -1,7 +1,7 @@
 {
     "title": "Generate video content summary with Amazon Bedrock",
     "description": "Meeting recordings uploaded through a UI trigger an AWS event, leading to transcription by Amazon Transcribe and summarization using AI21 Lab's Jurassic-2 Ultra model, with results stored in DynamoDB and accessible via the UI.",
-    "language": "Typescript,Python",
+    "language": "Python",
     "simplicity": "3 - Application",
     "usecase": "",
     "type": "Standard",
