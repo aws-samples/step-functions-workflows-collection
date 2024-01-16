@@ -15,7 +15,7 @@
         "Amazon Bedrock",
         "AWS Step Functions",
         "Amazon CloudFront",
-        "Amazon Transcribe"
+        "transcribe"
     ],
     "introBox": {
         "headline": "How it works",
