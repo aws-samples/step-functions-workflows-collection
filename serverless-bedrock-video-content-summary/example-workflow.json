@@ -12,7 +12,7 @@
     "level": "300",
     "framework": "CDK",
     "services": [
-        "Amazon Bedrock",
+        "bedrock",
         "sfn",
         "cloudfront",
         "transcribe"
