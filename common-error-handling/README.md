@@ -4,8 +4,7 @@ These example Step Functions show how to use a common error reporting task withi
 
 Neither of these examples do anything with the information about what task errored or the error itself, other than logging it.
 
-Learn more about this workflow at Step Functions workflows collection: << Add the live URL here >>
-
+Learn more about this workflow at Step Functions workflows collection: [https://serverlessland.com/workflows/common-error-handling](https://serverlessland.com/workflows/common-error-handling)
 Important: this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the [AWS Pricing page](https://aws.amazon.com/pricing/) for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
 
 ## Requirements
