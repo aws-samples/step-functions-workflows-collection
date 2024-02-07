@@ -1,0 +1,57 @@
+{
+  "title": "Orchestrate continuous running Glue Workflow",
+  "description": "This workflow demonstrates how to orchestrate a continuous running Glue Workflow.",
+  "language": "",
+  "simplicity": "2 - Pattern",
+  "usecase": "Orchestrating continous running Glue Workflow",
+  "type": "Standard",
+  "diagram": "/resources/stepfunctions_graph.png",
+  "videoId": "",
+  "level": "200",
+  "framework": "Terraform",
+  "services": ["glue","stepfunctions"],
+  "introBox": {
+    "headline": "How it works",
+    "text": [
+      "1. Triggering Glue Workflow: Initially, the Step Function triggers a Glue workflow to begin its execution",
+      "2. Polling for Completion: After triggering the Glue workflow, the Step Function enters a polling loop. It periodically checks the status of the Glue workflow, every 60 seconds.",
+      "3. Completion Check: Once the Glue workflow completes, the Step Function checks if there are any failed actions within the workflow.",
+      "4. Decision Making: If there are no failed actions detected, the Step Function initiates a new execution of itself, thereby starting the process all over again. This effectively creates a continuous loop of triggering Glue workflows",
+      "5. Decision Making: If there are failed actions within the Glue workflow, the Step Function stops its execution. This ensures that the process halts when errors or failures occur during the Glue workflow execution"
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": [
+      "See the GitHub repo for detailed testing instructions."
+    ]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": [
+      "1. Delete the stack: <code>terraform destroy</code>."
+    ]
+  },
+  "deploy": {
+    "text": [
+      "terraform init",
+      "terraform apply"
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "The AWS Step Functions Workshop",
+        "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Swapnil Kesarkar",
+      "bio": "Swapnil Kesarkar is a Mission Critical Engineer at Schuberg Philis, based out of Netherlands",
+      "linkedin": "swapnil-kesarkar-6500247a"
+    }
+  ]
+}
