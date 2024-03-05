@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: SAM template to create a Lambda function in Python 3.12 runtime, SNS topic with user-provided email destination, and schedule a Step Function using EventBridge to run every 5 minutes
+Description: SAM template to create a Lambda function in Python 3.12 runtime, SNS topic with user-provided email destination, and schedule a Step Function using EventBridge to run every 10 minutes
 
 Parameters:
   EmailAddress:
@@ -17,7 +17,7 @@ Resources:
         ZipFile: |
           import pandas
           import json
-          
+
           def handler(event, context):
               # TODO implement
               return {
@@ -80,7 +80,7 @@ Resources:
     Type: AWS::Events::Rule
     Properties:
       Description: Schedule rule for triggering Step Function every 5 minutes
-      ScheduleExpression: "rate(5 minutes)" # Schedule the execution every 5 minutes
+      ScheduleExpression: "rate(10 minutes)" # Schedule the execution every 5 minutes
       State: ENABLED
       Targets:
         - Arn: !Ref StepFunctionStateMachine

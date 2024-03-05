@@ -1,6 +1,6 @@
 # Email Notification on StepFunction Execution Error
 
-This workflow aims to promptly send an email notification in the event of an error occurring during the execution of the state machine. Operating on an EventBridge schedule, the workflow involves a Lambda task that encounters “ImportModule” error, triggering an email notification through an SNS topic. The workflow setup is as follows:
+This workflow aims to promptly send an email notification in the event of an error occur during the execution of the state machine. Operating on an EventBridge schedule, the workflow involves a Lambda task that encounters “ImportModule” error, triggering an email notification through an SNS topic. The workflow setup is as follows:
 
 ![image](./resources/workflow.png)
 

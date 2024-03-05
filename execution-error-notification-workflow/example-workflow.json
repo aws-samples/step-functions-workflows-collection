@@ -1,8 +1,8 @@
 {
-    "title": "Synchronous Job",
-    "description": "Wait for an asynchroous Job to finish before moving onto the next state",
+    "title": "Email Notification on StepFunction Execution Error",
+    "description": "Receive an email alert through SNS during Step Function error which runs on an EventBridge schedule",
     "language": "",
-    "simplicity": "1 - Fundamental",
+    "simplicity": "2 -  Pattern",
     "usecase": "",
     "type": "Standard",
     "diagram":"/resources/statemachine.png",
