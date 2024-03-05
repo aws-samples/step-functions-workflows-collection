@@ -50,7 +50,6 @@ State machine executes every 10 minutes and it catches the error by sending an e
 
 
 ## Image
-Provide an exported .png of the workflow in the `/resources` directory from [Workflow stuio](https://docs.aws.amazon.com/step-functions/latest/dg/workflow-studio.html) and add here.
 ![image](./resources/statemachine.png)
 
 ## Testing

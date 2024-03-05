@@ -80,7 +80,7 @@ Resources:
     Type: AWS::Events::Rule
     Properties:
       Description: Schedule rule for triggering Step Function every 5 minutes
-      ScheduleExpression: "rate(10 minutes)" # Schedule the execution every 5 minutes
+      ScheduleExpression: "rate(10 minutes)" # Schedule the execution every 10 minutes
       State: ENABLED
       Targets:
         - Arn: !Ref StepFunctionStateMachine
