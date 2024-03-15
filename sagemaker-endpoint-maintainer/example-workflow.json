@@ -9,7 +9,7 @@
   "videoId": "",
   "level": "200",
   "framework": "CDK",
-  "services": ["eventbridge", "cloudwatch", "stepfunctions"],
+  "services": ["sagemaker", "eventbridge", "cloudwatch", "stepfunctions"],
   "introBox": {
     "headline": "How it works",
     "text": [
