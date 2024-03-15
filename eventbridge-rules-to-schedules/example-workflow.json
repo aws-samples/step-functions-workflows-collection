@@ -13,12 +13,13 @@
     "introBox": {
       "headline": "How it works",
       "text": [
-        "This workflow processes EventBridge rules with ScheduleExpression using Lambda function and maps over each rule to create corresponding schedules using the AWS SDK CreateSchedule.",
-        "It can enable, disable, or preserve rule states based on input.",
-        "It can also enable or disable the new schedule.",
-        "The workflow handles up to 260000 scheduled rules with max concurrency of 50.",
-        "It also handles pagination with NextToken.",
-        "Please check the GitHub repo for the payload format."
+        "EventBridge released Scheduler in Nov 2022, a new feature that expands on the functionality of scheduled rules and decoupled from the event bus.",
+        "New capabilities were launched on Scheduler such as Time Zone support, one time schedules, higher scale supporting millions of schedules, time windows and the ability to invoke over 200 services and over 6000 APIs Scheduler.",
+        "For scheduled rules users on the event bus who wish to leverage these new features we’ve designed a migration workflow to easily move your scheduled rules from the bus to a schedule in EventBridge Scheduler.",
+        "This workflow orchestrates AWS Lambda functions to process Amazon EventBridge rules with ScheduleExpression, generating corresponding schedules via the AWS SDK CreateSchedule service.",
+        "It can enable, disable, or maintain rule states based on input, including toggling the new schedule.",
+        "Designed for scalability, it manages up to 260,000 scheduled rules with a concurrency limit of 50, handling pagination efficiently with NextToken.",
+        "Refer to the GitHub repo for payload details."
       ]
     },
     "testing": {
