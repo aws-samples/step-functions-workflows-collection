@@ -1,0 +1,109 @@
+{
+    "Comment": "Step Function to orchestrate continous running glue Workflow",
+    "StartAt": "StartWorkflowRun",
+    "States": {
+      "StartWorkflowRun": {
+        "Type": "Task",
+        "Parameters": {
+          "Name.$": "$.workflow_name"
+        },
+        "Resource": "arn:aws:states:::aws-sdk:glue:startWorkflowRun",
+        "Next": "Wait until worflow run is completed",
+        "ResultPath": "$.taskresult"
+      },
+      "Wait until worflow run is completed": {
+        "Type": "Wait",
+        "Seconds": 60,
+        "Next": "GetWorkflowRun"
+      },
+      "GetWorkflowRun": {
+        "Type": "Task",
+        "Parameters": {
+          "Name.$": "$.workflow_name",
+          "RunId.$": "$.taskresult.RunId"
+        },
+        "Resource": "arn:aws:states:::aws-sdk:glue:getWorkflowRun",
+        "Next": "CheckWorkFlowRunStatus",
+        "Retry": [
+          {
+            "ErrorEquals": [
+              "Glue.GlueException"
+            ],
+            "BackoffRate": 1,
+            "IntervalSeconds": 2,
+            "MaxAttempts": 6
+          }
+        ]
+      },
+      "CheckWorkFlowRunStatus": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "Variable": "$.Run.Status",
+            "StringEquals": "RUNNING",
+            "Next": "Transform data required for GetWorkflowRun state"
+          },
+          {
+            "Variable": "$.Run.Status",
+            "StringEquals": "COMPLETED",
+            "Next": "CheckWorkFlowRunStatistics"
+          }
+        ],
+        "Default": "Fail"
+      },
+      "Transform data required for GetWorkflowRun state": {
+        "Type": "Pass",
+        "Parameters": {
+          "taskresult": {
+            "RunId.$": "$.Run.WorkflowRunId"
+          },
+          "workflow_name.$": "$.Run.Name"
+        },
+        "Next": "Wait until worflow run is completed"
+      },
+      "Fail": {
+        "Type": "Fail"
+      },
+      "CheckWorkFlowRunStatistics": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "Not": {
+              "Variable": "$.Run.Statistics.FailedActions",
+              "NumericEquals": 0
+            },
+            "Next": "Fail"
+          },
+          {
+            "Variable": "$.Run.Status",
+            "StringEquals": "COMPLETED",
+            "Next": "Wait before start of next run"
+          }
+        ]
+      },
+      "Wait before start of next run": {
+        "Type": "Wait",
+        "Seconds": 60,
+        "Next": "Transform data required for execution of Step Function"
+      },
+      "Transform data required for execution of Step Function": {
+        "Type": "Pass",
+        "Next": "Step Functions StartExecution",
+        "Parameters": {
+          "workflow_name.$": "$.Run.Name"
+        }
+      },
+      "Step Functions StartExecution": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::states:startExecution",
+        "Parameters": {
+          "StateMachineArn": "${state_machine_arn}",
+          "Input": {
+            "workflow_name.$": "$.workflow_name",
+            "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+          }
+        },
+        "End": true
+      }
+    }
+  }
