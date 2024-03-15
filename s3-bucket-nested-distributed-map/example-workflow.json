@@ -1,0 +1,71 @@
+{
+  "title": "S3 Distributed Map",
+  "description": "Read and Transform S3 objects using a distributed map",
+  "language": "Typescript",
+  "simplicity": "2 - Pattern",
+  "usecase": "",
+  "type": "Standard",
+  "diagram":"/resources/stepfunctions_graph.png",
+  "videoId": "",
+  "level": "300",
+  "framework": "CDK",
+  "services": ["stepfunction","s3","sns"],
+  "introBox": {
+    "headline": "How it works",
+    "text": [
+      "This workflow is an example application of a step function using a Distributed map. This distributed map reads all objects in S3 bucket.",
+			"Each Batch of files will be treated by a NESTED Distributed map, the nested distributed map as well add a new level of distribution by rebatching into smaller batches.",
+      "For processing each small batch will be treated by a INLINE map as core to get object and publish object body as results."
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": [
+      "See the GitHub repo for detailed testing instructions."
+    ]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": [
+      
+      "1. Delete the stack: <code>npm run cdk:destroy</code>."
+    ]
+  },
+  "deploy": {
+    "text": [
+      "1. Bootstrap CDK, if needed: <code>cdk bootstrap aws://{your-aws-account-number}/{your-aws-region}</code>",
+      "2. Deploy the stack: <code>npm run cdk:deploy</code>"
+    ]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/s3-high-throughput-distributed-map-cdk/",
+      "templateDir":"s3-high-throughput-distributed-map-cdk",
+      "templateFile": "app.py",
+      "ASL": "statemachine/statemachine.asl.json"
+    },
+    "payloads": [
+      {
+        "headline": "",
+        "payloadURL": ""
+      }
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "The AWS Step Functions Workshop",
+        "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Omid Eidivandi",
+      "image": "https://media.licdn.com/dms/image/C5603AQHCdQJPl04YtA/profile-displayphoto-shrink_800_800/0/1581423565523?e=1708560000&v=beta&t=ZtYc3v5Rf6Ma-0ccCDr2OGDeB7ketH6L24O8ble_Y3Q",
+      "bio": "Omid is a Solution Architect and Serverless Folk interested about Serverless and event driven architectures. He is passionate about helping community to build well architected solutions on AWS",
+      "linkedin": "mike-ellis-3a1589b7"
+    }
+  ]
+}
