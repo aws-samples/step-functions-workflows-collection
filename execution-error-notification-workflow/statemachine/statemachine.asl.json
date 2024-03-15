@@ -1,0 +1,31 @@
+{
+  "Comment": "A state machine to send SNS email notification on execution error",
+  "StartAt": "InvokeLambda",
+  "States": {
+    "InvokeLambda": {
+      "Type": "Task",
+      "Resource": "${LambdaArn}",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "SendErrorNotification"
+        }
+      ],
+      "End": true
+    },
+    "SendErrorNotification": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "${SnsTopicArn}",
+        "Message": {
+          "ExecutionArn.$": "$$.Execution.Id",
+          "Error.$": "$.Error",
+          "Cause.$": "$.Cause"
+        },
+        "Subject": "Step Function Error Notification"
+      },
+      "End": true
+    }
+  }
+}

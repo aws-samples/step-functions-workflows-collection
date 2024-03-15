@@ -1,0 +1,71 @@
+{
+    "title": "Email Notification on StepFunction Execution Error",
+    "description": "Receive an email alert through SNS during Step Function error which runs on an EventBridge schedule",
+    "language": "",
+    "simplicity": "2 -  Pattern",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "100",
+    "framework": "SAM",
+    "services": ["Lambda","SNS","EventBridge"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "This workflow submits an AWS Batch job. In its normal state the job is asynchronous. The state machine submits the job to the AWS Batch service and waits for the job to complete before sending a Notify Success message to an Amazon SNS topic.",
+        "This is done by making use of Step Functions `.sync` execution pattern"
+
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/synchronous-job/",
+        "templateDir":"synchronous-job",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Your name",
+          "image": "link-to-your-photo.jpg",
+          "bio": "Your bio.",
+          "linkedin": "linked-in-ID",
+          "twitter": "twitter-handle"
+        }
+      ]
+  }
+  

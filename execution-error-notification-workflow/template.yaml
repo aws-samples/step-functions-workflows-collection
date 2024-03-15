@@ -1,0 +1,132 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: SAM template to create a Lambda function in Python 3.12 runtime, SNS topic with user-provided email destination, and schedule a Step Function using EventBridge to run every 10 minutes
+
+Parameters:
+  EmailAddress:
+    Description: Email address to receive error notifications
+    Type: String
+
+Resources:
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import pandas
+          import json
+
+          def handler(event, context):
+              # TODO implement
+              return {
+                'statusCode': 200,
+                'body': json.dumps('Hello from Lambda!')
+              }
+      Runtime: python3.12
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "lambda.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Policies:
+        - PolicyName: LambdaExecutionPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: "arn:aws:logs:::*"
+
+  SnsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: "Step Function Error Notifications"
+      Subscription:
+        - Protocol: email
+          Endpoint: !Ref EmailAddress
+  
+  EventBridgeRuleExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: EventBridgeStepFunctionExecutionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'states:StartExecution'
+                Resource: !Ref StepFunctionStateMachine
+
+  ScheduleRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Schedule rule for triggering Step Function every 5 minutes
+      ScheduleExpression: "rate(10 minutes)" # Schedule the execution every 10 minutes
+      State: ENABLED
+      Targets:
+        - Arn: !Ref StepFunctionStateMachine
+          Id: "StepFunctionTarget"
+          RoleArn: !GetAtt EventBridgeRuleExecutionRole.Arn
+
+  StepFunctionStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/statemachine.asl.json
+      DefinitionSubstitutions:
+        LambdaArn: !GetAtt LambdaFunction.Arn
+        SnsTopicArn: !GetAtt SnsTopic.TopicArn
+      Role: !GetAtt StepFunctionRole.Arn
+
+  StepFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "states.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Policies:
+        - PolicyName: StepFunctionPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "lambda:InvokeFunction"
+                  - "sns:Publish"
+                Resource: "*"
+
+Outputs:
+  LambdaFunctionArn:
+    Description: ARN of the Lambda function
+    Value: !GetAtt LambdaFunction.Arn
+  SnsTopicArn:
+    Description: ARN of the SNS topic
+    Value: !Ref SnsTopic
+  EventBridgeScheduleRuleArn:
+    Description: ARN of the EventBridge schedule rule
+    Value: !GetAtt ScheduleRule.Arn
+  StepFunctionStateMachineArn:
+    Description: ARN of the Step Function state machine
+    Value: !Ref StepFunctionStateMachine
