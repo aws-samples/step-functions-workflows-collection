@@ -1,0 +1,87 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Lambda Invoke",
+  "States": {
+    "Lambda Invoke": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${WorkloadFunctionArn}",
+        "Payload.$": "$"
+      },
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Decrement Retries",
+          "ResultPath": "$.LambdaResult"
+        }
+      ],
+      "InputPath": "$.payload",
+      "OutputPath": "$.Payload",
+      "Next": "Success"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "Decrement Retries": {
+      "Type": "Pass",
+      "Next": "Check Retries",
+      "Parameters": {
+        "retries.$": "States.MathAdd($.retries, -1)",
+        "payload.$": "$.payload",
+        "LambdaResult.$": "$.LambdaResult"
+      }
+    },
+    "Check Retries": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.retries",
+          "NumericGreaterThan": 0,
+          "Next": "Lambda Invoke"
+        }
+      ],
+      "Default": "Handle Error"
+    },
+    "Handle Error": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "InputPath": "$.LambdaResult",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "${ErrorHandlerFunctionArn}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Success",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Fail",
+          "Comment": "Failed to handle"
+        }
+      ]
+    },
+    "Fail": {
+      "Type": "Fail",
+      "Cause": "Retries ran out, error handling failed.",
+      "Error": "ErrorHandlingFailed"
+    }
+  }
+}
