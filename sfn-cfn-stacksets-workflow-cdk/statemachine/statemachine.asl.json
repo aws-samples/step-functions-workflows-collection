@@ -1,0 +1,214 @@
+{
+  "StartAt": "ListRoots",
+  "States": {
+    "ListRoots": {
+      "Next": "CreateOrDelete?",
+      "Type": "Task",
+      "ResultPath": "$.org",
+      "ResultSelector": {
+        "rootOU.$": "$.Roots[0].Id"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:organizations:listRoots",
+      "Parameters": {}
+    },
+    "CreateOrDelete?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.operation",
+          "StringEquals": "create",
+          "Next": "CreateStackSet"
+        },
+        {
+          "Variable": "$.operation",
+          "StringEquals": "delete",
+          "Next": "DeleteStackInstances"
+        }
+      ],
+      "Default": "InvalidInput"
+    },
+    "InvalidInput": {
+      "Type": "Fail",
+      "Error": "InvalidInput",
+      "Cause": "Input Params should be ( \"operation\": \"create\"|\"delete\" }"
+    },
+    "CreateStackSet": {
+      "Next": "CreateStackInstances",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "CloudFormation.NameAlreadyExistsException"
+          ],
+          "Next": "StackSetExists"
+        }
+      ],
+      "Type": "Task",
+      "ResultPath": "$.StackSetId",
+      "Resource": "arn:aws:states:::aws-sdk:cloudformation:createStackSet",
+      "Parameters": {
+        "StackSetName": "sfn-cfn-stackset",
+        "Description": "StackSet for creating IAM roles in linked accounts",
+        "ManagedExecution": {
+          "Active": true
+        },
+        "PermissionModel": "SERVICE_MANAGED",
+        "Capabilities": [
+          "CAPABILITY_NAMED_IAM"
+        ],
+        "AutoDeployment": {
+          "Enabled": true,
+          "RetainStacksOnAccountRemoval": false
+        },
+        "Parameters": [
+          {
+            "ParameterKey": "ManagementAccountId",
+            "ParameterValue.$": "$.managementAccountId"
+          }
+        ],
+        "TemplateURL.$": "$.templateURL"
+      }
+    },
+    "CreateStackInstances": {
+      "Next": "Creating, Wait 5s",
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:cloudformation:createStackInstances",
+      "Parameters": {
+        "StackSetName": "sfn-cfn-stackset",
+        "Regions": [
+          "us-east-1"
+        ],
+        "DeploymentTargets": {
+          "OrganizationalUnitIds.$": "States.Array($.org.rootOU)"
+        }
+      }
+    },
+    "Creating, Wait 5s": {
+      "Type": "Wait",
+      "Seconds": 5,
+      "Next": "CheckCreatingStackSetStatus"
+    },
+    "Create Completed?": {
+      "Type": "Choice",
+      "OutputPath": "$.StackSetOperation",
+      "Choices": [
+        {
+          "Or": [
+            {
+              "Variable": "$.StackSetOperation.Status",
+              "StringEquals": "RUNNING"
+            },
+            {
+              "Variable": "$.StackSetOperation.Status",
+              "StringEquals": "QUEUED"
+            }
+          ],
+          "Next": "Creating, Wait 5s"
+        },
+        {
+          "Variable": "$.StackSetOperation.Status",
+          "StringEquals": "SUCCEEDED",
+          "Next": "StackSet Created"
+        }
+      ],
+      "Default": "CreateStackSetFailed"
+    },
+    "CheckCreatingStackSetStatus": {
+      "Next": "Create Completed?",
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:cloudformation:describeStackSetOperation",
+      "Parameters": {
+        "StackSetName": "sfn-cfn-stackset",
+        "OperationId.$": "$.OperationId"
+      }
+    },
+    "CreateStackSetFailed": {
+      "Type": "Fail",
+      "ErrorPath": "$.error",
+      "CausePath": "$.cause"
+    },
+    "StackSet Created": {
+      "Type": "Succeed"
+    },
+    "StackSetExists": {
+      "Type": "Fail",
+      "Error": "CreateStackSetsFailed",
+      "Cause": "StackSet already exists"
+    },
+    "DeleteStackInstances": {
+      "Next": "Deleting, Wait 5s",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "CloudFormation.StackSetNotFoundException"
+          ],
+          "Next": "DeleteStackSetFailed"
+        }
+      ],
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:cloudformation:deleteStackInstances",
+      "Parameters": {
+        "StackSetName": "sfn-cfn-stackset",
+        "Regions": [
+          "us-east-1"
+        ],
+        "DeploymentTargets": {
+          "OrganizationalUnitIds.$": "States.Array($.org.rootOU)"
+        },
+        "RetainStacks": "false"
+      }
+    },
+    "Deleting, Wait 5s": {
+      "Type": "Wait",
+      "Seconds": 5,
+      "Next": "CheckDeletingStackSetStatus"
+    },
+    "Delete Completed?": {
+      "Type": "Choice",
+      "OutputPath": "$.StackSetOperation",
+      "Choices": [
+        {
+          "Or": [
+            {
+              "Variable": "$.StackSetOperation.Status",
+              "StringEquals": "RUNNING"
+            },
+            {
+              "Variable": "$.StackSetOperation.Status",
+              "StringEquals": "QUEUED"
+            }
+          ],
+          "Next": "Deleting, Wait 5s"
+        },
+        {
+          "Variable": "$.StackSetOperation.Status",
+          "StringEquals": "SUCCEEDED",
+          "Next": "DeleteStackSet"
+        }
+      ],
+      "Default": "DeleteStackSetFailed"
+    },
+    "CheckDeletingStackSetStatus": {
+      "Next": "Delete Completed?",
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:cloudformation:describeStackSetOperation",
+      "Parameters": {
+        "StackSetName": "sfn-cfn-stackset",
+        "OperationId.$": "$.OperationId"
+      }
+    },
+    "DeleteStackSetFailed": {
+      "Type": "Fail",
+      "Error": "Failed to Delete StackSets",
+      "Cause": "StackSet not found or StackSet Status was one of 'FAILED | STOPPING | STOPPED'"
+    },
+    "DeleteStackSet": {
+      "End": true,
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:cloudformation:deleteStackSet",
+      "Parameters": {
+        "StackSetName": "sfn-cfn-stackset"
+      }
+    }
+  },
+  "Comment": "SFN Pattern to Create/Delete CFN StackSets"
+}
