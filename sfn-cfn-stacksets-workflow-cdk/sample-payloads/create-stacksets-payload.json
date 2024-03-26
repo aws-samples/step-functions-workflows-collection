@@ -1,0 +1,5 @@
+{
+    "operation": "create",
+    "managementAccountId": "0123456789",
+    "templateURL": "https://cf-templates-xxxxxxxxxx-us-east-1.s3.amazonaws.com/stackset-template.yaml"
+}
