@@ -20,6 +20,9 @@ Resources:
                 "rekognition:StartSegmentDetection",
                 "mediaconvert:CreateJob",
                 "mediaconvert:GetJob",
+                "events:PutTargets",
+                "events:PutRule",
+                "events:DescribeRule"
                 ]
               Resource: "*"
 
