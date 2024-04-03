@@ -1,0 +1,78 @@
+{
+    "title": "Video segment detection and edition workflow",
+    "description": "This workflow is a sample of how you can leverage AWS Step Functions for performing typical video edition. Specifically, this example uses a video that has a SMPTE color bars of random duration and the beginning. The workflow will get a demo video from S3, puts it through Amazon Rekognition for detecting segments, and then Amazon MediaConvert removes the initial video segment (SMPTE color bars). ",
+    "language": "",
+    "simplicity": "3 - Application",
+    "usecase": "Video Processing",
+    "type": "Standard",
+    "diagram":"./resources/statemachine.png",
+    "videoId": "",
+    "level": "200",
+    "framework": "SAM",
+    "services": ["mediaconvert","rekognition","s3","step functions"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "This workflow automates the video edition process by leveraging Amazon Rekognition for detecting segments and Amazon MediaConvert for removing segments.",
+        "As input you will use a video file with SMPTE color bars at the beginning, and as output you will get a clean video file without SMPTE color bars." 
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/segment-detection-workflow/",
+        "templateDir":"segment-detection-workflow",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "Amazon Rekognition - Segment Detection",
+          "link": "https://docs.aws.amazon.com/rekognition/latest/dg/segments.html"
+        },
+        {
+          "text": "Amazon MediaConvert - Working with jobs",
+          "link": "https://docs.aws.amazon.com/mediaconvert/latest/ug/working-with-jobs.html"
+        },
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Aryam Gutierrez",
+          "image": "https://serverlessland.com/assets/images/resources/contributors/ext-agutierrezl.png",
+          "bio": "Aryam is a Solutions Architect at Amazon Web Service based in Spain",
+          "linkedin": "aryaml",
+          "twitter": "aryam_gl"
+        }
+      ]
+  }
+  
