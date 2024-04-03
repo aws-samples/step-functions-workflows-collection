@@ -53,9 +53,9 @@
         "Type": "Task",
         "Resource": "arn:aws:states:::mediaconvert:createJob.sync",
         "Parameters": {
-          "Queue": "arn:aws:mediaconvert:us-east-1:${ACCOUNT_ID}:queues/Default",
+          "Queue": "arn:aws:mediaconvert:us-east-1:${AWS_ACCOUNT_ID}:queues/Default",
           "UserMetadata": {},
-          "Role": "arn:aws:iam::${ACCOUNT_ID}:role/service-role/MediaConvert_Default_Role",
+          "Role": "${MEDIACONVERT_ROLE}",
           "Settings": {
             "TimecodeConfig": {
               "Source": "ZEROBASED"
