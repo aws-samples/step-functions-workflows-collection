@@ -49,7 +49,7 @@ Resources:
                   "s3:List*",
                   "s3:Put*"
                   ]
-                Resource: !Ref S3Bucket
+                Resource: !GetAtt S3Bucket.Arn
 
 
 # List all common outputs for usage
