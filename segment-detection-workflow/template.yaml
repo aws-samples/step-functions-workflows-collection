@@ -55,8 +55,10 @@ Resources:
                 Resource: !GetAtt S3Bucket.Arn
 
 
-# List all common outputs for usage
 Outputs:
-  MySegementDetectionAndSubstitutionArn:
+  MySegementDetectionStateMachineArn:
     Description: "MySampleStateMachine ARN"
     Value: !Ref MySampleStateMachine
+  S3Bucket:
+    Description: "Video input/output S3 bucket"
+    Value: !Ref S3Bucket
