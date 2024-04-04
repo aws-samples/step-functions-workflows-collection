@@ -1,4 +1,4 @@
-# Segment Detection and Edition
+# Video Segment Detection and Edition
 
 This workflow automates the video edition process by leveraging Amazon Rekognition for detecting segments and Amazon MediaConvert for removing segments.
 
@@ -38,15 +38,26 @@ Important: this application uses various AWS services and there are costs associ
 
 ## How it works
 
-Explain how the workflow works.
+This workflow automates the video edition process by leveraging Amazon Rekognition for detecting segments and Amazon MediaConvert for removing segments. As input you will use a video file with SMPTE color bars at the beginning, and as output you will get a transcoded clean video file without SMPTE color bars.
+For the input you will use a video created for the demo. Once you deploy via SAM, note the S3 bucket where you have to upload the video. The output S3 bucket should the same.
 
-## Image
-Provide an exported .png of the workflow in the `/resources` directory from [Workflow stuio](https://docs.aws.amazon.com/step-functions/latest/dg/workflow-studio.html) and add here.
+Workflow starts by calling Amazon Rekognition for Segment Detection. The time taken for the Segment Detection Job will vary depending on the length of the video, so the workflow implements loop with Wait and Choice states. Between the Wait and Choice states, and every 60 seconds, the workflow calls the GetSegmentDetection API of Amazon Rekognition to confirm the status of the job. If the job didn't finish, the workflow stays in the loop. If the job finished, the workflow passes the segments to MediaConvert for processing.
+
+Finally, MediaCovert received as input the segments (one of them is the SMPTE color bars at the beginning of the video), and the S3 video, and it triggers the transcoding job. During the transcoding job, MediaConvert removes the SMPTE color bars. MediaConvert CreateJob is a synchronous call following the Run a Job (.sync) pattern in AWS Step Functions, which means you don't need to implement any loop until the job finished (as we did with Amazon Rekognition), Step Functions handles that with MediaConvert for you.
+
+Note: The loop implementation for Amazon Rekognition Segment Detection Job, can be implemented differently with custom code and Lambda functions, but for simplification we used simple Wait and Choice states to maintain all low-code. Additionally, in a production environment, you should also handle failures from the Segment Detection Job.
+
+## State Machine
+
 ![image](./resources/statemachine.png)
 
 ## Testing
 
-Once your have deployed the statemachine, you should trigger it and see how it in action. For that:
+Once your have deployed the state machine, you should trigger it and see how it works in action. For that:
+
+1. Go to the Amazon S3 console in you AWS Account.
+
+1. Identify the S3 bucket created via SAM (look a the SAM output), and upload the video stored in the folder *./resources* of your cloned repo.
 
 1. Go to the AWS Step Functions console in you AWS Account.
 
@@ -54,17 +65,17 @@ Once your have deployed the statemachine, you should trigger it and see how it i
 
 1.  Click on the state machine name and then click **Start Execution** in the top-right of you screen.
 
-1. In the following window, introduce the input of the state machine. It should look like the below json.
+1. In the following window, introduce the input of the state machine. Substitute the *bucket name* (don't use s3://). It should look like the below json. 
 
     ```json
     {
         "Input": {
-            "Bucket": "INPUT_BUCKET_NAME",
-            "Key": "INPUT_SOURCE_NAME"
+            "Bucket": "{S3 BUCKET NAME CREATED VIA SAM}",
+            "Key": "source_video.mp4"
         },
         "Output": {
-            "Bucket": "OUTPUT_BUCKET_NAME",
-            "Key": "OUTPUT_PREFIX/"
+            "Bucket": "{S3 BUCKET NAME CREATED VIA SAM}",
+            "Key": "output/"
         }
     }
     ```
