@@ -38,34 +38,34 @@ Important: this application uses various AWS services and there are costs associ
 
 ## How it works
 
-This workflow automates the video edition process by leveraging Amazon Rekognition for detecting segments and Amazon MediaConvert for removing segments. As input you will use a video file with SMPTE color bars at the beginning, and as output you will get a transcoded clean video file without SMPTE color bars.
-For the input you will use a video created for the demo. Once you deploy via SAM, note the S3 bucket where you have to upload the video. The output S3 bucket should the same.
+This workflow automates the video edition process by leveraging Amazon Rekognition for detecting segments, and Amazon MediaConvert for removing segments. As input you will use a video file with SMPTE color bars at the beginning, and as output you will get a transcoded clean video file without SMPTE color bars.
+For the input you will use a video created for the demo. Once you deploy via SAM, note the S3 bucket where you have to upload the video. The output S3 bucket should be the same.
 
 Workflow starts by calling Amazon Rekognition for Segment Detection. The time taken for the Segment Detection Job will vary depending on the length of the video, so the workflow implements loop with Wait and Choice states. Between the Wait and Choice states, and every 60 seconds, the workflow calls the GetSegmentDetection API of Amazon Rekognition to confirm the status of the job. If the job didn't finish, the workflow stays in the loop. If the job finished, the workflow passes the segments to MediaConvert for processing.
 
-Finally, MediaCovert received as input the segments (one of them is the SMPTE color bars at the beginning of the video), and the S3 video, and it triggers the transcoding job. During the transcoding job, MediaConvert removes the SMPTE color bars. MediaConvert CreateJob is a synchronous call following the Run a Job (.sync) pattern in AWS Step Functions, which means you don't need to implement any loop until the job finished (as we did with Amazon Rekognition), Step Functions handles that with MediaConvert for you.
+Finally, MediaCovert received the segments as input (one of them is the SMPTE color bars at the beginning of the video), and the S3 video, to then triggering the transcoding job. During the transcoding job, MediaConvert removes the SMPTE color bars. MediaConvert CreateJob is a synchronous call following the [Run a Job (.sync)](https://docs.aws.amazon.com/step-functions/latest/dg/connect-to-resource.html#connect-sync) pattern in AWS Step Functions, which means you don't need to implement any loop to get the job status (as we did with Amazon Rekognition); Step Functions handles that with MediaConvert for you.
 
-Note: The loop implementation for Amazon Rekognition Segment Detection Job, can be implemented differently with custom code and Lambda functions, but for simplification we used simple Wait and Choice states to maintain all low-code. Additionally, in a production environment, you should also handle failures from the Segment Detection Job.
+Note: The loop implementation for Amazon Rekognition Segment Detection Job, can be implemented differently with custom code and Lambda functions, but for simplification we use simple Wait and Choice states to maintain all low-code. Additionally, in a production environment, you should also handle failures from the Segment Detection Job.
 
 ## State Machine
 
-![image](./resources/statemachine.png)
+<div style="text-align:center"><img src="./resources/statemachine.png" /></div>
 
 ## Testing
 
-Once your have deployed the state machine, you should trigger it and see how it works in action. For that:
+Once your have deployed the state machine, you should trigger it and see it in action. For that:
 
 1. Go to the Amazon S3 console in you AWS Account.
 
-1. Identify the S3 bucket created via SAM (look a the SAM output), and upload the video stored in the folder *./resources* of your cloned repo.
+1. Identify the S3 bucket created via SAM (look at the SAM output), and upload the video stored in the folder *./resources* of your cloned repo.
 
 1. Go to the AWS Step Functions console in you AWS Account.
 
-1. Identify the State Machine. You should see a state machine with a name that matches the output of the sam deploy command.
+1. Identify the State Machine. You should see a state machine with a name that matches to the ARN in the output of the sam deploy command.
 
-1.  Click on the state machine name and then click **Start Execution** in the top-right of you screen.
+1.  Click on the state machine name and then click on **Start Execution** in the top-right of your screen.
 
-1. In the following window, introduce the input of the state machine. Substitute the *bucket name* (don't use s3://). It should look like the below json. 
+1. In the following window, introduce the input of the state machine. Substitute the *bucket name* (don't use s3://). It should look like the below json.
 
     ```json
     {
@@ -83,9 +83,10 @@ Once your have deployed the state machine, you should trigger it and see how it 
 1. Click on **Start Execution**
 
 1. It will take few minutes, but once the workflow finished, you should see an image like the below.
-![image](./resources/workflow.png)
 
-1. At this point you can go to the Output S3 bucket to see the video edited.
+<div style="text-align:center"><img src="./resources/workflow.png" /></div>
+
+1. At this point you can go to the output S3 bucket to watch the video edited, without the SMPTE color bars at the beginning.
 
 ## Cleanup
  
