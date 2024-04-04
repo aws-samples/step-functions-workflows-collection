@@ -25,6 +25,17 @@ Resources:
                 "events:DescribeRule"
                 ]
               Resource: "*"
+            - Effect: "Allow"
+              Action: [
+                "iam:PassRole"
+                ]
+              Resource: "*"
+              Condition: 
+                StringLike: 
+                  "iam:PassedToService": "mediaconvert.amazonaws.com"
+        - S3ReadPolicy:
+            BucketName: !Ref S3Bucket
+
 
   S3Bucket:
     Type: 'AWS::S3::Bucket'
