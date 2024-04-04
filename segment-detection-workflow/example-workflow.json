@@ -1,6 +1,6 @@
 {
     "title": "Video segment detection and edition workflow",
-    "description": "This workflow is a sample of how you can leverage AWS Step Functions for performing typical video edition. Specifically, this example uses a video that has a SMPTE color bars of random duration and the beginning. The workflow will get a demo video from S3, puts it through Amazon Rekognition for detecting segments, and then Amazon MediaConvert removes the initial video segment (SMPTE color bars). ",
+    "description": "This workflow is a sample of how you can leverage AWS Step Functions for performing typical video edition. Specifically, this example uses a video that has a SMPTE color bars of random duration and the beginning. The workflow will get a demo video from S3, puts it through Amazon Rekognition for detecting segments, and then Amazon MediaConvert removes the initial video segment (SMPTE color bars).",
     "language": "",
     "simplicity": "3 - Application",
     "usecase": "Video Processing",
@@ -31,7 +31,8 @@
     },
     "deploy": {
       "text": [
-        "sam deploy --guided"
+        "sam build",
+        "sam deploy --guided --capabilities CAPABILITY_NAMED_IAM"
       ]
     },
     "gitHub": {
