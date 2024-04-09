@@ -90,6 +90,7 @@ Once your have deployed the state machine, you should trigger it and see it in a
 
 ## Cleanup
  
+1. Empty the S3 bucket created via SAM
 1. Delete the stack
     ```bash
     sam delete
