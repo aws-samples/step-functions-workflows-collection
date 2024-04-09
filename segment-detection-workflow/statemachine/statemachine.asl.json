@@ -53,7 +53,7 @@
         "Type": "Task",
         "Resource": "arn:aws:states:::mediaconvert:createJob.sync",
         "Parameters": {
-          "Queue": "arn:aws:mediaconvert:us-east-1:${AWS_ACCOUNT_ID}:queues/Default",
+          "Queue": "arn:aws:mediaconvert:{REGION}:${AWS_ACCOUNT_ID}:queues/Default",
           "UserMetadata": {},
           "Role": "${MEDIACONVERT_ROLE}",
           "Settings": {

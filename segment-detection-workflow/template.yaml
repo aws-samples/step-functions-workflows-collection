@@ -11,6 +11,7 @@ Resources:
       DefinitionSubstitutions:
         AWS_ACCOUNT_ID: !Ref AWS::AccountId
         MEDIACONVERT_ROLE : !Ref MediaConvertRole
+        REGION: !Ref AWS::Region
       Policies:
         - Version: "2012-10-17"
           Statement: 
