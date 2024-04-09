@@ -10,7 +10,7 @@ Resources:
       DefinitionUri: statemachine/statemachine.asl.json
       DefinitionSubstitutions:
         AWS_ACCOUNT_ID: !Ref AWS::AccountId
-        MEDIACONVERT_ROLE : !Ref MediaConvertRole
+        MEDIACONVERT_ROLE : !GetAtt MediaConvertRole.Arn
         REGION: !Ref AWS::Region
       Policies:
         - Version: "2012-10-17"
@@ -64,7 +64,13 @@ Resources:
                   "s3:List*",
                   "s3:Put*"
                   ]
-                Resource: !GetAtt S3Bucket.Arn
+                Resource:
+                  - !GetAtt S3Bucket.Arn
+                  - !Join 
+                      - ''
+                      - - !GetAtt S3Bucket.Arn
+                        - '/*'
+                  
 
 
 Outputs:
