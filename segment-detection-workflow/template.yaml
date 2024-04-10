@@ -1,0 +1,82 @@
+
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Step Functions Workflow - description
+
+Resources:
+  MySampleStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/statemachine.asl.json
+      DefinitionSubstitutions:
+        AWS_ACCOUNT_ID: !Ref AWS::AccountId
+        MEDIACONVERT_ROLE : !GetAtt MediaConvertRole.Arn
+        REGION: !Ref AWS::Region
+      Policies:
+        - Version: "2012-10-17"
+          Statement: 
+            - Effect: "Allow"
+              Action: [
+                "rekognition:GetSegmentDetection",
+                "rekognition:StartSegmentDetection",
+                "mediaconvert:CreateJob",
+                "mediaconvert:GetJob",
+                "events:PutTargets",
+                "events:PutRule",
+                "events:DescribeRule"
+                ]
+              Resource: "*"
+            - Effect: "Allow"
+              Action: [
+                "iam:PassRole"
+                ]
+              Resource: "*"
+              Condition: 
+                StringLike: 
+                  "iam:PassedToService": "mediaconvert.amazonaws.com"
+        - S3ReadPolicy:
+            BucketName: !Ref S3Bucket
+
+
+  S3Bucket:
+    Type: 'AWS::S3::Bucket'
+
+  MediaConvertRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - mediaconvert.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies: 
+        - PolicyName: "mediaconvert_default"
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement: 
+              - Effect: "Allow"
+                Action: [
+                  "s3:Get*",
+                  "s3:List*",
+                  "s3:Put*"
+                  ]
+                Resource:
+                  - !GetAtt S3Bucket.Arn
+                  - !Join 
+                      - ''
+                      - - !GetAtt S3Bucket.Arn
+                        - '/*'
+                  
+
+
+Outputs:
+  MySegementDetectionStateMachineArn:
+    Description: "MySampleStateMachine ARN"
+    Value: !Ref MySampleStateMachine
+  S3Bucket:
+    Description: "Video input/output S3 bucket"
+    Value: !Ref S3Bucket

@@ -1,0 +1,111 @@
+{
+    "Comment": "A description of my state machine",
+    "StartAt": "StartSegmentDetection",
+    "States": {
+      "StartSegmentDetection": {
+        "Type": "Task",
+        "Parameters": {
+          "Filters": {
+            "ShotFilter": {
+              "MinSegmentConfidence": 95
+            }
+          },
+          "SegmentTypes": [
+            "TECHNICAL_CUE"
+          ],
+          "Video": {
+            "S3Object": {
+              "Bucket.$": "$.Input.Bucket",
+              "Name.$": "$.Input.Key"
+            }
+          }
+        },
+        "Resource": "arn:aws:states:::aws-sdk:rekognition:startSegmentDetection",
+        "Next": "Wait",
+        "ResultPath": "$.SegmentJob"
+      },
+      "Wait": {
+        "Type": "Wait",
+        "Seconds": 60,
+        "Next": "GetSegmentDetection"
+      },
+      "GetSegmentDetection": {
+        "Type": "Task",
+        "Parameters": {
+          "JobId.$": "$.SegmentJob.JobId"
+        },
+        "Resource": "arn:aws:states:::aws-sdk:rekognition:getSegmentDetection",
+        "Next": "Choice",
+        "ResultPath": "$.Segments"
+      },
+      "Choice": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "Variable": "$.Segments.JobStatus",
+            "StringEquals": "SUCCEEDED",
+            "Next": "MediaConvert CreateJob"
+          }
+        ],
+        "Default": "Wait"
+      },
+      "MediaConvert CreateJob": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::mediaconvert:createJob.sync",
+        "Parameters": {
+          "Queue": "arn:aws:mediaconvert:${REGION}:${AWS_ACCOUNT_ID}:queues/Default",
+          "UserMetadata": {},
+          "Role": "${MEDIACONVERT_ROLE}",
+          "Settings": {
+            "TimecodeConfig": {
+              "Source": "ZEROBASED"
+            },
+            "OutputGroups": [
+              {
+                "Name": "Apple HLS",
+                "Outputs": [
+                  {
+                    "Preset": "System-Ott_Hls_Ts_Avc_Aac_16x9_1280x720p_30Hz_5.0Mbps",
+                    "NameModifier": "test"
+                  }
+                ],
+                "OutputGroupSettings": {
+                  "Type": "HLS_GROUP_SETTINGS",
+                  "HlsGroupSettings": {
+                    "SegmentLength": 10,
+                    "Destination.$": "States.Format('s3://{}/{}', $.Output.Bucket, $.Output.Key)",
+                    "MinSegmentLength": 0
+                  }
+                }
+              }
+            ],
+            "FollowSource": 1,
+            "Inputs": [
+              {
+                "InputClippings": [
+                  {
+                    "StartTimecode.$": "$.Segments.Segments[0].EndTimecodeSMPTE"
+                  }
+                ],
+                "AudioSelectors": {
+                  "Audio Selector 1": {
+                    "DefaultSelection": "DEFAULT"
+                  }
+                },
+                "VideoSelector": {},
+                "TimecodeSource": "ZEROBASED",
+                "FileInput.$": "States.Format('s3://{}/{}', $.Input.Bucket, $.Input.Key)"
+              }
+            ]
+          },
+          "BillingTagsSource": "JOB",
+          "AccelerationSettings": {
+            "Mode": "DISABLED"
+          },
+          "StatusUpdateInterval": "SECONDS_60",
+          "Priority": 0
+        },
+        "End": true
+      }
+    }
+  }
