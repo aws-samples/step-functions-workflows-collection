@@ -17,22 +17,22 @@ Important: this application uses various AWS services and there are costs associ
     ``` 
     git clone REPO_NAME
     ```
-1. Change directory to the pattern directory:
+2. Change directory to the pattern directory:
     ```
-    cd lambda-cleanup
+    cd step-functions-lambda-versions-cleanup
     ```
-1. From the command line, initialize Terraform to download and install the providers defined in the configuration:
+3. From the command line, initialize Terraform to download and install the providers defined in the configuration:
     ```
     terraform init
     ```
-1. From the command line, apply the configuration in the main.tf file:
+4. From the command line, apply the configuration in the main.tf file:
     ```
     terraform apply -var='lambda_function_filter_prefix= '
     ```
-1. During the prompts:
+5. During the prompts:
     * Enter yes
 
-1. Note the outputs from the Terraform deployment process. These contain the resource names and/or ARNs which are used for testing.
+6. Note the outputs from the Terraform deployment process. These contain the resource names and/or ARNs which are used for testing.
 
 ## How it works
 
@@ -48,15 +48,15 @@ Important: this application uses various AWS services and there are costs associ
 ## Cleanup
 1. Change directory to the pattern directory:
     ```bash
-    cd lambda-cleanup
+    cd step-functions-lambda-versions-cleanup
     ```
-1. Delete all created resources
+2. Delete all created resources
     ```bash
     terraform destroy
     ```
-1. During the prompts:
+3. During the prompts:
     * Enter yes
-1. Confirm all created resources has been deleted
+4. Confirm all created resources have been deleted
     ```bash
     terraform show
     ```
