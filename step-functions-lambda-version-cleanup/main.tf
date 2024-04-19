@@ -92,70 +92,70 @@ module "sort_functions_fn" {
 # --------------------------------------------------
 # ----------  EventBridge Scheduler Schedule 
 # --------------------------------------------------
-#resource "aws_scheduler_schedule" "lambda_cleanup_state_machine_eb_schedule" {
-  #name       = "lambda-cleanup-state-machine-eb-schedule"
-  #group_name = "default"
+resource "aws_scheduler_schedule" "lambda_cleanup_state_machine_eb_schedule" {
+  name       = "lambda-cleanup-state-machine-eb-schedule"
+  group_name = "default"
 
-  #description = "Start lambda cleanup state machine"
+  description = "Start lambda cleanup state machine"
 
-  #flexible_time_window {
-    #mode = "OFF"
-  #}
+  flexible_time_window {
+    mode = "OFF"
+  }
 
-  #schedule_expression          = "cron(0 3 1 * ? *)"
-  #schedule_expression_timezone = "Europe/Berlin"
+  schedule_expression          = "cron(0 3 1 * ? *)"
+  schedule_expression_timezone = "Europe/Berlin"
 
-  #target {
-    #arn      = module.lambda_cleanup_sfn.state_machine_arn
-    #role_arn = aws_iam_role.lambda_cleanup_state_machine_eb_schedule_role.arn
-  #}
-#}
+  target {
+    arn      = module.lambda_cleanup_sfn.state_machine_arn
+    role_arn = aws_iam_role.lambda_cleanup_state_machine_eb_schedule_role.arn
+  }
+}
 
-### --------------------------------------------------
-### ----------  IAM Role for the EventBridge Scheduler Schedule
-### --------------------------------------------------
-#resource "aws_iam_role" "lambda_cleanup_state_machine_eb_schedule_role" {
-  #name = "lambda-cleanup-state-machine-eb-schedule-role"
+## --------------------------------------------------
+## ----------  IAM Role for the EventBridge Scheduler Schedule
+## --------------------------------------------------
+resource "aws_iam_role" "lambda_cleanup_state_machine_eb_schedule_role" {
+  name = "lambda-cleanup-state-machine-eb-schedule-role"
 
-  #assume_role_policy = jsonencode({
-    #Version = "2012-10-17"
-    #Statement = [
-      #{
-        #Action = "sts:AssumeRole"
-        #Effect = "Allow"
-        #Sid    = ""
-        #Principal = {
-          #Service = "scheduler.amazonaws.com"
-        #},
-        #Condition = {
-          #StringEquals = {
-            #"aws:SourceAccount" = "${data.aws_caller_identity.current.account_id}"
-          #}
-        #}
-      #},
-    #]
-  #})
-#}
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "scheduler.amazonaws.com"
+        },
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount" = "${data.aws_caller_identity.current.account_id}"
+          }
+        }
+      }
+    ]
+  })
+}
 
-#resource "aws_iam_policy" "lambda_cleanup_state_machine_eb_schedule_policy" {
-  #name = "lambda-cleanup-state-machine-eb-schedule-policy"
+resource "aws_iam_policy" "lambda_cleanup_state_machine_eb_schedule_policy" {
+  name = "lambda-cleanup-state-machine-eb-schedule-policy"
 
-  #policy = jsonencode({
-    #Version = "2012-10-17"
-    #Statement = [
-      #{
-        #Action = [
-          #"states:StartExecution",
-        #]
-        #Effect   = "Allow"
-        #Resource = "${module.lambda_cleanup_sfn.state_machine_arn}"
-      #},
-    #]
-  #})
-#}
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "states:StartExecution",
+        ]
+        Effect   = "Allow"
+        Resource = "${module.lambda_cleanup_sfn.state_machine_arn}"
+      }
+    ]
+  })
+}
 
-#resource "aws_iam_role_policy_attachment" "lambda_cleanup_state_machine_eb_schedule_attachment" {
-  #role       = aws_iam_role.lambda_cleanup_state_machine_eb_schedule_role.name
-  #policy_arn = aws_iam_policy.lambda_cleanup_state_machine_eb_schedule_policy.arn
-#}
+resource "aws_iam_role_policy_attachment" "lambda_cleanup_state_machine_eb_schedule_attachment" {
+  role       = aws_iam_role.lambda_cleanup_state_machine_eb_schedule_role.name
+  policy_arn = aws_iam_policy.lambda_cleanup_state_machine_eb_schedule_policy.arn
+}
 
