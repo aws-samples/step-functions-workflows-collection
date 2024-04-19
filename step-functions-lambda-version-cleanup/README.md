@@ -1,6 +1,6 @@
 # Lambda Version Cleanup Workflow
 
-This workflow shows how to manage/cleanup the number of available verions of an AWS Lambda function. The workflow uses the `ListFunctions`, `ListVersionsByFunction` and `DeleteFunction` SDK calls to determine which functions should be processed as well as to get to know the available number of versions and to reduce them to a specified amount. The workflow takes Lambda aliases into account as well as provides the possibilty to filter which functions should be taken into account and how many versions - starting from the most recent one - should be kept available.  
+This workflow shows how to manage/cleanup the number of available versions of an AWS Lambda function. The workflow uses the `ListFunctions`, `ListVersionsByFunction` and `DeleteFunction` SDK calls to determine which functions should be processed as well as to get to know the available number of versions and to reduce them to a specified amount. The workflow takes Lambda aliases into account as well as provides the possibility to filter which functions should be taken into account and how many versions - starting from the most recent one - should be kept available.  
 
 Important: this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the [AWS Pricing page](https://aws.amazon.com/pricing/) for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
 
