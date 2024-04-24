@@ -47,7 +47,7 @@ The state machine first checks the file type (txt, pdf, or docx) and invokes the
 The generated summary is stored in the original S3 bucket with the prefix "curated/", providing users with a convenient way to access the key information from large documents without having to read through the entire content.
 
 ## Image
-![Workflow Diagram](./resources/statemachine.png)
+![Workflow Diagram](./resources/stepfunctions_graph.png)
 
 ## Testing
 
