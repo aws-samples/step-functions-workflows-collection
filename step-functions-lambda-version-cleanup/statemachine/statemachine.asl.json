@@ -4,9 +4,7 @@
   "States": {
     "List function names": {
       "Type": "Task",
-      "Parameters": {
-        "MaxItems": 5
-      },
+      "Parameters": {},
       "Resource": "arn:aws:states:::aws-sdk:lambda:listFunctions",
       "Next": "Iterate Functions",
       "Retry": [
@@ -157,7 +155,6 @@
     "List more function names": {
       "Type": "Task",
       "Parameters": {
-        "MaxItems": 5,
         "Marker.$": "$.NextMarker"
       },
       "Resource": "arn:aws:states:::aws-sdk:lambda:listFunctions",
