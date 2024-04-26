@@ -23,8 +23,9 @@ Important: this application uses various AWS services and there are costs associ
     ```
     cd step-functions-workflows-collection/s3-sfn-lambda-bedrock
     ```
-1. From the command line, use AWS SAM to deploy the AWS resources for the workflow as specified in the template.yaml file:
+1. From the command line, use AWS SAM to build and deploy the AWS resources for the workflow as specified in the template.yaml file:
     ```
+    sam build
     sam deploy --guided
     ```
 1. During the prompts:
