@@ -1,0 +1,123 @@
+{
+  "Comment": "Load Generator for Lambda",
+  "StartAt": "ConfigureRampup",
+  "States": {
+    "ConfigureRampup": {
+      "Type": "Pass",
+      "Next": "RampupTimer",
+      "Parameters": {
+        "timer.$": "$"
+      }
+    },
+    "RampupTimer": {
+      "Type": "Task",
+      "Resource": "arn:${AWSPartition}:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "${FunctionLoadTesterLoadGeneratorArn}"
+      },
+      "Next": "IsRampupTimeReached"
+    },
+    "IsRampupTimeReached": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.timer.continue",
+          "BooleanEquals": true,
+          "Next": "ContinueRampup"
+        }
+      ],
+      "Default": "ConfigureHold"
+    },
+    "ContinueRampup": {
+      "Type": "Pass",
+      "Next": "RunRampupLoad",
+      "Parameters": {
+        "timer.$": "$.timer",
+        "items.$": "$.items"
+      }
+    },
+    "RunRampupLoad": {
+      "Type": "Task",
+      "Resource": "arn:${AWSPartition}:states:::states:startExecution.sync:2",
+      "Parameters": {
+        "StateMachineArn": "${StateMachineLoadTesterRunLoadArn}",
+        "Input": {
+          "StatePayload.$": "$.items",
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        }
+      },
+      "Next": "RampupTimer",
+      "ResultPath": null,
+      "TimeoutSeconds": 30,
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "RampupTimer",
+          "ResultPath": null
+        }
+      ]
+    },
+    "ConfigureHold": {
+      "Type": "Pass",
+      "Parameters": {
+        "timer": {
+          "duration.$": "$.timer.duration",
+          "targetConcurrency.$": "$.timer.targetConcurrency"
+        }
+      },
+      "Next": "LoadHoldTimer"
+    },
+    "LoadHoldTimer": {
+      "Type": "Task",
+      "Resource": "arn:${AWSPartition}:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "${FunctionLoadTesterLoadGeneratorArn}"
+      },
+      "Next": "IsLoadHoldTimeReached"
+    },
+    "IsLoadHoldTimeReached": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.timer.continue",
+          "BooleanEquals": true,
+          "Next": "HoldLoad"
+        }
+      ],
+      "Default": "Load Test Complete"
+    },
+    "HoldLoad": {
+      "Type": "Task",
+      "Resource": "arn:${AWSPartition}:states:::states:startExecution.sync:2",
+      "Parameters": {
+        "StateMachineArn": "${StateMachineLoadTesterRunLoadArn}",
+        "Input": {
+          "StatePayload.$": "$.items",
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        }
+      },
+      "Next": "LoadHoldTimer",
+      "ResultPath": null,
+      "TimeoutSeconds": 30,
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "LoadHoldTimer",
+          "ResultPath": null
+        }
+      ]
+    },
+    "Load Test Complete": {
+      "Type": "Pass",
+      "End": true
+    }
+  }
+}

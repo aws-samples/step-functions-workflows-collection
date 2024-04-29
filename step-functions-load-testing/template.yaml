@@ -1,0 +1,93 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  step-functions-load-testing
+  
+  An example of using AWS Step Functions state machine to generate load 
+  
+  **WARNING**
+  This template creates AWS Step Functions state machines, AWS Lambda function and related resources.
+  You will be billed for the AWS resources used if you create a stack from this template.
+
+Parameters:
+  LambdaFunctionName:
+    Type: String
+    Description: Name of the Lambda function that the state machine will load test
+  LambdaParameters:
+    Type: String
+    Description: Parameters to be passed to the Lambda function that will be load tested
+    Default: "{}"
+
+Resources:
+  # Step functions state machine that will orchestrate the generation of load
+  LoadGeneratorStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name: LoadGeneratorStateMachine
+      DefinitionUri: statemachine/load-orchestrator-statemachine.asl.json
+      DefinitionSubstitutions:
+        AWSPartition: !Ref AWS::Partition
+        FunctionLoadTesterLoadGeneratorArn: !Ref LoadMonitorFunction
+        StateMachineLoadTesterRunLoadArn: !Ref RunLoadStateMachine
+      Role: !GetAtt LoadGeneratorRole.Arn
+  # Step functions state machine that will generate the load
+  RunLoadStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name: RunLoadStateMachine
+      DefinitionUri: statemachine/load-generator-statemachine.asl.json
+      DefinitionSubstitutions:
+        AWSPartition: !Ref AWS::Partition
+        LambdaFunctionName: !Ref LambdaFunctionName
+        LambdaParameters: !Ref LambdaParameters
+      Policies:
+        -  LambdaInvokePolicy:
+            FunctionName: !Ref LambdaFunctionName
+        -  StepFunctionsExecutionPolicy:
+            StateMachineName: RunLoadStateMachine
+
+  # Lambda function to scale the concurrency during ramp up phase and monitor the load generation times
+  LoadMonitorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: LoadMonitorFunction
+      CodeUri: lambda/loadmonitor/
+      Handler: index.handler
+      Runtime: nodejs20.x
+
+  # IAM role for the LoadGeneratorStateMachine step function to invoke the nested step function and the load monitor Lambda function
+  LoadGeneratorRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: states.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LoadGeneratorPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              # Needed to allow synchronous execution of a nested step function. Reference: https://docs.aws.amazon.com/step-functions/latest/dg/stepfunctions-iam.html
+              - Effect: Allow
+                Action:
+                  - events:PutTargets
+                  - events:PutRule
+                  - events:DescribeRule
+                Resource:
+                  - !Sub arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/StepFunctionsGetEventsForStepFunctionsExecutionRule
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource:
+                  - !GetAtt LoadMonitorFunction.Arn
+              - Effect: Allow
+                Action: states:StartExecution
+                Resource:
+                  - !Ref RunLoadStateMachine
+Outputs:
+  LoadTester:
+    Description: "The ARN of the state machine to generate load"
+    Value: !Ref LoadGeneratorStateMachine

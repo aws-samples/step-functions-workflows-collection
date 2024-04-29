@@ -1,0 +1,74 @@
+{
+    "title": "Serverless load generator using distributed map",
+    "description": "This example creates a serverless load generator using AWS Step Function to load an AWS Lambda function It can also be extended to load test other workloads like HTTP endpoints, APIs or other services that AWS Step Functions support.",
+    "language": "",
+    "simplicity": "2 - Pattern",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "200",
+    "framework": "SAM",
+    "services": ["stepfunctions","lambda"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "When the step function is triggered it first starts the ramp-up phase. In this phase it starts a timer to monitor if the ramp up time is reached. It then uses a distributed map to calls the Lambda function in parallel. After each execution of the distributed map ends, the Step Function checks if the ramp up time is reached and increases the concurrency of the distributed map. Once the ramp up time is reached, the state machine then send the load to the Lambda for the time specified in input."
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/step-functions-load-testing/",
+        "templateDir":"step-functions-load-testing",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/load-orchestrator-statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Rakshith Rao",
+          "image": "https://rao.sh/assets/img/profile_pic.png",
+          "bio": "I am a Senior Solutions Architect at AWS and help our strategic customers build and operate their key workloads on AWS.",
+          "linkedin": "rakshithrao"
+        },
+        {
+          "name": "Biswanath Mukherjee",
+          "image": "https://d1rwvjey2iif32.cloudfront.net",
+          "bio": "I am a Sr. Solutions Architect working at AWS India.",
+          "linkedin": "biswanathmukherjee"
+        }
+      ]
+  }
+  

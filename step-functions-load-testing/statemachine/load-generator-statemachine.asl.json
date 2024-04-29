@@ -1,0 +1,38 @@
+{
+  "Comment": "Invoke the Lambda in parallel",
+  "StartAt": "RunLoad",
+  "States": {
+    "RunLoad": {
+      "Type": "Map",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "DISTRIBUTED",
+          "ExecutionType": "EXPRESS"
+        },
+        "StartAt": "Setup Lambda",
+        "States": {
+          "Setup Lambda": {
+            "Type": "Pass",
+            "Next": "Run Lambda",
+            "Parameters": {
+              "LambdaParameters": "${LambdaParameters}"
+            }
+          },
+          "Run Lambda": {
+            "Type": "Task",
+            "Resource": "arn:${AWSPartition}:states:::lambda:invoke",
+            "OutputPath": "$.Payload",
+            "Parameters": {
+              "Payload.$": "States.StringToJson($.LambdaParameters)",
+              "FunctionName": "${LambdaFunctionName}"
+            },
+            "End": true
+          }
+        }
+      },
+      "InputPath": "$.StatePayload",
+      "ResultPath": null,
+      "End": true
+    }
+  }
+}
