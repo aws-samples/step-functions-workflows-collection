@@ -1,0 +1,227 @@
+{
+  "StartAt": "Describe DB Instances",
+  "States": {
+    "Describe DB Instances": {
+      "Next": "Create Final Snapshot",
+      "Type": "Task",
+      "ResultPath": "$.VersionDetails",
+      "ResultSelector": {
+        "EngineVersion.$": "$.DbInstances[0].EngineVersion",
+        "Engine.$": "$.DbInstances[0].Engine",
+        "DbInstanceClass.$": "$.DbInstances[0].DbInstanceClass"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:rds:describeDBInstances",
+      "Parameters": {
+        "DbInstanceIdentifier.$": "$.dbInstanceId"
+      }
+    },
+    "Create Final Snapshot": {
+      "Next": "Creating Snapshot, Wait 30s",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.output",
+          "Next": "Fail"
+        }
+      ],
+      "Type": "Task",
+      "ResultPath": "$.DbSnapshot",
+      "ResultSelector": {
+        "DbSnapshotStatus.$": "$.DbSnapshot.Status",
+        "DbSnapshotArn.$": "$.DbSnapshot.DbSnapshotArn",
+        "DbSnapshotIdentifier.$": "$.DbSnapshot.DbSnapshotIdentifier"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:rds:createDBSnapshot",
+      "Parameters": {
+        "DbInstanceIdentifier.$": "$.dbInstanceId",
+        "DbSnapshotIdentifier.$": "States.Format('{}-final-snapshot', $.dbInstanceId)"
+      }
+    },
+    "Creating Snapshot, Wait 30s": {
+      "Type": "Wait",
+      "Seconds": 30,
+      "Next": "Check DBSnapshot Status"
+    },
+    "Check DBSnapshot Status": {
+      "Next": "Is DBSnapshot Available?",
+      "Type": "Task",
+      "ResultPath": "$.DbSnapshot",
+      "ResultSelector": {
+        "DbSnapshotStatus.$": "$.DbSnapshots[0].Status",
+        "DbSnapshotArn.$": "$.DbSnapshots[0].DbSnapshotArn",
+        "DbSnapshotIdentifier.$": "$.DbSnapshots[0].DbSnapshotIdentifier"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:rds:describeDBSnapshots",
+      "Parameters": {
+        "DbSnapshotIdentifier.$": "$.DbSnapshot.DbSnapshotIdentifier"
+      }
+    },
+    "Is DBSnapshot Available?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.DbSnapshot.DbSnapshotStatus",
+          "StringEquals": "available",
+          "Next": "Restore DBCluster from Snapshot"
+        }
+      ],
+      "Default": "Creating Snapshot, Wait 30s"
+    },
+    "Restore DBCluster from Snapshot": {
+      "Next": "ClusterRestoring - Wait 30s",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.output",
+          "Next": "Fail"
+        }
+      ],
+      "Type": "Task",
+      "ResultPath": "$.AuroraClusterDetails",
+      "ResultSelector": {
+        "DbClusterIdentifier.$": "$.DbCluster.DbClusterIdentifier"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:rds:restoreDBClusterFromSnapshot",
+      "Parameters": {
+        "DbClusterIdentifier.$": "States.Format('{}-apg-cluster', $.dbInstanceId)",
+        "Engine": "aurora-postgresql",
+        "EngineVersion.$": "$.VersionDetails.EngineVersion",
+        "SnapshotIdentifier.$": "$.DbSnapshot.DbSnapshotArn"
+      }
+    },
+    "ClusterRestoring - Wait 30s": {
+      "Type": "Wait",
+      "Seconds": 30,
+      "Next": "DescribeDBClusters"
+    },
+    "DescribeDBClusters": {
+      "Next": "Is Aurora Cluster Ready?",
+      "Type": "Task",
+      "ResultPath": "$.AuroraClusterDetails",
+      "ResultSelector": {
+        "DbClusterStatus.$": "$.DbClusters[0].Status",
+        "DbClusterIdentifier.$": "$.DbClusters[0].DbClusterIdentifier"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:rds:describeDBClusters",
+      "Parameters": {
+        "DbClusterIdentifier.$": "$.AuroraClusterDetails.DbClusterIdentifier"
+      }
+    },
+    "Is Aurora Cluster Ready?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.AuroraClusterDetails.DbClusterStatus",
+          "StringEquals": "available",
+          "Next": "Create Aurora Instance"
+        }
+      ],
+      "Default": "ClusterRestoring - Wait 30s"
+    },
+    "Create Aurora Instance": {
+      "Next": "ClusterInstance Creating - Wait 30s",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.output",
+          "Next": "Fail"
+        }
+      ],
+      "Type": "Task",
+      "ResultPath": "$.AuroraClusterDetails",
+      "ResultSelector": {
+        "DbInstanceStatus.$": "$.DbInstance.DbInstanceStatus",
+        "DbInstanceIdentifier.$": "$.DbInstance.DbInstanceIdentifier"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:rds:createDBInstance",
+      "Parameters": {
+        "DbClusterIdentifier.$": "$.AuroraClusterDetails.DbClusterIdentifier",
+        "DbInstanceIdentifier.$": "States.Format('{}-apg-instance-1', $.dbInstanceId)",
+        "DbInstanceClass.$": "$.dbInstanceClass",
+        "Engine": "aurora-postgresql"
+      }
+    },
+    "ClusterInstance Creating - Wait 30s": {
+      "Type": "Wait",
+      "Seconds": 30,
+      "Next": "DescribeDBInstances"
+    },
+    "DescribeDBInstances": {
+      "Next": "Is Aurora Instance Ready?",
+      "Type": "Task",
+      "ResultPath": "$.AuroraClusterDetails",
+      "ResultSelector": {
+        "DbInstanceStatus.$": "$.DbInstances[0].DbInstanceStatus",
+        "DbInstanceIdentifier.$": "$.DbInstances[0].DbInstanceIdentifier",
+        "DbClusterIdentifier.$": "$.DbInstances[0].DbClusterIdentifier"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:rds:describeDBInstances",
+      "Parameters": {
+        "DbInstanceIdentifier.$": "$.AuroraClusterDetails.DbInstanceIdentifier"
+      }
+    },
+    "Is Aurora Instance Ready?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.AuroraClusterDetails.DbInstanceStatus",
+          "StringEquals": "available",
+          "Next": "AlsoUpgradeCluster?"
+        }
+      ],
+      "Default": "ClusterInstance Creating - Wait 30s"
+    },
+    "AlsoUpgradeCluster?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.alsoUpgradeTo",
+          "IsPresent": true,
+          "Next": "Modify Aurora Cluster"
+        }
+      ],
+      "Default": "Success"
+    },
+    "Success": {
+      "Type": "Succeed",
+      "Comment": "Migration to Aurora Postgres complete"
+    },
+    "Modify Aurora Cluster": {
+      "Next": "Success",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.output",
+          "Next": "Fail"
+        }
+      ],
+      "Type": "Task",
+      "ResultPath": "$.AuroraClusterDetails",
+      "ResultSelector": {
+        "DbClusterStatus.$": "$.DbCluster.Status",
+        "DbClusterIdentifier.$": "$.DbCluster.DbClusterIdentifier"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:rds:modifyDBCluster",
+      "Parameters": {
+        "DbClusterIdentifier.$": "$.AuroraClusterDetails.DbClusterIdentifier",
+        "EngineVersion.$": "$.alsoUpgradeTo",
+        "AllowMajorVersionUpgrade": true,
+        "ApplyImmediately": true
+      }
+    },
+    "Fail": {
+      "Type": "Fail",
+      "ErrorPath": "$.output.Error",
+      "CausePath": "$.output.Cause"
+    }
+  },
+  "Comment": "\n        This State Machine workflow converts an RDS PostgreSQL (R-PgSQL) DB instance to an Aurora PostgreSQL (A-PgSQL) DB Cluster by migrating the data from one to another. \n        The workflow is divided into the following states: \n        1/ create a snapshot of the R-PgSQL instance, \n        2/ restore an A-PgSQL Cluster using this snapshot \n        3/ create an instance of A-PgSQL inside the cluster. \n\n        The final RDS snapshot will be named \"{rds-instance-name}-final-snapshot\". \n        The A-PgSQL Cluster will be named \"{rds-instance-name}-apg-cluster\"\n        The Primary node in the A-PgSQL cluster will be named \"{rds-instance-name}-apg-instance-1\"\n\n        The SFN needs the following input to be provided:\n        Input Params: \n        {\n            \"dbInstanceId\": \"<name of R-PgSQL instance to convert to A-PgSQL cluster>\",\n            \"dbInstanceClass\": \"<The compute and memory capacity of the A-PgSQL DB instance that will be created, for example db.m5.large>\",\n            \"alsoUpgradeTo\": \"<Optional - if supplied, the version to try to upgrade A-PgSQL instance to after migrating>\"\n        }\n        "
+}

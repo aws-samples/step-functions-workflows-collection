@@ -1,0 +1,79 @@
+{
+    "title": "Step Functions Workflow - Migrate RDS to Aurora PostgreSQL",
+    "description": "A step function workflow to migrate an RDS PostgreSQL DB instance to Aurora PostgreSQL DB Cluster.",
+    "language": "Python",
+    "simplicity": "2 -  Pattern",
+    "usecase": "Streamline the migration & upgrade of RDS DB instance to Aurora DB Cluster, following AWS best practices.",
+    "type": "Standard",
+    "diagram":"/resources/stepfunctions_statemachine.png",
+    "videoId": "",
+    "level": "200",
+    "framework": "CDK",
+    "services": ["rds"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "This CDK application deploys a Step Function workflow that migrates a RDS PostgreSQL DB instance to Aurora PostgreSQL DB Cluster, and optinally upgrades the Aurora Cluster engine version.",
+        "The workflow is divided into the following states: 1/ create a snapshot of the R-PgSQL instance, 2/ restore an A-PgSQL Cluster using this snapshot, 3/ create an instance of A-PgSQL inside the cluster and 4/ (optionally) upgrade the A-PgSQL cluster engine version",
+        "The Step Function workflow requires specific input parameters when triggerring the execution, as described in the README."
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>cdk destroy</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "cdk deploy"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/sfn-rds-to-aurora-migrate-postgres-cdk",
+        "templateDir":"sfn-rds-to-aurora-migrate-postgres-cdk",
+        "templateFile": "sfn_migrate_rds_to_aurora_postgres_workflow_cdk/sfn_migrate_rds_to_aurora_postgres_workflow_cdk_stack.py",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "Step Functions AWS SDK Integrations",
+          "link": "https://docs.aws.amazon.com/step-functions/latest/dg/supported-services-awssdk.html"
+        },
+        {
+          "text": "Migrate RDS DB instance to Aurora with PostgreSQL compatiblity",
+          "link": "https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraPostgreSQL.Migrating.html"
+        },
+        {
+          "text": "Upgrading the PostgreSQL DB engine for Amazon RDS",
+          "link": "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.PostgreSQL.html"
+        }
+      ]
+    },
+    "authors": [
+      {
+        "name": "Akshay Singhal",
+        "image": "",
+        "bio": "Akshay Singhal is a Sr. Technical Account Manager (TAM) for AWS Enterprise Support focussing on the Security ISV (Independent Software Vendors) segment and loves everything serverless.",
+        "linkedin": "https://www.linkedin.com/in/singhalakshay/",
+        "twitter": "@_sin_ak"
+      }
+      ]
+  }
+  
