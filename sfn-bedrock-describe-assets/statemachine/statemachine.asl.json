@@ -1,0 +1,67 @@
+{
+  "Comment": "Describe Assets",
+  "StartAt": "S3 object keys",
+  "States": {
+    "S3 object keys": {
+      "Type": "Map",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "DISTRIBUTED",
+          "ExecutionType": "STANDARD"
+        },
+        "StartAt": "Bedrock Describe Assets",
+        "States": {
+          "Bedrock Describe Assets": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "OutputPath": "$.Payload",
+            "Parameters": {
+              "Payload.$": "$",
+              "FunctionName": "LambdaFunction"
+            },
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "Lambda.ServiceException",
+                  "Lambda.AWSLambdaException",
+                  "Lambda.SdkClientException",
+                  "Lambda.TooManyRequestsException"
+                ],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 3,
+                "BackoffRate": 2
+              }
+            ],
+            "Next": "PutObject to S3"
+          },
+          "PutObject to S3": {
+            "Type": "Task",
+            "End": true,
+            "Parameters": {
+              "Body.$": "$.text",
+              "Bucket.$": "$.bucket",
+              "Key.$": "$.key"
+            },
+            "Resource": "arn:aws:states:::aws-sdk:s3:putObject"
+          }
+        }
+      },
+      "ItemReader": {
+        "Resource": "arn:aws:states:::s3:listObjectsV2",
+        "Parameters": {
+          "Bucket.$": "$.Bucket"
+        }
+      },
+      "MaxConcurrency": 1000,
+      "Label": "S3objectkeys",
+      "End": true,
+      "ItemBatcher": {
+        "MaxItemsPerBatch": 10
+      },
+      "ItemSelector": {
+        "Bucket.$": "$.Bucket",
+        "Data.$": "$$.Map.Item.Value"
+      }
+    }
+  }
+}
