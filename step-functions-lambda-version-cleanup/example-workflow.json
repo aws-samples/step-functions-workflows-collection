@@ -1,0 +1,60 @@
+{
+  "title": "Lambda version cleanup",
+  "description": "This workflow shows how to manage/cleanup the number of available verions of an AWS Lambda function..",
+  "language": "Python",
+  "simplicity": "3 - Application",
+  "usecase": "Cloud infrastructure management",
+  "type": "Standard",
+  "diagram": "/resources/statemachine.png",
+  "videoId": "",
+  "level": "300",
+  "framework": "Terraform",
+  "services": ["Lambda, EventBridge"],
+  "introBox": {
+    "headline": "How it works",
+    "text": [
+      "The workflow uses the `ListFunctions`, `ListVersionsByFunction` and `DeleteFunction` SDK calls to determine which functions should be processed as well as to get to know the available number of versions and to reduce them to a specified amount. The workflow takes Lambda aliases into account as well as provides the possibilty to filter which functions should be taken into account and how many versions - starting from the most recent one - should be kept available. An accompanying EventBridge scheduler can be used to trigger this workflow regularly in order to cleanup the Lambda versions completely automated."
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": ["See the GitHub repo for detailed testing instructions."]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": ["1. Delete the stack: <code>terraform destroy</code>."]
+  },
+  "deploy": {
+    "text": ["terraform init", "terraform apply -var='lambda_function_filter_prefix= '"]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "",
+      "templateDir": "synchronous-job",
+      "templateFile": "main.tf",
+      "ASL": "statemachine/statemachine.asl.json"
+    },
+    "payloads": [
+      {
+        "headline": "",
+        "payloadURL": ""
+      }
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "The AWS Step Functions Workshop",
+        "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Maureen Plank",
+      "bio": "Maureen is a passionate Junior Cloud Engineer. ",
+      "linkedin": "maureenplank"
+    }
+  ]
+}

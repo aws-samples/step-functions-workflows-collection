@@ -1,0 +1,4 @@
+.vscode
+builds
+.terraform
+terraform*

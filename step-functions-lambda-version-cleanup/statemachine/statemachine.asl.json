@@ -1,0 +1,178 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "List function names",
+  "States": {
+    "List function names": {
+      "Type": "Task",
+      "Parameters": {},
+      "Resource": "arn:aws:states:::aws-sdk:lambda:listFunctions",
+      "Next": "Iterate Functions",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3
+        }
+      ]
+    },
+    "Iterate Functions": {
+      "Type": "Map",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "INLINE"
+        },
+        "StartAt": "Filter the functions",
+        "States": {
+          "Filter the functions": {
+            "Type": "Choice",
+            "Choices": [
+              {
+                "Variable": "$.lambda_function_name",
+                "StringMatches": "${filter_prefix}*",
+                "Next": "Get array of all versions"
+              }
+            ],
+            "Default": "Skip"
+          },
+          "Skip": {
+            "Type": "Pass",
+            "End": true
+          },
+          "Get array of all versions": {
+            "Type": "Task",
+            "Parameters": {
+              "FunctionName.$": "$.lambda_function_name"
+            },
+            "Resource": "arn:aws:states:::aws-sdk:lambda:listVersionsByFunction",
+            "ResultSelector": {
+              "version.$": "$.Versions[*].Version"
+            },
+            "Next": "Remove $LATEST version",
+            "ResultPath": "$.data",
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "States.ALL"
+                ],
+                "BackoffRate": 2,
+                "IntervalSeconds": 1,
+                "MaxAttempts": 3
+              }
+            ]
+          },
+          "Remove $LATEST version": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+              "Payload.$": "$",
+              "FunctionName": "${sort_functions_fn_name}"
+            },
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "Lambda.ServiceException",
+                  "Lambda.AWSLambdaException",
+                  "Lambda.SdkClientException",
+                  "Lambda.TooManyRequestsException"
+                ],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 3,
+                "BackoffRate": 2
+              }
+            ],
+            "Next": "Check number of versions",
+            "ResultSelector": {
+              "payload.$": "States.StringToJson($.Payload.body)"
+            },
+            "OutputPath": "$.payload"
+          },
+          "Check number of versions": {
+            "Type": "Choice",
+            "Choices": [
+              {
+                "Variable": "$.count",
+                "NumericGreaterThan": 3,
+                "Next": "Delete oldest version"
+              }
+            ],
+            "Default": "Nothing to do"
+          },
+          "Nothing to do": {
+            "Type": "Pass",
+            "End": true
+          },
+          "Delete oldest version": {
+            "Type": "Task",
+            "Next": "Remove deleted version and decrement version count",
+            "Parameters": {
+              "FunctionName.$": "States.Format('{}:{}', $.lambda_function_name, $.sorted_versions[0])"
+            },
+            "Resource": "arn:aws:states:::aws-sdk:lambda:deleteFunction",
+            "ResultPath": null,
+            "Catch": [
+              {
+                "ErrorEquals": [
+                  "Lambda.ResourceConflictException"
+                ],
+                "Next": "Remove deleted version and decrement version count",
+                "ResultPath": "$.error"
+              }
+            ]
+          },
+          "Remove deleted version and decrement version count": {
+            "Type": "Pass",
+            "Next": "Check number of versions",
+            "Parameters": {
+              "lambda_function_name.$": "$.lambda_function_name",
+              "sorted_versions.$": "$.sorted_versions[1:]",
+              "count.$": "States.MathAdd($.count, -1)"
+            }
+          }
+        }
+      },
+      "MaxConcurrency": 1,
+      "ItemsPath": "$.Functions",
+      "ItemSelector": {
+        "lambda_function_name.$": "$$.Map.Item.Value.FunctionName"
+      },
+      "Next": "More functions to process?",
+      "ResultPath": null
+    },
+    "More functions to process?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.NextMarker",
+          "IsPresent": true,
+          "Next": "List more function names"
+        }
+      ],
+      "Default": "Success"
+    },
+    "List more function names": {
+      "Type": "Task",
+      "Parameters": {
+        "Marker.$": "$.NextMarker"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:lambda:listFunctions",
+      "Next": "Iterate Functions",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3
+        }
+      ]
+    },
+    "Success": {
+      "Type": "Succeed"
+    }
+  },
+  "TimeoutSeconds": 300
+}
