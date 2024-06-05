@@ -36,7 +36,7 @@ Additionally, there's an error-handling component. An AWS Lambda function handle
     cd serverless-bedrock-video-content-summary/typescript
     ```
 
-4. Modify the input of `sharedResourcesStack`, replace the `subEmail` variable with your own Email address:
+4. Modify the input of `sharedResourcesStack` in file `./typescript/bin/bedrock-workflow.ts`, replace the `subEmail` variable with your own Email address:
     ```typescript
     const sharedResourcesStack = new SharedResourcesStack(app, 'SharedResourcesStack', {
         subEmail: 'you@email.address', // <- replace with your Email
@@ -45,7 +45,7 @@ Additionally, there's an error-handling component. An AWS Lambda function handle
     ```
 5. To create a layer for lambda function to invoke Bedrock service, you will firstly need to run `pip` command to install `boto3==1.28.57` to directry `typescript/resource/layers/bedrock-layer/python` with command below: 
    ```bash 
-   pip install -r requirements.txt --target resource/layers/bedrock-layer/python
+   pip install -r requirements.txt --target resources/layers/bedrock-layer/python
    ```
 6. From the command line, use npm to install dependencies and run the build process for the Lambda functions.
 
