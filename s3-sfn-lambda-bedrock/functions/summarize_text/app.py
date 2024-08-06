@@ -3,29 +3,35 @@ import boto3
 import os
 from urllib.parse import unquote_plus
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+s3 = boto3.client("s3")
 
 def getSummaryFromText(content):
-    modelId = "anthropic.claude-v2:1"
-    contentType = "application/json"
-    accept = "*/*"
-    
-    body = json.dumps({
-    "prompt": "\n\nHuman: " + os.environ['BedrockPrompt'] + " \n " +content+ "\n\nAssistant:",
-    "max_tokens_to_sample": 300,
-    "temperature": 0.1,
-    "top_p": 0.9,
-})
-
-    
+    model_id = os.environ['Model']
     bedrock_client = boto3.client("bedrock-runtime")
 
-    response = bedrock_client.invoke_model(
-        modelId=modelId, contentType=contentType, accept=accept, body=body
-    )
+    system_prompt = os.environ['BedrockPrompt']
+    max_tokens = 300
 
-    response_body = json.loads(response.get("body").read())
-    return response_body["completion"]
+    user_message = {"role": "user", "content": content}
+    messages = [user_message]
 
+    body = json.dumps({
+        "anthropic_version": "bedrock-2023-05-31",
+        "max_tokens": max_tokens,
+        "system": system_prompt,
+        "messages": messages
+    })
+
+    response = bedrock_client.invoke_model(body=body, modelId=model_id)
+    response_body = json.loads(response.get('body').read())
+
+    summary_text = response_body['content'][0]['text']
+
+    return summary_text
 
 def readFile(bucket, key):
     s3_client = boto3.client("s3")
@@ -33,10 +39,9 @@ def readFile(bucket, key):
     file_content = fileObj["Body"].read().decode("utf-8")
     return file_content
 
-
 def lambda_handler(event, context):
     txt_response = ""
-    s3 = boto3.client("s3")
+
     if event:
         print("event", event)
         
@@ -57,7 +62,7 @@ def lambda_handler(event, context):
         output_data = {
             "original_content": file_content,
             "summary": txt_response,
-            "model": "anthropic.claude-v2:1",
+            "model": os.environ['Model'],
             "datetime": str(datetime.now())
         }
 
