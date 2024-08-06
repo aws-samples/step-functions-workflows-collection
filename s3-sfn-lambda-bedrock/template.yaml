@@ -11,6 +11,9 @@ Parameters:
   CuratedPrefix:
     Type: String
     Default: curated/
+  Model:
+    Type: String
+    Default: anthropic.claude-3-sonnet-20240229-v1:0
   BedrockPrompt:
     Type: String
     Default: 'You are a business analyst.  Review the following content and produce a concise summary for an executive.  Also, generate tags that can be used to find the content in a search or word cloud: '
@@ -157,6 +160,7 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Environment:
         Variables:
+          Model: !Ref Model
           NextPrefix: !Ref CuratedPrefix
           BedrockPrompt: !Ref BedrockPrompt
       Description: This Lambda function is summarizes text files using the Amazon Bedrock AI service. It takes the text content from an S3 object and generates a concise summary. The summarized content is then stored in an S3 bucket with a specified prefix.
