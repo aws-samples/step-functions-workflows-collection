@@ -1,6 +1,6 @@
 {
-    "title": "GenAI message categorization",
-    "description": "Message categorizing no-code example with AWS Step Functions, Amazon Bedrock and Amazon Simple Queue Service.",
+    "title": "Message categorization with Amazon Bedrock",
+    "description": "Message categorizing with AWS Step Functions, Amazon Bedrock and Amazon Simple Queue Service.",
     "language": "",
     "simplicity": "1 - Fundamental",
     "type": "Express",
@@ -15,11 +15,11 @@
       "headline": "How it works",
       "text": [
         "The provided example demonstrates the deployment of a serverless application using the AWS Serverless Application Model (SAM) template.",
-        "This Express state machine is designed categorize messages into queues for further processing based on business needs.",
-        "It uses input message from user to invoke the Amazon Bedrock language model which will return a category for the message.",
-        "The output from the state machine execution is returned to Step Functions which will further route the message to a correct SQS Queue for further processing.", 
+        "This Express state machine is designed to categorize messages into queues for further processing based on business needs.",
+        "It uses the input message from the user to invoke an language model through Amazon Bedrock which will return a category for the message.",
+        "The output from the model is returned to Step Functions which will further route the message to a correct SQS queue for further processing.", 
         "If no queue is found, Step Functions will send the message to a default queue.",
-        "The SQS Queue processing is not included as part of this example but showcases the capabilities for message routing based on LLM categorization."
+        "The SQS queue processing is not included as part of this example but showcases the capabilities for message routing based on LLM categorization."
       ]
     },
     "gitHub": {

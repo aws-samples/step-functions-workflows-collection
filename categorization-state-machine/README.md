@@ -1,15 +1,15 @@
 # Message categorizing with Amazon Bedrock and Amazon SQS
 
-This workflow demonstrates how you can use Amazon Bedrock to categorize messages and then send them to an Simple Queue Service queue for further processing. The AWS Serverless Application Model (SAM) template deploys the AWS Step Functions state machine which takes care of the steps related to the workflow. 
+This workflow demonstrates how you can use Amazon Bedrock to categorize messages and then send them to an Amazon SQS queue for further processing. The AWS Serverless Application Model (SAM) template deploys the AWS Step Functions state machine which defines the workflow. 
 
 Important: this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the AWS Pricing page for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
 
 ## Requirements
 
-- Create an AWS account if you do not already have one and log in. The IAM user that you use must have sufficient permissions to make necessary AWS service calls and manage AWS resources.
+- [Create an AWS account](https://portal.aws.amazon.com/gp/aws/developer/registration/index.html) if you do not already have one and log in. The IAM user or role that you use must have sufficient permissions to make the necessary AWS service calls and manage AWS resources.
 - AWS CLI installed and configured
-- Git Installed
-- AWS Serverless Application Model (AWS SAM) installed
+- [Git Installed](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+- [AWS Serverless Application Model](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) (AWS SAM) installed
 - NOTE! Manage Access to Amazon Bedrock Foundation Models at the time of writing, this example uses Amazon Bedrock foundation model anthropic.claude-3-haiku-20240307-v1:0
 
 ## Deployment Instructions
@@ -43,7 +43,7 @@ sam deploy --guided
 - Enter the desired AWS Region
 - Allow SAM CLI to create IAM roles with the required permissions.
 
-Once you have run sam deploy --guided mode once and saved arguments to a configuration file (samconfig.toml), you can use sam deploy in future to use these defaults.
+Once you have run `sam deploy --guided` once and saved arguments to a configuration file (for exmaple `samconfig.toml`), you can use `sam deploy` in future to use these defaults.
 
 7. Note the outputs from the SAM deployment process. These contain the resource names and/or ARNs which are used for testing.
 
@@ -65,7 +65,7 @@ Bedrock will then categorize the message and send it to the correct SQS queue fo
 
 ## Testing
 
-Manually invoke Step Function, either from the console or using the CLI. A successful execution will send the message to correct SQS queue that you can then use to further process the messages in your application.
+Manually invoke the Step Functions state machine either from the console or using the CLI. A successful execution will send the message to correct SQS queue that you can then use to further process the messages in your application.
 
 ## Cleanup
 
