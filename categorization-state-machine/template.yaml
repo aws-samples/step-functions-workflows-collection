@@ -81,7 +81,7 @@ Resources:
   DefaultQueue:
     Type: AWS::SQS::Queue
     Properties:
-      MessageRetentionPeriod: 345600
+      MessageRetentionPeriod: 43200
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt DefaultDLQ.Arn
         maxReceiveCount: 5
@@ -89,7 +89,7 @@ Resources:
   DefaultDLQ:
     Type: AWS::SQS::Queue
     Properties:
-      MessageRetentionPeriod: 345600
+      MessageRetentionPeriod: 43200
 
   ComplaintsQueue:
     Type: AWS::SQS::Queue
@@ -97,12 +97,12 @@ Resources:
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt ComplaintsDLQ.Arn
         maxReceiveCount: 5
-      MessageRetentionPeriod: 345600
+      MessageRetentionPeriod: 43200
 
   ComplaintsDLQ:
     Type: AWS::SQS::Queue
     Properties:
-      MessageRetentionPeriod: 345600
+      MessageRetentionPeriod: 43200
   
   BillingQueue:
     Type: AWS::SQS::Queue
@@ -110,9 +110,9 @@ Resources:
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt BillingDLQ.Arn
         maxReceiveCount: 5
-      MessageRetentionPeriod: 345600
+      MessageRetentionPeriod: 43200
 
   BillingDLQ:
     Type: AWS::SQS::Queue
     Properties:
-      MessageRetentionPeriod: 345600
+      MessageRetentionPeriod: 43200

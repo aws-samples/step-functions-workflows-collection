@@ -7,10 +7,10 @@ Important: this application uses various AWS services and there are costs associ
 ## Requirements
 
 - [Create an AWS account](https://portal.aws.amazon.com/gp/aws/developer/registration/index.html) if you do not already have one and log in. The IAM user or role that you use must have sufficient permissions to make the necessary AWS service calls and manage AWS resources.
-- AWS CLI installed and configured
+- [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) installed and configured
 - [Git Installed](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 - [AWS Serverless Application Model](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) (AWS SAM) installed
-- NOTE! Manage Access to Amazon Bedrock Foundation Models at the time of writing, this example uses Amazon Bedrock foundation model anthropic.claude-3-haiku-20240307-v1:0
+- NOTE! This example uses Amazon Bedrock foundation model anthropic.claude-3-haiku-20240307-v1:0. To change the model used in the example, you will need to adjust the BedrockAccess policy attached to the Step Functions. Also note that different models take inputs in different formats. To use another model, you will also need to adjust the input parameters sent to the model in the State Machine invokeModel step.
 
 ## Deployment Instructions
 
@@ -66,6 +66,16 @@ Bedrock will then categorize the message and send it to the correct SQS queue fo
 ## Testing
 
 Manually invoke the Step Functions state machine either from the console or using the CLI. A successful execution will send the message to correct SQS queue that you can then use to further process the messages in your application.
+
+With an example message
+
+```
+{
+  "message": "I need to update the billing address for my monthly unicorn rental subscription since I recently moved to a new stable. Could you please change my address from 123 Rainbow Lane to 456 Glitter Grove?"
+}
+```
+
+after the execution you will see the same message in your Billing SQS Queue.
 
 ## Cleanup
 

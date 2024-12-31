@@ -31,22 +31,22 @@
 			"ResultSelector": {
 				"category.$": "$.Body.content[0].text"
 			},
-			"ResultPath": "$",
+			"ResultPath": "$.result",
 			"Next": "Choice"
 		},
 		"Choice": {
 			"Type": "Choice",
 			"Choices": [
-				{
-					"Variable": "$.category",
-					"StringEquals": "COMPLAINT",
-					"Next": "SQS Complaints"
-				},
-				{
-					"Variable": "$.category",
-					"StringEquals": "BILLING",
-					"Next": "SQS Billing"
-				}
+			  {
+				"Variable": "$.result.category",
+				"StringEquals": "COMPLAINT",
+				"Next": "SQS Complaints"
+			  },
+			  {
+				"Variable": "$.result.category",
+				"StringEquals": "BILLING",
+				"Next": "SQS Billing"
+			  }
 			],
 			"Default": "SQS Default"
 		},
@@ -54,7 +54,9 @@
 			"Type": "Task",
 			"Resource": "arn:aws:states:::sqs:sendMessage",
 			"Parameters": {
-				"MessageBody.$": "$",
+				"MessageBody": {
+					"message.$": "$.message"
+				},
 				"QueueUrl": "${complaintsSubstitution}"
 			},
 			"End": true
@@ -63,7 +65,9 @@
 			"Type": "Task",
 			"Resource": "arn:aws:states:::sqs:sendMessage",
 			"Parameters": {
-				"MessageBody.$": "$",
+				"MessageBody": {
+					"message.$": "$.message"
+				},
 				"QueueUrl": "${billingSubstitution}"
 			},
 			"End": true
@@ -72,7 +76,9 @@
 			"Type": "Task",
 			"Resource": "arn:aws:states:::sqs:sendMessage",
 			"Parameters": {
-				"MessageBody.$": "$",
+				"MessageBody": {
+					"message.$": "$.message"
+				},
 				"QueueUrl": "${defaultQueueSubstitution}"
 			},
 			"End": true
