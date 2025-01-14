@@ -21,7 +21,7 @@
 								},
 								{
 									"type": "text",
-									"text": "You are a text categorizing program. Given the a list of categories [\"COMPLAINT\",\"BILLING\"], categorize the text into one of these classes (\"Category\"). Give the answer with exactly one class and no additional text. If you cannot categorize the text, please use [\"UNKNOWN\"] category. Do not try to make up a category."
+									"text": "You are a text categorizing program. Given the list of categories [\"COMPLAINT\",\"BILLING\"], categorize the text into one of these classes (\"Category\"). Give the answer with exactly one class and no additional text. If you cannot categorize the text, please use [\"UNKNOWN\"] category. Do not try to make up a category."
 								}
 							]
 						}

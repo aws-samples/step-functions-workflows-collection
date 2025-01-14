@@ -1,6 +1,6 @@
-# Message categorizing with Amazon Bedrock and Amazon SQS
+# Message categorization with Amazon Bedrock and Amazon SQS
 
-This workflow demonstrates how you can use Amazon Bedrock to categorize messages and then send them to an Amazon SQS queue for further processing. The AWS Serverless Application Model (SAM) template deploys the AWS Step Functions state machine which defines the workflow. 
+This workflow demonstrates how you can use Amazon Bedrock to categorize messages and then send them to an Amazon SQS queue for further processing. The AWS Serverless Application Model (SAM) template deploys an AWS Step Functions state machine which defines the workflow.
 
 Important: this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the AWS Pricing page for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
 
@@ -10,7 +10,7 @@ Important: this application uses various AWS services and there are costs associ
 - [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) installed and configured
 - [Git Installed](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 - [AWS Serverless Application Model](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) (AWS SAM) installed
-- NOTE! This example uses Amazon Bedrock foundation model anthropic.claude-3-haiku-20240307-v1:0. To change the model used in the example, you will need to adjust the BedrockAccess policy attached to the Step Functions. Also note that different models take inputs in different formats. To use another model, you will also need to adjust the input parameters sent to the model in the State Machine invokeModel step.
+- NOTE! This example uses Amazon Bedrock foundation model anthropic.claude-3-haiku-20240307-v1:0. To change the model used in the example, you will need to adjust the BedrockAccess policy attached to the Step Functions state machine. Also note that different models take inputs in different formats. To use another model, you will also need to adjust the input parameters sent to the model in the state machine `invokeModel` step.
 
 ## Deployment Instructions
 
@@ -75,7 +75,7 @@ With an example message
 }
 ```
 
-after the execution you will see the same message in your Billing SQS Queue.
+after the execution you will see the same message in your Billing SQS queue.
 
 ## Cleanup
 
