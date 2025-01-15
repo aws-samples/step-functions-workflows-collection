@@ -2,7 +2,7 @@
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.321.1",
     "@aws-sdk/client-sfn": "^3.321.1",
-    "axios": "^1.4.0",
+    "axios": "^1.7.4",
     "uuid": "^9.0.0"
   }
 }
