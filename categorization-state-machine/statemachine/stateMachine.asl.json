@@ -1,0 +1,87 @@
+{
+	"StartAt": "InvokeModel",
+	"States": {
+		"InvokeModel": {
+			"Type": "Task",
+			"Resource": "arn:aws:states:::bedrock:invokeModel",
+			"Parameters": {
+				"ModelId": "anthropic.claude-3-haiku-20240307-v1:0",
+				"ContentType": "application/json",
+				"Accept": "application/json",
+				"Body": {
+					"anthropic_version": "bedrock-2023-05-31",
+					"max_tokens": 2000,
+					"messages": [
+						{
+							"role": "user",
+							"content": [
+								{
+									"type": "text",
+									"text.$": "States.JsonToString($)"
+								},
+								{
+									"type": "text",
+									"text": "You are a text categorizing program. Given the list of categories [\"COMPLAINT\",\"BILLING\"], categorize the text into one of these classes (\"Category\"). Give the answer with exactly one class and no additional text. If you cannot categorize the text, please use [\"UNKNOWN\"] category. Do not try to make up a category."
+								}
+							]
+						}
+					]
+				}
+			},
+			"ResultSelector": {
+				"category.$": "$.Body.content[0].text"
+			},
+			"ResultPath": "$.result",
+			"Next": "Choice"
+		},
+		"Choice": {
+			"Type": "Choice",
+			"Choices": [
+			  {
+				"Variable": "$.result.category",
+				"StringEquals": "COMPLAINT",
+				"Next": "SQS Complaints"
+			  },
+			  {
+				"Variable": "$.result.category",
+				"StringEquals": "BILLING",
+				"Next": "SQS Billing"
+			  }
+			],
+			"Default": "SQS Default"
+		},
+		"SQS Complaints": {
+			"Type": "Task",
+			"Resource": "arn:aws:states:::sqs:sendMessage",
+			"Parameters": {
+				"MessageBody": {
+					"message.$": "$.message"
+				},
+				"QueueUrl": "${complaintsSubstitution}"
+			},
+			"End": true
+		},
+		"SQS Billing": {
+			"Type": "Task",
+			"Resource": "arn:aws:states:::sqs:sendMessage",
+			"Parameters": {
+				"MessageBody": {
+					"message.$": "$.message"
+				},
+				"QueueUrl": "${billingSubstitution}"
+			},
+			"End": true
+		},
+		"SQS Default": {
+			"Type": "Task",
+			"Resource": "arn:aws:states:::sqs:sendMessage",
+			"Parameters": {
+				"MessageBody": {
+					"message.$": "$.message"
+				},
+				"QueueUrl": "${defaultQueueSubstitution}"
+			},
+			"End": true
+		}
+	}
+}
