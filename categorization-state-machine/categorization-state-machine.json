@@ -4,7 +4,7 @@
     "language": "",
     "simplicity": "1 - Fundamental",
     "type": "Express",
-    "diagram":"/resources/categorization-state-machine.png",
+    "diagram":"/resources/statemachine.png",
     "level": "200",
     "framework": "SAM",
     "services": [
@@ -26,7 +26,7 @@
       "template": {
         "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/categorization-state-machine/",
         "templateDir": "categorization-state-machine",
-        "templateFile": "template.yaml",
+        "templateFile": "template.yml",
         "ASL": "statemachine/stateMachine.asl.json"
       },
       "payloads": [
