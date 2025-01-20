@@ -9,9 +9,9 @@
   },
   "dependencies": {
     "core-js": "^3.6.5",
-    "vue": "^2.6.11",
+    "vue": "^3.5.13",
     "vue-video-player": "^6.0.0",
-    "vuetify": "^2.4.0"
+    "vuetify": "^3.7.6"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~5.0.8",
@@ -23,8 +23,8 @@
     "sass": "~1.32.0",
     "sass-loader": "^10.0.0",
     "vue-cli-plugin-vuetify": "~2.4.1",
-    "vue-template-compiler": "^2.6.11",
-    "vuetify-loader": "^1.7.0"
+    "vue-template-compiler": "^2.7.16",
+    "vuetify-loader": "^1.9.2"
   },
   "eslintConfig": {
     "root": true,
