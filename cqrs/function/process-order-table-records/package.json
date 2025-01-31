@@ -6,6 +6,6 @@
     "dependencies": {
         "@aws-sdk/client-secrets-manager": "^3.199.0",
         "@aws-sdk/util-dynamodb": "^3.199.0",
-        "mysql2": "^2.3.3"
+        "mysql2": "^3.9.8"
     }
 }

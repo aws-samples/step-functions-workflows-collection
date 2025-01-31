@@ -1,0 +1,118 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Message categorization with AWS Step Functions, Amazon Bedrock and Amazon SQS.
+
+Resources:
+  StateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt StateMachineLogGroup.Arn
+      Role: !GetAtt StatesMachineExecutionRole.Arn
+      Type: EXPRESS
+      DefinitionSubstitutions:
+        complaintsSubstitution: !Ref ComplaintsQueue
+        billingSubstitution: !Ref BillingQueue
+        defaultQueueSubstitution: !Ref DefaultQueue
+      DefinitionUri: statemachine/stateMachine.asl.json
+
+  StatesMachineExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - !Sub states.${AWS::Region}.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: SQS
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sqs:SendMessage
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                Resource:
+                  - !GetAtt DefaultQueue.Arn
+                  - !GetAtt ComplaintsQueue.Arn
+                  - !GetAtt BillingQueue.Arn
+        - PolicyName: CWLogs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogDelivery
+                  - logs:CreateLogStream
+                  - logs:GetLogDelivery
+                  - logs:UpdateLogDelivery
+                  - logs:DeleteLogDelivery
+                  - logs:ListLogDeliveries
+                  - logs:PutLogEvents
+                  - logs:PutResourcePolicy
+                  - logs:DescribeResourcePolicies
+                  - logs:DescribeLogGroups
+                Resource: '*'
+        - PolicyName: BedrockAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                Resource: !Sub arn:aws:bedrock:${AWS::Region}::foundation-model/anthropic.claude-3-haiku-20240307-v1:0
+
+  StateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/vendedlogs/states/${AWS::StackName}-StateMachine-Logs
+
+  DefaultQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 43200
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt DefaultDLQ.Arn
+        maxReceiveCount: 5
+
+  DefaultDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 43200
+
+  ComplaintsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt ComplaintsDLQ.Arn
+        maxReceiveCount: 5
+      MessageRetentionPeriod: 43200
+
+  ComplaintsDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 43200
+  
+  BillingQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt BillingDLQ.Arn
+        maxReceiveCount: 5
+      MessageRetentionPeriod: 43200
+
+  BillingDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 43200

@@ -1,0 +1,83 @@
+{
+    "title": "Message categorization with Amazon Bedrock",
+    "description": "Message categorizing with AWS Step Functions, Amazon Bedrock and Amazon Simple Queue Service.",
+    "language": "",
+    "simplicity": "1 - Fundamental",
+    "type": "Express",
+    "diagram":"/resources/categorization-state-machine.png",
+    "level": "200",
+    "framework": "SAM",
+    "services": [
+      "Bedrock",
+      "SQS"
+    ],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "The provided example demonstrates the deployment of a serverless application using the AWS Serverless Application Model (SAM) template.",
+        "This Express state machine is designed to categorize messages into queues for further processing based on business needs.",
+        "It uses the input message from the user to invoke an language model through Amazon Bedrock which will return a category for the message.",
+        "The output from the model is returned to Step Functions which will further route the message to a correct SQS queue for further processing.", 
+        "If no queue is found, Step Functions will send the message to a default queue.",
+        "The SQS queue processing is not included as part of this example but showcases the capabilities for message routing based on LLM categorization."
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/categorization-state-machine/",
+        "templateDir": "categorization-state-machine",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/stateMachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "bullets": [
+        {
+          "text": "Amazon Bedrock",
+          "link": "https://aws.amazon.com/bedrock/"
+        },
+        {
+            "text": "Amazon Simple Queue Service",
+            "link": "https://aws.amazon.com/sqs/"
+          },
+        {
+          "text": "AWS Step Functions Intrinsic functions",
+          "link": "https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-intrinsic-functions.html"
+        },
+        {
+          "text": "Synchronous and Asynchronous Express Workflows",
+          "link": "https://docs.aws.amazon.com/step-functions/latest/dg/concepts-express-synchronous.html"
+        }
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy"
+      ]
+    },
+    "testing": {
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "text": [
+        "<code>sam delete</code>"
+      ]
+    },
+    "authors": [
+      {
+        "name": "Carita Niskanen",
+        "image": "https://media.licdn.com/dms/image/v2/C4E03AQFT4dda8F1j9g/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1516230337269?e=1736985600&v=beta&t=f0NYSSLgAqzh_AuK6a6t-SMGB_JNAQ71ruwYC-0lsHA",
+        "bio": "Carita is a Solutions Architect at Amazon Web Services (AWS) based in Helsinki, Finland.",
+        "linkedin": "carita-niskanen-274258",
+        "twitter": ""
+      }
+    ]
+}
