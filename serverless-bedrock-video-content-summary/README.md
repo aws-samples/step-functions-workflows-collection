@@ -43,18 +43,15 @@ Additionally, there's an error-handling component. An AWS Lambda function handle
         env: env
     });
     ```
-5. To create a layer for lambda function to invoke Bedrock service, you will firstly need to run `pip` command to install `boto3==1.28.57` to directry `typescript/resource/layers/bedrock-layer/python` with command below: 
-   ```bash 
-   pip install -r requirements.txt --target resources/layers/bedrock-layer/python
-   ```
-6. From the command line, use npm to install dependencies and run the build process for the Lambda functions.
+
+5. From the command line, use npm to install dependencies and run the build process for the Lambda functions.
 
     ```bash
     npm install
     npm run build
     ```
 
-7. From the command line, use CDK to deploy the AWS resources for the workflow as specified in the TypeScript files under `/lib` and `/bin/vod-workflow.ts`:
+6. From the command line, use CDK to deploy the AWS resources for the workflow as specified in the TypeScript files under `/lib` and `/bin/vod-workflow.ts`:
 
     ```bash
     cdk deploy --all
