@@ -14,8 +14,7 @@ const env = {
 };
 
 const sharedResourcesStack = new SharedResourcesStack(app, 'SharedResourcesStack', {
-  // subEmail: 'you@email.address',
-  subEmail: 'fanhongy@amazon.com',
+  subEmail: 'you@email.address',
   env: env
 });
 
