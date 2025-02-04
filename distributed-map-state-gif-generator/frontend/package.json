@@ -11,7 +11,7 @@
     "core-js": "^3.40.0",
     "vue": "^3.5.13",
     "vue-video-player": "^6.0.0",
-    "vuetify": "^3.7.7"
+    "vuetify": "^3.7.11"
   },
   "eslintConfig": {
     "root": true,
@@ -37,7 +37,7 @@
     "@vue/cli-plugin-eslint": "^5.0.8",
     "@vue/cli-service": "^5.0.8",
     "babel-eslint": "^10.1.0",
-    "eslint": "^9.18.0",
+    "eslint": "^9.19.0",
     "eslint-plugin-vue": "^9.32.0",
     "sass": "^1.83.4",
     "sass-loader": "^16.0.4",
