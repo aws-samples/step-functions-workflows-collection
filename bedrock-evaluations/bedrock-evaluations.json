@@ -2,14 +2,14 @@
     "title": "Bedrock Knowledge Base Evaluations",
     "description": "Ingest data into multiple Knowledge Bases and evaluate the performance with your test suite of prompts",
     "language": "",
-    "simplicity": "1 - Fundamental",
+    "simplicity": "3 - Application",
     "usecase": "",
     "type": "Standard",
     "diagram":"/resources/statemachine.png",
     "videoId": "",
-    "level": "100",
+    "level": "200",
     "framework": "SAM",
-    "services": ["sns","batch"],
+    "services": ["bedrock","opensearch serverless", "s3"],
     "introBox": {
       "headline": "How it works",
       "text": [
@@ -61,7 +61,7 @@
     "authors": [
         {
           "name": "Rohan",
-          "image": "link-to-your-photo.jpg",
+          "image": "https://media.licdn.com/dms/image/v2/C4D03AQG1qfZlu1eemw/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1573532220993?e=1744848000&v=beta&t=RPHGXLg7HlFrF5BSfKgelMSn6odKwkReWk3n7-HoUXQ",
           "bio": "Rohan Mehta is a Solutions Architect at AWS",
           "linkedin": "https://www.linkedin.com/in/rohan-mehta-dev/",
           "twitter": "@rohanmehta_dev"
