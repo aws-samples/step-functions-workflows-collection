@@ -1,4 +1,4 @@
-# Bedrock Knowledge Base Evaluations
+# Amazon Bedrock Knowledge Base parallel evaluations
 
 This workflow ingests data into multiple Knowledge Bases and evaluates the performance of your Knowledge Bases with your test suite of prompts.
 
