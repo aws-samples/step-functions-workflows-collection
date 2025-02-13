@@ -409,7 +409,7 @@ Resources:
             End: true
       DefinitionSubstitutions:
         IngestionEmbeddingModelArn: >-
-          arn:aws:bedrock:us-east-1::foundation-model/amazon.titan-embed-text-v2:0
+          arn:aws:bedrock:${AWS::Region}::foundation-model/amazon.titan-embed-text-v2:0
         KnowledgeBaseRoleArn: !GetAtt BedrockKBRole.Arn
         OpensearchCollectionArn: !GetAtt OpenSearchCollection.Arn
         S3DocumentBucket: !GetAtt DocumentBucket.Arn
@@ -516,7 +516,7 @@ Resources:
                 Action:
                   - bedrock:Retrieve
                   - bedrock:RetrieveAndGenerate
-                Resource: !Sub 'arn:aws:bedrock:us-east-1:${AWS::AccountId}:knowledge-base/*'
+                Resource: !Sub 'arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:knowledge-base/*'
 
         - PolicyName: BedrockResourceAccess
           PolicyDocument:
@@ -598,7 +598,7 @@ Resources:
                 Action:
                   - bedrock:InvokeModel
                 Resource:
-                  - 'arn:aws:bedrock:us-east-1::foundation-model/amazon.titan-embed-text-v2:0'
+                  - 'arn:aws:bedrock:${AWS::Region}::foundation-model/amazon.titan-embed-text-v2:0'
         - PolicyName: OpenSearchServerlessAccess
           PolicyDocument:
             Version: '2012-10-17'
