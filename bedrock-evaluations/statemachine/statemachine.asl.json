@@ -13,7 +13,7 @@
                 "DataSourceConfiguration": {
                   "S3Configuration": {
                     "BucketArn": "arn:aws:s3:::knowledge-base-evaluations-documentbucket-7bsjgjmbjkll",
-                    "BucketOwnerAccountId": "637423582422"
+                    "BucketOwnerAccountId": "000000000000"
                   },
                   "Type": "S3"
                 },
@@ -81,7 +81,7 @@
                 "OutputDataConfig": {
                   "S3Uri": "s3://knowledge-base-evaluations-evaluationbucket-lucehibx2avn/output/"
                 },
-                "RoleArn": "arn:aws:iam::637423582422:role/bedrock-eval-role"
+                "RoleArn": "arn:aws:iam::000000000000:role/bedrock-eval-role"
               },
               "Assign": {
                 "EvaluationJobId": "{% $states.result.JobArn %}"
@@ -105,10 +105,10 @@
                   }
                 },
                 "Name": "{% 'KnowledgeBase' & $uuid() %}",
-                "RoleArn": "arn:aws:iam::637423582422:role/bedrock-kb-role",
+                "RoleArn": "arn:aws:iam::000000000000:role/bedrock-kb-role",
                 "StorageConfiguration": {
                   "OpensearchServerlessConfiguration": {
-                    "CollectionArn": "arn:aws:aoss:us-east-1:637423582422:collection/nqetrvu6wwjmgnjngad6",
+                    "CollectionArn": "arn:aws:aoss:us-east-1:000000000000:collection/nqetrvu6wwjmgnjngad6",
                     "FieldMapping": {
                       "MetadataField": "metadata",
                       "TextField": "text",
@@ -211,7 +211,7 @@
                 "DataSourceConfiguration": {
                   "S3Configuration": {
                     "BucketArn": "arn:aws:s3:::knowledge-base-evaluations-documentbucket-7bsjgjmbjkll",
-                    "BucketOwnerAccountId": "637423582422"
+                    "BucketOwnerAccountId": "000000000000"
                   },
                   "Type": "S3"
                 },
@@ -295,7 +295,7 @@
                 "OutputDataConfig": {
                   "S3Uri": "s3://knowledge-base-evaluations-evaluationbucket-lucehibx2avn/output/"
                 },
-                "RoleArn": "arn:aws:iam::637423582422:role/bedrock-eval-role"
+                "RoleArn": "arn:aws:iam::000000000000:role/bedrock-eval-role"
               },
               "Assign": {
                 "EvaluationJobId": "{% $states.result.JobArn %}"
@@ -319,10 +319,10 @@
                   }
                 },
                 "Name": "{% 'KnowledgeBase' & $uuid() %}",
-                "RoleArn": "arn:aws:iam::637423582422:role/bedrock-kb-role",
+                "RoleArn": "arn:aws:iam::000000000000:role/bedrock-kb-role",
                 "StorageConfiguration": {
                   "OpensearchServerlessConfiguration": {
-                    "CollectionArn": "arn:aws:aoss:us-east-1:637423582422:collection/nqetrvu6wwjmgnjngad6",
+                    "CollectionArn": "arn:aws:aoss:us-east-1:000000000000:collection/nqetrvu6wwjmgnjngad6",
                     "FieldMapping": {
                       "MetadataField": "metadata",
                       "TextField": "text",
