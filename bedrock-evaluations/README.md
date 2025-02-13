@@ -41,7 +41,6 @@ Important: this application uses various AWS services and there are costs associ
 This workflow creates multiple Knowledge Bases, performs an ingestion job into a vector database, and runs evaluation jobs for you to assess the effectiveness of your ingestion jobs. This is done by making use of Step Functions Parallel state to run multiple testing flows in parallel."
 
 ## Image
-Provide an exported .png of the workflow in the `/resources` directory from [Workflow stuio](https://docs.aws.amazon.com/step-functions/latest/dg/workflow-studio.html) and add here.
 ![image](./resources/statemachine.png)
 
 ## Testing
