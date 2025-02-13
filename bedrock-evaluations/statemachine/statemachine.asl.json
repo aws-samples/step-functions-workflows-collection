@@ -12,7 +12,7 @@
               "Arguments": {
                 "DataSourceConfiguration": {
                   "S3Configuration": {
-                    "BucketArn": "arn:aws:s3:::knowledge-base-evaluations-documentbucket-7bsjgjmbjkll",
+                    "BucketArn": "arn:aws:s3:::BUCKET_NAME",
                     "BucketOwnerAccountId": "000000000000"
                   },
                   "Type": "S3"
@@ -36,7 +36,7 @@
                       {
                         "Dataset": {
                           "DatasetLocation": {
-                            "S3Uri": "s3://knowledge-base-evaluations-evaluationbucket-lucehibx2avn/input/referenceresponses.jsonl"
+                            "S3Uri": "s3://BUCKET_NAME/input/referenceresponses.jsonl"
                           },
                           "Name": "Evaluations"
                         },
@@ -79,7 +79,7 @@
                 },
                 "JobName": "{%$lowercase('EvaluationJob' & $KnowledgeBaseId & $uuid()) %}",
                 "OutputDataConfig": {
-                  "S3Uri": "s3://knowledge-base-evaluations-evaluationbucket-lucehibx2avn/output/"
+                  "S3Uri": "s3://BUCKET_NAME/output/"
                 },
                 "RoleArn": "arn:aws:iam::000000000000:role/bedrock-eval-role"
               },
@@ -210,7 +210,7 @@
               "Arguments": {
                 "DataSourceConfiguration": {
                   "S3Configuration": {
-                    "BucketArn": "arn:aws:s3:::knowledge-base-evaluations-documentbucket-7bsjgjmbjkll",
+                    "BucketArn": "arn:aws:s3:::BUCKET_NAME",
                     "BucketOwnerAccountId": "000000000000"
                   },
                   "Type": "S3"
@@ -250,7 +250,7 @@
                       {
                         "Dataset": {
                           "DatasetLocation": {
-                            "S3Uri": "s3://knowledge-base-evaluations-evaluationbucket-lucehibx2avn/input/referenceresponses.jsonl"
+                            "S3Uri": "s3://BUCKET_NAME/input/referenceresponses.jsonl"
                           },
                           "Name": "Evaluations"
                         },
@@ -293,7 +293,7 @@
                 },
                 "JobName": "{%$lowercase('EvaluationJob' & $KnowledgeBaseId & $uuid()) %}",
                 "OutputDataConfig": {
-                  "S3Uri": "s3://knowledge-base-evaluations-evaluationbucket-lucehibx2avn/output/"
+                  "S3Uri": "s3://BUCKET_NAME/output/"
                 },
                 "RoleArn": "arn:aws:iam::000000000000:role/bedrock-eval-role"
               },
