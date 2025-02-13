@@ -635,7 +635,7 @@ Resources:
                   StringEquals:
                     aws:ResourceAccount:
                       - !Ref 'AWS::AccountId'
-        - PolicyName: S3FullAccess
+        - PolicyName: S3WriteAccess
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
