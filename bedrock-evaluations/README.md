@@ -1,6 +1,6 @@
-# Bedrock Knowledge Base Evaluations
+# Amazon Bedrock Knowledge Base parallel evaluations
 
-This workflow ingests data into multiple Knowledge Bases and evaluates the performance of your Knowledge Bases with your test suite of prompts.
+This Amazon Step Functions workflow ingests data into multiple Knowledge Bases and evaluates the performance of your Knowledge Bases with your test suite of prompts.
 
 Learn more about this workflow at Step Functions workflows collection: << Add the live URL here >>
 
@@ -64,6 +64,6 @@ Provide an exported .png of the workflow in the `/resources` directory from [Wor
     aws cloudformation list-stacks --query "StackSummaries[?contains(StackName,'STACK_NAME')].StackStatus"
     ```
 ----
-Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+Copyright 2025 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
 SPDX-License-Identifier: MIT-0
