@@ -108,7 +108,7 @@
                 "RoleArn": "arn:aws:iam::000000000000:role/bedrock-kb-role",
                 "StorageConfiguration": {
                   "OpensearchServerlessConfiguration": {
-                    "CollectionArn": "arn:aws:aoss:us-east-1:000000000000:collection/nqetrvu6wwjmgnjngad6",
+                    "CollectionArn": "arn:aws:aoss:us-east-1:000000000000:collection/COLLECTION_ID",
                     "FieldMapping": {
                       "MetadataField": "metadata",
                       "TextField": "text",
@@ -322,7 +322,7 @@
                 "RoleArn": "arn:aws:iam::000000000000:role/bedrock-kb-role",
                 "StorageConfiguration": {
                   "OpensearchServerlessConfiguration": {
-                    "CollectionArn": "arn:aws:aoss:us-east-1:000000000000:collection/nqetrvu6wwjmgnjngad6",
+                    "CollectionArn": "arn:aws:aoss:us-east-1:000000000000:collection/COLLECTION_ID",
                     "FieldMapping": {
                       "MetadataField": "metadata",
                       "TextField": "text",
