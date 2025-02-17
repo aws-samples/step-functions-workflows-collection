@@ -2,7 +2,7 @@
 
 This Amazon Step Functions workflow ingests data into multiple Knowledge Bases and evaluates the performance of your Knowledge Bases with your test suite of prompts.
 
-Learn more about this workflow at Step Functions workflows collection: << Add the live URL here >>
+Learn more about this workflow at Step Functions workflows collection: https://serverlessland.com/workflows/bedrock-evaluations-sam
 
 Important: this application uses various AWS services and there are costs associated with these services after the Free Tier usage - please see the [AWS Pricing page](https://aws.amazon.com/pricing/) for details. You are responsible for any AWS costs incurred. No warranty is implied in this example.
 
@@ -21,7 +21,7 @@ Important: this application uses various AWS services and there are costs associ
     ```
 1. Change directory to the pattern directory:
     ```
-    cd step-functions-workflows-collection/bedrock-evaluations
+    cd step-functions-workflows-collection/bedrock-evaluations-sam
     ```
 1. From the command line, use AWS SAM to deploy the AWS resources for the workflow as specified in the template.yaml file:
     ```
