@@ -1,5 +1,5 @@
 {
-    "title": "Bedrock Knowledge Base Evaluations",
+    "title": "Amazon Bedrock Knowledge Base Evaluations",
     "description": "Ingest data into multiple Knowledge Bases and evaluate the performance with your test suite of prompts",
     "language": "",
     "simplicity": "3 - Application",
@@ -60,10 +60,10 @@
     },
     "authors": [
         {
-          "name": "Rohan",
+          "name": "Rohan Mehta",
           "image": "https://media.licdn.com/dms/image/v2/C4D03AQG1qfZlu1eemw/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1573532220993?e=1744848000&v=beta&t=RPHGXLg7HlFrF5BSfKgelMSn6odKwkReWk3n7-HoUXQ",
           "bio": "Rohan Mehta is a Solutions Architect at AWS",
-          "linkedin": "https://www.linkedin.com/in/rohan-mehta-dev/",
+          "linkedin": "rohan-mehta-dev",
           "twitter": "@rohanmehta_dev"
         }
       ]
