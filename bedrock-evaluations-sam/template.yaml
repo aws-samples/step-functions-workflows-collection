@@ -409,8 +409,7 @@ Resources:
                     Type: Fail
             End: true
       DefinitionSubstitutions:
-        IngestionEmbeddingModelArn: >-
-          arn:aws:bedrock:${AWS::Region}::foundation-model/amazon.titan-embed-text-v2:0
+        IngestionEmbeddingModelArn: !Sub 'arn:aws:bedrock:${AWS::Region}::foundation-model/amazon.titan-embed-text-v2:0'
         KnowledgeBaseRoleArn: !GetAtt BedrockKBRole.Arn
         OpensearchCollectionArn: !GetAtt OpenSearchCollection.Arn
         S3DocumentBucket: !GetAtt DocumentBucket.Arn
