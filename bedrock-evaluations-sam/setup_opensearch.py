@@ -81,7 +81,7 @@ def create_vector_index(client, index_name, vector_dimension=1024):
 
 def main():
     # Replace with your OpenSearch Serverless collection endpoint (without https://)
-    host = "nv5d497gl5jqxaeru9l0.us-east-1.aoss.amazonaws.com"
+    host = "<TEST>.us-east-1.aoss.amazonaws.com"
     region = "us-east-1"  # e.g., us-east-1
     
     # Create OpenSearch client
