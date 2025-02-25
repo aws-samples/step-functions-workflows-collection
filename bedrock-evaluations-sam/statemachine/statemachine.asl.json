@@ -1,0 +1,425 @@
+{
+  "Comment": "Create Bedrock Evaluation Pipelines",
+  "QueryLanguage": "JSONata",
+  "StartAt": "Create Evaluation Pipelines",
+  "States": {
+    "Create Evaluation Pipelines": {
+      "Branches": [
+        {
+          "StartAt": "CreateKnowledgeBase",
+          "States": {
+            "Create Data Source": {
+              "Arguments": {
+                "DataSourceConfiguration": {
+                  "S3Configuration": {
+                    "BucketArn": "arn:aws:s3:::BUCKET_NAME",
+                    "BucketOwnerAccountId": "000000000000"
+                  },
+                  "Type": "S3"
+                },
+                "KnowledgeBaseId": "{% $KnowledgeBaseId %}",
+                "Name": "{% 'DataSource' & $uuid() %}"
+              },
+              "Assign": {
+                "DataSourceId": "{% $states.result.DataSource.DataSourceId %}"
+              },
+              "Next": "Start Ingestion Job",
+              "Resource": "arn:aws:states:::aws-sdk:bedrockagent:createDataSource",
+              "Type": "Task"
+            },
+            "Create Evaluation Job": {
+              "Arguments": {
+                "ApplicationType": "RagEvaluation",
+                "EvaluationConfig": {
+                  "Automated": {
+                    "DatasetMetricConfigs": [
+                      {
+                        "Dataset": {
+                          "DatasetLocation": {
+                            "S3Uri": "s3://BUCKET_NAME/input/referenceresponses.jsonl"
+                          },
+                          "Name": "Evaluations"
+                        },
+                        "MetricNames": [
+                          "Builtin.Correctness",
+                          "Builtin.Completeness",
+                          "Builtin.Helpfulness"
+                        ],
+                        "TaskType": "Generation"
+                      }
+                    ],
+                    "EvaluatorModelConfig": {
+                      "BedrockEvaluatorModels": [
+                        {
+                          "ModelIdentifier": "anthropic.claude-3-5-sonnet-20240620-v1:0"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "InferenceConfig": {
+                  "RagConfigs": [
+                    {
+                      "KnowledgeBaseConfig": {
+                        "RetrieveAndGenerateConfig": {
+                          "KnowledgeBaseConfiguration": {
+                            "KnowledgeBaseId": "{% $KnowledgeBaseId %}",
+                            "ModelArn": "anthropic.claude-3-5-sonnet-20240620-v1:0",
+                            "RetrievalConfiguration": {
+                              "VectorSearchConfiguration": {
+                                "NumberOfResults": 3
+                              }
+                            }
+                          },
+                          "Type": "KNOWLEDGE_BASE"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "JobName": "{%$lowercase('EvaluationJob' & $KnowledgeBaseId & $uuid()) %}",
+                "OutputDataConfig": {
+                  "S3Uri": "s3://BUCKET_NAME/output/"
+                },
+                "RoleArn": "arn:aws:iam::000000000000:role/bedrock-eval-role"
+              },
+              "Assign": {
+                "EvaluationJobId": "{% $states.result.JobArn %}"
+              },
+              "Next": "Wait 10 Minutes",
+              "Resource": "arn:aws:states:::aws-sdk:bedrock:createEvaluationJob",
+              "Type": "Task"
+            },
+            "CreateKnowledgeBase": {
+              "Arguments": {
+                "KnowledgeBaseConfiguration": {
+                  "Type": "VECTOR",
+                  "VectorKnowledgeBaseConfiguration": {
+                    "EmbeddingModelArn": "arn:aws:bedrock:REGION::foundation-model/amazon.titan-embed-text-v2:0",
+                    "EmbeddingModelConfiguration": {
+                      "BedrockEmbeddingModelConfiguration": {
+                        "Dimensions": 1024,
+                        "EmbeddingDataType": "FLOAT32"
+                      }
+                    }
+                  }
+                },
+                "Name": "{% 'KnowledgeBase' & $uuid() %}",
+                "RoleArn": "arn:aws:iam::000000000000:role/bedrock-kb-role",
+                "StorageConfiguration": {
+                  "OpensearchServerlessConfiguration": {
+                    "CollectionArn": "arn:aws:aoss:REGION:000000000000:collection/COLLECTION_ID",
+                    "FieldMapping": {
+                      "MetadataField": "metadata",
+                      "TextField": "text",
+                      "VectorField": "vector_field"
+                    },
+                    "VectorIndexName": "vector-index-1"
+                  },
+                  "Type": "OPENSEARCH_SERVERLESS"
+                }
+              },
+              "Assign": {
+                "KnowledgeBaseId": "{% $states.result.KnowledgeBase.KnowledgeBaseId %}"
+              },
+              "Next": "Wait",
+              "Resource": "arn:aws:states:::aws-sdk:bedrockagent:createKnowledgeBase",
+              "Type": "Task"
+            },
+            "Evaluation Complete?": {
+              "Choices": [
+                {
+                  "Condition": "{% $states.input.Status = 'Completed' %}",
+                  "Next": "Success"
+                },
+                {
+                  "Condition": "{% $states.input.Status = 'Failed' %}",
+                  "Next": "Fail"
+                }
+              ],
+              "Default": "Wait 10 Minutes",
+              "Type": "Choice"
+            },
+            "Fail": {
+              "Type": "Fail"
+            },
+            "Get Evaluation Job Status": {
+              "Arguments": {
+                "JobIdentifier": "{% $EvaluationJobId %}"
+              },
+              "Next": "Evaluation Complete?",
+              "Resource": "arn:aws:states:::aws-sdk:bedrock:getEvaluationJob",
+              "Type": "Task"
+            },
+            "Get Ingestion Job": {
+              "Arguments": {
+                "DataSourceId": "{% $DataSourceId %}",
+                "IngestionJobId": "{% $IngestionJobId %}",
+                "KnowledgeBaseId": "{% $KnowledgeBaseId %}"
+              },
+              "Next": "Ingestion Complete?",
+              "Resource": "arn:aws:states:::aws-sdk:bedrockagent:getIngestionJob",
+              "Type": "Task"
+            },
+            "Ingestion Complete?": {
+              "Choices": [
+                {
+                  "Condition": "{% $states.input.IngestionJob.Status = 'COMPLETE' %}",
+                  "Next": "Create Evaluation Job"
+                }
+              ],
+              "Default": "Wait 60 Seconds",
+              "Type": "Choice"
+            },
+            "Start Ingestion Job": {
+              "Arguments": {
+                "DataSourceId": "{% $DataSourceId %}",
+                "KnowledgeBaseId": "{% $KnowledgeBaseId %}"
+              },
+              "Assign": {
+                "IngestionJobId": "{% $states.result.IngestionJob.IngestionJobId %}"
+              },
+              "Next": "Wait 60 Seconds",
+              "Resource": "arn:aws:states:::aws-sdk:bedrockagent:startIngestionJob",
+              "Type": "Task"
+            },
+            "Success": {
+              "Type": "Succeed"
+            },
+            "Wait": {
+              "Next": "Create Data Source",
+              "Seconds": 20,
+              "Type": "Wait"
+            },
+            "Wait 10 Minutes": {
+              "Next": "Get Evaluation Job Status",
+              "Seconds": 600,
+              "Type": "Wait"
+            },
+            "Wait 60 Seconds": {
+              "Next": "Get Ingestion Job",
+              "Seconds": 60,
+              "Type": "Wait"
+            }
+          }
+        },
+        {
+          "StartAt": "Create Knowledge Base 2",
+          "States": {
+            "Create Data Source 2": {
+              "Arguments": {
+                "DataSourceConfiguration": {
+                  "S3Configuration": {
+                    "BucketArn": "arn:aws:s3:::BUCKET_NAME",
+                    "BucketOwnerAccountId": "000000000000"
+                  },
+                  "Type": "S3"
+                },
+                "KnowledgeBaseId": "{% $KnowledgeBaseId %}",
+                "Name": "{% 'DataSource' & $uuid() %}",
+                "VectorIngestionConfiguration": {
+                  "ChunkingConfiguration": {
+                    "ChunkingStrategy": "HIERARCHICAL",
+                    "HierarchicalChunkingConfiguration": {
+                      "LevelConfigurations": [
+                        {
+                          "MaxTokens": 1500
+                        },
+                        {
+                          "MaxTokens": 300
+                        }
+                      ],
+                      "OverlapTokens": 60
+                    }
+                  }
+                }
+              },
+              "Assign": {
+                "DataSourceId": "{% $states.result.DataSource.DataSourceId %}"
+              },
+              "Next": "Start Ingestion Job 2",
+              "Resource": "arn:aws:states:::aws-sdk:bedrockagent:createDataSource",
+              "Type": "Task"
+            },
+            "Create Evaluation Job 2": {
+              "Arguments": {
+                "ApplicationType": "RagEvaluation",
+                "EvaluationConfig": {
+                  "Automated": {
+                    "DatasetMetricConfigs": [
+                      {
+                        "Dataset": {
+                          "DatasetLocation": {
+                            "S3Uri": "s3://BUCKET_NAME/input/referenceresponses.jsonl"
+                          },
+                          "Name": "Evaluations"
+                        },
+                        "MetricNames": [
+                          "Builtin.Correctness",
+                          "Builtin.Completeness",
+                          "Builtin.Helpfulness"
+                        ],
+                        "TaskType": "Generation"
+                      }
+                    ],
+                    "EvaluatorModelConfig": {
+                      "BedrockEvaluatorModels": [
+                        {
+                          "ModelIdentifier": "anthropic.claude-3-5-sonnet-20240620-v1:0"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "InferenceConfig": {
+                  "RagConfigs": [
+                    {
+                      "KnowledgeBaseConfig": {
+                        "RetrieveAndGenerateConfig": {
+                          "KnowledgeBaseConfiguration": {
+                            "KnowledgeBaseId": "{% $KnowledgeBaseId %}",
+                            "ModelArn": "anthropic.claude-3-5-sonnet-20240620-v1:0",
+                            "RetrievalConfiguration": {
+                              "VectorSearchConfiguration": {
+                                "NumberOfResults": 3
+                              }
+                            }
+                          },
+                          "Type": "KNOWLEDGE_BASE"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "JobName": "{%$lowercase('EvaluationJob' & $KnowledgeBaseId & $uuid()) %}",
+                "OutputDataConfig": {
+                  "S3Uri": "s3://BUCKET_NAME/output/"
+                },
+                "RoleArn": "arn:aws:iam::000000000000:role/bedrock-eval-role"
+              },
+              "Assign": {
+                "EvaluationJobId": "{% $states.result.JobArn %}"
+              },
+              "Next": "Wait 10 Minutes 2",
+              "Resource": "arn:aws:states:::aws-sdk:bedrock:createEvaluationJob",
+              "Type": "Task"
+            },
+            "Create Knowledge Base 2": {
+              "Arguments": {
+                "KnowledgeBaseConfiguration": {
+                  "Type": "VECTOR",
+                  "VectorKnowledgeBaseConfiguration": {
+                    "EmbeddingModelArn": "arn:aws:bedrock:REGION::foundation-model/amazon.titan-embed-text-v2:0",
+                    "EmbeddingModelConfiguration": {
+                      "BedrockEmbeddingModelConfiguration": {
+                        "Dimensions": 1024,
+                        "EmbeddingDataType": "FLOAT32"
+                      }
+                    }
+                  }
+                },
+                "Name": "{% 'KnowledgeBase' & $uuid() %}",
+                "RoleArn": "arn:aws:iam::000000000000:role/bedrock-kb-role",
+                "StorageConfiguration": {
+                  "OpensearchServerlessConfiguration": {
+                    "CollectionArn": "arn:aws:aoss:REGION:000000000000:collection/COLLECTION_ID",
+                    "FieldMapping": {
+                      "MetadataField": "metadata",
+                      "TextField": "text",
+                      "VectorField": "vector_field"
+                    },
+                    "VectorIndexName": "vector-index-2"
+                  },
+                  "Type": "OPENSEARCH_SERVERLESS"
+                }
+              },
+              "Assign": {
+                "KnowledgeBaseId": "{% $states.result.KnowledgeBase.KnowledgeBaseId %}"
+              },
+              "Next": "Wait 2",
+              "Resource": "arn:aws:states:::aws-sdk:bedrockagent:createKnowledgeBase",
+              "Type": "Task"
+            },
+            "Evaluation Complete? 2": {
+              "Choices": [
+                {
+                  "Condition": "{% $states.input.Status = 'Completed' %}",
+                  "Next": "Success 2"
+                },
+                {
+                  "Condition": "{% $states.input.Status = 'Failed' %}",
+                  "Next": "Fail 2"
+                }
+              ],
+              "Default": "Wait 10 Minutes 2",
+              "Type": "Choice"
+            },
+            "Fail 2": {
+              "Type": "Fail"
+            },
+            "Get Evaluation Job Status 2": {
+              "Arguments": {
+                "JobIdentifier": "{% $EvaluationJobId %}"
+              },
+              "Next": "Evaluation Complete? 2",
+              "Resource": "arn:aws:states:::aws-sdk:bedrock:getEvaluationJob",
+              "Type": "Task"
+            },
+            "Get Ingestion Job 2": {
+              "Arguments": {
+                "DataSourceId": "{% $DataSourceId %}",
+                "IngestionJobId": "{% $IngestionJobId %}",
+                "KnowledgeBaseId": "{% $KnowledgeBaseId %}"
+              },
+              "Next": "Ingestion Complete? 2",
+              "Resource": "arn:aws:states:::aws-sdk:bedrockagent:getIngestionJob",
+              "Type": "Task"
+            },
+            "Ingestion Complete? 2": {
+              "Choices": [
+                {
+                  "Condition": "{% $states.input.IngestionJob.Status = 'COMPLETE' %}",
+                  "Next": "Create Evaluation Job 2"
+                }
+              ],
+              "Default": "Wait 60 Seconds 2",
+              "Type": "Choice"
+            },
+            "Start Ingestion Job 2": {
+              "Arguments": {
+                "DataSourceId": "{% $DataSourceId %}",
+                "KnowledgeBaseId": "{% $KnowledgeBaseId %}"
+              },
+              "Assign": {
+                "IngestionJobId": "{% $states.result.IngestionJob.IngestionJobId %}"
+              },
+              "Next": "Wait 60 Seconds 2",
+              "Resource": "arn:aws:states:::aws-sdk:bedrockagent:startIngestionJob",
+              "Type": "Task"
+            },
+            "Success 2": {
+              "Type": "Succeed"
+            },
+            "Wait 10 Minutes 2": {
+              "Next": "Get Evaluation Job Status 2",
+              "Seconds": 600,
+              "Type": "Wait"
+            },
+            "Wait 2": {
+              "Next": "Create Data Source 2",
+              "Seconds": 30,
+              "Type": "Wait"
+            },
+            "Wait 60 Seconds 2": {
+              "Next": "Get Ingestion Job 2",
+              "Seconds": 60,
+              "Type": "Wait"
+            }
+          }
+        }
+      ],
+      "End": true,
+      "Type": "Parallel"
+    }
+  }
+}

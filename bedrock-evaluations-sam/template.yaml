@@ -1,0 +1,650 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  DocumentBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: 
+              - '*'
+            AllowedMethods:
+              - GET
+              - PUT
+              - POST
+              - DELETE
+              - HEAD
+            AllowedOrigins:
+              - '*'  # For development. In production, specify exact origins
+  
+  EvaluationBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: 
+              - '*'
+            AllowedMethods:
+              - GET
+              - PUT
+              - POST
+              - DELETE
+              - HEAD
+            AllowedOrigins:
+              - '*'  # For development. In production, specify exact origins
+
+  OpenSearchCollection:
+    Type: AWS::OpenSearchServerless::Collection
+    DependsOn: [EncryptionPolicy, NetworkPolicy, DataAccessPolicy]
+    Properties:
+      Name: vector-search-collection
+      Type: VECTORSEARCH
+      Description: Collection for vector search
+
+  EncryptionPolicy:
+    Type: AWS::OpenSearchServerless::SecurityPolicy
+    Properties:
+      Name: vector-search-encryption-policy
+      Type: encryption
+      Policy: 
+        !Sub |
+        {
+          "Rules": [
+            {
+              "ResourceType": "collection",
+              "Resource": ["collection/vector-search-collection"]
+            }
+          ],
+          "AWSOwnedKey": true
+        }
+
+  NetworkPolicy:
+    Type: AWS::OpenSearchServerless::SecurityPolicy
+    Properties:
+      Name: vector-search-network-policy
+      Type: network
+      Policy: 
+        !Sub |
+        [{
+          "Rules": [
+            {
+              "ResourceType": "collection",
+              "Resource": ["collection/vector-search-collection"]
+            }
+          ],
+          "AllowFromPublic": true
+        }]
+
+  DataAccessPolicy:
+    Type: AWS::OpenSearchServerless::AccessPolicy
+    Properties:
+      Name: vector-search-access-policy
+      Type: data
+      Policy: 
+        !Sub |
+        [{
+          "Description": "Access policy for vector search collection",
+          "Rules": [
+            {
+              "ResourceType": "collection",
+              "Resource": ["collection/vector-search-collection"],
+              "Permission": [
+                "aoss:CreateCollectionItems",
+                "aoss:DeleteCollectionItems",
+                "aoss:UpdateCollectionItems",
+                "aoss:DescribeCollectionItems"
+              ]
+            },
+            {
+              "ResourceType": "index",
+              "Resource": ["index/vector-search-collection/*"],
+              "Permission": [
+                "aoss:CreateIndex",
+                "aoss:DeleteIndex",
+                "aoss:UpdateIndex",
+                "aoss:DescribeIndex",
+                "aoss:ReadDocument",
+                "aoss:WriteDocument"
+              ]
+            }
+          ],
+           "Principal": ["arn:aws:iam::${AWS::AccountId}:root"]
+        }]
+
+  KnowledgeBaseEvaluations:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Definition:
+        QueryLanguage: JSONata
+        Comment: A description of my state machine
+        StartAt: Create Evaluation Pipelines
+        States:
+          Create Evaluation Pipelines:
+            Type: Parallel
+            Branches:
+              - StartAt: CreateKnowledgeBase
+                States:
+                  CreateKnowledgeBase:
+                    Type: Task
+                    Arguments:
+                      KnowledgeBaseConfiguration:
+                        Type: VECTOR
+                        VectorKnowledgeBaseConfiguration:
+                          EmbeddingModelArn: >-
+                            ${IngestionEmbeddingModelArn}
+                          EmbeddingModelConfiguration:
+                            BedrockEmbeddingModelConfiguration:
+                              Dimensions: 1024
+                              EmbeddingDataType: FLOAT32
+                      Name: '{% ''KnowledgeBase'' & $uuid() %}'
+                      RoleArn: ${KnowledgeBaseRoleArn}
+                      StorageConfiguration:
+                        Type: OPENSEARCH_SERVERLESS
+                        OpensearchServerlessConfiguration:
+                          CollectionArn: >-
+                            ${OpensearchCollectionArn}
+                          VectorIndexName: vector-index-1
+                          FieldMapping:
+                            VectorField: vector_field
+                            TextField: text
+                            MetadataField: metadata
+                    Resource: arn:aws:states:::aws-sdk:bedrockagent:createKnowledgeBase
+                    Next: Wait
+                    Assign:
+                      KnowledgeBaseId: '{% $states.result.KnowledgeBase.KnowledgeBaseId %}'
+                  Wait:
+                    Type: Wait
+                    Seconds: 20
+                    Next: Create Data Source
+                  Create Data Source:
+                    Type: Task
+                    Arguments:
+                      DataSourceConfiguration:
+                        Type: S3
+                        S3Configuration:
+                          BucketArn: >-
+                            ${S3DocumentBucket}
+                          BucketOwnerAccountId: ${AccountId}
+                      KnowledgeBaseId: '{% $KnowledgeBaseId %}'
+                      Name: '{% ''DataSource'' & $uuid() %}'
+                    Resource: arn:aws:states:::aws-sdk:bedrockagent:createDataSource
+                    Next: Start Ingestion Job
+                    Assign:
+                      DataSourceId: '{% $states.result.DataSource.DataSourceId %}'
+                  Start Ingestion Job:
+                    Type: Task
+                    Arguments:
+                      DataSourceId: '{% $DataSourceId %}'
+                      KnowledgeBaseId: '{% $KnowledgeBaseId %}'
+                    Resource: arn:aws:states:::aws-sdk:bedrockagent:startIngestionJob
+                    Next: Wait 60 Seconds
+                    Assign:
+                      IngestionJobId: '{% $states.result.IngestionJob.IngestionJobId %}'
+                  Wait 60 Seconds:
+                    Type: Wait
+                    Seconds: 60
+                    Next: Get Ingestion Job
+                  Get Ingestion Job:
+                    Type: Task
+                    Arguments:
+                      DataSourceId: '{% $DataSourceId %}'
+                      IngestionJobId: '{% $IngestionJobId %}'
+                      KnowledgeBaseId: '{% $KnowledgeBaseId %}'
+                    Resource: arn:aws:states:::aws-sdk:bedrockagent:getIngestionJob
+                    Next: Ingestion Complete?
+                  Ingestion Complete?:
+                    Type: Choice
+                    Choices:
+                      - Condition: '{% $states.input.IngestionJob.Status = ''COMPLETE'' %}'
+                        Next: Create Evaluation Job
+                    Default: Wait 60 Seconds
+                  Create Evaluation Job:
+                    Type: Task
+                    Arguments:
+                      JobName: >-
+                        {%$lowercase('EvaluationJob' & $KnowledgeBaseId &
+                        $uuid()) %}
+                      ApplicationType: RagEvaluation
+                      EvaluationConfig:
+                        Automated:
+                          DatasetMetricConfigs:
+                            - TaskType: Generation
+                              Dataset:
+                                Name: Evaluations
+                                DatasetLocation:
+                                  S3Uri: >-
+                                    ${S3EvaluationJobPromptFolder}
+                              MetricNames:
+                                - Builtin.Correctness
+                                - Builtin.Completeness
+                                - Builtin.Helpfulness
+                          EvaluatorModelConfig:
+                            BedrockEvaluatorModels:
+                              - ModelIdentifier: anthropic.claude-3-5-sonnet-20240620-v1:0
+                      InferenceConfig:
+                        RagConfigs:
+                          - KnowledgeBaseConfig:
+                              RetrieveAndGenerateConfig:
+                                Type: KNOWLEDGE_BASE
+                                KnowledgeBaseConfiguration:
+                                  KnowledgeBaseId: '{% $KnowledgeBaseId %}'
+                                  ModelArn: anthropic.claude-3-5-sonnet-20240620-v1:0
+                                  RetrievalConfiguration:
+                                    VectorSearchConfiguration:
+                                      NumberOfResults: 3
+                      OutputDataConfig:
+                        S3Uri: ${S3EvaluationJobOutputFolder}
+                      RoleArn: ${EvaluationJobIAMRoleArn}
+                    Resource: arn:aws:states:::aws-sdk:bedrock:createEvaluationJob
+                    Next: Wait 10 Minutes
+                    Assign:
+                      EvaluationJobId: '{% $states.result.JobArn %}'
+                  Wait 10 Minutes:
+                    Type: Wait
+                    Seconds: 600
+                    Next: Get Evaluation Job Status
+                  Get Evaluation Job Status:
+                    Type: Task
+                    Arguments:
+                      JobIdentifier: '{% $EvaluationJobId %}'
+                    Resource: arn:aws:states:::aws-sdk:bedrock:getEvaluationJob
+                    Next: Evaluation Complete?
+                  Evaluation Complete?:
+                    Type: Choice
+                    Choices:
+                      - Condition: '{% $states.input.Status = ''Completed'' %}'
+                        Next: Success
+                      - Next: Fail
+                        Condition: '{% $states.input.Status = ''Failed'' %}'
+                    Default: Wait 10 Minutes
+                  Success:
+                    Type: Succeed
+                  Fail:
+                    Type: Fail
+              - StartAt: Create Knowledge Base 2
+                States:
+                  Create Knowledge Base 2:
+                    Type: Task
+                    Arguments:
+                      KnowledgeBaseConfiguration:
+                        Type: VECTOR
+                        VectorKnowledgeBaseConfiguration:
+                          EmbeddingModelArn: >-
+                            ${IngestionEmbeddingModelArn}
+                          EmbeddingModelConfiguration:
+                            BedrockEmbeddingModelConfiguration:
+                              Dimensions: 1024
+                              EmbeddingDataType: FLOAT32
+                      Name: '{% ''KnowledgeBase'' & $uuid() %}'
+                      RoleArn: ${KnowledgeBaseRoleArn}
+                      StorageConfiguration:
+                        Type: OPENSEARCH_SERVERLESS
+                        OpensearchServerlessConfiguration:
+                          CollectionArn: >-
+                            ${OpensearchCollectionArn}
+                          VectorIndexName: vector-index-2
+                          FieldMapping:
+                            VectorField: vector_field
+                            TextField: text
+                            MetadataField: metadata
+                    Resource: arn:aws:states:::aws-sdk:bedrockagent:createKnowledgeBase
+                    Next: Wait 2
+                    Assign:
+                      KnowledgeBaseId: '{% $states.result.KnowledgeBase.KnowledgeBaseId %}'
+                  Wait 2:
+                    Type: Wait
+                    Seconds: 30
+                    Next: Create Data Source 2
+                  Create Data Source 2:
+                    Type: Task
+                    Arguments:
+                      DataSourceConfiguration:
+                        Type: S3
+                        S3Configuration:
+                          BucketArn: >-
+                            ${S3DocumentBucket}
+                          BucketOwnerAccountId: ${AccountId}
+                      KnowledgeBaseId: '{% $KnowledgeBaseId %}'
+                      Name: '{% ''DataSource'' & $uuid() %}'
+                      VectorIngestionConfiguration:
+                        ChunkingConfiguration:
+                          ChunkingStrategy: HIERARCHICAL
+                          HierarchicalChunkingConfiguration:
+                            LevelConfigurations:
+                              - MaxTokens: 1500
+                              - MaxTokens: 300
+                            OverlapTokens: 60
+                    Resource: arn:aws:states:::aws-sdk:bedrockagent:createDataSource
+                    Assign:
+                      DataSourceId: '{% $states.result.DataSource.DataSourceId %}'
+                    Next: Start Ingestion Job 2
+                  Start Ingestion Job 2:
+                    Type: Task
+                    Arguments:
+                      DataSourceId: '{% $DataSourceId %}'
+                      KnowledgeBaseId: '{% $KnowledgeBaseId %}'
+                    Resource: arn:aws:states:::aws-sdk:bedrockagent:startIngestionJob
+                    Assign:
+                      IngestionJobId: '{% $states.result.IngestionJob.IngestionJobId %}'
+                    Next: Wait 60 Seconds 2
+                  Wait 60 Seconds 2:
+                    Type: Wait
+                    Seconds: 60
+                    Next: Get Ingestion Job 2
+                  Get Ingestion Job 2:
+                    Type: Task
+                    Arguments:
+                      DataSourceId: '{% $DataSourceId %}'
+                      IngestionJobId: '{% $IngestionJobId %}'
+                      KnowledgeBaseId: '{% $KnowledgeBaseId %}'
+                    Resource: arn:aws:states:::aws-sdk:bedrockagent:getIngestionJob
+                    Next: Ingestion Complete? 2
+                  Ingestion Complete? 2:
+                    Type: Choice
+                    Choices:
+                      - Condition: '{% $states.input.IngestionJob.Status = ''COMPLETE'' %}'
+                        Next: Create Evaluation Job 2
+                    Default: Wait 60 Seconds 2
+                  Create Evaluation Job 2:
+                    Type: Task
+                    Arguments:
+                      JobName: >-
+                        {%$lowercase('EvaluationJob' & $KnowledgeBaseId &
+                        $uuid()) %}
+                      ApplicationType: RagEvaluation
+                      EvaluationConfig:
+                        Automated:
+                          DatasetMetricConfigs:
+                            - TaskType: Generation
+                              Dataset:
+                                Name: Evaluations
+                                DatasetLocation:
+                                  S3Uri: >-
+                                    ${S3EvaluationJobPromptFolder}
+                              MetricNames:
+                                - Builtin.Correctness
+                                - Builtin.Completeness
+                                - Builtin.Helpfulness
+                          EvaluatorModelConfig:
+                            BedrockEvaluatorModels:
+                              - ModelIdentifier: anthropic.claude-3-5-sonnet-20240620-v1:0
+                      InferenceConfig:
+                        RagConfigs:
+                          - KnowledgeBaseConfig:
+                              RetrieveAndGenerateConfig:
+                                Type: KNOWLEDGE_BASE
+                                KnowledgeBaseConfiguration:
+                                  KnowledgeBaseId: '{% $KnowledgeBaseId %}'
+                                  ModelArn: anthropic.claude-3-5-sonnet-20240620-v1:0
+                                  RetrievalConfiguration:
+                                    VectorSearchConfiguration:
+                                      NumberOfResults: 3
+                      OutputDataConfig:
+                        S3Uri: ${S3EvaluationJobOutputFolder}
+                      RoleArn: ${EvaluationJobIAMRoleArn}
+                    Resource: arn:aws:states:::aws-sdk:bedrock:createEvaluationJob
+                    Assign:
+                      EvaluationJobId: '{% $states.result.JobArn %}'
+                    Next: Wait 10 Minutes 2
+                  Wait 10 Minutes 2:
+                    Type: Wait
+                    Seconds: 600
+                    Next: Get Evaluation Job Status 2
+                  Get Evaluation Job Status 2:
+                    Type: Task
+                    Arguments:
+                      JobIdentifier: '{% $EvaluationJobId %}'
+                    Resource: arn:aws:states:::aws-sdk:bedrock:getEvaluationJob
+                    Next: Evaluation Complete? 2
+                  Evaluation Complete? 2:
+                    Type: Choice
+                    Choices:
+                      - Condition: '{% $states.input.Status = ''Completed'' %}'
+                        Next: Success 2
+                      - Next: Fail 2
+                        Condition: '{% $states.input.Status = ''Failed'' %}'
+                    Default: Wait 10 Minutes 2
+                  Success 2:
+                    Type: Succeed
+                  Fail 2:
+                    Type: Fail
+            End: true
+      DefinitionSubstitutions:
+        IngestionEmbeddingModelArn: !Sub 'arn:aws:bedrock:${AWS::Region}::foundation-model/amazon.titan-embed-text-v2:0'
+        KnowledgeBaseRoleArn: !GetAtt BedrockKBRole.Arn
+        OpensearchCollectionArn: !GetAtt OpenSearchCollection.Arn
+        S3DocumentBucket: !GetAtt DocumentBucket.Arn
+        S3EvaluationJobPromptFolder: !Sub 's3://${EvaluationBucket}/input/referenceresponses.jsonl'
+        S3EvaluationJobOutputFolder: !Sub 's3://${EvaluationBucket}/output/'
+        EvaluationJobIAMRoleArn: !GetAtt BedrockEvalRole.Arn
+        AccountId: !Ref AWS::AccountId
+
+      Name: KnowledgeBaseEvaluations
+      Type: STANDARD
+      Role:
+        Fn::GetAtt:
+          - KnowledgeBaseEvaluationsIAMRole
+          - Arn
+      Logging:
+        Level: 'OFF'
+        IncludeExecutionData: false
+  KnowledgeBaseEvaluationsIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: 
+                - states.amazonaws.com
+                - bedrock.amazonaws.com
+            Action: sts:AssumeRole
+      MaxSessionDuration: 3600
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonBedrockFullAccess
+      Policies:
+        - PolicyName: XRayAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - xray:PutTraceSegments
+                  - xray:PutTelemetryRecords
+                  - xray:GetSamplingRules
+                  - xray:GetSamplingTargets
+                Resource:
+                  - '*'
+        - PolicyName: BedrockAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: BedrockKnowledgeBaseAccess
+                Effect: Allow
+                Action: 
+                  - bedrock:CreateDataSource
+                  - bedrock:CreateKnowledgeBase
+                  - bedrock:DeleteKnowledgeBase
+                  - bedrock:GetKnowledgeBase
+                  - bedrock:ListKnowledgeBases
+                  - bedrock:UpdateKnowledgeBase
+                Resource: '*'
+              - Sid: BedrockAgentAccess
+                Effect: Allow
+                Action:
+                  - bedrock-agent:CreateKnowledgeBase
+                  - bedrock-agent:DeleteKnowledgeBase
+                  - bedrock-agent:GetKnowledgeBase
+                  - bedrock-agent:ListKnowledgeBases
+                  - bedrock-agent:UpdateKnowledgeBase
+                Resource: !Sub 'arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:knowledge-base/*'
+        - PolicyName: IAMPassRole
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource:
+                  - !GetAtt BedrockKBRole.Arn
+                  - !GetAtt BedrockEvalRole.Arn
+                Condition:
+                  StringEquals:
+                    'iam:PassedToService': 
+                      - bedrock.amazonaws.com
+                      - bedrock-agent.amazonaws.com
+
+
+  BedrockEvalRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: bedrock-eval-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: bedrock.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: KnowledgeBaseAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: AllowKBCombinedCallOnKnowledgeBaseInstance
+                Effect: Allow
+                Action:
+                  - bedrock:Retrieve
+                  - bedrock:RetrieveAndGenerate
+                Resource: !Sub 'arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:knowledge-base/*'
+
+        - PolicyName: BedrockResourceAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: AllowAccessToBedrockResources
+                Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                  - bedrock:InvokeModelWithResponseStream
+                  - bedrock:CreateModelInvocationJob
+                  - bedrock:StopModelInvocationJob
+                  - bedrock:GetProvisionedModelThroughput
+                  - bedrock:GetInferenceProfile
+                  - bedrock:ListInferenceProfiles
+                  - bedrock:GetImportedModel
+                  - bedrock:GetPromptRouter
+                  - sagemaker:InvokeEndpoint
+                Resource:
+                  - 'arn:aws:bedrock:*::foundation-model/*'
+                  - !Sub 'arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/*'
+                  - !Sub 'arn:aws:bedrock:*:${AWS::AccountId}:provisioned-model/*'
+                  - !Sub 'arn:aws:bedrock:*:${AWS::AccountId}:imported-model/*'
+                  - !Sub 'arn:aws:bedrock:*:${AWS::AccountId}:application-inference-profile/*'
+                  - !Sub 'arn:aws:bedrock:*:${AWS::AccountId}:default-prompt-router/*'
+                  - !Sub 'arn:aws:sagemaker:*:${AWS::AccountId}:endpoint/*'
+                  - !Sub 'arn:aws:bedrock:*:${AWS::AccountId}:marketplace/model-endpoint/all-access'
+
+        - PolicyName: S3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: FetchInputBuckets
+                Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub 'arn:aws:s3:::${EvaluationBucket}'
+                  - !Sub 'arn:aws:s3:::${EvaluationBucket}/*'
+                Condition:
+                  StringEquals:
+                    aws:ResourceAccount: !Ref 'AWS::AccountId'
+
+              - Sid: FetchAndUpdateOutputBucket
+                Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:ListBucket
+                  - s3:PutObject
+                  - s3:GetBucketLocation
+                  - s3:AbortMultipartUpload
+                  - s3:ListBucketMultipartUploads
+                Resource:
+                  - !Sub 'arn:aws:s3:::${EvaluationBucket}'
+                  - !Sub 'arn:aws:s3:::${EvaluationBucket}/*'
+                Condition:
+                  StringEquals:
+                    aws:ResourceAccount: !Ref 'AWS::AccountId'
+
+  BedrockKBRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: bedrock-kb-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: bedrock.amazonaws.com
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref 'AWS::AccountId'
+      Policies:
+        - PolicyName: BedrockModelAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: BedrockInvokeModelStatement
+                Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                Resource:
+                  - !Sub 'arn:aws:bedrock:${AWS::Region}::foundation-model/amazon.titan-embed-text-v2:0'
+        - PolicyName: OpenSearchServerlessAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: OpenSearchServerlessAPIAccessAllStatement
+                Effect: Allow
+                Action:
+                  - aoss:APIAccessAll
+                Resource:
+                  -  !GetAtt OpenSearchCollection.Arn
+        - PolicyName: S3BucketAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: S3ListBucketStatement
+                Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource:
+                  - !Sub 'arn:aws:s3:::${DocumentBucket}'
+                  - !Sub 'arn:aws:s3:::${EvaluationBucket}'
+                Condition:
+                  StringEquals:
+                    aws:ResourceAccount:
+                      - !Ref 'AWS::AccountId'
+              - Sid: S3GetObjectStatement
+                Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource:
+                  - !Sub 'arn:aws:s3:::${DocumentBucket}/*'
+                  - !Sub 'arn:aws:s3:::${EvaluationBucket}/*'
+                Condition:
+                  StringEquals:
+                    aws:ResourceAccount:
+                      - !Ref 'AWS::AccountId'
+        - PolicyName: S3WriteAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                Resource:
+                  - !Sub 'arn:aws:s3:::${DocumentBucket}/*'
+                  - !Sub 'arn:aws:s3:::${EvaluationBucket}/*'

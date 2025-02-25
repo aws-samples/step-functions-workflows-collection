@@ -1,0 +1,71 @@
+{
+    "title": "Amazon Bedrock Knowledge Base Evaluations",
+    "description": "Ingest data into multiple Knowledge Bases and evaluate the performance with your test suite of prompts",
+    "language": "",
+    "simplicity": "3 - Application",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "200",
+    "framework": "SAM",
+    "services": ["bedrock","opensearch serverless", "s3"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "This workflow creates multiple Knowledge Bases, performs an ingestion job into a vector database, and runs evaluation jobs for you to assess the effectiveness of your ingestion jobs.",
+        "This is done by making use of Step Functions Parallel state to run multiple testing flows in parallel"
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete any documents stored in the S3 buckets.",
+        "2. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/bedrock-evaluations/",
+        "templateDir":"bedrock-evaluations",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "New RAG evaluation and LLM-as-a-judge capabilities in Amazon Bedrock",
+          "link": "https://aws.amazon.com/blogs/aws/new-rag-evaluation-and-llm-as-a-judge-capabilities-in-amazon-bedrock/"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Rohan Mehta",
+          "image": "https://media.licdn.com/dms/image/v2/C4D03AQG1qfZlu1eemw/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1573532220993?e=1744848000&v=beta&t=RPHGXLg7HlFrF5BSfKgelMSn6odKwkReWk3n7-HoUXQ",
+          "bio": "Rohan Mehta is a Solutions Architect at AWS",
+          "linkedin": "rohan-mehta-dev",
+          "twitter": "@rohanmehta_dev"
+        }
+      ]
+  }
+  
