@@ -1,0 +1,95 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  # Common Lambda Role
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  # First Lambda Function
+  FirstLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/first-function
+      Handler: app.lambda_handler
+      Runtime: python3.13
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 30
+      Role: !GetAtt LambdaExecutionRole.Arn
+
+  # Second Lambda Function
+  SecondLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/second-function/
+      Handler: app.lambda_handler
+      Runtime: python3.13
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 30
+      Role: !GetAtt LambdaExecutionRole.Arn
+
+  # Third Lambda Function
+  ThirdLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/third-function/
+      Handler: app.lambda_handler
+      Runtime: python3.13
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 30
+      Role: !GetAtt LambdaExecutionRole.Arn
+
+  # State Machine Role
+  StateMachineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: states.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaInvokePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: 
+                  - !GetAtt FirstLambdaFunction.Arn
+                  - !GetAtt SecondLambdaFunction.Arn
+                  - !GetAtt ThirdLambdaFunction.Arn
+
+  # State Machine
+  StateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionSubstitutions:
+        FirstLambdaArn: !GetAtt FirstLambdaFunction.Arn
+        SecondLambdaArn: !GetAtt SecondLambdaFunction.Arn
+        ThirdLambdaArn: !GetAtt ThirdLambdaFunction.Arn
+      DefinitionUri: statemachine/statemachine.asl.json
+      Role: !GetAtt StateMachineRole.Arn
+
+Outputs:
+  StateMachineArn:
+    Description: "State Machine ARN"
+    Value: !Ref StateMachine
