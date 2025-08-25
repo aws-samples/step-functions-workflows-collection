@@ -1,7 +1,8 @@
 {
-  "Comment": "StateMachine using JSONata QueryLanguage with common fallback state for multiple task states",
+  "Comment": "State machine using JSONata query language with common fallback state for multiple task states",
   "StartAt": "FirstLambdaState",
   "States": {
+    "QueryLanguage": "JSONata",
     "FirstLambdaState": {
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
@@ -111,6 +112,5 @@
       "Type": "Pass",
       "End": true
     }
-  },
-  "QueryLanguage": "JSONata"
+  }
 }
