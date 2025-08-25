@@ -1,6 +1,6 @@
 # Shared Fallback State - JSONata
 
-This workflow shows how to fetch failed state names in JSONata StateMachine using a shared fallback state for multiple tasks. Step Functions users want to implement centralized error reporting to avoid duplicating error handling logic. While setting up shared error reporting is simple, a challenge exists: the error reporting task can access error messages but cannot determine which state triggered the error. This creates issues in workflows with many Lambda functions by making it hard to identify failure points. Using JSONata, we show how to overcome this limitation and enable error tracking.
+This workflow shows how to fetch failed state names in JSONata StateMachine using a shared fallback state for multiple tasks. AWS Step Functions users want to implement centralized error reporting to avoid duplicating error handling logic. While setting up shared error reporting is simple, a challenge exists: the error reporting task can access error messages but cannot determine which state triggered the error. This creates issues in workflows with many Lambda functions by making it hard to identify failure points. Using JSONata, we show how to overcome this limitation and enable error tracking.
 
 Learn more about this workflow at Step Functions workflows collection: [https://serverlessland.com/workflows/shared-fallback-state-jsonata](https://serverlessland.com/workflows/shared-fallback-state-jsonata)
 
