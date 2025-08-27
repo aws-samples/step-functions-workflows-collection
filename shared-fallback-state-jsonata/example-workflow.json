@@ -1,0 +1,69 @@
+{
+    "title": "Shared Fallback State - JSONata",
+    "description": "Fetch failed state name in JSONata StateMachine with shared fallback state for multiple task states",
+    "language": "Python",
+    "simplicity": "2 - Pattern",
+    "usecase": "Error Handling",
+    "type": "Standard",
+    "diagram":"/resources/statemachine.png",
+    "videoId": "",
+    "level": "200",
+    "framework": "SAM",
+    "services": ["stepfunctions","lambda"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "This workflow shows how to fetch failed state names in JSONata StateMachine using a shared fallback state for multiple tasks. Step Functions users want to implement centralized error reporting to avoid duplicating error handling logic. While setting up shared error reporting is simple, a challenge exists: the error reporting task can access error messages but cannot determine which state triggered the error. This creates issues in workflows with many Lambda functions by making it hard to identify failure points. Using JSONata, we show how to overcome this limitation and enable error tracking."
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/shared-fallback-state-jsonata/",
+        "templateDir":"shared-fallback-state-jsonata",
+        "templateFile": "template.yaml",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+     "authors": [
+        {
+          "name": "Sahithi Ginjupalli",
+          "image": "https://drive.google.com/file/d/1YcKYuGz3LfzSxiwb2lWJfpyi49SbvOSr/view?usp=sharing",
+          "bio": "Cloud Engineer at AWS with a passion for diving deep into cloud and AI services to build innovative serverless applications.",
+          "linkedin": "ginjupalli-sahithi-37460a18b",
+          "twitter": ""
+        }
+      ]
+  }
+  
