@@ -80,11 +80,11 @@ Important: this application uses various AWS services and there are costs associ
    - Replace `'ConnectionArn'` with your EventBridge connection ARN
    - Replace `'glue_job'` with your Glue job name
    - Replace `'task_table'` with your task table name
-   - Replace `'child1'` and `'child2'` with the respective state machine ARNs
+   - Replace `'Data Extraction Child'` and `'Data Processing Child'` with the respective state machine ARNs
 
 8. Create the state machines:
     ```bash
-    # Create main state machine
+    # Create Distributed Data Stream Aggregator state machine
     aws stepfunctions create-state-machine \
         --name DistributedDataStreamAggregator \
         --definition file://statemachine/statemachine.asl.json \
@@ -108,13 +108,13 @@ Important: this application uses various AWS services and there are costs associ
 
 This distributed data stream aggregator implements a three-tier processing architecture:
 
-### Main Workflow (Parent State Machine)
+### Distributed Data Stream Aggregator Workflow (Parent State Machine)
 The main workflow accepts a unique task ID and orchestrates the entire data aggregation process. It queries DynamoDB to retrieve various client locations based on the task ID, then uses distributed map iteration to process multiple locations in parallel. Finally, it triggers an AWS Glue job to combine all partial data files and updates the task status in DynamoDB.
 
-### Child Workflow 1 (Standard Execution)  
+### Data Extraction Workflow (Standard Execution)  
 This workflow handles data extraction from third-party locations. It pings locations via HTTP endpoints to verify data availability, processes different types of data (failed, rejected) using inline map iteration, and calls the express child workflow with pagination parameters. Extracted data is stored as JSON files in S3 organized by task ID.
 
-### Child Workflow 2 (Express Execution)
+### Data Processing Workflow (Express Execution)
 The express workflow handles the actual API calls to third-party endpoints. It receives location details, data type, and pagination parameters, makes HTTP calls with query parameters, formats the retrieved data into standardized JSON format, and returns results with count and pagination metadata.
 
 ### Data Consolidation
