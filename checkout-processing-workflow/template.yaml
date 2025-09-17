@@ -14,24 +14,24 @@ Resources:
         DynamoName: !Sub ${AWS::StackName}-OrderTable
         EventBusName : !Sub ${AWS::StackName}-notification-bus
       Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
-      - LambdaInvokePolicy:
-          FunctionName: !Ref PaymentServiceEndpoint
-      - LambdaInvokePolicy:
-          FunctionName: !Ref ShippingServiceEndpoint
-      - arn:aws:iam::aws:policy/CloudWatchFullAccess
-      - arn:aws-cn:iam::aws:policy/CloudWatchEventsFullAccess
-      - arn:aws-cn:iam::aws:policy/AmazonAPIGatewayInvokeFullAccess
-      - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
-      - arn:aws:iam::aws:policy/AmazonEventBridgeFullAccess
+        - LambdaInvokePolicy:
+            FunctionName: !Ref PaymentServiceEndpoint
+        - LambdaInvokePolicy:
+            FunctionName: !Ref ShippingServiceEndpoint
+        - arn:aws:iam::aws:policy/CloudWatchFullAccess
+        - arn:aws:iam::aws:policy/CloudWatchEventsFullAccess
+        - arn:aws:iam::aws:policy/AmazonAPIGatewayInvokeFullAccess
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+        - arn:aws:iam::aws:policy/AmazonEventBridgeFullAccess
 
 
-  # Create Checkout API 
+  # Create Checkout API
   ApiGatewayApi:
     Type: AWS::Serverless::Api
     Properties:
       Name: !Sub ${AWS::StackName}-CheckoutAPI
       StageName: dev
-  
+
   # Create DynamoDB to store orders data
   OrderTable:
     Type: AWS::DynamoDB::Table
@@ -44,7 +44,7 @@ Resources:
       KeySchema:
         - AttributeName: cart_id
           KeyType: HASH
-    
+
   # Third Party Payment Endpoint Function
   # Invoked from API Gateway /checkout/payment POST request
   PaymentServiceEndpoint:
@@ -59,8 +59,8 @@ Resources:
       Timeout: 3
       Policies:
         - arn:aws:iam::aws:policy/CloudWatchFullAccess
-        - arn:aws-cn:iam::aws:policy/CloudWatchEventsFullAccess
-        - arn:aws-us-gov:iam::aws:policy/AWSStepFunctionsFullAccess
+        - arn:aws:iam::aws:policy/CloudWatchEventsFullAccess
+        - arn:aws:iam::aws:policy/AWSStepFunctionsFullAccess
       RuntimeManagementConfig:
         UpdateRuntimeOn: Auto
       Events:
@@ -70,7 +70,7 @@ Resources:
             RestApiId: !Ref ApiGatewayApi
             Path: /checkout/payment
             Method: POST
-  
+
   # Third Party Shipping Endpoint Function
   # Invoked from API Gateway /checkout/shipping POST request
   ShippingServiceEndpoint:
@@ -85,8 +85,8 @@ Resources:
       Timeout: 3
       Policies:
         - arn:aws:iam::aws:policy/CloudWatchFullAccess
-        - arn:aws-cn:iam::aws:policy/CloudWatchEventsFullAccess
-        - arn:aws-us-gov:iam::aws:policy/AWSStepFunctionsFullAccess
+        - arn:aws:iam::aws:policy/CloudWatchEventsFullAccess
+        - arn:aws:iam::aws:policy/AWSStepFunctionsFullAccess
       RuntimeManagementConfig:
         UpdateRuntimeOn: Auto
       Events:
@@ -96,13 +96,13 @@ Resources:
             RestApiId: !Ref ApiGatewayApi
             Path: /checkout/shipping
             Method: POST
-  
+
   # Create Event Bus to push notification to users
   EventBus:
     Type: AWS::Events::EventBus
     Properties:
       Name: !Sub ${AWS::StackName}-notification-bus
-  
+
   # Payment Failed Rule
   PaymentFailedEventRule:
     Type: AWS::Events::Rule
@@ -163,7 +163,7 @@ Resources:
     Properties:
       QueueName: !Sub ${AWS::StackName}-EmailQueue
       SqsManagedSseEnabled: false
-      
+
   # Policy to allow EventBridge to invoke SQS
   EventBridgeToToSqsPolicy:
     Type: AWS::SQS::QueuePolicy
@@ -177,7 +177,7 @@ Resources:
           Resource:  !GetAtt EmailQueue.Arn
       Queues:
        - !Ref EmailQueue
-      
+
   # Lambda Function to notify users based on events polled from SQS
   NotifyUserFunction:
     Type: 'AWS::Serverless::Function'
@@ -190,7 +190,7 @@ Resources:
       MemorySize: 128
       Timeout: 3
       Policies:
-        - arn:aws-cn:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - arn:aws:iam::aws:policy/AmazonSQSFullAccess
         - arn:aws:iam::aws:policy/AmazonSESFullAccess
         - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
