@@ -1,0 +1,8 @@
+# AWS SDK
+boto3>=1.28.0
+
+# Document processing
+python-docx>=1.1.2
+
+# Standard libraries used
+# os, tempfile, sys, urllib.parse (no need to include in requirements.txt)

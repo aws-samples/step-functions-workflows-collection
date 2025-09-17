@@ -1,0 +1,5 @@
+# AWS SDK
+boto3>=1.28.0
+
+# Text encoding detection
+chardet>=5.2.0

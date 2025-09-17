@@ -1,0 +1,9 @@
+# AWS SDK
+boto3>=1.28.0
+
+# Document processing
+python-docx>=1.1.2
+
+# Security
+defusedxml>=0.7.1  # For secure XML parsing
+lxml>=5.0.0       # For enhanced XML features with security settings
