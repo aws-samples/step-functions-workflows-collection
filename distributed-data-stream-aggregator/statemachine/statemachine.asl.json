@@ -118,7 +118,7 @@
         "JobName": "{% 'glue_job' %}",
         "Arguments": {
           "--task_id": "{% $taskId %}",
-          "--bucket": "{% 'destination_bucket' %}",
+          "--bucket": "{% 's3-bucket-name' %}",
           "--output_file_name": "{% $outputFileName %}"
         }
       },
