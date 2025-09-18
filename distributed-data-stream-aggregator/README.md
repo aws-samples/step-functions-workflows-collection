@@ -55,16 +55,22 @@ Important: this application uses various AWS services and there are costs associ
     aws s3 mb s3://your-output-bucket
     ```
 
-5. Create AWS Glue job for data consolidation:
+5. Upload the Glue job script to S3:
     ```bash
-    # Create Glue job (replace with your script location)
+    # Upload the Glue script to your bucket
+    aws s3 cp app.py s3://your-data-processing-bucket/scripts/app.py
+    ```
+
+6. Create AWS Glue job for data consolidation:
+    ```bash
+    # Create Glue job
     aws glue create-job \
         --name data-aggregation-job \
         --role arn:aws:iam::YOUR_ACCOUNT:role/GlueServiceRole \
-        --command Name=glueetl,ScriptLocation=s3://your-bucket/glue-script.py
+        --command Name=glueetl,ScriptLocation=s3://your-data-processing-bucket/scripts/app.py
     ```
 
-6. Create HTTP connections for third-party API access:
+7. Create HTTP connections for third-party API access:
     ```bash
     # Create EventBridge connection for API access
     aws events create-connection \
@@ -73,16 +79,16 @@ Important: this application uses various AWS services and there are costs associ
         --auth-parameters "ApiKeyAuthParameters={ApiKeyName=Authorization,ApiKeyValue=Bearer YOUR_TOKEN}"
     ```
 
-7. Deploy the state machines by updating the placeholder values in each ASL file:
+8. Deploy the state machines by updating the placeholder values in each ASL file:
    - Replace `'s3-bucket-name'` with your source bucket name
    - Replace `'destination_bucket'` with your destination bucket name  
    - Replace `'api_endpoint'` and `'summary_api_endpoint'` with your API URLs
    - Replace `'ConnectionArn'` with your EventBridge connection ARN
-   - Replace `'glue_job'` with your Glue job name
-   - Replace `'task_table'` with your task table name
+   - Replace `'data-aggregation-job'` with your Glue job name
+   - Replace `'processing-tasks'` with your task table name
    - Replace `'Data Extraction Child'` and `'Data Processing Child'` with the respective state machine ARNs
 
-8. Create the state machines:
+9. Create the state machines:
     ```bash
     # Create Distributed Data Stream Aggregator state machine
     aws stepfunctions create-state-machine \
