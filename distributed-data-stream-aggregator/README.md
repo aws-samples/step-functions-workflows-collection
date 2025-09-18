@@ -71,8 +71,15 @@ Important: this application uses various AWS services and there are costs associ
     ```
 
 7. Create HTTP connections for third-party API access:
+    This workflow uses EventBridge connections to securely authenticate with third-party APIs. 
+    Configure the connection based on your API's authentication requirements.
+    
+    See the [AWS EventBridge Connections documentation](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-connections.html) 
+    for supported authentication methods (API Key, OAuth, Basic Auth, IAM Role).
+    
+    Example for API Key authentication:
+    
     ```bash
-    # Create EventBridge connection for API access
     aws events create-connection \
         --name api-connection \
         --authorization-type API_KEY \
