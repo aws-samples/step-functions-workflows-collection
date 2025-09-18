@@ -181,6 +181,6 @@ An AWS Glue job combines all small JSON files from the temporary S3 directory in
     ```
 
 ----
-Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+Copyright 2025 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
 SPDX-License-Identifier: MIT-0
