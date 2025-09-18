@@ -17,7 +17,7 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::http:invoke",
       "Arguments": {
-        "ApiEndpoint": "{% 'api_endpoint' %}",
+        "ApiEndpoint": "{% 'api_endpoint'& $locationId &'/get-data' %}",
         "Method": "GET",
         "InvocationConfig": {
           "ConnectionArn": "{% 'ConnectionArn' %}"

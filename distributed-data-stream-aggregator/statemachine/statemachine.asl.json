@@ -38,7 +38,7 @@
             "Type": "Task",
             "Resource": "arn:aws:states:::http:invoke",
             "Arguments": {
-              "ApiEndpoint": "{% 'summary_api_endpoint' %}",
+              "ApiEndpoint": "{% 'api_endpoint'& $states.input.Items.location_id.S &'/get-summary' %}",
               "Method": "GET",
               "InvocationConfig": {
                 "ConnectionArn": "{% 'ConnectionArn' %}"

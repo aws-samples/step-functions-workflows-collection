@@ -82,7 +82,7 @@ Important: this application uses various AWS services and there are costs associ
 8. Deploy the state machines by updating the placeholder values in each ASL file:
    - Replace `'s3-bucket-name'` with your source bucket name
    - Replace `'destination_bucket'` with your destination bucket name  
-   - Replace `'api_endpoint'` and `'summary_api_endpoint'` with your API URLs
+   - Replace `'api_endpoint'` with your API URL
    - Replace `'ConnectionArn'` with your EventBridge connection ARN
    - Replace `'data-aggregation-job'` with your Glue job name
    - Replace `'processing-tasks'` with your task table name
