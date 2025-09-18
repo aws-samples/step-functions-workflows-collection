@@ -1,6 +1,6 @@
 # Distributed Data Stream Aggregator
 
-This workflow demonstrates how to aggregate data from multiple third-party locations using a distributed processing pattern with AWS Step Functions. The workflow orchestrates data extraction, transformation, and consolidation at scale using Step Functions, DynamoDB, S3, and AWS Glue.
+This workflow demonstrates how to aggregate data from multiple third-party locations using a distributed processing pattern with AWS Step Functions. The workflow orchestrates data extraction, transformation, and consolidation at scale using Step Functions, Amazon DynamoDB, Amazon S3, and AWS Glue.
 
 **Key Features:** This approach is unique as it implements a **no-Lambda, low-code solution** that leverages native AWS service integrations and JSONata expressions within Step Functions. The only custom code required is a minimal Glue job script for data consolidation, making it a cost-effective and maintainable solution with fewer dependencies and no Lambda cold start overhead.
 
