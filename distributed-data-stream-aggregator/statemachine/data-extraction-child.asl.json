@@ -1,0 +1,113 @@
+{
+  "Comment": "Data Extraction Child",
+  "StartAt": "Assign variables",
+  "States": {
+    "Assign variables": {
+      "Type": "Pass",
+      "Assign": {
+        "locationId": "{% $states.input.locationId %}",
+        "locationDataType": [
+          "failed",
+          "rejected"
+        ],
+        "taskId": "{% $states.input.taskId %}",
+        "taskToken": "{% $states.input.taskToken %}"
+      },
+      "Next": "Iterate states"
+    },
+    "Iterate states": {
+      "Type": "Map",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "INLINE"
+        },
+        "StartAt": "Get data type",
+        "States": {
+          "Get data type": {
+            "Type": "Pass",
+            "Next": "Get Data",
+            "Assign": {
+              "dataType": "{% $states.input%}",
+              "maxCount": 400,
+              "offset": 0
+            }
+          },
+          "Get Data": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::states:startExecution.sync:2",
+            "Arguments": {
+              "StateMachineArn": "{% 'child2' %}",
+              "Input": {
+                "locationId": "{% $locationId %}",
+                "dataType": "{% $dataType %}",
+                "limit": "{% $maxCount %}",
+                "offset": "{% $offset %}",
+                "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID": "{% $states.context.Execution.Id %}",
+                "childTaskToken": "{% $states.context.Task.Token %}"
+              }
+            },
+            "Next": "Data count",
+            "Assign": {
+              "resultCount": "{% $states.result.resultCount %}",
+              "offset": "{% $states.result.offset %}"
+            }
+          },
+          "Data count": {
+            "Type": "Choice",
+            "Choices": [
+              {
+                "Next": "PutObject",
+                "Condition": "{% $count($states.input.csvContent) > 0 %}",
+                "Output": {
+                  "data": "{% $states.input.csvContent %}"
+                }
+              }
+            ],
+            "Default": "No data found"
+          },
+          "PutObject": {
+            "Type": "Task",
+            "Arguments": {
+              "Body": "{% $string($states.input.data) %}",
+              "Bucket": "{% 's3-bucket-name' %}",
+              "Key": "{% 'tmp/'&$taskId&'/'&'part-'&$millis()&'.json' %}",
+              "ContentType": "application/json"
+            },
+            "Resource": "arn:aws:states:::aws-sdk:s3:putObject",
+            "Next": "Check pagination"
+          },
+          "No data found": {
+            "Type": "Pass",
+            "End": true
+          },
+          "Check pagination": {
+            "Type": "Choice",
+            "Choices": [
+              {
+                "Next": "Do nothing",
+                "Condition": "{% $resultCount < $maxCount %}"
+              }
+            ],
+            "Default": "Get Data"
+          },
+          "Do nothing": {
+            "Type": "Pass",
+            "End": true
+          }
+        }
+      },
+      "Items": "{% $locationDataType %}",
+      "Next": "SendTaskSuccess"
+    },
+    "SendTaskSuccess": {
+      "Type": "Task",
+      "Arguments": {
+        "Output": "{\"status\": \" complete\"}",
+        "TaskToken": "{% $taskToken %}"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:sfn:sendTaskSuccess",
+      "End": true
+    }
+  },
+  "QueryLanguage": "JSONata"
+}

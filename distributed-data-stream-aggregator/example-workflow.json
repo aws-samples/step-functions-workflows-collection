@@ -1,0 +1,80 @@
+{
+    "title": "Distributed Data Stream Aggregator",
+    "description": "Aggregate data from multiple third-party locations using distributed processing with 3-tier architecture",
+    "language": "",
+    "simplicity": "3 - Application",
+    "usecase": "Data Processing",
+    "type": "Standard",
+    "diagram": "/resources/illustration.png",
+    "videoId": "",
+    "level": "200",
+    "framework": "Manual",
+    "services": ["stepfunctions", "dynamodb", "s3", "glue", "eventbridge"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "This workflow demonstrates large-scale data aggregation from multiple third-party locations using AWS Step Functions' distributed processing capabilities with a 3-tier architecture.",
+        "The main workflow orchestrates the entire process by querying DynamoDB for client locations, then uses distributed map to process multiple locations in parallel. Each location is processed by a standard execution child workflow that handles data extraction and pagination.",
+        "A second express execution child workflow performs the actual API calls to third-party endpoints with query parameters and pagination support. Data is temporarily stored in S3 as JSON files organized by task ID.",
+        "Finally, an AWS Glue job consolidates all partial files into a single output file uploaded to the destination S3 bucket, with status updates tracked in DynamoDB."
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "1. Populate the locations DynamoDB table with test data containing task_id and location information.",
+        "2. Execute the state machine using the AWS CLI with task_id and task_sort_key as input.",
+        "3. Monitor execution progress in the Step Functions console and verify data consolidation in S3."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the state machines using AWS CLI: <code>aws stepfunctions delete-state-machine</code>",
+        "2. Delete DynamoDB tables: <code>aws dynamodb delete-table</code>", 
+        "3. Delete S3 buckets: <code>aws s3 rb --force</code>",
+        "4. Delete Glue job and EventBridge connection"
+      ]
+    },
+    "deploy": {
+      "text": [
+        "Follow the step-by-step deployment instructions in the README.md to create DynamoDB tables, S3 buckets, Glue job, EventBridge connections, and deploy the state machines."
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/distributed-data-stream-aggregator/",
+        "templateDir": "distributed-data-stream-aggregator",
+        "templateFile": "",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        },
+        {
+          "text": "Distributed Map state documentation",
+          "link": "https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-map-state.html"
+        },
+        {
+          "text": "JSONata expressions in Step Functions",
+          "link": "https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-jsonata.html"
+        }
+      ]
+    },
+    "authors": [
+      {
+        "name": "Aparna Saha"
+      }
+    ]
+  }

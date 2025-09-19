@@ -1,0 +1,90 @@
+{
+  "Comment": "Data Processing Child",
+  "StartAt": "initiate variables",
+  "States": {
+    "initiate variables": {
+      "Type": "Pass",
+      "Assign": {
+        "locationId": "{% $states.input.locationId %}",
+        "dataType": "{% $states.input.dataType %}",
+        "limit": "{% $states.input.limit %}",
+        "offset": "{% $states.input.offset %}",
+        "childTaskToken": "{% $states.input.childTaskToken %}"
+      },
+      "Next": "Get Data"
+    },
+    "Get Data": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::http:invoke",
+      "Arguments": {
+        "ApiEndpoint": "{% 'api_endpoint'& $locationId &'/get-data' %}",
+        "Method": "GET",
+        "InvocationConfig": {
+          "ConnectionArn": "{% 'ConnectionArn' %}"
+        },
+        "QueryParameters": {
+          "state": "{% $dataType %}",
+          "limit": "{% $limit %}",
+          "offset": "{% $offset %}"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "BackoffRate": 2,
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Next": "Convert Page to JSON content",
+      "Assign": {
+        "resultCount": "{% $states.result.ResponseBody.count %}",
+        "nextOffset": "{% $states.result.ResponseBody.count+$number($offset) %}"
+      }
+    },
+    "Convert Page to JSON content": {
+      "Type": "Map",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "INLINE"
+        },
+        "StartAt": "Format Row",
+        "States": {
+          "Format Row": {
+            "Type": "Pass",
+            "Output": {
+              "discount_code": "{% $states.input.resourceKey %}",
+              "error_message": "{% $replace($states.input.errors[0].message, '\"', '') %}",
+              "status": "{% $states.input.state %}"
+            },
+            "End": true
+          }
+        }
+      },
+      "Items": "{% $states.input.ResponseBody.results %}",
+      "Next": "output"
+    },
+    "output": {
+      "Type": "Pass",
+      "Output": {
+        "csvContent": "{% $states.input %}",
+        "resultCount": "{% $resultCount %}",
+        "offset": "{% $nextOffset %}"
+      },
+      "Next": "SendTaskSuccess"
+    },
+    "SendTaskSuccess": {
+      "Type": "Task",
+      "Arguments": {
+        "Output": "{% $states.input %}",
+        "TaskToken": "{% $childTaskToken %}"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:sfn:sendTaskSuccess",
+      "End": true
+    }
+  },
+  "QueryLanguage": "JSONata"
+}
