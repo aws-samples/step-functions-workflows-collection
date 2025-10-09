@@ -1,0 +1,198 @@
+{
+  "Comment": "Distributed Data Stream Aggregator",
+  "StartAt": "Initiate variables",
+  "States": {
+    "Initiate variables": {
+      "Type": "Pass",
+      "Assign": {
+        "taskId": "{% $states.input.task_id %}",
+        "taskSortKey": "{% $states.input.task_sort_key %}",
+        "outputFileName": "{% 'accumulate-' & $string($millis()) & '-file.csv' %}"
+      },
+      "Next": "Get Third-party locations"
+    },
+    "Get Third-party locations": {
+      "Type": "Task",
+      "Arguments": {
+        "TableName": "locations",
+        "KeyConditionExpression": "task_id = :taskValue",
+        "ExpressionAttributeValues": {
+          ":taskValue": {
+            "S": "{% $states.input.task_id %}"
+          }
+        }
+      },
+      "Resource": "arn:aws:states:::aws-sdk:dynamodb:query",
+      "Next": "Iterate Containers"
+    },
+    "Iterate Containers": {
+      "Type": "Map",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "DISTRIBUTED",
+          "ExecutionType": "STANDARD"
+        },
+        "StartAt": "Get location Summary",
+        "States": {
+          "Get location Summary": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::http:invoke",
+            "Arguments": {
+              "ApiEndpoint": "{% 'api_endpoint'& $states.input.Items.location_id.S &'/get-summary' %}",
+              "Method": "GET",
+              "InvocationConfig": {
+                "ConnectionArn": "{% 'ConnectionArn' %}"
+              }
+            },
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "States.ALL"
+                ],
+                "BackoffRate": 2,
+                "IntervalSeconds": 1,
+                "MaxAttempts": 3,
+                "JitterStrategy": "FULL"
+              }
+            ],
+            "Output": {
+              "failed": "{% $states.result.ResponseBody.states.failed %}",
+              "rejected": "{% $states.result.ResponseBody.states.rejected %}"
+            },
+            "Next": "Has Data",
+            "Assign": {
+              "locationId": "{% $states.input.Items.location_id.S %}",
+              "locationTaskId": "{% $states.input.BatchInput.mapTaskId %}"
+            }
+          },
+          "Has Data": {
+            "Type": "Choice",
+            "Choices": [
+              {
+                "Next": "Extract Data",
+                "Condition": "{% $number($states.input.failed) > 0 or $number($states.input.rejected) > 0 %}",
+                "Comment": "location has data"
+              }
+            ],
+            "Default": "Do Nothing"
+          },
+          "Extract Data": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::states:startExecution.sync:2",
+            "Arguments": {
+              "StateMachineArn": "{% 'child1' %}",
+              "Input": {
+                "locationId": "{% $locationId %}",
+                "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID": "{% $states.context.Execution.Id %}",
+                "taskId": "{% $locationTaskId %}",
+                "taskToken": "{% $states.context.Task.Token %}"
+              }
+            },
+            "Next": "Do Nothing"
+          },
+          "Do Nothing": {
+            "Type": "Pass",
+            "End": true,
+            "Output": {}
+          }
+        }
+      },
+      "Items": "{% $states.input.Items%}",
+      "Assign": {
+        "taskId1": "{% $taskId %}"
+      },
+      "Next": "Combine Part Files",
+      "Label": "IterateContainers",
+      "MaxConcurrency": 5,
+      "ItemBatcher": {
+        "MaxItemsPerBatch": 1,
+        "BatchInput": {
+          "mapTaskId": "{% $taskId %}"
+        }
+      }
+    },
+    "Combine Part Files": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun",
+      "Arguments": {
+        "JobName": "{% 'glue_job' %}",
+        "Arguments": {
+          "--task_id": "{% $taskId %}",
+          "--bucket": "{% 's3-bucket-name' %}",
+          "--output_file_name": "{% $outputFileName %}"
+        }
+      },
+      "Next": "Wait for the status",
+      "Output": {
+        "Id": "{% $states.result.JobRunId %}"
+      }
+    },
+    "Wait for the status": {
+      "Type": "Wait",
+      "Seconds": 30,
+      "Next": "Has Job Finish"
+    },
+    "Has Job Finish": {
+      "Type": "Task",
+      "Arguments": {
+        "JobName": "{% 'glue_job' %}",
+        "RunId": "{% $states.input.Id %}"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:glue:getJobRun",
+      "Next": "Has Job succeeded"
+    },
+    "Has Job succeeded": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Update DynamoDb",
+          "Condition": "{% $states.input.JobRun.JobRunState = \"SUCCEEDED\" %}"
+        },
+        {
+          "Next": "Job Failed",
+          "Condition": "{% $states.input.JobRun.JobRunState = \"FAILED\" %}"
+        }
+      ],
+      "Default": "Wait for the status",
+      "Output": {
+        "Id": "{% $states.input.JobRun.Id %}"
+      }
+    },
+    "Update DynamoDb": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:updateItem",
+      "Arguments": {
+        "TableName": "{% 'task_table' %}",
+        "Key": {
+          "task_id": {
+            "S": "{% $taskId %}"
+          },
+          "created_at": {
+            "S": "{% $taskSortKey %}"
+          }
+        },
+        "UpdateExpression": "SET #CsvUrl = :fileRef",
+        "ExpressionAttributeValues": {
+          ":fileRef": {
+            "S": "{% $outputFileName %}"
+          }
+        },
+        "ExpressionAttributeNames": {
+          "#errorCsvUrl": "errorCsvUrl"
+        }
+      },
+      "Next": "Job Succeeded"
+    },
+    "Job Succeeded": {
+      "Type": "Pass",
+      "Output": {
+        "outputFileName": "{% $outputFileName %}"
+      },
+      "End": true
+    },
+    "Job Failed": {
+      "Type": "Fail"
+    }
+  },
+  "QueryLanguage": "JSONata"
+}
