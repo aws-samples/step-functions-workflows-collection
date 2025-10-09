@@ -131,7 +131,7 @@ The `deploy-with-db-init.sh` script uses AWS SAM to deploy:
 1. VPC with public and private subnets
 2. Aurora PostgreSQL database with pgvector support
 3. Lambda functions for document processing
-4. Step Functions for workflow orchestration
+4. Step Functions state machine for workflow orchestration
 5. Security groups and IAM roles
 
 #### Database Initialization
