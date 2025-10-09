@@ -39,7 +39,7 @@ The pipeline has been enhanced with several important improvements:
 
 ### Workflow Diagram
 
-The following diagram illustrates the complete Step Functions workflow for the document vectorization pipeline:
+The following diagram illustrates the complete AWS Step Functions workflow for the document vectorization pipeline:
 
 ![Workflow Diagram](./resources/workflow-diagram.png)
 
