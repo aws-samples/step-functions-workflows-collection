@@ -50,6 +50,16 @@ This workflow shows the parallel processing capabilities of the pipeline, includ
 - Vector embedding generation using Amazon Bedrock
 - Database storage with PostgreSQL and pgvector
 
+### Data Processing Layers
+
+The pipeline processes documents through three distinct S3 layers, each serving a specific purpose in the data transformation workflow:
+
+- **Raw Layer** (`raw/` prefix): Original documents are uploaded here to trigger the pipeline. This layer contains unprocessed files in their native formats (PDF, DOCX, TXT).
+- **Cleaned Layer** (`cleaned/` prefix): Documents are processed to extract and clean text content, removing formatting artifacts, null bytes, and encoding issues that could cause downstream processing errors.
+- **Curated Layer** (`curated/` prefix): Final processed text chunks are stored here, optimized for vector embedding generation with proper chunking, overlap handling, and metadata enrichment.
+
+This layered approach ensures data lineage, enables reprocessing at any stage, and maintains separation between raw source data and processed content ready for AI/ML workloads.
+
 ### Components:
 
 - **S3 Bucket**: Stores documents in different stages (raw, cleaned, curated)
