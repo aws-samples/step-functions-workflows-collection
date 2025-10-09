@@ -85,7 +85,7 @@ Resources:
       VpcId: !Ref VPC
       AvailabilityZone: !Select 
         - 0
-        - !GetAZs ''
+        - !GetAZs !Ref AWS::Region
       CidrBlock: 10.0.1.0/24
       MapPublicIpOnLaunch: false
       Tags:
@@ -98,7 +98,7 @@ Resources:
       VpcId: !Ref VPC
       AvailabilityZone: !Select 
         - 1
-        - !GetAZs ''
+        - !GetAZs !Ref AWS::Region
       CidrBlock: 10.0.2.0/24
       MapPublicIpOnLaunch: false
       Tags:
@@ -296,12 +296,30 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
-        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - !Ref LambdaS3Policy
         - !Ref LambdaBedrockPolicy
         - !Ref LambdaRDSPolicy
         - !Ref LambdaSecretPolicy
 
   # Custom managed policies for Lambda
+  LambdaS3Policy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: "Minimal S3 policy for Lambda document processing"
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+              - s3:DeleteObject
+            Resource: !Sub "${ContentBucket}/*"
+          - Effect: Allow
+            Action:
+              - s3:ListBucket
+            Resource: !Ref ContentBucket
+
   LambdaBedrockPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
