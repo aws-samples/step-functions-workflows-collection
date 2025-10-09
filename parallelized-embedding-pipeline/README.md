@@ -62,11 +62,11 @@ This layered approach ensures data lineage, enables reprocessing at any stage, a
 
 ### Components:
 
-- **S3 Bucket**: Stores documents in different stages (raw, cleaned, curated)
-- **SQS Queue**: Handles document processing events
-- **Step Functions**: Orchestrates the document processing workflow
-- **Lambda Functions**: Process documents and generate embeddings
-- **Aurora PostgreSQL**: Database with pgvector extension for storing vectors
+- **Amazon S3**: Stores documents in different stages (raw, cleaned, curated)
+- **Amazon SQS**: Handles document processing events
+- **AWS Step Functions**: Orchestrates the document processing workflow
+- **AWS Lambda**: Process documents and generate embeddings
+- **Amazon Aurora PostgreSQL**: Database with pgvector extension for storing vectors
 
 ## Prerequisites
 
