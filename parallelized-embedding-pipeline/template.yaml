@@ -1,7 +1,7 @@
 Transform: AWS::Serverless-2016-10-31
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Step Functions workflow to summarize documents using Amazon Bedrock with
-  automated database setup
+Description: Step Functions workflow to process documents and generate vector embeddings using Amazon Bedrock with automated database setup
+
 Parameters:
   RawPrefix:
     Type: String
@@ -83,8 +83,9 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      # Use first AZ from current region
-      AvailabilityZone: us-east-1a
+      AvailabilityZone: !Select 
+        - 0
+        - !GetAZs !Ref AWS::Region
       CidrBlock: 10.0.1.0/24
       MapPublicIpOnLaunch: false
       Tags:
@@ -95,8 +96,9 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      # Use second AZ from current region
-      AvailabilityZone: us-east-1b
+      AvailabilityZone: !Select 
+        - 1
+        - !GetAZs !Ref AWS::Region
       CidrBlock: 10.0.2.0/24
       MapPublicIpOnLaunch: false
       Tags:
@@ -111,8 +113,6 @@ Resources:
         - Key: Name
           Value: !Sub ${AWS::StackName}-route-table
 
-  # Removed unrestricted route to IGW (0.0.0.0/0)
-
   Subnet1RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -125,24 +125,13 @@ Resources:
       SubnetId: !Ref Subnet2
       RouteTableId: !Ref RouteTable
 
-  # Updated Security Group with egress rules
+  # Security Groups
   DBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: "Security group for RDS database with restricted access"
       VpcId: !Ref VPC
       SecurityGroupIngress:
-        # Allow PostgreSQL standard port with specific /32 CIDR
-        - IpProtocol: tcp
-          FromPort: 5432
-          ToPort: 5432
-          CidrIp: 10.0.1.1/32
-          Description: "Allow access from specific IP in subnet 1"
-        - IpProtocol: tcp
-          FromPort: 5432
-          ToPort: 5432
-          CidrIp: 10.0.2.1/32
-          Description: "Allow access from specific IP in subnet 2"
         - IpProtocol: tcp
           FromPort: 5432
           ToPort: 5432
@@ -158,26 +147,17 @@ Resources:
         - Key: Name
           Value: !Sub ${AWS::StackName}-db-sg
 
-  # Updated Security Group with restricted egress
   LambdaSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: "Security group for Lambda functions with restricted access"
       VpcId: !Ref VPC
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          CidrIp: 10.0.1.1/32
-          Description: "Allow HTTPS traffic from specific IP"
       SecurityGroupEgress:
-        # Restricted egress rules - limited to specific services
         - IpProtocol: tcp
           FromPort: 443
           ToPort: 443
-          CidrIp: 10.0.0.0/16
-          Description: "Allow HTTPS traffic within VPC"
-        # PostgreSQL standard port
+          CidrIp: 0.0.0.0/0
+          Description: "Allow HTTPS traffic for AWS services"
         - IpProtocol: tcp
           FromPort: 5432
           ToPort: 5432
@@ -203,7 +183,7 @@ Resources:
     Type: AWS::KMS::Key
     Properties:
       Description: "KMS key for encrypting resources"
-      EnableKeyRotation: true
+      EnableKeyRotation: false
       PendingWindowInDays: 7
       KeyPolicy:
         Version: '2012-10-17'
@@ -242,7 +222,6 @@ Resources:
       EngineVersion: '15.4'
       DatabaseName: !Ref DatabaseName
       MasterUsername: !Ref DatabaseUsername
-      # Use secure parameter reference
       MasterUserPassword: !Ref DatabasePassword
       DBClusterIdentifier: !Sub ${AWS::StackName}-db
       EnableHttpEndpoint: true
@@ -251,17 +230,16 @@ Resources:
         MaxCapacity: 1
       StorageEncrypted: true
       KmsKeyId: !GetAtt KMSKey.Arn
-      BackupRetentionPeriod: 30  # Increased from 7 to 30 days
-      DeletionProtection: true
+      BackupRetentionPeriod: 7
+      DeletionProtection: false
       CopyTagsToSnapshot: true
-      EnableIAMDatabaseAuthentication: true  # Enable IAM authentication
+      EnableIAMDatabaseAuthentication: true
       DBClusterParameterGroupName: !Ref ClusterParameterGroup
       DBSubnetGroupName: !Ref DBSubnetGroup
       VpcSecurityGroupIds:
         - !Ref DBSecurityGroup
       EnableCloudwatchLogsExports:
         - postgresql
-        - upgrade
       PreferredBackupWindow: "03:00-04:00"
       PreferredMaintenanceWindow: "mon:04:00-mon:05:00"
 
@@ -270,34 +248,16 @@ Resources:
     Properties:
       Engine: aurora-postgresql
       DBClusterIdentifier: !Ref VectorDBCluster
-      StorageEncrypted: true # Explicitly set storage encryption
+      StorageEncrypted: true
       DBInstanceClass: db.serverless
       PubliclyAccessible: false
       DBSubnetGroupName: !Ref DBSubnetGroup
-      AutoMinorVersionUpgrade: true # Enable automatic minor version upgrades
-      MonitoringInterval: 60 # Enable enhanced monitoring (60 seconds)
-      MonitoringRoleArn: !GetAtt RDSMonitoringRole.Arn
-      DeletionProtection: true # Enable deletion protection
+      AutoMinorVersionUpgrade: true
+      DeletionProtection: false
       EnablePerformanceInsights: true
       PerformanceInsightsRetentionPeriod: 7
       EnableCloudwatchLogsExports:
         - postgresql
-      BackupRetentionPeriod: 7
-      MultiAZ: true # Enable Multi-AZ support
-
-  # Role for Enhanced Monitoring
-  RDSMonitoringRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-        - Effect: Allow
-          Principal:
-            Service: monitoring.rds.amazonaws.com
-          Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
 
   ClusterParameterGroup:
     Type: AWS::RDS::DBClusterParameterGroup
@@ -306,7 +266,7 @@ Resources:
       Family: aurora-postgresql15
       Parameters: 
         max_wal_senders: "20"
-        rds.force_ssl: "1"  # Force SSL connections to ensure encryption in transit
+        rds.force_ssl: "1"
 
   DBPasswordSecret:
     Type: AWS::SecretsManager::Secret
@@ -320,193 +280,9 @@ Resources:
         PasswordLength: 16
         ExcludeCharacters: '"@/\'
 
-  # Secret Rotation
-  SecretRotationSchedule:
-    Type: AWS::SecretsManager::RotationSchedule
-    Properties:
-      SecretId: !Ref DBPasswordSecret
-      RotationLambdaARN: !GetAtt SecretRotationFunction.Arn
-      RotationRules:
-        AutomaticallyAfterDays: 30
-    DependsOn: SecretRotationAttachment
+  # Secret rotation removed for demo purposes - not required for development/testing
 
-  SecretRotationAttachment:
-    Type: AWS::SecretsManager::ResourcePolicy
-    Properties:
-      SecretId: !Ref DBPasswordSecret
-      ResourcePolicy:
-        Version: '2012-10-17'
-        Statement:
-        - Effect: Allow
-          Principal:
-            AWS: !GetAtt SecretRotationFunction.Arn
-          Action:
-            - secretsmanager:DescribeSecret
-            - secretsmanager:GetSecretValue
-            - secretsmanager:PutSecretValue
-            - secretsmanager:UpdateSecretVersionStage
-          Resource: '*'
-
-  SecretRotationFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/SecretRotationFunction/
-      Handler: lambda_function.lambda_handler
-      Runtime: python3.9
-      InlineCode: |
-        import boto3
-        import json
-        import os
-        import logging
-        
-        logger = logging.getLogger()
-        logger.setLevel(logging.INFO)
-        
-        def lambda_handler(event, context):
-            logger.info('Rotation function triggered')
-            # This is a placeholder for actual password rotation logic
-            # In production, implement the full rotation logic with stages
-            return {"statusCode": 200, "body": "Rotation placeholder"}
-      Role: !GetAtt SecretRotationRole.Arn
-      Timeout: 30
-      Environment:
-        Variables:
-          SECRETS_MANAGER_ENDPOINT: !Sub https://secretsmanager.${AWS::Region}.amazonaws.com
-
-  SecretRotationRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-        - Effect: Allow
-          Principal:
-            Service: lambda.amazonaws.com
-          Action: sts:AssumeRole
-      ManagedPolicyArns:
-      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      - arn:aws:iam::aws:policy/SecretsManagerReadWrite
-
-  # S3 Replication resources
-  ReplicationBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Sub ${AWS::StackName}-replication-${AWS::AccountId}
-      AccessControl: Private
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-      VersioningConfiguration:
-        Status: Enabled
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: "aws:kms"
-              KMSMasterKeyID: !GetAtt KMSKey.Arn
-      ObjectLockEnabled: true
-      ObjectLockConfiguration:
-        ObjectLockEnabled: Enabled
-        Rule:
-          DefaultRetention:
-            Mode: COMPLIANCE
-            Days: 30
-      # Add logging configuration to address S3_BUCKET_LOGGING_ENABLED finding
-      LoggingConfiguration:
-        DestinationBucketName: !Ref LoggingBucket
-        LogFilePrefix: !Sub ${AWS::StackName}-replication-logs/
-      # Add replication configuration to address S3_BUCKET_REPLICATION_ENABLED finding
-      ReplicationConfiguration:
-        Role: !GetAtt ReplicationRole.Arn
-        Rules:
-          - Status: Enabled
-            Destination:
-              Bucket: !Sub arn:aws:s3:::${AWS::StackName}-secondary-replication-${AWS::AccountId}
-              StorageClass: STANDARD
-            Priority: 1
-            DeleteMarkerReplication:
-              Status: Enabled
-
-  # Secondary replication bucket for cross-region replication
-  SecondaryReplicationBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Sub ${AWS::StackName}-secondary-replication-${AWS::AccountId}
-      AccessControl: Private
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-      VersioningConfiguration:
-        Status: Enabled
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: "aws:kms"
-              KMSMasterKeyID: !GetAtt KMSKey.Arn
-      ObjectLockEnabled: true
-      ObjectLockConfiguration:
-        ObjectLockEnabled: Enabled
-        Rule:
-          DefaultRetention:
-            Mode: COMPLIANCE
-            Days: 30
-      LoggingConfiguration:
-        DestinationBucketName: !Ref LoggingBucket
-        LogFilePrefix: secondary-replication-logs/
-
-  # Replication role for S3 buckets
-  ReplicationRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: s3.amazonaws.com
-            Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - !Ref ReplicationPolicy
-
-  # Replication policy
-  ReplicationPolicy:
-    Type: AWS::IAM::ManagedPolicy
-    Properties:
-      Description: "Policy for S3 bucket replication"
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Action:
-              - s3:GetReplicationConfiguration
-              - s3:ListBucket
-            Resource:
-              - !Sub arn:aws:s3:::${AWS::StackName}-replication-${AWS::AccountId}
-              - !Sub arn:aws:s3:::${AWS::StackName}-content-${AWS::AccountId}
-              - !Sub arn:aws:s3:::${AWS::StackName}-logs-${AWS::AccountId}
-              - !Sub arn:aws:s3:::${AWS::StackName}-logbackup-${AWS::AccountId}
-          - Effect: Allow
-            Action:
-              - s3:GetObjectVersionForReplication
-              - s3:GetObjectVersionAcl
-              - s3:GetObjectVersionTagging
-            Resource:
-              - !Sub arn:aws:s3:::${AWS::StackName}-replication-${AWS::AccountId}/*
-              - !Sub arn:aws:s3:::${AWS::StackName}-content-${AWS::AccountId}/*
-              - !Sub arn:aws:s3:::${AWS::StackName}-logs-${AWS::AccountId}/*
-              - !Sub arn:aws:s3:::${AWS::StackName}-logbackup-${AWS::AccountId}/*
-          - Effect: Allow
-            Action:
-              - s3:ReplicateObject
-              - s3:ReplicateDelete
-              - s3:ReplicateTags
-            Resource:
-              - !Sub arn:aws:s3:::${AWS::StackName}-secondary-replication-${AWS::AccountId}/*
-
-  # Lambda Execution Role (Modified to address IAM_NO_INLINE_POLICY_CHECK finding)
+  # Lambda Execution Role
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -519,39 +295,30 @@ Resources:
           Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-        - arn:aws:iam::aws:policy/AmazonS3FullAccess
-        - !Ref LambdaVPCAccessPolicy
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+        - !Ref LambdaS3Policy
         - !Ref LambdaBedrockPolicy
         - !Ref LambdaRDSPolicy
         - !Ref LambdaSecretPolicy
 
-  # Custom managed policies for Lambda instead of inline policies
-  LambdaVPCAccessPolicy:
+  # Custom managed policies for Lambda
+  LambdaS3Policy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      Description: "Policy for Lambda VPC access"
+      Description: "Minimal S3 policy for Lambda document processing"
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
           - Effect: Allow
             Action:
-              - ec2:CreateNetworkInterface
-              - ec2:DescribeNetworkInterfaces
-              - ec2:DeleteNetworkInterface
-              - ec2:AssignPrivateIpAddresses
-              - ec2:UnassignPrivateIpAddresses
-            Resource: 
-              - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:network-interface/*
-              - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:subnet/${Subnet1}
-              - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:subnet/${Subnet2}
-              - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:security-group/${LambdaSecurityGroup}
+              - s3:GetObject
+              - s3:PutObject
+              - s3:DeleteObject
+            Resource: !Sub "${ContentBucket}/*"
           - Effect: Allow
             Action:
-              - ec2:DescribeNetworkInterfaces
-              - ec2:DescribeVpcs
-              - ec2:DescribeSubnets
-              - ec2:DescribeSecurityGroups
-            Resource: "*"
+              - s3:ListBucket
+            Resource: !Ref ContentBucket
 
   LambdaBedrockPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -596,8 +363,8 @@ Resources:
     Properties:
       CodeUri: functions/DatabaseInitFunction/
       Handler: app.lambda_handler
-      Runtime: python3.9
-      Timeout: 300
+      Runtime: python3.12
+      Timeout: 120
       MemorySize: 256
       Role: !GetAtt LambdaExecutionRole.Arn
       Environment:
@@ -619,7 +386,7 @@ Resources:
     Properties:
       CodeUri: functions/GetByteRangesFunction
       Handler: app.lambda_handler
-      Runtime: python3.9
+      Runtime: python3.12
       Timeout: 30
       MemorySize: 256
       Environment:
@@ -635,7 +402,7 @@ Resources:
     Properties:
       CodeUri: functions/IngestDocFunction
       Handler: app.lambda_handler
-      Runtime: python3.9
+      Runtime: python3.12
       Timeout: 60
       MemorySize: 512
       Environment:
@@ -649,7 +416,7 @@ Resources:
     Properties:
       CodeUri: functions/IngestPDFFunction
       Handler: app.lambda_handler
-      Runtime: python3.9
+      Runtime: python3.12
       Timeout: 120
       MemorySize: 1024
       Environment:
@@ -663,7 +430,7 @@ Resources:
     Properties:
       CodeUri: functions/IngestTextFunction
       Handler: app.lambda_handler
-      Runtime: python3.9
+      Runtime: python3.12
       Timeout: 30
       MemorySize: 256
       Environment:
@@ -677,7 +444,7 @@ Resources:
     Properties:
       CodeUri: functions/VectorizeFunction
       Handler: app.lambda_handler
-      Runtime: python3.9
+      Runtime: python3.12
       Timeout: 60
       MemorySize: 512
       Environment:
@@ -688,63 +455,34 @@ Resources:
       Layers:
         - !Ref SharedLibrariesLayer
 
-  # Shared Libraries Layer with optimized configuration
+  # Shared Libraries Layer
   SharedLibrariesLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
       LayerName: shared-libraries
-      Description: Common libraries and secure utilities for document processing
+      Description: Common libraries for document processing
       ContentUri: functions/shared
       CompatibleRuntimes:
-        - python3.9
+        - python3.12
       RetentionPolicy: Retain
-      BuildMethod: python3.9
 
-  # Updated S3 Bucket with proper security configurations
+  # S3 Bucket for content storage
   ContentBucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub ${AWS::StackName}-content-${AWS::AccountId}
-      AccessControl: Private
-      # Block public access
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
-      # Enable versioning
       VersioningConfiguration:
         Status: Enabled
-      # Enable server-side encryption
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: "aws:kms"
               KMSMasterKeyID: !GetAtt KMSKey.Arn
-      # Enable object locking
-      ObjectLockEnabled: true
-      ObjectLockConfiguration:
-        ObjectLockEnabled: Enabled
-        Rule:
-          DefaultRetention:
-            Mode: COMPLIANCE
-            Days: 30
-      # Enable logging
-      LoggingConfiguration:
-        DestinationBucketName: !Ref LoggingBucket
-        LogFilePrefix: !Sub ${AWS::StackName}-content-logs/
-      # Add replication configuration
-      ReplicationConfiguration:
-        Role: !GetAtt ReplicationRole.Arn
-        Rules:
-          - Status: Enabled
-            Destination:
-              Bucket: !Sub arn:aws:s3:::${AWS::StackName}-secondary-replication-${AWS::AccountId}
-              StorageClass: STANDARD
-            Priority: 1
-            DeleteMarkerReplication:
-              Status: Enabled
-      # Configure SQS notifications
       NotificationConfiguration:
         QueueConfigurations:
         - Event: s3:ObjectCreated:*
@@ -756,133 +494,57 @@ Resources:
           Queue: !GetAtt DocumentQueue.Arn
     DependsOn:
     - DocumentQueuePolicy
-    - LoggingBucket
-    - ReplicationRole
 
-  # Content replication role
-  ContentReplicationRole:
-    Type: AWS::IAM::Role
+  # SQS Queue for document processing
+  DocumentQueue:
+    Type: AWS::SQS::Queue
     Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+      QueueName: !Sub ${AWS::StackName}-document-queue
+      MessageRetentionPeriod: 1209600
+      KmsMasterKeyId: !GetAtt KMSKey.Arn
+
+  DocumentQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref DocumentQueue
+      PolicyDocument:
         Statement:
           - Effect: Allow
             Principal:
               Service: s3.amazonaws.com
-            Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - !Ref ContentReplicationPolicy
-
-  # Replication policy
-  ContentReplicationPolicy:
-    Type: AWS::IAM::ManagedPolicy
-    Properties:
-      Description: "Policy for S3 bucket replication"
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
             Action:
-              - s3:GetReplicationConfiguration
-              - s3:ListBucket
-            Resource: !Sub arn:aws:s3:::${AWS::StackName}-content-${AWS::AccountId}
-          - Effect: Allow
-            Action:
-              - s3:GetObjectVersionForReplication
-              - s3:GetObjectVersionAcl
-              - s3:GetObjectVersionTagging
-            Resource: !Sub arn:aws:s3:::${AWS::StackName}-content-${AWS::AccountId}/*
-          - Effect: Allow
-            Action:
-              - s3:ReplicateObject
-              - s3:ReplicateDelete
-              - s3:ReplicateTags
-            Resource: !Sub arn:aws:s3:::${AWS::StackName}-replication-${AWS::AccountId}/*
+              - sqs:SendMessage
+            Resource: !GetAtt DocumentQueue.Arn
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Sub arn:aws:s3:::${AWS::StackName}-content-${AWS::AccountId}
 
-  # Logging bucket for S3 access logs with appropriate settings
-  LoggingBucket:
-    Type: AWS::S3::Bucket
+  # Step Functions State Machine
+  DocumentProcessingStateMachine:
+    Type: AWS::Serverless::StateMachine
     Properties:
-      BucketName: !Sub ${AWS::StackName}-logs-${AWS::AccountId}
-      AccessControl: LogDeliveryWrite
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-      VersioningConfiguration:
-        Status: Enabled
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: "aws:kms"
-              KMSMasterKeyID: !GetAtt KMSKey.Arn
-      ObjectLockEnabled: true
-      ObjectLockConfiguration:
-        ObjectLockEnabled: Enabled
-        Rule:
-          DefaultRetention:
-            Mode: COMPLIANCE
-            Days: 30
-      # Self-logging setup
-      LoggingConfiguration:
-        DestinationBucketName: !Ref LogBackupBucket
-        LogFilePrefix: logging-bucket-logs/
-      # Add replication configuration
-      ReplicationConfiguration:
-        Role: !GetAtt ReplicationRole.Arn
-        Rules:
-          - Status: Enabled
-            Destination:
-              Bucket: !Sub arn:aws:s3:::${AWS::StackName}-secondary-replication-${AWS::AccountId}
-              StorageClass: STANDARD
-            Priority: 1
-            DeleteMarkerReplication:
-              Status: Enabled
+      Name: !Sub ${AWS::StackName}-document-processing
+      DefinitionUri: statemachine.json
+      DefinitionSubstitutions:
+        IngestTextFunction: !GetAtt IngestTextFunction.Arn
+        IngestPDFFunction: !GetAtt IngestPDFFunction.Arn
+        IngestDocFunction: !GetAtt IngestDocFunction.Arn
+        GetByteRangesFunction: !GetAtt GetByteRangesFunction.Arn
+        VectorizeFunction: !GetAtt VectorizeFunction.Arn
+      Role: !GetAtt StepFunctionsRole.Arn
+      Events:
+        SQSEvent:
+          Type: Schedule
+          Properties:
+            Schedule: rate(5 minutes)
+            Input: !Sub |
+              {
+                "QueueUrl": "${DocumentQueue}"
+              }
 
-  # Log backup bucket for self-logging
-  LogBackupBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Sub ${AWS::StackName}-logbackup-${AWS::AccountId}
-      AccessControl: Private
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-      VersioningConfiguration:
-        Status: Enabled
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: "aws:kms"
-              KMSMasterKeyID: !GetAtt KMSKey.Arn
-      ObjectLockEnabled: true
-      ObjectLockConfiguration:
-        ObjectLockEnabled: Enabled
-        Rule:
-          DefaultRetention:
-            Mode: COMPLIANCE
-            Days: 30
-      # Add logging configuration
-      LoggingConfiguration:
-        DestinationBucketName: !Ref LoggingBucket
-        LogFilePrefix: logbackup-logs/
-      # Add replication configuration
-      ReplicationConfiguration:
-        Role: !GetAtt ReplicationRole.Arn
-        Rules:
-          - Status: Enabled
-            Destination:
-              Bucket: !Sub arn:aws:s3:::${AWS::StackName}-secondary-replication-${AWS::AccountId}
-              StorageClass: STANDARD
-            Priority: 1
-            DeleteMarkerReplication:
-              Status: Enabled
-
-  # Log replication role
-  LogReplicationRole:
+  # Step Functions execution role
+  StepFunctionsRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -890,525 +552,46 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              Service: s3.amazonaws.com
+              Service: states.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
-        - !Ref LogReplicationPolicy
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaRole
+      Policies:
+        - PolicyName: StepFunctionsExecutionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !GetAtt IngestTextFunction.Arn
+                  - !GetAtt IngestPDFFunction.Arn
+                  - !GetAtt IngestDocFunction.Arn
+                  - !GetAtt GetByteRangesFunction.Arn
+                  - !GetAtt VectorizeFunction.Arn
 
-  # Log replication policy
-  LogReplicationPolicy:
-    Type: AWS::IAM::ManagedPolicy
-    Properties:
-      Description: "Policy for S3 log bucket replication"
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Action:
-              - s3:GetReplicationConfiguration
-              - s3:ListBucket
-            Resource: !Sub arn:aws:s3:::${AWS::StackName}-logs-${AWS::AccountId}
-          - Effect: Allow
-            Action:
-              - s3:GetObjectVersionForReplication
-              - s3:GetObjectVersionAcl
-              - s3:GetObjectVersionTagging
-            Resource: !Sub arn:aws:s3:::${AWS::StackName}-logs-${AWS::AccountId}/*
-          - Effect: Allow
-            Action:
-              - s3:ReplicateObject
-              - s3:ReplicateDelete
-              - s3:ReplicateTags
-            Resource: !Sub arn:aws:s3:::${AWS::StackName}-secondary-replication-${AWS::AccountId}/*
+Outputs:
+  ContentBucketName:
+    Description: Name of the S3 bucket for content storage
+    Value: !Ref ContentBucket
+    Export:
+      Name: !Sub ${AWS::StackName}-ContentBucket
 
-  # VPC Flow Logs
-  FlowLogsRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: vpc-flow-logs.amazonaws.com
-            Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSVPCFlowLogsRole
+  DatabaseClusterArn:
+    Description: ARN of the Aurora PostgreSQL cluster
+    Value: !GetAtt VectorDBCluster.DBClusterArn
+    Export:
+      Name: !Sub ${AWS::StackName}-DatabaseClusterArn
 
-  VPCFlowLogs:
-    Type: AWS::EC2::FlowLog
-    Properties:
-      DeliverLogsPermissionArn: !GetAtt FlowLogsRole.Arn
-      LogGroupName: !Sub /aws/vpc/${AWS::StackName}-flow-logs
-      ResourceId: !Ref VPC
-      ResourceType: VPC
-      TrafficType: ALL
-      MaxAggregationInterval: 60
-      Tags:
-        - Key: Name
-          Value: !Sub ${AWS::StackName}-vpc-flow-logs
+  StateMachineArn:
+    Description: ARN of the Step Functions state machine
+    Value: !Ref DocumentProcessingStateMachine
+    Export:
+      Name: !Sub ${AWS::StackName}-StateMachine
 
-  # Enhance RDS Cluster Configuration
-  VectorDBCluster:
-    Type: AWS::RDS::DBCluster
-    Properties:
-      Engine: aurora-postgresql
-      EngineVersion: '15.4'
-      DatabaseName: !Ref DatabaseName
-      MasterUsername: !Ref DatabaseUsername
-      MasterUserPassword: !Ref DatabasePassword
-      DBClusterIdentifier: !Sub ${AWS::StackName}-db
-      EnableHttpEndpoint: true
-      ServerlessV2ScalingConfiguration:
-        MinCapacity: 0.5
-        MaxCapacity: 1
-      StorageEncrypted: true
-      KmsKeyId: !GetAtt KMSKey.Arn
-      BackupRetentionPeriod: 30  # Increased from 7 to 30 days
-      DeletionProtection: true
-      CopyTagsToSnapshot: true
-      EnableIAMDatabaseAuthentication: true  # Enable IAM authentication
-      DBClusterParameterGroupName: !Ref ClusterParameterGroup
-      DBSubnetGroupName: !Ref DBSubnetGroup
-      VpcSecurityGroupIds:
-        - !Ref DBSecurityGroup
-      EnableCloudwatchLogsExports:
-        - postgresql
-        - upgrade
-      PreferredBackupWindow: "03:00-04:00"
-      PreferredMaintenanceWindow: "mon:04:00-mon:05:00"
-
-  VectorDBInstance:
-    Type: AWS::RDS::DBInstance
-    Properties:
-      Engine: aurora-postgresql
-      DBClusterIdentifier: !Ref VectorDBCluster
-      StorageEncrypted: true # Explicitly set storage encryption
-      DBInstanceClass: db.serverless
-      PubliclyAccessible: false
-      DBSubnetGroupName: !Ref DBSubnetGroup
-      AutoMinorVersionUpgrade: true # Enable automatic minor version upgrades
-      MonitoringInterval: 60 # Enable enhanced monitoring (60 seconds)
-      MonitoringRoleArn: !GetAtt RDSMonitoringRole.Arn
-      DeletionProtection: true # Enable deletion protection
-      EnablePerformanceInsights: true
-      PerformanceInsightsRetentionPeriod: 7
-      EnableCloudwatchLogsExports:
-        - postgresql
-      BackupRetentionPeriod: 7
-      MultiAZ: true # Enable Multi-AZ support
-
-  # Role for Enhanced Monitoring
-  RDSMonitoringRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-        - Effect: Allow
-          Principal:
-            Service: monitoring.rds.amazonaws.com
-          Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
-
-  ClusterParameterGroup:
-    Type: AWS::RDS::DBClusterParameterGroup
-    Properties:
-      Description: Parameter group for Aurora PostgreSQL
-      Family: aurora-postgresql15
-      Parameters: 
-        max_wal_senders: "20"
-        rds.force_ssl: "1"  # Force SSL connections to ensure encryption in transit
-
-  DBPasswordSecret:
-    Type: AWS::SecretsManager::Secret
-    Properties:
-      Name: !Sub ${AWS::StackName}-db-password
-      Description: Password for vectorization database
-      KmsKeyId: !GetAtt KMSKey.Arn
-      GenerateSecretString:
-        SecretStringTemplate: !Sub '{"username": "${DatabaseUsername}"}'
-        GenerateStringKey: password
-        PasswordLength: 16
-        ExcludeCharacters: '"@/\'
-
-  # Secret Rotation
-  SecretRotationSchedule:
-    Type: AWS::SecretsManager::RotationSchedule
-    Properties:
-      SecretId: !Ref DBPasswordSecret
-      RotationLambdaARN: !GetAtt SecretRotationFunction.Arn
-      RotationRules:
-        AutomaticallyAfterDays: 30
-    DependsOn: SecretRotationAttachment
-
-  SecretRotationAttachment:
-    Type: AWS::SecretsManager::ResourcePolicy
-    Properties:
-      SecretId: !Ref DBPasswordSecret
-      ResourcePolicy:
-        Version: '2012-10-17'
-        Statement:
-        - Effect: Allow
-          Principal:
-            AWS: !GetAtt SecretRotationFunction.Arn
-          Action:
-            - secretsmanager:DescribeSecret
-            - secretsmanager:GetSecretValue
-            - secretsmanager:PutSecretValue
-            - secretsmanager:UpdateSecretVersionStage
-          Resource: '*'
-
-  SecretRotationFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/SecretRotationFunction/
-      Handler: lambda_function.lambda_handler
-      Runtime: python3.9
-      InlineCode: |
-        import boto3
-        import json
-        import os
-        import logging
-        
-        logger = logging.getLogger()
-        logger.setLevel(logging.INFO)
-        
-        def lambda_handler(event, context):
-            logger.info('Rotation function triggered')
-            # This is a placeholder for actual password rotation logic
-            # In production, implement the full rotation logic with stages
-            return {"statusCode": 200, "body": "Rotation placeholder"}
-      Role: !GetAtt SecretRotationRole.Arn
-      Timeout: 30
-      Environment:
-        Variables:
-          SECRETS_MANAGER_ENDPOINT: !Sub https://secretsmanager.${AWS::Region}.amazonaws.com
-
-  SecretRotationRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-        - Effect: Allow
-          Principal:
-            Service: lambda.amazonaws.com
-          Action: sts:AssumeRole
-      ManagedPolicyArns:
-      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      - arn:aws:iam::aws:policy/SecretsManagerReadWrite
-
-  # S3 Replication resources
-  ReplicationBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Sub ${AWS::StackName}-replication-${AWS::AccountId}
-      AccessControl: Private
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-      VersioningConfiguration:
-        Status: Enabled
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: "aws:kms"
-              KMSMasterKeyID: !GetAtt KMSKey.Arn
-      ObjectLockEnabled: true
-      ObjectLockConfiguration:
-        ObjectLockEnabled: Enabled
-        Rule:
-          DefaultRetention:
-            Mode: COMPLIANCE
-            Days: 30
-      # Add logging configuration to address S3_BUCKET_LOGGING_ENABLED finding
-      LoggingConfiguration:
-        DestinationBucketName: !Ref LoggingBucket
-        LogFilePrefix: !Sub ${AWS::StackName}-replication-logs/
-      # Add replication configuration to address S3_BUCKET_REPLICATION_ENABLED finding
-      ReplicationConfiguration:
-        Role: !GetAtt ReplicationRole.Arn
-        Rules:
-          - Status: Enabled
-            Destination:
-              Bucket: !Sub arn:aws:s3:::${AWS::StackName}-secondary-replication-${AWS::AccountId}
-              StorageClass: STANDARD
-            Priority: 1
-            DeleteMarkerReplication:
-              Status: Enabled
-
-  # Secondary replication bucket for cross-region replication
-  SecondaryReplicationBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Sub ${AWS::StackName}-secondary-replication-${AWS::AccountId}
-      AccessControl: Private
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-      VersioningConfiguration:
-        Status: Enabled
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: "aws:kms"
-              KMSMasterKeyID: !GetAtt KMSKey.Arn
-      ObjectLockEnabled: true
-      ObjectLockConfiguration:
-        ObjectLockEnabled: Enabled
-        Rule:
-          DefaultRetention:
-            Mode: COMPLIANCE
-            Days: 30
-      LoggingConfiguration:
-        DestinationBucketName: !Ref LoggingBucket
-        LogFilePrefix: secondary-replication-logs/
-
-  # Replication role for S3 buckets
-  ReplicationRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: s3.amazonaws.com
-            Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - !Ref ReplicationPolicy
-
-  # Replication policy
-  ReplicationPolicy:
-    Type: AWS::IAM::ManagedPolicy
-    Properties:
-      Description: "Policy for S3 bucket replication"
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Action:
-              - s3:GetReplicationConfiguration
-              - s3:ListBucket
-            Resource:
-              - !Sub arn:aws:s3:::${AWS::StackName}-replication-${AWS::AccountId}
-              - !Sub arn:aws:s3:::${AWS::StackName}-content-${AWS::AccountId}
-              - !Sub arn:aws:s3:::${AWS::StackName}-logs-${AWS::AccountId}
-              - !Sub arn:aws:s3:::${AWS::StackName}-logbackup-${AWS::AccountId}
-          - Effect: Allow
-            Action:
-              - s3:GetObjectVersionForReplication
-              - s3:GetObjectVersionAcl
-              - s3:GetObjectVersionTagging
-            Resource:
-              - !Sub arn:aws:s3:::${AWS::StackName}-replication-${AWS::AccountId}/*
-              - !Sub arn:aws:s3:::${AWS::StackName}-content-${AWS::AccountId}/*
-              - !Sub arn:aws:s3:::${AWS::StackName}-logs-${AWS::AccountId}/*
-              - !Sub arn:aws:s3:::${AWS::StackName}-logbackup-${AWS::AccountId}/*
-          - Effect: Allow
-            Action:
-              - s3:ReplicateObject
-              - s3:ReplicateDelete
-              - s3:ReplicateTags
-            Resource:
-              - !Sub arn:aws:s3:::${AWS::StackName}-secondary-replication-${AWS::AccountId}/*
-
-  # Lambda Execution Role (Modified to address IAM_NO_INLINE_POLICY_CHECK finding)
-  LambdaExecutionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-        - Effect: Allow
-          Principal:
-            Service: lambda.amazonaws.com
-          Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-        - arn:aws:iam::aws:policy/AmazonS3FullAccess
-        - !Ref LambdaVPCAccessPolicy
-        - !Ref LambdaBedrockPolicy
-        - !Ref LambdaRDSPolicy
-        - !Ref LambdaSecretPolicy
-
-  # Custom managed policies for Lambda instead of inline policies
-  LambdaVPCAccessPolicy:
-    Type: AWS::IAM::ManagedPolicy
-    Properties:
-      Description: "Policy for Lambda VPC access"
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Action:
-              - ec2:CreateNetworkInterface
-              - ec2:DescribeNetworkInterfaces
-              - ec2:DeleteNetworkInterface
-              - ec2:AssignPrivateIpAddresses
-              - ec2:UnassignPrivateIpAddresses
-            Resource: 
-              - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:network-interface/*
-              - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:subnet/${Subnet1}
-              - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:subnet/${Subnet2}
-              - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:security-group/${LambdaSecurityGroup}
-          - Effect: Allow
-            Action:
-              - ec2:DescribeNetworkInterfaces
-              - ec2:DescribeVpcs
-              - ec2:DescribeSubnets
-              - ec2:DescribeSecurityGroups
-            Resource: "*"
-
-  LambdaBedrockPolicy:
-    Type: AWS::IAM::ManagedPolicy
-    Properties:
-      Description: "Policy for Lambda Bedrock access"
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Action:
-              - bedrock:InvokeModel
-            Resource: !Sub arn:aws:bedrock:${AWS::Region}::foundation-model/${EmbeddingModelId}
-
-  LambdaRDSPolicy:
-    Type: AWS::IAM::ManagedPolicy
-    Properties:
-      Description: "Policy for Lambda RDS access"
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Action:
-              - rds-data:ExecuteStatement
-              - rds-data:BatchExecuteStatement
-            Resource: !GetAtt VectorDBCluster.DBClusterArn
-
-  LambdaSecretPolicy:
-    Type: AWS::IAM::ManagedPolicy
-    Properties:
-      Description: "Policy for Lambda Secrets Manager access"
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Action:
-              - secretsmanager:GetSecretValue
-            Resource: !Ref DBPasswordSecret
-
-  # Lambda Functions
-  DatabaseInitFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/DatabaseInitFunction/
-      Handler: app.lambda_handler
-      Runtime: python3.9
-      Timeout: 300
-      MemorySize: 256
-      Role: !GetAtt LambdaExecutionRole.Arn
-      Environment:
-        Variables:
-          CLUSTER_ARN: !GetAtt VectorDBCluster.DBClusterArn
-          SECRET_ARN: !Ref DBPasswordSecret
-          DATABASE_NAME: !Ref DatabaseName
-          TABLE_NAME: !Ref TableName
-      Description: This function initializes the PostgreSQL database with pgvector extension and required tables
-      VpcConfig:
-        SecurityGroupIds:
-          - !Ref LambdaSecurityGroup
-        SubnetIds:
-          - !Ref Subnet1
-          - !Ref Subnet2
-
-  GetByteRangesFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/GetByteRangesFunction
-      Handler: app.lambda_handler
-      Runtime: python3.9
-      Timeout: 30
-      MemorySize: 256
-      Environment:
-        Variables:
-          CHUNK_SIZE: !Ref ChunkSize
-          CHUNK_OVERLAP: !Ref ChunkOverlap
-          PYTHONPATH: /opt/python
-      Layers:
-        - !Ref SharedLibrariesLayer
-
-  IngestDocFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/IngestDocFunction
-      Handler: app.lambda_handler
-      Runtime: python3.9
-      Timeout: 60
-      MemorySize: 512
-      Environment:
-        Variables:
-          PYTHONPATH: /opt/python
-      Layers:
-        - !Ref SharedLibrariesLayer
-
-  IngestPDFFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/IngestPDFFunction
-      Handler: app.lambda_handler
-      Runtime: python3.9
-      Timeout: 120
-      MemorySize: 1024
-      Environment:
-        Variables:
-          PYTHONPATH: /opt/python
-      Layers:
-        - !Ref SharedLibrariesLayer
-
-  IngestTextFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/IngestTextFunction
-      Handler: app.lambda_handler
-      Runtime: python3.9
-      Timeout: 30
-      MemorySize: 256
-      Environment:
-        Variables:
-          PYTHONPATH: /opt/python
-      Layers:
-        - !Ref SharedLibrariesLayer
-
-  VectorizeFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/VectorizeFunction
-      Handler: app.lambda_handler
-      Runtime: python3.9
-      Timeout: 60
-      MemorySize: 512
-      Environment:
-        Variables:
-          EMBEDDING_MODEL_ID: !Ref EmbeddingModelId
-          EMBEDDING_MODEL_TYPE: !Ref EmbeddingModelType
-          PYTHONPATH: /opt/python
-      Layers:
-        - !Ref SharedLibrariesLayer
-
-  # Shared Libraries Layer with optimized configuration
-  SharedLibrariesLayer:
-    Type: AWS::Serverless::LayerVersion
-    Properties:
-      LayerName: shared-libraries
-      Description: Common libraries and secure utilities for document processing
-      ContentUri: functions/shared
-      CompatibleRuntimes:
-        - python3.9
-      RetentionPolicy: Retain
-      BuildMethod: python3.9
+  DatabaseSecretArn:
+    Description: ARN of the database password secret
+    Value: !Ref DBPasswordSecret
+    Export:
+      Name: !Sub ${AWS::StackName}-DatabaseSecret

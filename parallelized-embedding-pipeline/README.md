@@ -50,13 +50,23 @@ This workflow shows the parallel processing capabilities of the pipeline, includ
 - Vector embedding generation using Amazon Bedrock
 - Database storage with PostgreSQL and pgvector
 
+### Data Processing Layers
+
+The pipeline processes documents through three distinct S3 layers, each serving a specific purpose in the data transformation workflow:
+
+- **Raw Layer** (`raw/` prefix): Original documents are uploaded here to trigger the pipeline. This layer contains unprocessed files in their native formats (PDF, DOCX, TXT).
+- **Cleaned Layer** (`cleaned/` prefix): Documents are processed to extract and clean text content, removing formatting artifacts, null bytes, and encoding issues that could cause downstream processing errors.
+- **Curated Layer** (`curated/` prefix): Final processed text chunks are stored here, optimized for vector embedding generation with proper chunking, overlap handling, and metadata enrichment.
+
+This layered approach ensures data lineage, enables reprocessing at any stage, and maintains separation between raw source data and processed content ready for AI/ML workloads.
+
 ### Components:
 
-- **S3 Bucket**: Stores documents in different stages (raw, cleaned, curated)
-- **SQS Queue**: Handles document processing events
-- **Step Functions**: Orchestrates the document processing workflow
-- **Lambda Functions**: Process documents and generate embeddings
-- **Aurora PostgreSQL**: Database with pgvector extension for storing vectors
+- **Amazon S3**: Stores documents in different stages (raw, cleaned, curated)
+- **Amazon SQS**: Handles document processing events
+- **AWS Step Functions**: Orchestrates the document processing workflow
+- **AWS Lambda**: Process documents and generate embeddings
+- **Amazon Aurora PostgreSQL**: Database with pgvector extension for storing vectors
 
 ## Prerequisites
 
@@ -66,14 +76,6 @@ This workflow shows the parallel processing capabilities of the pipeline, includ
 - Python 3 (for database initialization)
 
 ## Deployment Guide
-
-### Quick Start - Which Script Should I Use?
-
-1. **For complete new deployments:** Use `./deploy-with-db-init.sh`
-2. **For infrastructure deployment only (no DB init):** Use `./deploy-with-db-init.sh --skip-db`
-3. **For database initialization only:** Use `./deploy-db-init.sh`
-4. **To test database connectivity:** Use `./test-connection.sh`
-5. **To test full pipeline functionality:** Use `./test-functionality.sh`
 
 ### Deployment Scripts
 
@@ -151,18 +153,18 @@ This script works in any environment with:
 
 ## Parameters
 
-| Parameter          | Description                      | Default                    |
-| ------------------ | -------------------------------- | -------------------------- |
-| RawPrefix          | S3 prefix for raw documents      | raw/                       |
-| CleanedPrefix      | S3 prefix for cleaned documents  | cleaned/                   |
-| CuratedPrefix      | S3 prefix for curated documents  | curated/                   |
-| ChunkSize          | Size of document chunks in bytes | 3000                       |
-| ChunkOverlap       | Overlap between chunks in bytes  | 300                        |
-| DatabaseName       | Aurora PostgreSQL database name  | mydb                       |
-| TableName          | Database table name for vectors  | vectortable                |
-| EmbeddingModelId   | Bedrock embedding model ID       | amazon.titan-embed-text-v1 |
-| EmbeddingModelType | Model service type               | bedrock                    |
-| WorkspaceId        | Workspace identifier             | vectordb                   |
+| Parameter          | Description                      | Default                      |
+| ------------------ | -------------------------------- | ---------------------------- |
+| RawPrefix          | S3 prefix for raw documents      | raw/                         |
+| CleanedPrefix      | S3 prefix for cleaned documents  | cleaned/                     |
+| CuratedPrefix      | S3 prefix for curated documents  | curated/                     |
+| ChunkSize          | Size of document chunks in bytes | 3000                         |
+| ChunkOverlap       | Overlap between chunks in bytes  | 300                          |
+| DatabaseName       | Aurora PostgreSQL database name  | mydb                         |
+| TableName          | Database table name for vectors  | vectortable                  |
+| EmbeddingModelId   | Bedrock embedding model ID       | amazon.titan-embed-text-v2:0 |
+| EmbeddingModelType | Model service type               | bedrock                      |
+| WorkspaceId        | Workspace identifier             | vectordb                     |
 
 ## Lambda Functions
 
@@ -215,3 +217,9 @@ aws cloudformation delete-stack --stack-name vectorization-pipeline --region [YO
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Copyright
+
+Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+
+SPDX-License-Identifier: MIT-0
