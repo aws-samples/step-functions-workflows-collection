@@ -217,3 +217,7 @@ aws cloudformation delete-stack --stack-name vectorization-pipeline --region [YO
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Copyright
+
+Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
