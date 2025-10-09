@@ -64,28 +64,49 @@
     }
   },
   "resources": {
-    "headline": "Additional resources",
     "bullets": [
       {
-        "text": "The AWS Step Functions Workshop",
-        "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        "text": "Amazon Bedrock",
+        "link": "https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-bedrock.html"
       },
       {
-        "text": "Amazon Bedrock User Guide", 
-        "link": "https://docs.aws.amazon.com/bedrock/"
+        "text": "AWS Step Functions",
+        "link": "https://aws.amazon.com/step-functions/"
       },
       {
-        "text": "Aurora PostgreSQL and pgvector",
-        "link": "https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraPostgreSQL.VectorDB.html"
+        "text": "AWS Lambda",
+        "link": "https://aws.amazon.com/lambda/"
+      },
+      {
+        "text": "Amazon RDS for PostgreSQL",
+        "link": "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_PostgreSQL.html"
+      },
+      {
+        "text": "pgvector Extension",
+        "link": "https://github.com/pgvector/pgvector"
+      },
+      {
+        "text": "Amazon Titan Embedding Models",
+        "link": "https://docs.aws.amazon.com/bedrock/latest/userguide/titan-embedding-models.html"
+      },
+      {
+        "text": "AWS Serverless Application Model (SAM)",
+        "link": "https://docs.aws.amazon.com/serverless-application-model/"
       }
     ]
   },
   "authors": [
     {
-      "name": "Your Name",
-      "image": "",
-      "bio": "Solutions Architect specializing in serverless architectures and machine learning workflows",
+      "name": "Solomon Ojo",
+      "image": "/resources/solomon.jpg",
+      "bio": "Solomon is a Solutions Architect supporting Federal System Integrators at AWS. He specializes in Generative AI solutions and serverless architectures, and is an active member of the AWS Machine Learning and Artificial Intelligence community. Outside of work, Solomon is passionate about serving his community and helping others leverage cloud technologies to solve complex problems.",
       "linkedin": ""
+    },
+    {
+      "name": "Dave Horne",
+      "image": "/resources/Dave.jpg",
+      "bio": "Dave is a Sr. Solutions Architect supporting Federal System Integrators at AWS. He is based in Washington, DC and has 15 years of experience building, modernizing and integrating systems for Public Sector customers. Outside of work, Dave enjoys playing with his kids and hiking.",
+      "linkedin": "davidjhorne"
     }
   ]
 }
