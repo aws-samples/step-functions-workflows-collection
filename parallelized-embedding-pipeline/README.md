@@ -153,18 +153,18 @@ This script works in any environment with:
 
 ## Parameters
 
-| Parameter          | Description                      | Default                    |
-| ------------------ | -------------------------------- | -------------------------- |
-| RawPrefix          | S3 prefix for raw documents      | raw/                       |
-| CleanedPrefix      | S3 prefix for cleaned documents  | cleaned/                   |
-| CuratedPrefix      | S3 prefix for curated documents  | curated/                   |
-| ChunkSize          | Size of document chunks in bytes | 3000                       |
-| ChunkOverlap       | Overlap between chunks in bytes  | 300                        |
-| DatabaseName       | Aurora PostgreSQL database name  | mydb                       |
-| TableName          | Database table name for vectors  | vectortable                |
-| EmbeddingModelId   | Bedrock embedding model ID       | amazon.titan-embed-text-v1 |
-| EmbeddingModelType | Model service type               | bedrock                    |
-| WorkspaceId        | Workspace identifier             | vectordb                   |
+| Parameter          | Description                      | Default                      |
+| ------------------ | -------------------------------- | -----------------------------|
+| RawPrefix          | S3 prefix for raw documents      | raw/                         |
+| CleanedPrefix      | S3 prefix for cleaned documents  | cleaned/                     |
+| CuratedPrefix      | S3 prefix for curated documents  | curated/                     |
+| ChunkSize          | Size of document chunks in bytes | 3000                         |
+| ChunkOverlap       | Overlap between chunks in bytes  | 300                          |
+| DatabaseName       | Aurora PostgreSQL database name  | mydb                         |
+| TableName          | Database table name for vectors  | vectortable                  |
+| EmbeddingModelId   | Bedrock embedding model ID       | amazon.titan-embed-text-v2:0 |
+| EmbeddingModelType | Model service type               | bedrock                      |
+| WorkspaceId        | Workspace identifier             | vectordb                     |
 
 ## Lambda Functions
 
