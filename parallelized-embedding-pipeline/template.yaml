@@ -364,7 +364,7 @@ Resources:
       CodeUri: functions/DatabaseInitFunction/
       Handler: app.lambda_handler
       Runtime: python3.12
-      Timeout: 300
+      Timeout: 120
       MemorySize: 256
       Role: !GetAtt LambdaExecutionRole.Arn
       Environment:
