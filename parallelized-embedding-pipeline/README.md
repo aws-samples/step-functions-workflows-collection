@@ -77,14 +77,6 @@ This layered approach ensures data lineage, enables reprocessing at any stage, a
 
 ## Deployment Guide
 
-### Quick Start - Which Script Should I Use?
-
-1. **For complete new deployments:** Use `./deploy-with-db-init.sh`
-2. **For infrastructure deployment only (no DB init):** Use `./deploy-with-db-init.sh --skip-db`
-3. **For database initialization only:** Use `./deploy-db-init.sh`
-4. **To test database connectivity:** Use `./test-connection.sh`
-5. **To test full pipeline functionality:** Use `./test-functionality.sh`
-
 ### Deployment Scripts
 
 | Script                   | Purpose                                                                          | When to Use                                                                    |
