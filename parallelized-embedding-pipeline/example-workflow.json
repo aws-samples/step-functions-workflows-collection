@@ -4,7 +4,7 @@
   "language": "Python",
   "simplicity": "3 - Application",
   "level": "400",
-  "framework": "SAM",
+  "framework": "AWS SAM",
   "usecase": [
     "This sample project demonstrates how to build a scalable document vectorization pipeline using AWS Step Functions to orchestrate parallel processing of text, PDF, and Word documents. The pipeline extracts content, generates vector embeddings using Amazon Bedrock, and stores them in PostgreSQL with pgvector extension for similarity search.",
     "The state machine intelligently routes different document types to specialized Lambda functions for content extraction, then processes documents in parallel chunks to optimize performance and handle large files efficiently. Vector embeddings are generated using Amazon Bedrock's Titan embedding models.",
