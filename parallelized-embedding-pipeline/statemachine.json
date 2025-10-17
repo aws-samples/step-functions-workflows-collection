@@ -1,0 +1,117 @@
+{
+  "Comment": "A state machine that processes different types of documents and generates vector embeddings",
+  "StartAt": "ParseS3String",
+  "States": {
+    "ParseS3String": {
+      "Type": "Pass",
+      "Parameters": {
+        "s3Event.$": "States.StringToJson($.[0].body)"
+      },
+      "Next": "CheckFileType"
+    },
+    "CheckFileType": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.s3Event.Records[0].s3.object.key",
+          "StringMatches": "*.txt",
+          "Next": "IngestTextFile"
+        },
+        {
+          "Variable": "$.s3Event.Records[0].s3.object.key",
+          "StringMatches": "*.pdf",
+          "Next": "IngestPDFFile"
+        },
+        {
+          "Variable": "$.s3Event.Records[0].s3.object.key",
+          "StringMatches": "*.docx",
+          "Next": "IngestDocFile"
+        }
+      ],
+      "Default": "UnsupportedFileType"
+    },
+    "IngestTextFile": {
+      "Type": "Task",
+      "Resource": "${IngestTextFunction}",
+      "Parameters": {
+        "SourceKey.$": "$.s3Event.Records[0].s3.object.key",
+        "Bucket.$": "$.s3Event.Records[0].s3.bucket.name"
+      },
+      "Next": "GetObjectMetadata"
+    },
+    "IngestPDFFile": {
+      "Type": "Task",
+      "Resource": "${IngestPDFFunction}",
+      "Parameters": {
+        "SourceKey.$": "$.s3Event.Records[0].s3.object.key",
+        "Bucket.$": "$.s3Event.Records[0].s3.bucket.name"
+      },
+      "Next": "GetObjectMetadata"
+    },
+    "IngestDocFile": {
+      "Type": "Task",
+      "Resource": "${IngestDocFunction}",
+      "Parameters": {
+        "SourceKey.$": "$.s3Event.Records[0].s3.object.key",
+        "Bucket.$": "$.s3Event.Records[0].s3.bucket.name"
+      },
+      "Next": "GetObjectMetadata"
+    },
+    "UnsupportedFileType": {
+      "Type": "Fail",
+      "Error": "UnsupportedFileType",
+      "Cause": "Unsupported file type"
+    },
+    "GetObjectMetadata": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:s3:headObject",
+      "Parameters": {
+        "Bucket.$": "$.Bucket",
+        "Key.$": "$.SourceKey"
+      },
+      "ResultPath": "$.objectMetadata",
+      "Next": "GetByteRanges"
+    },
+    "GetByteRanges": {
+      "Type": "Task",
+      "Resource": "${GetByteRangesFunction}",
+      "Parameters": {
+        "objectSize.$": "$.objectMetadata.ContentLength"
+      },
+      "ResultPath": "$.byteRanges",
+      "Next": "ParallelProcessing"
+    },
+    "ParallelProcessing": {
+      "Type": "Map",
+      "InputPath": "$",
+      "ItemsPath": "$.byteRanges.byteRanges",
+      "ItemSelector": {
+        "Bucket.$": "$.Bucket",
+        "Key.$": "$.SourceKey",
+        "ByteRange.$": "$.Map.Item.Value"
+      },
+      "MaxConcurrency": 10,
+      "ResultPath": "$.vectorizeResult",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "INLINE"
+        },
+        "StartAt": "ProcessChunk",
+        "States": {
+          "ProcessChunk": {
+            "Type": "Task",
+            "Resource": "${VectorizeFunction}",
+            "Parameters": {
+              "Bucket.$": "$.Bucket",
+              "Key.$": "$.Key",
+              "ByteRangeStart.$": "$.ByteRange.start",
+              "ByteRangeEnd.$": "$.ByteRange.end"
+            },
+            "End": true
+          }
+        }
+      },
+      "End": true
+    }
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "title": "Document Vectorization Pipeline",
+  "description": "A serverless document processing pipeline that extracts text from PDF, Word, and text documents, generates vector embeddings using Amazon Bedrock, and stores them in Aurora PostgreSQL with pgvector for similarity search",
+  "language": "Python",
+  "simplicity": "3-Advanced",
+  "usecase": "Document Processing, Vector Search, Machine Learning",
+  "type": "Standard",
+  "diagram": "architecture.png",
+  "videoId": "",
+  "level": "300",
+  "framework": "SAM",
+  "services": [
+    "stepfunctions",
+    "lambda",
+    "s3",
+    "sqs",
+    "rds",
+    "bedrock",
+    "secretsmanager",
+    "kms"
+  ],
+  "introBox": {
+    "headline": "Document Vectorization Pipeline",
+    "text": [
+      "This workflow demonstrates how to build a serverless document processing pipeline that:",
+      "• Processes PDF, Word, and text documents uploaded to S3",
+      "• Extracts and cleans text content using Lambda functions", 
+      "• Generates vector embeddings using Amazon Bedrock Titan models",
+      "• Stores vectors in Aurora PostgreSQL with pgvector extension",
+      "• Enables semantic search and similarity matching capabilities"
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": [
+      "See the testing section of the README for detailed testing instructions including:",
+      "• Database connectivity testing",
+      "• End-to-end pipeline testing with sample documents",
+      "• Automated deployment and initialization scripts"
+    ]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": [
+      "1. Delete the CloudFormation stack: `aws cloudformation delete-stack --stack-name vectorization-pipeline --region [YOUR-REGION]`",
+      "2. Empty and delete the S3 buckets if they weren't automatically deleted",
+      "3. Verify all resources have been cleaned up in the AWS Console"
+    ]
+  },
+  "deploy": {
+    "text": [
+      "1. Clone this repository",
+      "2. Run `./deploy-with-db-init.sh --region [YOUR-REGION]` for complete deployment",
+      "3. The script will deploy infrastructure and initialize the database",
+      "4. Test the pipeline by uploading a document to the S3 bucket's raw/ prefix"
+    ]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/document-vectorization-pipeline/",
+      "templateDir": "document-vectorization-pipeline",
+      "templateFile": "template.yaml",
+      "ASL": "statemachine.json"
+    }
+  },
+  "resources": {
+    "bullets": [
+      {
+        "text": "Amazon Bedrock",
+        "link": "https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-bedrock.html"
+      },
+      {
+        "text": "AWS Step Functions",
+        "link": "https://aws.amazon.com/step-functions/"
+      },
+      {
+        "text": "AWS Lambda",
+        "link": "https://aws.amazon.com/lambda/"
+      },
+      {
+        "text": "Amazon RDS for PostgreSQL",
+        "link": "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_PostgreSQL.html"
+      },
+      {
+        "text": "pgvector Extension",
+        "link": "https://github.com/pgvector/pgvector"
+      },
+      {
+        "text": "Amazon Titan Embedding Models",
+        "link": "https://docs.aws.amazon.com/bedrock/latest/userguide/titan-embedding-models.html"
+      },
+      {
+        "text": "AWS Serverless Application Model (SAM)",
+        "link": "https://docs.aws.amazon.com/serverless-application-model/"
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Solomon Ojo",
+      "image": "/resources/solomon.jpg",
+      "bio": "Solomon is a Solutions Architect supporting Federal System Integrators at AWS. He specializes in Generative AI solutions and serverless architectures, and is an active member of the AWS Machine Learning and Artificial Intelligence community. Outside of work, Solomon is passionate about serving his community and helping others leverage cloud technologies to solve complex problems.",
+      "linkedin": ""
+    },
+    {
+      "name": "Dave Horne",
+      "image": "/resources/Dave.jpg",
+      "bio": "Dave is a Sr. Solutions Architect supporting Federal System Integrators at AWS. He is based in Washington, DC and has 15 years of experience building, modernizing and integrating systems for Public Sector customers. Outside of work, Dave enjoys playing with his kids and hiking.",
+      "linkedin": "davidjhorne"
+    }
+  ]
+}
