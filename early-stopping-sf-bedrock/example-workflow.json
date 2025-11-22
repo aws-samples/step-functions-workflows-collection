@@ -1,0 +1,76 @@
+{
+    "title": "Smart Exploration with Early Stopping workflow",
+    "description": "Runs multiple worker workflows to answer AWS questions, and terminates once high confidence answer is received.",
+    "language": "Python",
+    "simplicity": "2 - Pattern",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/MainWorkflow.png", 
+    "videoId": "",
+    "level": "200",
+    "framework": "SAM",
+    "services": ["bedrock","stepfunctions", "eventbridge","lambda"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "A user submits a query (eg. What is CloudFront ?), and AWS Step Functions orchestrates 4 parallel agent workflows simultaneously. Each agent uses a different specialized approach (service-specific, architecture patterns, cost optimization, and general overview). Response with high confidence is used to terminate rest of the workflows."
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "1. Delete the stack: <code>sam delete</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "sam deploy --guided"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/early-stopping-sf-bedrock/",
+        "templateDir":"early-stopping-sf-bedrock",
+        "templateFile": "template.yaml",
+        "ASL":  "statemachine/main.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Dave Horne",
+          "image": "https://d2908q01vomqb2.cloudfront.net/9e6a55b6b4563e652a23be9d623ca5055c356940/2025/04/07/me.jpeg",
+          "bio": "Dave is a senior Solutions Architect supporting Federal System Integrators at AWS. He is based in Washington, DC, and has 15 years of experience building, modernizing, and integrating systems for public sector customers. Outside of work, Dave enjoys playing with his kids, hiking, and watching Penn State football.",
+          "linkedin": "davidjhorne",
+          "twitter": ""
+        },
+         {
+          "name": "Satya Vedamtam",
+          "image": "",
+          "bio": "Satya is a senior Solutions Architect supporting US Federal customers at AWS. He is passionate about serverless technologies and everyday is an opportunity to solve customer challenges.",
+          "linkedin": "svedamtam",
+          "twitter": ""
+        }
+      ]
+  }
+  
