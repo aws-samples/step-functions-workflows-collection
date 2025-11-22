@@ -110,7 +110,7 @@ def extract_aws_services(text):
     aws_services = [
         "EC2", "S3", "Lambda", "DynamoDB", "RDS", "Aurora", "ECS", "EKS",
         "SQS", "SNS", "API Gateway", "CloudFormation", "CloudFront", "Route 53",
-        "2PC", "IAM", "CloudWatch", "Step Functions", "EventBridge", "Cognito",
+        "VPC", "IAM", "CloudWatch", "Step Functions", "EventBridge", "Cognito",
         "Kinesis", "Glue", "Athena", "Redshift", "EMR", "SageMaker", "Bedrock"
     ]
     

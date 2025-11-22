@@ -9,7 +9,7 @@ Resources:
     Properties:
       CodeUri: functions/
       Handler: awsdocmcpserver.handler
-      Runtime: python3.12
+      Runtime: python3.14
       Timeout: 300
       MemorySize: 512
       Environment:
@@ -101,7 +101,7 @@ Resources:
     Properties:
       CodeUri: functions/
       Handler: workeragent.lambda_handler
-      Runtime: python3.12
+      Runtime: python3.14
       Timeout: 60
       MemorySize: 256
       Environment:
@@ -123,25 +123,19 @@ Resources:
     Properties:
       CodeUri: functions/
       Handler: evaluationfn.lambda_handler
-      Runtime: python3.12
+      Runtime: python3.14
       Timeout: 30
       MemorySize: 128
       Environment:
         Variables:
           CONFIDENCE_THRESHOLD: "0.8"
-      Policies:
-        - Statement:
-            - Effect: Allow
-              Action:
-                - states:StopExecution
-              Resource: "*"
-
+  
   SynthesisFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/
       Handler: synthesis.lambda_handler
-      Runtime: python3.12
+      Runtime: python3.14
       Timeout: 60
       MemorySize: 256
       Environment:

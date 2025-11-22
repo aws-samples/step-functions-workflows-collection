@@ -1,6 +1,6 @@
 # Parallel Execution with Early Stopping pattern with AWS Step Functions and Amazon Bedrock
 
-The **Parallel Agent Early Stopping** pattern uses AWS Step Functions and Amazon Bedrock to run multiple AI agents simultaneously on the same problem, with different approaches, and automatically terminates unnecessary processes once a high-confidence solution is discovered. The workflow coordinates Worker Agents that either retrieve information from the AWS Documentation MCP Server or generate responses using Amazon Bedrock models, while an Evaluation Agent continuously assesses confidence levels and triggers early stopping when a predetermined threshold is met. This design optimizes both performance and cost through parallel exploration, intelligent termination, and resource optimization techniques including agent tiering, token optimization, and Lambda memory tuning.
+The **Parallel Agent Early Stopping** pattern uses AWS Step Functions and Amazon Bedrock to run multiple AI agents simultaneously on the same problem, with different approaches, and automatically terminates unnecessary processes once a high-confidence solution is discovered. The workflow coordinates Worker Agents that either retrieve information from the AWS Documentation MCP Server or generate responses using Amazon Bedrock models, while an Evaluation Agent continuously assesses confidence levels and triggers early stopping when a predetermined threshold is met. This design optimizes both performance and cost through parallel exploration, intelligent termination, and resource optimization techniques including agent tiering, token optimization, and Lambda memory tuning. 
 
 Learn more about this workflow at Step Functions workflows collection: https://serverlessland.com/workflows/early-stopping-sf-bedrock
 
@@ -40,7 +40,7 @@ Important: this application uses various AWS services and there are costs associ
 
 1. A user submits a query (eg. What is CloudFront ?), and AWS Step Functions orchestrates 4 parallel agent workflows simultaneously. Each agent uses a different specialized approach (service-specific, architecture patterns, cost optimization, and general overview).
 
-2. Each agent independently retrieves information from the AWS Documentation MCP Server (Context Provider). If relevant information isn't available, agents fall back to Amazon Bedrock models to generate responses.
+2. Each agent independently retrieves information from the AWS Documentation MCP Server (Context Provider). If relevant information isn't available, agents fall back to Amazon Bedrock models to generate responses. Claude Haiku 3.5 is used in this example for its speed and cost-effectiveness. 
 
 3. As results arrive, an Evaluation Agent assesses each response's confidence level. When any agent produces a result exceeding the confidence threshold (typically 0.95), Step Functions automatically terminates the other executing workflows to optimize resources and costs.
 
@@ -54,21 +54,11 @@ Important: this application uses various AWS services and there are costs associ
 ![image](./resources/WorkerExecutionStatus.png)
 
 ## Testing
-Based on the uploaded document, here are the testing instructions for logging into the console and starting execution of the main workflow:
 
-## Testing Instructions
-
-1. Log in to the AWS Management Console
-   - Navigate to console.aws.amazon.com
-   - Enter your AWS account credentials
-   - Select the region where you deployed the solution (e.g., us-east-1)
-
-2. Access AWS Step Functions Console
-   - From the AWS services menu, search for and select "Step Functions"
+1. Log in to the AWS Step Functions Console
    - In the Step Functions dashboard, locate and click on the "MainStateMachine" that was created during deployment
-   - You should see details about the state machine including its Amazon Resource Name (ARN)
 
-3. Start a New Execution
+2. Start a New Execution
    - Click the "Start execution" button
    - In the input field, enter a test query in JSON format:
      ```json
@@ -77,13 +67,13 @@ Based on the uploaded document, here are the testing instructions for logging in
    - Optionally, provide a name for your execution in the "Name" field
    - Click "Start execution" to begin the workflow
 
-4. Monitor the Execution
+3. Monitor the Execution
    - The console will display a visual representation of your workflow execution
-   - You'll see the workflow spawn multiple parallel agents with different specialized approaches
-   - Watch as some agents complete successfully while others are terminated early
-   - When execution completes, review the output in the "Execution output" tab to see the synthesized result
+   - The main workflow starts execution of 4 worker agents in parallel using a distributed map 
+   - Worker agent execution shows the agent with success, and others as aborted
+   - Review the main workflow's output in the "Execution output" tab to see the synthesized result
 
-5. Verify Results
+4. Verify Results
    - Check that the output includes a "status" field (typically "synthesized")
    - Review the "processing_details" section to confirm early stopping functionality
    - Verify that responses include attribution to AWS Documentation
@@ -95,11 +85,11 @@ Based on the uploaded document, here are the testing instructions for logging in
     ```bash
     aws cloudformation delete-stack --stack-name STACK_NAME
     ```
-1. Confirm the stack has been deleted
+2. Confirm the stack has been deleted
     ```bash
     aws cloudformation list-stacks --query "StackSummaries[?contains(StackName,'STACK_NAME')].StackStatus"
     ```
 ----
-Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+Copyright 2025 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
 SPDX-License-Identifier: MIT-0

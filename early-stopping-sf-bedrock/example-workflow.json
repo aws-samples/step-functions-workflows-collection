@@ -35,10 +35,10 @@
     },
     "gitHub": {
       "template": {
-        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/dynamodb-transfer/",
-        "templateDir":"dynamodb-transfer",
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/early-stopping-sf-bedrock/",
+        "templateDir":"early-stopping-sf-bedrock",
         "templateFile": "template.yaml",
-        "ASL": "statemachine/statemachine.asl.json"
+        "ASL":  "statemachine/main.asl.json"
       },
       "payloads": [
         {
@@ -60,14 +60,14 @@
         {
           "name": "Dave Horne",
           "image": "https://d2908q01vomqb2.cloudfront.net/9e6a55b6b4563e652a23be9d623ca5055c356940/2025/04/07/me.jpeg",
-          "bio": "Dave is a senior solutions architect supporting Federal System Integrators at AWS. He is based in Washington, DC, and has 15 years of experience building, modernizing, and integrating systems for public sector customers. Outside of work, Dave enjoys playing with his kids, hiking, and watching Penn State football.",
+          "bio": "Dave is a senior Solutions Architect supporting Federal System Integrators at AWS. He is based in Washington, DC, and has 15 years of experience building, modernizing, and integrating systems for public sector customers. Outside of work, Dave enjoys playing with his kids, hiking, and watching Penn State football.",
           "linkedin": "davidjhorne",
           "twitter": ""
         },
          {
           "name": "Satya Vedamtam",
           "image": "",
-          "bio": "Satya is a senior solutions architect supporting US Federal customers at AWS. He is passionate about serverless technologies and everyday is an opportunity to solve customer challenges.",
+          "bio": "Satya is a senior Solutions Architect supporting US Federal customers at AWS. He is passionate about serverless technologies and everyday is an opportunity to solve customer challenges.",
           "linkedin": "svedamtam",
           "twitter": ""
         }
