@@ -45,6 +45,22 @@ const processMP4 = async (event) => {
 	const start =  event.start
 	const end =  event.end
 
+	// Input validation to prevent command injection
+	if (!originalMP4 || typeof originalMP4 !== 'string') {
+		throw new Error('Invalid Key parameter')
+	}
+	
+	// Validate start and end parameters - must be positive numbers
+	const startNum = parseFloat(start)
+	const endNum = parseFloat(end)
+	
+	if (isNaN(startNum) || isNaN(endNum) || startNum < 0 || endNum < 0 || startNum >= endNum) {
+		throw new Error('Invalid start or end time parameters')
+	}
+	
+	// Sanitize the key to prevent path traversal
+	const sanitizedKey = originalMP4.replace(/[^a-zA-Z0-9._-]/g, '_')
+	
 	// Get signed URL for source object
 	const params = {
 		Bucket: process.env.SourceBucketName, 
@@ -52,21 +68,21 @@ const processMP4 = async (event) => {
 		Expires
 	}
 	const url = s3.getSignedUrl('getObject', params)
-	console.log('processMP4: ', { url, originalMP4, start, end })
+	console.log('processMP4: ', { url, originalMP4: sanitizedKey, start: startNum, end: endNum })
 
 	// Extract frames from MP4 (1 per second)
 	console.log('Create GIF')
-	const baseFilename = params.Key.split('.')[0]
+	const baseFilename = sanitizedKey.split('.')[0]
 	
-	// Create GIF
-	const gifName = `${baseFilename}-${start}.gif`
-	// Generates gif in local tmp
-	await execPromise(`${ffmpegPath} -loglevel error -ss ${start} -to ${end} -y -i "${url}" -vf "fps=10,scale=240:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" -loop 0 ${ffTmp}/${gifName}`)
+	// Create GIF - use validated numeric parameters
+	const gifName = `${baseFilename}-${startNum}.gif`
+	// Generates gif in local tmp - parameters are now validated numbers
+	await execPromise(`${ffmpegPath} -loglevel error -ss ${startNum} -to ${endNum} -y -i "${url}" -vf "fps=10,scale=240:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" -loop 0 ${ffTmp}/${gifName}`)
 	// Upload gif to local tmp
 	// Generate frames
 	if (process.env.GenerateFrames === 'true') {	
 		console.log('Capturing frames')
-		await execPromise(`${ffmpegPath} -loglevel error -ss ${start} -to ${end} -i "${url}" -vf fps=1 ${ffTmp}/${baseFilename}-${start}-frame-%d.jpg`)
+		await execPromise(`${ffmpegPath} -loglevel error -ss ${startNum} -to ${endNum} -i "${url}" -vf fps=1 ${ffTmp}/${baseFilename}-${startNum}-frame-%d.jpg`)
 	}
 
 	// Upload all generated files
