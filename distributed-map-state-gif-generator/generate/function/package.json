@@ -14,6 +14,6 @@
   "devDependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.0.20",
     "@ffprobe-installer/ffprobe": "^1.1.0",
-    "aws-sdk": "latest"
+    "aws-sdk": "^2.1693.0"
   }
 }
