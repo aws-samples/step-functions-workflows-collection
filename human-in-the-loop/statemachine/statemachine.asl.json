@@ -54,10 +54,12 @@
     "Handle failure": {
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
-      "OutputPath": "$.Payload",
       "Parameters": {
-        "Payload.$": "$",
-        "FunctionName": "${ProcessingLambda}"
+        "FunctionName": "${ProcessingLambda}",
+        "Payload": {
+          "input.$": "$",
+          "result": "failure"
+        }
       },
       "Retry": [
         {
@@ -76,10 +78,12 @@
     "Handle rejection": {
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
-      "OutputPath": "$.Payload",
       "Parameters": {
-        "Payload.$": "$",
-        "FunctionName": "${ProcessingLambda}"
+        "FunctionName": "${ProcessingLambda}",
+        "Payload": {
+          "input.$": "$",
+          "result": "rejected"
+        }
       },
       "Retry": [
         {
@@ -98,10 +102,12 @@
     "Handle approval": {
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
-      "OutputPath": "$.Payload",
       "Parameters": {
-        "Payload.$": "$",
-        "FunctionName": "${ProcessingLambda}"
+        "FunctionName": "${ProcessingLambda}",
+        "Payload": {
+          "input.$": "$",
+          "result": "approved"
+        }
       },
       "Retry": [
         {
