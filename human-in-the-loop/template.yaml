@@ -1,19 +1,16 @@
-
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: Step Functions Workflow Pattern - Human in the loop
 
 Parameters:
-  # During deployment, this paramter will prompt for the email address of a reviewer.
   ModeratorEmailAddress:
     Type: String
     Default: moderator@example.com
     Description: Enter the email address that will receive review notifications.
 
-# Comment each resource section to explain usage.
 Resources:
   StateMachine:
-    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Type: AWS::Serverless::StateMachine
     Properties:
       Name: human-in-the-loop
       DefinitionUri: statemachine/statemachine.asl.json
@@ -37,12 +34,12 @@ Resources:
   # AWS Lambda function processes the review result.
   # Consider using different functions when your logic gets more complex.
   ProcessingLambda:
-    Type: AWS::Serverless::Function 
+    Type: AWS::Serverless::Function
     Properties:
       FunctionName: ProcessingLambda
       CodeUri: lambda/
       Handler: app.handler
-      Runtime: nodejs16.x
+      Runtime: nodejs24.x
       Timeout: 3
       Policies:
         - AWSLambdaBasicExecutionRole
