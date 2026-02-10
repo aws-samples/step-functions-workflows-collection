@@ -1,0 +1,206 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: SAM Template for Worker Job Processing
+
+Resources:
+  # AWS MCP Server Lambda Function (First Deployment)
+  AWSMCPServerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/
+      Handler: awsdocmcpserver.handler
+      Runtime: python3.14
+      Timeout: 300
+      MemorySize: 512
+      Environment:
+        Variables:
+          FASTMCP_LOG_LEVEL: ERROR
+          AWS_DOCUMENTATION_PARTITION: AWS
+
+  # IAM Role for invoking MCP Server Lambda
+  MCPServerInvokeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-MCPServerInvokeRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+                - states.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: InvokeMCPServerPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: !GetAtt AWSMCPServerFunction.Arn
+
+  # SQS Queue
+  JobQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: JobQueue
+      VisibilityTimeout: 180 # 3 minutes, adjust as needed
+
+  # EventBridge Pipe
+  SQSToStateMachinePipe:
+    Type: AWS::Pipes::Pipe
+    DependsOn:
+      - SQSToStateMachinePipeRole
+      - MainStateMachine
+    Properties:
+      Name: pipe-sqs-to-sfn
+      RoleArn: !GetAtt SQSToStateMachinePipeRole.Arn
+      Source: !GetAtt JobQueue.Arn
+      Target: !Ref MainStateMachine
+      SourceParameters:
+        SqsQueueParameters:
+          BatchSize: 1
+      TargetParameters:
+        StepFunctionStateMachineParameters:
+          InvocationType: FIRE_AND_FORGET
+
+  # IAM Role for EventBridge Pipe
+  SQSToStateMachinePipeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: pipes.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: SQSAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                Resource: !GetAtt JobQueue.Arn
+        - PolicyName: StepFunctionAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: states:StartExecution
+                Resource: !Sub arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${AWS::StackName}-MainStateMachine
+
+  WorkerAgentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/
+      Handler: workeragent.lambda_handler
+      Runtime: python3.14
+      Timeout: 60
+      MemorySize: 256
+      Environment:
+        Variables:
+          MODEL_ID: us.anthropic.claude-3-5-haiku-20241022-v1:0
+          MCP_FUNCTION_NAME: !Ref AWSMCPServerFunction
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+                - lambda:InvokeFunction
+              Resource: 
+                - "arn:aws:bedrock:*::foundation-model/us.anthropic.claude-3-5-haiku-20241022-v1:0"
+                - !GetAtt AWSMCPServerFunction.Arn
+
+  EvaluationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/
+      Handler: evaluationfn.lambda_handler
+      Runtime: python3.14
+      Timeout: 30
+      MemorySize: 128
+      Environment:
+        Variables:
+          CONFIDENCE_THRESHOLD: "0.8"
+  
+  SynthesisFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/
+      Handler: synthesis.lambda_handler
+      Runtime: python3.14
+      Timeout: 60
+      MemorySize: 256
+      Environment:
+        Variables:
+          MODEL_ID: us.anthropic.claude-3-5-haiku-20241022-v1:0
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource: "arn:aws:bedrock:*::foundation-model/us.anthropic.claude-3-5-haiku-20241022-v1:0"
+
+  # Step Functions
+  MainStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionSubstitutions:
+        WorkerStateMachine: !GetAtt WorkerStateMachine.Arn
+        SynthesisFunction: !GetAtt SynthesisFunction.Arn
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: '*'
+        - Statement:
+            - Effect: Allow
+              Action:
+                - states:StartExecution
+                - states:StopExecution
+                - states:DescribeExecution
+              Resource:
+                - !Sub arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:WorkerStateMachine-*
+                - !Sub arn:aws:states:${AWS::Region}:${AWS::AccountId}:execution:WorkerStateMachine-*
+      DefinitionUri: statemachine/main.asl.json
+
+  WorkerStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionSubstitutions:
+        WorkerAgentFunction: !GetAtt WorkerAgentFunction.Arn
+        EvaluationFunction: !GetAtt EvaluationFunction.Arn
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: '*'
+        - Statement:
+            - Effect: Allow
+              Action:
+                - states:SendTaskSuccess
+                - states:SendTaskFailure
+                - states:SendTaskHeartbeat
+              Resource: '*'
+      DefinitionUri: statemachine/worker.asl.json
+
+Outputs:
+  AWSMCPServerFunctionArn:
+    Description: ARN of the AWS MCP Server Lambda Function
+    Value: !GetAtt AWSMCPServerFunction.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-MCPServerArn
+  MCPServerInvokeRoleArn:
+    Description: ARN of the role to invoke MCP Server Lambda
+    Value: !GetAtt MCPServerInvokeRole.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-MCPServerInvokeRoleArn
+  JobQueueUrl:
+    Description: URL of the Job Queue
+    Value: !Ref JobQueue
+  MainStateMachineArn:
+    Description: ARN of the Main State Machine
+    Value: !Ref MainStateMachine

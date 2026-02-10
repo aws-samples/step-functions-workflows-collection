@@ -1,0 +1,93 @@
+{
+    "Comment": "Worker Step Function that generates random numbers between 1-10 and reports back to main state machine",
+    "StartAt": "Initialize Workers",
+    "States": {
+        "Initialize Workers": {
+            "Comment": "Map state to handle multiple workers in parallel",
+            "Type": "Map",
+            "ItemsPath": "$.workers",
+            "Parameters": {
+                "taskToken.$": "$.taskToken",
+                "executionName.$": "$.executionName",
+                "query.$": "$.query",
+                "workerId.$": "$$.Map.Item.Value.workerId",
+                "approach.$": "$$.Map.Item.Value.approach"
+            },
+            "Iterator": {
+                "StartAt": "Call Worker Agent",
+                "States": {
+                    "Call Worker Agent": {
+                        "Comment": "Invokes WorkerAgent to query AWS MCP server",
+                        "Type": "Task",
+                        "Resource": "arn:aws:states:::lambda:invoke",
+                        "Parameters": {
+                            "Payload": {
+                                "query.$": "$.query",
+                                "agent_id.$": "$.workerId",
+                                "approach.$": "$.approach"
+                            },
+                            "FunctionName": "${WorkerAgentFunction}"
+                        },
+                        "ResultPath": "$.agentResult",
+                        "Catch": [
+                            {
+                                "ErrorEquals": ["States.ALL"],
+                                "Next": "Worker Error"
+                            }
+                        ],
+                        "Next": "Evaluate Result"
+                    },
+                    "Worker Error": {
+                        "Comment": "Handles worker agent errors and ends workflow",
+                        "Type": "Fail",
+                        "Cause": "Worker agent execution failed",
+                        "Error": "WorkerAgentError"
+                    },
+                    "Evaluate Result": {
+                        "Comment": "Evaluates if the agent result meets confidence threshold",
+                        "Type": "Task",
+                        "Resource": "arn:aws:states:::lambda:invoke",
+                        "Parameters": {
+                            "Payload.$": "$.agentResult.Payload",
+                            "FunctionName": "${EvaluationFunction}"
+                        },
+                        "ResultPath": "$.evaluation",
+                        "Next": "Check Confidence Threshold"
+                    },
+                    "Check Confidence Threshold": {
+                        "Comment": "Checks if confidence threshold is met",
+                        "Type": "Choice",
+                        "Choices": [
+                            {
+                                "Variable": "$.evaluation.Payload.threshold_met",
+                                "BooleanEquals": true,
+                                "Next": "Report Success"
+                            }
+                        ],
+                        "Default": "Worker Error"
+                    },
+                    "Report Success": {
+                        "Comment": "Reports back to main state machine with generated number using task token",
+                        "Type": "Task",
+                        "Resource": "arn:aws:states:::aws-sdk:sfn:sendTaskSuccess",
+                        "Parameters": {
+                            "TaskToken.$": "$.taskToken",
+                            "Output": {
+                                "result.$": "$.evaluation.Payload.result",
+                                "confidence_score.$": "$.evaluation.Payload.confidence_score",
+                                "agent_id.$": "$.evaluation.Payload.agent_id",
+                                "workerId.$": "$.workerId",
+                                "executionArn.$": "$$.Execution.Id",
+                                "executionName.$": "$.executionName",
+                                "query.$": "$.query",
+                                "approach.$": "$.approach"
+                            }
+                        },
+                        "End": true
+                    }
+                }
+            },
+            "End": true
+        }
+    }
+}

@@ -1,0 +1,158 @@
+{
+    "Comment": "Main Step Function for Job Processing - Coordinates multiple workers to generate random numbers until reaching a target sum",
+    "StartAt": "ParseInput",
+    "States": {
+        "ParseInput": {
+            "Comment": "Handles both SQS message format and direct JSON input",
+            "Type": "Choice",
+            "Choices": [
+                {
+                    "Variable": "$.query",
+                    "IsPresent": true,
+                    "Next": "Parse Direct Input"
+                }
+            ],
+            "Default": "Parse SQS Input"
+        },
+        "Parse SQS Input": {
+            "Comment": "Extracts and parses JSON from SQS message body",
+            "Type": "Pass",
+            "InputPath": "$[0].body",
+            "Parameters": {
+                "parsed": {
+                    "input.$": "States.StringToJson($)"
+                }
+            },
+            "Next": "Initialize"
+        },
+        "Parse Direct Input": {
+            "Comment": "Passes through direct JSON input",
+            "Type": "Pass",
+            "Parameters": {
+                "parsed": {
+                    "input.$": "$"
+                }
+            },
+            "Next": "Initialize"
+        },
+        "Initialize": {
+            "Comment": "Sets up initial state with query and 4 workers using different approaches",
+            "Type": "Pass",
+            "Parameters": {
+                "query.$": "$.parsed.input.query",
+                "approaches": [
+                    {
+                        "workerId": 1,
+                        "approach": "general"
+                    },
+                    {
+                        "workerId": 2,
+                        "approach": "service_specific"
+                    },
+                    {
+                        "workerId": 3,
+                        "approach": "architecture_patterns"
+                    },
+                    {
+                        "workerId": 4,
+                        "approach": "cost_optimization"
+                    }
+                ]
+            },
+            "Next": "Launch Workers"
+        },
+        "Launch Workers": {
+            "Comment": "Starts worker state machine with task token. First worker to complete advances the workflow.",
+            "Type": "Task",
+            "Resource": "arn:aws:states:::states:startExecution.waitForTaskToken",
+            "Parameters": {
+                "StateMachineArn": "${WorkerStateMachine}",
+                "Input": {
+                    "workers.$": "$.approaches",
+                    "query.$": "$.query",
+                    "executionName.$": "$$.Execution.Name",
+                    "taskToken.$": "$$.Task.Token"
+                },
+                "Name.$": "$$.Execution.Name"
+            },
+            "TimeoutSeconds": 600,
+            "Catch": [
+                {
+                    "ErrorEquals": ["States.Timeout", "States.TaskFailed"],
+                    "Next": "All Workers Failed"
+                }
+            ],
+            "ResultPath": "$.workerResult",
+            "Next": "Clean Up Workers"
+        },
+        "All Workers Failed": {
+            "Comment": "Handles case when all workers fail or timeout",
+            "Type": "Fail",
+            "Cause": "All workers failed or timed out",
+            "Error": "AllWorkersFailed"
+        },
+        "Clean Up Workers": {
+            "Comment": "Stops the worker state machine execution after first result",
+            "Type": "Task",
+            "Resource": "arn:aws:states:::aws-sdk:sfn:stopExecution",
+            "Parameters": {
+                "ExecutionArn.$": "$.workerResult.executionArn",
+                "Cause": "Successfully completed - First worker returned valid result",
+                "Error": "SUCCESS"
+            },
+            "ResultPath": null,
+            "Next": "Update State"
+        },
+        "Update State": {
+            "Comment": "Extracts successful worker result",
+            "Type": "Pass",
+            "Parameters": {
+                "query.$": "$.query",
+                "approaches.$": "$.approaches",
+                "result.$": "$.workerResult.result",
+                "confidence_score.$": "$.workerResult.confidence_score",
+                "agent_id.$": "$.workerResult.agent_id"
+            },
+            "Next": "Generate Synthesis"
+        },
+        "Generate Synthesis": {
+            "Comment": "Generates final synthesis output with early termination details",
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+                "FunctionName": "${SynthesisFunction}",
+                "Payload": {
+                    "original_query.$": "$.query",
+                    "agent_results": [
+                        {
+                            "result.$": "$.result",
+                            "confidence_score.$": "$.confidence_score",
+                            "agent_id.$": "$.agent_id"
+                        }
+                    ]
+                }
+            },
+            "ResultPath": "$.synthesis",
+            "Next": "Format Final Output"
+        },
+        "Format Final Output": {
+            "Comment": "Formats the final JSON output with all required fields",
+            "Type": "Pass",
+            "Parameters": {
+                "early_termination": true,
+                "original_query.$": "$.query",
+                "winning_approach.$": "$.approaches[?(@.workerId == $.agent_id)].approach",
+                "confidence_score.$": "$.confidence_score",
+                "result.$": "$.result",
+                "synthesized_result.$": "$.synthesis.Payload.synthesized_result",
+                "agent_id.$": "$.agent_id"
+            },
+            "Next": "Success"
+        },
+        "Success": {
+            "Comment": "Final state - returns text obtained AWS documentation server",
+            "Type": "Succeed",
+            "OutputPath": "$"
+        }
+    }
+}
