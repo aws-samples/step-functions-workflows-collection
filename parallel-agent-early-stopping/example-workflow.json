@@ -35,8 +35,8 @@
     },
     "gitHub": {
       "template": {
-        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/early-stopping-sf-bedrock/",
-        "templateDir":"early-stopping-sf-bedrock",
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/parallel-agent-early-stopping/",
+        "templateDir":"parallel-agent-early-stopping",
         "templateFile": "template.yaml",
         "ASL":  "statemachine/main.asl.json"
       },
