@@ -8,7 +8,7 @@
     "diagram":"/resources/MainWorkflow.png", 
     "videoId": "",
     "level": "200",
-    "framework": "SAM",
+    "framework": "AWS SAM",
     "services": ["bedrock","stepfunctions", "eventbridge","lambda"],
     "introBox": {
       "headline": "How it works",
