@@ -1,0 +1,49 @@
+{
+  "Comment": "Orchestrate multiple AgentCore agents in parallel and aggregate responses with Bedrock",
+  "StartAt": "InvokeAgents",
+  "States": {
+    "InvokeAgents": {
+      "Type": "Map",
+      "ItemsPath": "$.agentRuntimeArns",
+      "Parameters": {
+        "agentRuntimeArn.$": "$$.Map.Item.Value",
+        "prompt.$": "$.prompt"
+      },
+      "Iterator": {
+        "StartAt": "CallAgent",
+        "States": {
+          "CallAgent": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+              "FunctionName": "${InvokeAgentFunctionArn}",
+              "Payload.$": "$"
+            },
+            "OutputPath": "$.Payload",
+            "Retry": [
+              {
+                "ErrorEquals": ["States.TaskFailed"],
+                "IntervalSeconds": 15,
+                "MaxAttempts": 2,
+                "BackoffRate": 2
+              }
+            ],
+            "End": true
+          }
+        }
+      },
+      "ResultPath": "$.agentResults",
+      "Next": "AggregateResults"
+    },
+    "AggregateResults": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${AggregateFunctionArn}",
+        "Payload.$": "$"
+      },
+      "OutputPath": "$.Payload",
+      "End": true
+    }
+  }
+}
