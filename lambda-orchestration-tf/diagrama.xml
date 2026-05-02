@@ -1,0 +1,79 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.6 Chrome/144.0.7559.236 Electron/40.8.4 Safari/537.36" version="29.6.6">
+  <diagram name="Serverless Workflow" id="diagram1">
+    <mxGraphModel dx="1436" dy="1564" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="10" parent="1" style="ellipse;html=1;whiteSpace=wrap;fillColor=#000000;strokeColor=#b85450;align=center;verticalAlign=middle;" value="End" vertex="1">
+          <mxGeometry height="40" width="60" x="580" y="820" as="geometry" />
+        </mxCell>
+        <mxCell id="gzcGnQg75xfjue9vkqFz-29" edge="1" parent="1" source="gzcGnQg75xfjue9vkqFz-19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="gzcGnQg75xfjue9vkqFz-20">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gzcGnQg75xfjue9vkqFz-19" parent="1" style="outlineConnect=0;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;shape=mxgraph.aws3.lambda_function;fillColor=#F58534;gradientColor=none;" value="&lt;span style=&quot;text-wrap-mode: wrap;&quot;&gt;Check&lt;/span&gt;&lt;br style=&quot;text-wrap-mode: wrap;&quot;&gt;&lt;span style=&quot;text-wrap-mode: wrap;&quot;&gt;Stock Price&lt;/span&gt;" vertex="1">
+          <mxGeometry height="72" width="69" x="575.5" y="-60" as="geometry" />
+        </mxCell>
+        <mxCell id="gzcGnQg75xfjue9vkqFz-30" edge="1" parent="1" source="gzcGnQg75xfjue9vkqFz-20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="gzcGnQg75xfjue9vkqFz-21">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gzcGnQg75xfjue9vkqFz-20" parent="1" style="outlineConnect=0;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;shape=mxgraph.aws3.lambda_function;fillColor=#F58534;gradientColor=none;" value="&lt;span style=&quot;text-wrap-mode: wrap;&quot;&gt;Generate&lt;/span&gt;&lt;br style=&quot;text-wrap-mode: wrap;&quot;&gt;&lt;span style=&quot;text-wrap-mode: wrap;&quot;&gt;Buy/Sell&lt;/span&gt;&lt;br style=&quot;text-wrap-mode: wrap;&quot;&gt;&lt;span style=&quot;text-wrap-mode: wrap;&quot;&gt;recommendation&lt;/span&gt;" vertex="1">
+          <mxGeometry height="72" width="69" x="575.5" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="gzcGnQg75xfjue9vkqFz-21" parent="1" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;strokeColor=#ffffff;fillColor=#232F3E;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;whiteSpace=wrap;fontSize=10;fontStyle=1;spacing=3;shape=mxgraph.aws4.productIcon;prIcon=mxgraph.aws4.sqs;labelPosition=center;" value="&lt;span style=&quot;color: rgb(255, 255, 255); font-size: 12px; font-weight: 400;&quot;&gt;Request&lt;/span&gt;&lt;br style=&quot;color: rgb(255, 255, 255); font-size: 12px; font-weight: 400;&quot;&gt;&lt;span style=&quot;color: rgb(255, 255, 255); font-size: 12px; font-weight: 400;&quot;&gt;Human Approval&lt;/span&gt;" vertex="1">
+          <mxGeometry height="100" width="80" x="570" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="gzcGnQg75xfjue9vkqFz-31" edge="1" parent="1" source="gzcGnQg75xfjue9vkqFz-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="gzcGnQg75xfjue9vkqFz-23">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gzcGnQg75xfjue9vkqFz-34" connectable="0" parent="gzcGnQg75xfjue9vkqFz-31" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="$.recommended_type == &#39;sell&#39;" vertex="1">
+          <mxGeometry relative="1" x="-0.3502" y="-2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gzcGnQg75xfjue9vkqFz-22" parent="1" style="sketch=0;points=[[0,0,0],[0.25,0,0],[0.5,0,0],[0.75,0,0],[1,0,0],[0,1,0],[0.25,1,0],[0.5,1,0],[0.75,1,0],[1,1,0],[0,0.25,0],[0,0.5,0],[0,0.75,0],[1,0.25,0],[1,0.5,0],[1,0.75,0]];outlineConnect=0;fontColor=#232F3E;fillColor=#E7157B;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.step_functions;" value="&lt;span style=&quot;color: rgb(255, 255, 255); text-wrap-mode: wrap;&quot;&gt;Buy or Sell?&lt;/span&gt;" vertex="1">
+          <mxGeometry height="78" width="78" x="566.5" y="420" as="geometry" />
+        </mxCell>
+        <mxCell id="gzcGnQg75xfjue9vkqFz-35" edge="1" parent="1" source="gzcGnQg75xfjue9vkqFz-23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="gzcGnQg75xfjue9vkqFz-25">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="580" y="614" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gzcGnQg75xfjue9vkqFz-23" parent="1" style="outlineConnect=0;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;shape=mxgraph.aws3.lambda_function;fillColor=#F58534;gradientColor=none;" value="&lt;span style=&quot;text-wrap-mode: wrap;&quot;&gt;Sell Stock&lt;/span&gt;" vertex="1">
+          <mxGeometry height="72" width="69" x="460" y="578" as="geometry" />
+        </mxCell>
+        <mxCell id="gzcGnQg75xfjue9vkqFz-36" edge="1" parent="1" source="gzcGnQg75xfjue9vkqFz-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="gzcGnQg75xfjue9vkqFz-25">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="640" y="614" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gzcGnQg75xfjue9vkqFz-24" parent="1" style="outlineConnect=0;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;shape=mxgraph.aws3.lambda_function;fillColor=#F58534;gradientColor=none;" value="&lt;span style=&quot;text-wrap-mode: wrap;&quot;&gt;Buy Stock&lt;/span&gt;" vertex="1">
+          <mxGeometry height="72" width="69" x="700" y="578" as="geometry" />
+        </mxCell>
+        <mxCell id="gzcGnQg75xfjue9vkqFz-25" parent="1" style="sketch=0;outlineConnect=0;fontColor=light-dark(#232F3E, #000000);gradientColor=none;strokeColor=#ffffff;fillColor=#232F3E;dashed=0;verticalLabelPosition=middle;verticalAlign=bottom;align=center;html=1;whiteSpace=wrap;fontSize=10;fontStyle=1;spacing=3;shape=mxgraph.aws4.productIcon;prIcon=mxgraph.aws4.sns;" value="&lt;span style=&quot;font-size: 12px; font-weight: 400;&quot;&gt;Report Result&lt;/span&gt;" vertex="1">
+          <mxGeometry height="100" width="80" x="570" y="690" as="geometry" />
+        </mxCell>
+        <mxCell id="gzcGnQg75xfjue9vkqFz-26" parent="1" style="ellipse;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#005700;align=center;verticalAlign=middle;fontColor=light-dark(#ffffff, #000000);" value="Start" vertex="1">
+          <mxGeometry height="40" width="60" x="580" y="-150" as="geometry" />
+        </mxCell>
+        <mxCell id="gzcGnQg75xfjue9vkqFz-28" edge="1" parent="1" source="gzcGnQg75xfjue9vkqFz-26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" target="gzcGnQg75xfjue9vkqFz-19">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gzcGnQg75xfjue9vkqFz-32" edge="1" parent="1" source="gzcGnQg75xfjue9vkqFz-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" target="gzcGnQg75xfjue9vkqFz-24">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gzcGnQg75xfjue9vkqFz-33" connectable="0" parent="gzcGnQg75xfjue9vkqFz-32" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="$.recommended_type == &#39;buy&#39;" vertex="1">
+          <mxGeometry relative="1" x="-0.1354" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gzcGnQg75xfjue9vkqFz-38" edge="1" parent="1" source="gzcGnQg75xfjue9vkqFz-25" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.537;entryY=0.144;entryDx=0;entryDy=0;entryPerimeter=0;" target="10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
