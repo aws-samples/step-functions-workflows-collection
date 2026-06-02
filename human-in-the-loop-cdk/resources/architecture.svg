@@ -1,0 +1,177 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1100 720" font-family="'Segoe UI', 'Inter', -apple-system, Arial, sans-serif">
+  <!-- Background with subtle gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f8fafc"/>
+      <stop offset="100%" style="stop-color:#f1f5f9"/>
+    </linearGradient>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+  <rect width="1100" height="720" fill="url(#bgGradient)"/>
+
+  <!-- Title -->
+  <text x="550" y="35" text-anchor="middle" font-size="20" font-weight="600" fill="#1a202c" letter-spacing="0.3">Human in the Loop - One-Click Email Approval Workflow</text>
+
+  <!-- Step 1: User -->
+  <g transform="translate(80, 80)">
+    <circle cx="25" cy="12" r="12" fill="#545b64"/>
+    <path d="M5 45 Q25 30 45 45 L45 55 L5 55 Z" fill="#545b64"/>
+    <text x="25" y="72" text-anchor="middle" font-size="11" font-weight="bold" fill="#232f3e">User</text>
+  </g>
+
+  <!-- Arrow: User to Step Functions -->
+  <line x1="130" y1="105" x2="190" y2="105" stroke="#545b64" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="160" y="95" text-anchor="middle" font-size="9" fill="#545b64">Start Execution</text>
+
+  <!-- Step Functions State Machine Box -->
+  <rect x="190" y="60" width="670" height="560" rx="8" fill="none" stroke="#E7157B" stroke-width="2" stroke-dasharray="8,4"/>
+  <image href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNjRweCIgaGVpZ2h0PSI2NHB4IiB2aWV3Qm94PSIwIDAgNjQgNjQiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+SWNvbi1BcmNoaXRlY3R1cmUvNDgvQXJjaF9BV1MtU3RlcC1GdW5jdGlvbnNfNDg8L3RpdGxlPgogICAgPGcgaWQ9Ikljb24tQXJjaGl0ZWN0dXJlLzQ4L0FyY2hfQVdTLVN0ZXAtRnVuY3Rpb25zXzQ4IiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMSIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj4KICAgICAgICA8ZyBpZD0iSWNvbi1BcmNoaXRlY3R1cmUtQkcvNDgvQXBwbGljYXRpb24tSW50ZWdyYXRpb24iIGZpbGw9IiNFNzE1N0IiPgogICAgICAgICAgICA8cmVjdCBpZD0iUmVjdGFuZ2xlIiB4PSIwIiB5PSIwIiB3aWR0aD0iNjQiIGhlaWdodD0iNjQiPjwvcmVjdD4KICAgICAgICA8L2c+CiAgICAgICAgPHBhdGggZD0iTTM3LDM0IEw1MiwzNCBMNTIsMzAgTDM3LDMwIEwzNywzNCBaIE01MywyOCBMMzYsMjggQzM1LjQ0NywyOCAzNSwyOC40NDggMzUsMjkgTDM1LDM1IEMzNSwzNS41NTIgMzUuNDQ3LDM2IDM2LDM2IEw1MywzNiBDNTMuNTUzLDM2IDU0LDM1LjU1MiA1NCwzNSBMNTQsMjkgQzU0LDI4LjQ0OCA1My41NTMsMjggNTMsMjggTDUzLDI4IFogTTM0LjUsNDkuNSBDMzQuNSw1MC44NzggMzMuMzc5LDUyIDMyLDUyIEMzMC42MjEsNTIgMjkuNSw1MC44NzggMjkuNSw0OS41IEMyOS41LDQ4LjEyMiAzMC42MjEsNDcgMzIsNDcgQzMzLjM3OSw0NyAzNC41LDQ4LjEyMiAzNC41LDQ5LjUgTDM0LjUsNDkuNSBaIE0xMiwzOCBMMTIsMzUgTDI1LDM1IEwyNSwzOCBMMjAsMzggTDE4LDM4IEwxMiwzOCBaIE0xMiwyOSBMMTIsMjYgTDE4LDI2IEwyMCwyNiBMMjUsMjYgTDI1LDI5IEwxMiwyOSBaIE0yOS41LDE0LjUgQzI5LjUsMTMuMTIyIDMwLjYyMSwxMiAzMiwxMiBDMzMuMzc5LDEyIDM0LjUsMTMuMTIyIDM0LjUsMTQuNSBDMzQuNSwxNS44NzggMzMuMzc5LDE3IDMyLDE3IEMzMC42MjEsMTcgMjkuNSwxNS44NzggMjkuNSwxNC41IEwyOS41LDE0LjUgWiBNNDQsNDIgTDIwLDQyIEwyMCw0MCBMMjYsNDAgQzI2LjU1Myw0MCAyNywzOS41NTIgMjcsMzkgTDI3LDM0IEMyNywzMy40NDggMjYuNTUzLDMzIDI2LDMzIEwyMCwzMyBMMjAsMzEgTDI2LDMxIEMyNi41NTMsMzEgMjcsMzAuNTUyIDI3LDMwIEwyNywyNSBDMjcsMjQuNDQ4IDI2LjU1MywyNCAyNiwyNCBMMjAsMjQgTDIwLDIyIEw0NCwyMiBMNDQsMjYgTDQ2LDI2IEw0NiwyMSBDNDYsMjAuNDQ4IDQ1LjU1MywyMCA0NSwyMCBMMzMsMjAgTDMzLDE4Ljg3OSBDMzUsMTguNDIyIDM2LjUsMTYuNjM3IDM2LjUsMTQuNSBDMzYuNSwxMi4wMTkgMzQuNDgxLDEwIDMyLDEwIEMyOS41MTksMTAgMjcuNSwxMi4wMTkgMjcuNSwxNC41IEMyNy41LDE2LjYzNyAyOSwxOC40MjIgMzEsMTguODc5IEwzMSwyMCBMMTksMjAgQzE4LjQ0NywyMCAxOCwyMC40NDggMTgsMjEgTDE4LDI0IEwxMSwyNCBDMTAuNDQ3LDI0IDEwLDI0LjQ0OCAxMCwyNSBMMTAsMzAgQzEwLDMwLjU1MiAxMC40NDcsMzEgMTEsMzEgTDE4LDMxIEwxOCwzMyBMMTEsMzMgQzEwLjQ0NywzMyAxMCwzMy40NDggMTAsMzQgTDEwLDM5IEMxMCwzOS41NTIgMTAuNDQ3LDQwIDExLDQwIEwxOCw0MCBMMTgsNDMgQzE4LDQzLjU1MiAxOC40NDcsNDQgMTksNDQgTDMxLDQ0IEwzMSw0NS4xMjEgQzI5LDQ1LjU3OCAyNy41LDQ3LjM2MyAyNy41LDQ5LjUgQzI3LjUsNTEuOTgxIDI5LjUxOSw1NCAzMiw1NCBDMzQuNDgxLDU0IDM2LjUsNTEuOTgxIDM2LjUsNDkuNSBDMzYuNSw0Ny4zNjMgMzUsNDUuNTc4IDMzLDQ1LjEyMSBMMzMsNDQgTDQ1LDQ0IEM0NS41NTMsNDQgNDYsNDMuNTUyIDQ2LDQzIEw0NiwzOCBMNDQsMzggTDQ0LDQyIFoiIGlkPSJBV1NfU3RlcF9GdW5jdGlvbnNfSWNvbl80OF9TcXVpZCIgZmlsbD0iI0ZGRkZGRiI+PC9wYXRoPgogICAgPC9nPgo8L3N2Zz4=" x="225" y="63" width="24" height="24"/>
+  <text x="260" y="80" font-size="12" font-weight="bold" fill="#E7157B">AWS Step Functions State Machine</text>
+
+  <!-- State 1: Notify Approver (Lambda waitForTaskToken) -->
+  <rect x="370" y="100" width="260" height="50" rx="6" fill="#ffffff" stroke="#ed7100" stroke-width="2" filter="url(#shadow)"/>
+  <image href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNjRweCIgaGVpZ2h0PSI2NHB4IiB2aWV3Qm94PSIwIDAgNjQgNjQiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+SWNvbi1BcmNoaXRlY3R1cmUvNDgvQXJjaF9BV1MtTGFtYmRhXzQ4PC90aXRsZT4KICAgIDxnIGlkPSJJY29uLUFyY2hpdGVjdHVyZS80OC9BcmNoX0FXUy1MYW1iZGFfNDgiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgICAgIDxnIGlkPSJJY29uLUFyY2hpdGVjdHVyZS1CRy80OC9Db21wdXRlIiBmaWxsPSIjRUQ3MTAwIj4KICAgICAgICAgICAgPHJlY3QgaWQ9IlJlY3RhbmdsZSIgeD0iMCIgeT0iMCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0Ij48L3JlY3Q+CiAgICAgICAgPC9nPgogICAgICAgIDxwYXRoIGQ9Ik0yMi42Nzk0MDk0LDUyIEwxMy41NzQwNzAxLDUyIEwyMy44Mzc2MTg5LDMwLjQxIEwyOC4zOTk3NDk0LDM5Ljg2MSBMMjIuNjc5NDA5NCw1MiBaIE0yNC43MjY5NDA2LDI3LjY2NyBDMjQuNTYwNjI4NSwyNy4zMjEgMjQuMjEyMDcwMiwyNy4xMDMgMjMuODMwNjQ3OCwyNy4xMDMgTDIzLjgyNzY2MDEsMjcuMTAzIEMyMy40NDUyNDE4LDI3LjEwNCAyMy4wOTY2ODM1LDI3LjMyNSAyMi45MzIzNjMyLDI3LjY3MiBMMTEuMDk3MzE0Myw1Mi41NjkgQzEwLjk0OTkyMzksNTIuODc5IDEwLjk3MDgzNzQsNTMuMjQzIDExLjE1NDA3OTUsNTMuNTM0IEMxMS4zMzUzMjk4LDUzLjgyNCAxMS42NTQwMTE3LDU0IDExLjk5NTU5ODksNTQgTDIzLjMwOTgwMiw1NCBDMjMuNjk1MjA4LDU0IDI0LjA0NDc2MjIsNTMuNzc3IDI0LjIxMDA3ODQsNTMuNDI4IEwzMC40MDQ0NTc3LDQwLjI4NCBDMzAuNTMyOTI2NCw0MC4wMSAzMC41MzE5MzA1LDM5LjY5MiAzMC4zOTk0NzgzLDM5LjQyIEwyNC43MjY5NDA2LDI3LjY2NyBaIE01MS4wMDgyMzgyLDUyIEw0MS45ODU1NTcsNTIgTDI2Ljk1NDcyNjIsMTkuNTc4IEMyNi43OTE0MDE3LDE5LjIyNiAyNi40Mzg4NTk5LDE5IDI2LjA1MjQ1ODEsMTkgTDIwLjEyNzk2MjUsMTkgTDIwLjEzNDkzMzcsMTIgTDMxLjgxNDYyNTEsMTIgTDQ2Ljc3NDc0ODMsNDQuNDIgQzQ2LjkzODA3MjgsNDQuNzc0IDQ3LjI5MDYxNDcsNDUgNDcuNjc5MDA4Miw0NSBMNTEuMDA4MjM4Miw0NSBMNTEuMDA4MjM4Miw1MiBaIE01Mi4wMDQxMTkxLDQzIEw0OC4zMTQzODAzLDQzIEwzMy4zNTQyNTcsMTAuNTggQzMzLjE5MDkzMjYsMTAuMjI2IDMyLjgzODM5MDcsMTAgMzIuNDUwOTkzLDEwIEwxOS4xNDAwNDg2LDEwIEMxOC41OTEzMTgyLDEwIDE4LjE0NTE2MzYsMTAuNDQ3IDE4LjE0NDE2NzcsMTAuOTk5IEwxOC4xMzYyMDA2LDE5Ljk5OSBDMTguMTM2MjAwNiwyMC4yNjUgMTguMjQwNzY4MSwyMC41MTkgMTguNDI2OTk3OSwyMC43MDcgQzE4LjYxNDIyMzUsMjAuODk1IDE4Ljg2NzE3NzIsMjEgMTkuMTMxMDg1NywyMSBMMjUuNDE3MDg2MSwyMSBMNDAuNDQ3OTE2OCw1My40MjIgQzQwLjYxMTI0MTMsNTMuNzc0IDQwLjk2Mjc4NzMsNTQgNDEuMzUwMTg1LDU0IEw1Mi4wMDQxMTkxLDU0IEM1Mi41NTQ4NDEyLDU0IDUzLDUzLjU1MiA1Myw1MyBMNTMsNDQgQzUzLDQzLjQ0OCA1Mi41NTQ4NDEyLDQzIDUyLjAwNDExOTEsNDMgTDUyLjAwNDExOTEsNDMgWiIgaWQ9IkFXUy1MYW1iZGFfSWNvbl80OF9TcXVpZCIgZmlsbD0iI0ZGRkZGRiI+PC9wYXRoPgogICAgPC9nPgo8L3N2Zz4=" x="378" y="108" width="34" height="34"/>
+  <text x="510" y="122" text-anchor="middle" font-size="12" font-weight="600" fill="#1a202c">Notify Approver</text>
+  <text x="510" y="138" text-anchor="middle" font-size="9" fill="#4a5568">lambda:invoke.waitForTaskToken</text>
+
+  <!-- Arrow down to Choice -->
+  <line x1="500" y1="150" x2="500" y2="230" stroke="#545b64" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="515" y="195" font-size="9" fill="#16a34a">Task token returned</text>
+
+  <!-- State 2: Choice - Approved? -->
+  <polygon points="500,230 580,265 500,300 420,265" fill="#ffffff" stroke="#1b660f" stroke-width="2" filter="url(#shadow)"/>
+  <text x="500" y="262" text-anchor="middle" font-size="11" font-weight="600" fill="#1a202c">Approved?</text>
+  <text x="500" y="275" text-anchor="middle" font-size="8" fill="#4a5568">Choice</text>
+
+  <!-- Arrow: Choice to Handle Approval -->
+  <line x1="420" y1="265" x2="350" y2="265" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowhead-green)"/>
+  <text x="385" y="255" text-anchor="middle" font-size="9" fill="#16a34a">result = true</text>
+
+  <!-- Arrow: Choice to Handle Rejection -->
+  <line x1="580" y1="265" x2="650" y2="265" stroke="#d13212" stroke-width="2" marker-end="url(#arrowhead-red)"/>
+  <text x="615" y="255" text-anchor="middle" font-size="9" fill="#d13212">result = false</text>
+
+  <!-- Arrow: Choice to Handle Failure -->
+  <line x1="500" y1="300" x2="500" y2="350" stroke="#545b64" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="540" y="330" font-size="9" fill="#545b64">Default</text>
+
+  <!-- Handle Approval (rectangular shape) -->
+  <rect x="240" y="252" width="110" height="26" rx="4" fill="#e9f7e8" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="295" y="270" text-anchor="middle" font-size="9" font-weight="bold" fill="#1b660f">Handle Approval</text>
+
+  <!-- Handle Rejection (rectangular shape) -->
+  <rect x="650" y="252" width="110" height="26" rx="4" fill="#fce9e6" stroke="#d13212" stroke-width="1.5"/>
+  <text x="705" y="270" text-anchor="middle" font-size="9" font-weight="bold" fill="#d13212">Handle Rejection</text>
+
+  <!-- Handle Failure (rectangular shape) -->
+  <rect x="450" y="352" width="100" height="26" rx="4" fill="#f5f5f5" stroke="#545b64" stroke-width="1.5"/>
+  <text x="500" y="370" text-anchor="middle" font-size="9" font-weight="bold" fill="#545b64">Handle Failure</text>
+
+  <!-- External Flow - Right Side -->
+  <!-- SendApprovalEmail Lambda -->
+  <rect x="750" y="410" width="200" height="50" rx="6" fill="#ffffff" stroke="#ed7100" stroke-width="1.5" filter="url(#shadow)"/>
+  <image href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNjRweCIgaGVpZ2h0PSI2NHB4IiB2aWV3Qm94PSIwIDAgNjQgNjQiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+SWNvbi1BcmNoaXRlY3R1cmUvNDgvQXJjaF9BV1MtTGFtYmRhXzQ4PC90aXRsZT4KICAgIDxnIGlkPSJJY29uLUFyY2hpdGVjdHVyZS80OC9BcmNoX0FXUy1MYW1iZGFfNDgiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgICAgIDxnIGlkPSJJY29uLUFyY2hpdGVjdHVyZS1CRy80OC9Db21wdXRlIiBmaWxsPSIjRUQ3MTAwIj4KICAgICAgICAgICAgPHJlY3QgaWQ9IlJlY3RhbmdsZSIgeD0iMCIgeT0iMCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0Ij48L3JlY3Q+CiAgICAgICAgPC9nPgogICAgICAgIDxwYXRoIGQ9Ik0yMi42Nzk0MDk0LDUyIEwxMy41NzQwNzAxLDUyIEwyMy44Mzc2MTg5LDMwLjQxIEwyOC4zOTk3NDk0LDM5Ljg2MSBMMjIuNjc5NDA5NCw1MiBaIE0yNC43MjY5NDA2LDI3LjY2NyBDMjQuNTYwNjI4NSwyNy4zMjEgMjQuMjEyMDcwMiwyNy4xMDMgMjMuODMwNjQ3OCwyNy4xMDMgTDIzLjgyNzY2MDEsMjcuMTAzIEMyMy40NDUyNDE4LDI3LjEwNCAyMy4wOTY2ODM1LDI3LjMyNSAyMi45MzIzNjMyLDI3LjY3MiBMMTEuMDk3MzE0Myw1Mi41NjkgQzEwLjk0OTkyMzksNTIuODc5IDEwLjk3MDgzNzQsNTMuMjQzIDExLjE1NDA3OTUsNTMuNTM0IEMxMS4zMzUzMjk4LDUzLjgyNCAxMS42NTQwMTE3LDU0IDExLjk5NTU5ODksNTQgTDIzLjMwOTgwMiw1NCBDMjMuNjk1MjA4LDU0IDI0LjA0NDc2MjIsNTMuNzc3IDI0LjIxMDA3ODQsNTMuNDI4IEwzMC40MDQ0NTc3LDQwLjI4NCBDMzAuNTMyOTI2NCw0MC4wMSAzMC41MzE5MzA1LDM5LjY5MiAzMC4zOTk0NzgzLDM5LjQyIEwyNC43MjY5NDA2LDI3LjY2NyBaIE01MS4wMDgyMzgyLDUyIEw0MS45ODU1NTcsNTIgTDI2Ljk1NDcyNjIsMTkuNTc4IEMyNi43OTE0MDE3LDE5LjIyNiAyNi40Mzg4NTk5LDE5IDI2LjA1MjQ1ODEsMTkgTDIwLjEyNzk2MjUsMTkgTDIwLjEzNDkzMzcsMTIgTDMxLjgxNDYyNTEsMTIgTDQ2Ljc3NDc0ODMsNDQuNDIgQzQ2LjkzODA3MjgsNDQuNzc0IDQ3LjI5MDYxNDcsNDUgNDcuNjc5MDA4Miw0NSBMNTEuMDA4MjM4Miw0NSBMNTEuMDA4MjM4Miw1MiBaIE01Mi4wMDQxMTkxLDQzIEw0OC4zMTQzODAzLDQzIEwzMy4zNTQyNTcsMTAuNTggQzMzLjE5MDkzMjYsMTAuMjI2IDMyLjgzODM5MDcsMTAgMzIuNDUwOTkzLDEwIEwxOS4xNDAwNDg2LDEwIEMxOC41OTEzMTgyLDEwIDE4LjE0NTE2MzYsMTAuNDQ3IDE4LjE0NDE2NzcsMTAuOTk5IEwxOC4xMzYyMDA2LDE5Ljk5OSBDMTguMTM2MjAwNiwyMC4yNjUgMTguMjQwNzY4MSwyMC41MTkgMTguNDI2OTk3OSwyMC43MDcgQzE4LjYxNDIyMzUsMjAuODk1IDE4Ljg2NzE3NzIsMjEgMTkuMTMxMDg1NywyMSBMMjUuNDE3MDg2MSwyMSBMNDAuNDQ3OTE2OCw1My40MjIgQzQwLjYxMTI0MTMsNTMuNzc0IDQwLjk2Mjc4NzMsNTQgNDEuMzUwMTg1LDU0IEw1Mi4wMDQxMTkxLDU0IEM1Mi41NTQ4NDEyLDU0IDUzLDUzLjU1MiA1Myw1MyBMNTMsNDQgQzUzLDQzLjQ0OCA1Mi41NTQ4NDEyLDQzIDUyLjAwNDExOTEsNDMgTDUyLjAwNDExOTEsNDMgWiIgaWQ9IkFXUy1MYW1iZGFfSWNvbl80OF9TcXVpZCIgZmlsbD0iI0ZGRkZGRiI+PC9wYXRoPgogICAgPC9nPgo8L3N2Zz4=" x="758" y="420" width="30" height="30"/>
+  <text x="870" y="432" text-anchor="middle" font-size="10" font-weight="600" fill="#ed7100">SendApprovalEmailFunction</text>
+  <text x="870" y="448" text-anchor="middle" font-size="9" fill="#4a5568">URL-encodes task token</text>
+
+  <!-- Arrow from State 1 to SendApprovalEmail Lambda (routed far right to avoid Handle Rejection) -->
+  <path d="M 630 125 L 780 125 L 780 410" fill="none" stroke="#ed7100" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrowhead-orange)"/>
+  <text x="795" y="270" font-size="9" fill="#ed7100" transform="rotate(90, 795, 270)">Invokes Lambda</text>
+
+  <!-- SNS Topic -->
+  <rect x="750" y="490" width="200" height="50" rx="6" fill="#ffffff" stroke="#dd3578" stroke-width="1.5" filter="url(#shadow)"/>
+  <image href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNjRweCIgaGVpZ2h0PSI2NHB4IiB2aWV3Qm94PSIwIDAgNjQgNjQiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+SWNvbi1BcmNoaXRlY3R1cmUvNDgvQXJjaF9BbWF6b24tU2ltcGxlLU5vdGlmaWNhdGlvbi1TZXJ2aWNlXzQ4PC90aXRsZT4KICAgIDxnIGlkPSJJY29uLUFyY2hpdGVjdHVyZS80OC9BcmNoX0FtYXpvbi1TaW1wbGUtTm90aWZpY2F0aW9uLVNlcnZpY2VfNDgiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgICAgIDxnIGlkPSJJY29uLUFyY2hpdGVjdHVyZS1CRy80OC9BcHBsaWNhdGlvbi1JbnRlZ3JhdGlvbiIgZmlsbD0iI0U3MTU3QiI+CiAgICAgICAgICAgIDxyZWN0IGlkPSJSZWN0YW5nbGUiIHg9IjAiIHk9IjAiIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCI+PC9yZWN0PgogICAgICAgIDwvZz4KICAgICAgICA8cGF0aCBkPSJNMTQsMzEgQzE0LjU1MiwzMSAxNSwzMS40NDkgMTUsMzIgQzE1LDMyLjU1MSAxNC41NTIsMzMgMTQsMzMgQzEzLjQ0OCwzMyAxMywzMi41NTEgMTMsMzIgQzEzLDMxLjQ0OSAxMy40NDgsMzEgMTQsMzEgTDE0LDMxIFogTTMzLjM5Niw1MSBDMjQuNTA4LDUxIDE2LjgyMiw0NC4wODEgMTUuMTUyLDM0Ljc2OCBDMTUuOTMsMzQuNDQzIDE2LjUzMSwzMy43OTcgMTYuODE1LDMzIEwyMiwzMyBMMjIsMzEgTDE2LjgxNSwzMSBDMTYuNTMyLDMwLjIwNCAxNS45MzIsMjkuNTU4IDE1LjE1NSwyOS4yMzIgQzE2Ljc3NiwyMC40OSAyNC40NTEsMTQgMzMuMzk2LDE0IEMzNy41ODcsMTQgNDAuNTg4LDE0Ljg0NCA0My40MjksMTYuODIxIEw0NC41NzEsMTUuMTc5IEM0MS40MTEsMTIuOTggMzcuOTY1LDEyIDMzLjM5NiwxMiBDMjMuMzk0LDEyIDE0LjgyNiwxOS4zMjIgMTMuMTQxLDI5LjE0IEMxMS45MDcsMjkuNTEyIDExLDMwLjY0NiAxMSwzMiBDMTEsMzMuMzUzIDExLjkwNiwzNC40ODYgMTMuMTM5LDM0Ljg1OSBDMTQuODgsNDUuMjQ4IDIzLjQ1Niw1MyAzMy4zOTYsNTMgQzM3LjYyOCw1MyA0MS43MjksNTEuNTkxIDQ1LjU4NSw0OC44MTEgTDQ0LjQxNSw0Ny4xODkgQzQwLjkwNyw0OS43MTggMzcuMTk5LDUxIDMzLjM5Niw1MSBMMzMuMzk2LDUxIFogTTI1LjA2MiwyOS40NTkgQzI2LjQ1NywyOS44MzcgMjguMDkxLDMwIDI5LjQzNCwzMCBDMzAuNzE2LDMwIDMyLjI2LDI5Ljg1NSAzMy42MTgsMjkuNTI2IEwzMC4xMDUsMzYuNTUzIEMzMC4wMzYsMzYuNjkxIDMwLDM2Ljg0NSAzMCwzNyBMMzAsNDAuNTAxIEMyOS44NzUsNDAuNjAyIDI5Ljc0MSw0MC43MTQgMjkuNjAxLDQwLjgzMiBDMjkuMjA3LDQxLjE2MiAyOC40MzIsNDEuODEzIDI4LDQxLjk3NCBMMjgsMzcgQzI4LDM2Ljg3MyAyNy45NzYsMzYuNzQ3IDI3LjkyOSwzNi42MjggTDI1LjA2MiwyOS40NTkgWiBNMjkuNDM0LDI2IEMzMi4wMzMsMjYgMzQuMDE1LDI2LjU2NiAzNC43NjksMjcgQzM0LjAxNSwyNy40MzQgMzIuMDMzLDI4IDI5LjQzNCwyOCBDMjYuNzM5LDI4IDI0LjkwMSwyNy4zOTkgMjQuMjE4LDI3IEMyNC45MDEsMjYuNjAxIDI2LjczOSwyNiAyOS40MzQsMjYgTDI5LjQzNCwyNiBaIE0yNyw0NCBMMjgsNDQgQzI4LjA0Myw0NCAyOC4wODYsNDMuOTk3IDI4LjEyOCw0My45OTIgQzI5LjA5NCw0My44NjcgMzAuMDQ2LDQzLjA2OCAzMC44ODYsNDIuMzY0IEMzMS4xNDUsNDIuMTQ3IDMxLjM3Miw0MS45NTIgMzEuNTQ2LDQxLjgzOCBDMzEuODI5LDQxLjY1MyAzMiw0MS4zMzggMzIsNDEgTDMyLDM3LjIzNiBMMzYuNTkyLDI4LjA1MyBDMzYuODUsMjcuNzQ1IDM3LDI3LjM5NiAzNywyNyBDMzcsMjQuNzk5IDMyLjQ3NSwyNCAyOS40MzQsMjQgQzI2LjQ0NSwyNCAyMiwyNC43OTkgMjIsMjcgQzIyLDI3LjMxNyAyMi4xMDEsMjcuNjAxIDIyLjI2OCwyNy44NjIgTDI2LDM3LjE5MiBMMjYsNDMgQzI2LDQzLjU1MiAyNi40NDcsNDQgMjcsNDQgTDI3LDQ0IFogTTQ5LDQzIEM0OS41NTIsNDMgNTAsNDMuNDQ5IDUwLDQ0IEM1MCw0NC41NTEgNDkuNTUyLDQ1IDQ5LDQ1IEM0OC40NDgsNDUgNDgsNDQuNTUxIDQ4LDQ0IEM0OCw0My40NDkgNDguNDQ4LDQzIDQ5LDQzIEw0OSw0MyBaIE00OSwxOSBDNDkuNTUyLDE5IDUwLDE5LjQ0OSA1MCwyMCBDNTAsMjAuNTUxIDQ5LjU1MiwyMSA0OSwyMSBDNDguNDQ4LDIxIDQ4LDIwLjU1MSA0OCwyMCBDNDgsMTkuNDQ5IDQ4LjQ0OCwxOSA0OSwxOSBMNDksMTkgWiBNNTEsMzEgQzUxLjU1MiwzMSA1MiwzMS40NDkgNTIsMzIgQzUyLDMyLjU1MSA1MS41NTIsMzMgNTEsMzMgQzUwLjQ0OCwzMyA1MCwzMi41NTEgNTAsMzIgQzUwLDMxLjQ0OSA1MC40NDgsMzEgNTEsMzEgTDUxLDMxIFogTTQ0LDMzIEw0OC4xODUsMzMgQzQ4LjU5OSwzNC4xNjIgNDkuNjk4LDM1IDUxLDM1IEM1Mi42NTQsMzUgNTQsMzMuNjU0IDU0LDMyIEM1NCwzMC4zNDYgNTIuNjU0LDI5IDUxLDI5IEM0OS42OTgsMjkgNDguNTk5LDI5LjgzOCA0OC4xODUsMzEgTDQ0LDMxIEw0NCwyMSBMNDYuMTg1LDIxIEM0Ni41OTksMjIuMTYyIDQ3LjY5OCwyMyA0OSwyMyBDNTAuNjU0LDIzIDUyLDIxLjY1NCA1MiwyMCBDNTIsMTguMzQ2IDUwLjY1NCwxNyA0OSwxNyBDNDcuNjk4LDE3IDQ2LjU5OSwxNy44MzggNDYuMTg1LDE5IEw0MywxOSBDNDIuNDQ3LDE5IDQyLDE5LjQ0OCA0MiwyMCBMNDIsMzEgTDM3LDMxIEwzNywzMyBMNDIsMzMgTDQyLDQ0IEM0Miw0NC41NTIgNDIuNDQ3LDQ1IDQzLDQ1IEw0Ni4xODUsNDUgQzQ2LjU5OSw0Ni4xNjIgNDcuNjk4LDQ3IDQ5LDQ3IEM1MC42NTQsNDcgNTIsNDUuNjU0IDUyLDQ0IEM1Miw0Mi4zNDYgNTAuNjU0LDQxIDQ5LDQxIEM0Ny42OTgsNDEgNDYuNTk5LDQxLjgzOCA0Ni4xODUsNDMgTDQ0LDQzIEw0NCwzMyBaIiBpZD0iQVdTLVNpbXBsZS1Ob3RpZmljYXRpb24tU2VydmljZV9JY29uXzQ4X1NxdWlkIiBmaWxsPSIjRkZGRkZGIj48L3BhdGg+CiAgICA8L2c+Cjwvc3ZnPg==" x="758" y="500" width="30" height="30"/>
+  <text x="870" y="512" text-anchor="middle" font-size="10" font-weight="600" fill="#dd3578">Amazon SNS</text>
+  <text x="870" y="528" text-anchor="middle" font-size="9" fill="#4a5568">Sends email notification</text>
+
+  <!-- Arrow: Lambda to SNS -->
+  <line x1="850" y1="460" x2="850" y2="490" stroke="#dd3578" stroke-width="1.5" marker-end="url(#arrowhead-pink)"/>
+
+  <!-- Email / Reviewer -->
+  <rect x="750" y="570" width="200" height="50" rx="6" fill="#ffffff" stroke="#0073bb" stroke-width="1.5" filter="url(#shadow)"/>
+  <image href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNDhweCIgaGVpZ2h0PSI0OHB4IiB2aWV3Qm94PSIwIDAgNDggNDgiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+SWNvbi1SZXNvdXJjZS9CdXNpbmVzcy1BcHBsaWNhdGlvbnMvUmVzX0FtYXpvbi1TaW1wbGUtRW1haWwtU2VydmljZV9FbWFpbF80ODwvdGl0bGU+CiAgICA8ZyBpZD0iSWNvbi1SZXNvdXJjZS9CdXNpbmVzcy1BcHBsaWNhdGlvbnMvUmVzX0FtYXpvbi1TaW1wbGUtRW1haWwtU2VydmljZV9FbWFpbF80OCIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+CiAgICAgICAgPHBhdGggZD0iTTEwLjMwMzIsMTQuMzEzNCBDMTAuMjc4MiwxNC40OTY0IDEwLjI2NTIsMTQuNzE3NCAxMC4yNjUyLDE0Ljk3NDQgTDEwLjI2NTIsMTUuMTMwNCBDMTAuMjY1MiwxNS4xODU0IDEwLjI3MjIsMTUuMjQzNCAxMC4yODQyLDE1LjMwNDQgQzEwLjAwMjIsMTUuNjEwNCA5LjY4NDIsMTUuNzY0NCA5LjMyODIsMTUuNzY0NCBDOC43MTYyLDE1Ljc2NDQgOC40MTAyLDE1LjEzOTQgOC40MTAyLDEzLjg5MDQgQzguNDEwMiwxMi44Mzc0IDguNTYxMiwxMS45Njc0IDguODYxMiwxMS4yODE0IEM5LjE2MDIsMTAuNTk2NCA5LjUzMTIsMTAuMjUyNCA5Ljk3MjIsMTAuMjUyNCBDMTAuMjE3MiwxMC4yNTI0IDEwLjQ5ODIsMTAuMzYzNCAxMC44MTcyLDEwLjU4NDQgTDEwLjMwMzIsMTQuMzEzNCBaIE01LjI2OTIsMjAuMTczNCBDNi4xNzUyLDIwLjcyNDQgNy4yNjUyLDIxLjAwMDQgOC41MzgyLDIxLjAwMDQgQzkuNTgwMiwyMS4wMDA0IDEwLjUxMDIsMjAuNzkxNCAxMS4zMzEyLDIwLjM3NTQgTDExLjMzMTIsMTguNzU4NCBDMTAuNDM3MiwxOS4wODg0IDkuNTgwMiwxOS4yNTQ0IDguNzU5MiwxOS4yNTQ0IEM3LjQxMjIsMTkuMjU0NCA2LjM3NDIsMTguODE2NCA1LjY0NjIsMTcuOTQwNCBDNC45MTYyLDE3LjA2NjQgNC41NTMyLDE1Ljc5NDQgNC41NTMyLDE0LjEyOTQgQzQuNTUzMiwxMi43NDY0IDQuNzkxMiwxMS40OTk0IDUuMjY5MiwxMC4zOTE0IEM1Ljc0NjIsOS4yODI0IDYuNDI2Miw4LjM5NzQgNy4zMDkyLDcuNzM2NCBDOC4xOTAyLDcuMDc1NCA5LjE4MjIsNi43NDU0IDEwLjI4NDIsNi43NDU0IEMxMS43MDUyLDYuNzQ1NCAxMi43ODUyLDcuMTQ2NCAxMy41MjcyLDcuOTQ3NCBDMTQuMjY3Miw4Ljc1MDQgMTQuNjM4Miw5LjkyMjQgMTQuNjM4MiwxMS40NjU0IEMxNC42MzgyLDEyLjIxMjQgMTQuNTU1MiwxMi45MTE0IDE0LjM4OTIsMTMuNTYwNCBDMTQuMjI1MiwxNC4yMDk0IDEzLjk5MTIsMTQuNzQ0NCAxMy42OTIyLDE1LjE2NzQgQzEzLjM5MjIsMTUuNTg5NCAxMy4wNzYyLDE1LjgwMTQgMTIuNzQ1MiwxNS44MDE0IEMxMi41NzQyLDE1LjgwMTQgMTIuNDQwMiwxNS43MzY0IDEyLjM0MjIsMTUuNjA4NCBDMTIuMjQzMiwxNS40ODA0IDEyLjE5NTIsMTUuMzA0NCAxMi4xOTUyLDE1LjA4NDQgQzEyLjE5NTIsMTQuODg5NCAxMi4yMDYyLDE0LjcxNzQgMTIuMjMyMiwxNC41NzA0IEwxMy4wMjEyLDguODU3NCBMMTEuMzEzMiw4Ljg1NzQgTDExLjA5MzIsOS41MDA0IEMxMC42MzkyLDguODg4NCAxMC4wODIyLDguNTgyNCA5LjQyMDIsOC41ODI0IEM4Ljg4MjIsOC41ODI0IDguMzY1Miw4LjgxNzQgNy44NjgyLDkuMjg5NCBDNy4zNzIyLDkuNzYxNCA2Ljk2NTIsMTAuNDIxNCA2LjY0NzIsMTEuMjcyNCBDNi4zMjgyLDEyLjEyNTQgNi4xNjkyLDEzLjA2MzQgNi4xNjkyLDE0LjA5MjQgQzYuMTY5MiwxNS4xNzA0IDYuMzY1MiwxNS45OTc0IDYuNzU3MiwxNi41NzI0IEM3LjE0OTIsMTcuMTQ4NCA3LjcyNDIsMTcuNDM2NCA4LjQ4NDIsMTcuNDM2NCBDOC44MzkyLDE3LjQzNjQgOS4yMDkyLDE3LjM0NDQgOS41OTYyLDE3LjE2MTQgQzkuOTgxMiwxNi45Nzc0IDEwLjMyMTIsMTYuNzI2NCAxMC42MTUyLDE2LjQwNzQgQzEwLjgxMDIsMTYuNzI2NCAxMS4wNzQyLDE2Ljk3MDQgMTEuNDA1MiwxNy4xNDE0IEMxMS43MzUyLDE3LjMxMzQgMTIuMTE1MiwxNy4zOTk0IDEyLjU0MzIsMTcuMzk5NCBDMTMuMjY2MiwxNy4zOTk0IDEzLjkzMDIsMTcuMTU0NCAxNC41MzcyLDE2LjY2NDQgQzE1LjE0MzIsMTYuMTc0NCAxNS42MjMyLDE1LjQ3NzQgMTUuOTc5MiwxNC41NzA0IEMxNi4zMzQyLDEzLjY2NDQgMTYuNTEyMiwxMi42MjM0IDE2LjUxMjIsMTEuNDQ3NCBDMTYuNTEyMiwxMC4xMTI0IDE2LjI3MzIsOC45NjQ0IDE1Ljc5NTIsOC4wMDM0IEMxNS4zMTcyLDcuMDQyNCAxNC42MTYyLDYuMzAxNCAxMy42OTIyLDUuNzgwNCBDMTIuNzY3Miw1LjI1OTQgMTEuNjU2Miw1LjAwMDQgMTAuMzU4Miw1LjAwMDQgQzguOTI1Miw1LjAwMDQgNy42MTEyLDUuMzc4NCA2LjQxNzIsNi4xMzk0IEM1LjIyNDIsNi44OTc0IDQuMjcxMiw3Ljk3MjQgMy41NjEyLDkuMzYyNCBDMi44NTAyLDEwLjc1MjQgMi40OTUyLDEyLjM1NDQgMi40OTUyLDE0LjE2NjQgQzIuNDk1MiwxNS41ODc0IDIuNzMxMiwxNi44MDU0IDMuMjAyMiwxNy44MjE0IEMzLjY3NDIsMTguODM4NCA0LjM2MzIsMTkuNjIyNCA1LjI2OTIsMjAuMTczNCBMNS4yNjkyLDIwLjE3MzQgWiBNMjMuMzU0MiwzMS45ODA0IEMyMy41MzkyLDMyLjEzNDQgMjMuNzY3MiwzMi4yMTE0IDIzLjk5NDIsMzIuMjExNCBDMjQuMjIyMiwzMi4yMTE0IDI0LjQ0OTIsMzIuMTM0NCAyNC42MzUyLDMxLjk4MDQgTDI3LjY2ODIsMjkuNDUzNCBMNDIuMjI1Miw0MS41ODQ0IEw1Ljc2MzIsNDEuNTg0NCBMMjAuMzIyMiwyOS40NTI0IEwyMy4zNTQyLDMxLjk4MDQgWiBNMjkuMjMxMiwyOC4xNTA0IEw0My45ODkyLDE1Ljg1MjQgTDQzLjk4OTIsNDAuNDQ4NCBMMjkuMjMxMiwyOC4xNTA0IFogTTQ0Ljk4OTIsMTIuNzE2NCBMMTguNTQ1MiwxMi43MTY0IEwxOC41NDUyLDE0LjcxNjQgTDQyLjIyNTIsMTQuNzE2NCBMMjMuOTk0MiwyOS45MTA0IEwxMy4zNjgyLDIxLjA0OTQgTDEyLjA4NzIsMjIuNTg0NCBMMTguNzU5MiwyOC4xNDk0IEw0LjAwMDIsNDAuNDQ4NCBMNC4wMDAyLDIyLjA3MDQgTDIuMDAwMiwyMi4wNzA0IEwyLjAwMDIsNDIuNTg0NCBDMi4wMDAyLDQzLjEzNjQgMi40NDgyLDQzLjU4NDQgMy4wMDAyLDQzLjU4NDQgTDQ0Ljk4OTIsNDMuNTg0NCBDNDUuNTQxMiw0My41ODQ0IDQ1Ljk4OTIsNDMuMTM2NCA0NS45ODkyLDQyLjU4NDQgTDQ1Ljk4OTIsMTMuNzE2NCBDNDUuOTg5MiwxMy4xNjQ0IDQ1LjU0MTIsMTIuNzE2NCA0NC45ODkyLDEyLjcxNjQgTDQ0Ljk4OTIsMTIuNzE2NCBaIiBpZD0iQW1hem9uLUFtYXpvbi1TaW1wbGUtRW1haWwtU2VydmljZS1FbWFpbF9SZXNvdXJjZS1JY29uX2xpZ2h0LWJnIiBmaWxsPSIjREQzNDRDIj48L3BhdGg+CiAgICA8L2c+Cjwvc3ZnPg==" x="758" y="580" width="30" height="30"/>
+  <text x="850" y="590" text-anchor="middle" font-size="10" font-weight="600" fill="#0073bb">Reviewer Email</text>
+  <text x="850" y="607" text-anchor="middle" font-size="9" fill="#4a5568">Approve / Reject links</text>
+
+  <!-- Arrow: SNS to Email -->
+  <line x1="850" y1="540" x2="850" y2="570" stroke="#0073bb" stroke-width="1.5" marker-end="url(#arrowhead-blue)"/>
+
+  <!-- API Gateway (same y as Amazon SNS) -->
+  <rect x="440" y="490" width="200" height="50" rx="6" fill="#ffffff" stroke="#8C4FFF" stroke-width="1.5" filter="url(#shadow)"/>
+  <image href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGcgaWQ9Ikljb24tQXJjaGl0ZWN0dXJlLzQ4L0FyY2hfQW1hem9uLUFQSS1HYXRld2F5XzQ4Ij4KPGcgaWQ9Ikljb24tQXJjaGl0ZWN0dXJlLUJHLzQ4L05ldHdvcmtpbmctQ29udGVudC1EZWxpdmVyeSI+CjxyZWN0IGlkPSJSZWN0YW5nbGUiIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgZmlsbD0iIzhDNEZGRiIvPgo8L2c+CjxnIGlkPSJJY29uLVNlcnZpY2UvNDgvQW1hem9uLUFQSS1HYXRld2F5XzQ4Ij4KPHBhdGggaWQ9IkFtYXpvbi1BUEktR2F0ZXdheV9JY29uXzQ4X1NxdWlkIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGNsaXAtcnVsZT0iZXZlbm9kZCIgZD0iTTI4IDQzLjk5OTlIMzFWNDEuOTk5OUgyOFY0My45OTk5Wk0zMyA0My45OTk5SDM2VjQxLjk5OTlIMzNWNDMuOTk5OVpNMjggMjEuOTk5OEgzMVYxOS45OTk4SDI4VjIxLjk5OThaTTMzIDIxLjk5OThIMzZWMTkuOTk5OEgzM1YyMS45OTk4Wk0yMiAxMi43NDA4TDEyIDE4LjU3MzhWNDYuMzgyTDIyIDUxLjM4MlYxMi43NDA4Wk0yNCAxOS45OTk4SDI2VjIxLjk5OThIMjRWNDEuOTk5OUgyNlY0My45OTk5SDI0VjUzQzI0IDUzLjM0NyAyMy44MiA1My42NjggMjMuNTI1IDUzLjg1MUMyMy4zNjUgNTMuOTUgMjMuMTgzIDU0IDIzIDU0QzIyLjg0NyA1NCAyMi42OTQgNTMuOTY1IDIyLjU1MyA1My44OTVMMTAuNTUzIDQ3Ljg5NUMxMC4yMTQgNDcuNzI1IDEwIDQ3LjM3OSAxMCA0N1YxNy45OTk4QzEwIDE3LjY0NDggMTAuMTg4IDE3LjMxNDggMTAuNDk2IDE3LjEzNThMMjIuNDk2IDEwLjEzNThDMjIuODA1IDkuOTU1NzUgMjMuMTg4IDkuOTU0NzUgMjMuNDk4IDEwLjEzMjhDMjMuODA5IDEwLjMxMDggMjQgMTAuNjQxOCAyNCAxMC45OTk4VjE5Ljk5OThaTTUyIDE4LjU3MzhMNDIgMTIuNzQwOFY1MS4zODJMNTIgNDYuMzgyVjE4LjU3MzhaTTU0IDE3Ljk5OThWNDdDNTQgNDcuMzc5IDUzLjc4NiA0Ny43MjUgNTMuNDQ3IDQ3Ljg5NUw0MS40NDcgNTMuODk1QzQxLjMwNiA1My45NjUgNDEuMTUzIDU0IDQxIDU0QzQwLjgxNyA1NCA0MC42MzUgNTMuOTUgNDAuNDc1IDUzLjg1MUM0MC4xOCA1My42NjggNDAgNTMuMzQ3IDQwIDUzVjQzLjk5OTlIMzhWNDEuOTk5OUg0MFYyMS45OTk4SDM4VjE5Ljk5OThINDBWMTAuOTk5OEM0MCAxMC42NDE4IDQwLjE5MSAxMC4zMTA4IDQwLjUwMiAxMC4xMzI4QzQwLjgxMiA5Ljk1NTc1IDQxLjE5NSA5Ljk1NTc1IDQxLjUwNCAxMC4xMzU4TDUzLjUwNCAxNy4xMzU4QzUzLjgxMiAxNy4zMTQ4IDU0IDE3LjY0NDggNTQgMTcuOTk5OFpNMzQuOTM5IDI3LjM0MTlMMzMuMDYxIDI2LjY1NzhMMjkuMDYxIDM3LjY1NzlMMzAuOTM5IDM4LjM0MTlMMzQuOTM5IDI3LjM0MTlaTTM5LjcwNyAzMi43MDY5QzQwLjA5OCAzMi4zMTU5IDQwLjA5OCAzMS42ODM5IDM5LjcwNyAzMS4yOTI5TDM2LjcwNyAyOC4yOTI5TDM1LjI5MyAyOS43MDY5TDM3LjU4NiAzMS45OTk5TDM1LjI5MyAzNC4yOTI5TDM2LjcwNyAzNS43MDY5TDM5LjcwNyAzMi43MDY5Wk0yNy4yOTMgMzUuNzA2OUwyNC4yOTMgMzIuNzA2OUMyMy45MDIgMzIuMzE1OSAyMy45MDIgMzEuNjgzOSAyNC4yOTMgMzEuMjkyOUwyNy4yOTMgMjguMjkyOUwyOC43MDcgMjkuNzA2OUwyNi40MTQgMzEuOTk5OUwyOC43MDcgMzQuMjkyOUwyNy4yOTMgMzUuNzA2OVoiIGZpbGw9IndoaXRlIi8+CjwvZz4KPC9nPgo8L3N2Zz4K" x="448" y="500" width="30" height="30"/>
+  <text x="540" y="512" text-anchor="middle" font-size="10" font-weight="600" fill="#8C4FFF">API Gateway</text>
+  <text x="540" y="528" text-anchor="middle" font-size="9" fill="#4a5568">GET /respond</text>
+
+  <!-- Arrow: Email to API Gateway (points into right side of APIGW box) -->
+  <path d="M 750 595 L 680 595 L 680 515 L 640 515" fill="none" stroke="#8C4FFF" stroke-width="1.5" marker-end="url(#arrowhead-purple)"/>
+  <text x="715" y="585" text-anchor="middle" font-size="9" fill="#8C4FFF">Click link</text>
+
+  <!-- HandleApproval Lambda -->
+  <rect x="440" y="570" width="200" height="50" rx="6" fill="#ffffff" stroke="#ed7100" stroke-width="1.5" filter="url(#shadow)"/>
+  <image href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNjRweCIgaGVpZ2h0PSI2NHB4IiB2aWV3Qm94PSIwIDAgNjQgNjQiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+SWNvbi1BcmNoaXRlY3R1cmUvNDgvQXJjaF9BV1MtTGFtYmRhXzQ4PC90aXRsZT4KICAgIDxnIGlkPSJJY29uLUFyY2hpdGVjdHVyZS80OC9BcmNoX0FXUy1MYW1iZGFfNDgiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgICAgIDxnIGlkPSJJY29uLUFyY2hpdGVjdHVyZS1CRy80OC9Db21wdXRlIiBmaWxsPSIjRUQ3MTAwIj4KICAgICAgICAgICAgPHJlY3QgaWQ9IlJlY3RhbmdsZSIgeD0iMCIgeT0iMCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0Ij48L3JlY3Q+CiAgICAgICAgPC9nPgogICAgICAgIDxwYXRoIGQ9Ik0yMi42Nzk0MDk0LDUyIEwxMy41NzQwNzAxLDUyIEwyMy44Mzc2MTg5LDMwLjQxIEwyOC4zOTk3NDk0LDM5Ljg2MSBMMjIuNjc5NDA5NCw1MiBaIE0yNC43MjY5NDA2LDI3LjY2NyBDMjQuNTYwNjI4NSwyNy4zMjEgMjQuMjEyMDcwMiwyNy4xMDMgMjMuODMwNjQ3OCwyNy4xMDMgTDIzLjgyNzY2MDEsMjcuMTAzIEMyMy40NDUyNDE4LDI3LjEwNCAyMy4wOTY2ODM1LDI3LjMyNSAyMi45MzIzNjMyLDI3LjY3MiBMMTEuMDk3MzE0Myw1Mi41NjkgQzEwLjk0OTkyMzksNTIuODc5IDEwLjk3MDgzNzQsNTMuMjQzIDExLjE1NDA3OTUsNTMuNTM0IEMxMS4zMzUzMjk4LDUzLjgyNCAxMS42NTQwMTE3LDU0IDExLjk5NTU5ODksNTQgTDIzLjMwOTgwMiw1NCBDMjMuNjk1MjA4LDU0IDI0LjA0NDc2MjIsNTMuNzc3IDI0LjIxMDA3ODQsNTMuNDI4IEwzMC40MDQ0NTc3LDQwLjI4NCBDMzAuNTMyOTI2NCw0MC4wMSAzMC41MzE5MzA1LDM5LjY5MiAzMC4zOTk0NzgzLDM5LjQyIEwyNC43MjY5NDA2LDI3LjY2NyBaIE01MS4wMDgyMzgyLDUyIEw0MS45ODU1NTcsNTIgTDI2Ljk1NDcyNjIsMTkuNTc4IEMyNi43OTE0MDE3LDE5LjIyNiAyNi40Mzg4NTk5LDE5IDI2LjA1MjQ1ODEsMTkgTDIwLjEyNzk2MjUsMTkgTDIwLjEzNDkzMzcsMTIgTDMxLjgxNDYyNTEsMTIgTDQ2Ljc3NDc0ODMsNDQuNDIgQzQ2LjkzODA3MjgsNDQuNzc0IDQ3LjI5MDYxNDcsNDUgNDcuNjc5MDA4Miw0NSBMNTEuMDA4MjM4Miw0NSBMNTEuMDA4MjM4Miw1MiBaIE01Mi4wMDQxMTkxLDQzIEw0OC4zMTQzODAzLDQzIEwzMy4zNTQyNTcsMTAuNTggQzMzLjE5MDkzMjYsMTAuMjI2IDMyLjgzODM5MDcsMTAgMzIuNDUwOTkzLDEwIEwxOS4xNDAwNDg2LDEwIEMxOC41OTEzMTgyLDEwIDE4LjE0NTE2MzYsMTAuNDQ3IDE4LjE0NDE2NzcsMTAuOTk5IEwxOC4xMzYyMDA2LDE5Ljk5OSBDMTguMTM2MjAwNiwyMC4yNjUgMTguMjQwNzY4MSwyMC41MTkgMTguNDI2OTk3OSwyMC43MDcgQzE4LjYxNDIyMzUsMjAuODk1IDE4Ljg2NzE3NzIsMjEgMTkuMTMxMDg1NywyMSBMMjUuNDE3MDg2MSwyMSBMNDAuNDQ3OTE2OCw1My40MjIgQzQwLjYxMTI0MTMsNTMuNzc0IDQwLjk2Mjc4NzMsNTQgNDEuMzUwMTg1LDU0IEw1Mi4wMDQxMTkxLDU0IEM1Mi41NTQ4NDEyLDU0IDUzLDUzLjU1MiA1Myw1MyBMNTMsNDQgQzUzLDQzLjQ0OCA1Mi41NTQ4NDEyLDQzIDUyLjAwNDExOTEsNDMgTDUyLjAwNDExOTEsNDMgWiIgaWQ9IkFXUy1MYW1iZGFfSWNvbl80OF9TcXVpZCIgZmlsbD0iI0ZGRkZGRiI+PC9wYXRoPgogICAgPC9nPgo8L3N2Zz4=" x="448" y="580" width="30" height="30"/>
+  <text x="560" y="592" text-anchor="middle" font-size="10" font-weight="600" fill="#ed7100">HandleApprovalFunction</text>
+  <text x="560" y="608" text-anchor="middle" font-size="9" fill="#4a5568">Decodes token, calls SendTaskSuccess</text>
+
+  <!-- Arrow: API GW to HandleApproval Lambda -->
+  <line x1="540" y1="540" x2="540" y2="570" stroke="#ed7100" stroke-width="1.5" marker-end="url(#arrowhead-orange)"/>
+
+  <!-- Arrow: HandleApproval back to Step Functions (Task Token) - points to Notify Approver box -->
+  <path d="M 440 595 L 220 595 L 220 125 L 370 125" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrowhead-green)"/>
+  <text x="207" y="400" font-size="9" fill="#16a34a" transform="rotate(-90, 207, 400)">SendTaskSuccess (token)</text>
+
+  <!-- Step numbers -->
+  <circle cx="740" cy="125" r="12" fill="#ed7100"/>
+  <text x="740" y="130" text-anchor="middle" font-size="10" font-weight="bold" fill="white">1</text>
+
+  <circle cx="850" cy="475" r="12" fill="#dd3578"/>
+  <text x="850" y="480" text-anchor="middle" font-size="10" font-weight="bold" fill="white">2</text>
+
+  <circle cx="850" cy="555" r="12" fill="#0073bb"/>
+  <text x="850" y="560" text-anchor="middle" font-size="10" font-weight="bold" fill="white">3</text>
+
+  <circle cx="695" cy="555" r="12" fill="#8C4FFF"/>
+  <text x="695" y="560" text-anchor="middle" font-size="10" font-weight="bold" fill="white">4</text>
+
+  <circle cx="555" cy="555" r="12" fill="#ed7100"/>
+  <text x="555" y="560" text-anchor="middle" font-size="10" font-weight="bold" fill="white">5</text>
+
+  <circle cx="233" cy="360" r="12" fill="#16a34a"/>
+  <text x="233" y="365" text-anchor="middle" font-size="10" font-weight="bold" fill="white">6</text>
+
+  <!-- Legend -->
+  <rect x="240" y="640" width="560" height="68" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="260" y="658" font-size="10" font-weight="600" fill="#1a202c">Flow:</text>
+  <text x="260" y="674" font-size="9" fill="#4a5568">1. State machine invokes Lambda with waitForTaskToken</text>
+  <text x="260" y="688" font-size="9" fill="#4a5568">2. Lambda URL-encodes token, publishes email via SNS</text>
+  <text x="550" y="660" font-size="9" fill="#4a5568">3. SNS delivers email with clickable links</text>
+  <text x="550" y="674" font-size="9" fill="#4a5568">4. Reviewer clicks Approve/Reject link</text>
+  <text x="550" y="688" font-size="9" fill="#4a5568">5. API Gateway triggers HandleApproval Lambda</text>
+  <text x="260" y="702" font-size="9" fill="#4a5568">6. Lambda decodes token and calls SendTaskSuccess to resume workflow</text>
+
+  <!-- Arrow markers -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#545b64"/>
+    </marker>
+    <marker id="arrowhead-green" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#16a34a"/>
+    </marker>
+    <marker id="arrowhead-red" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#d13212"/>
+    </marker>
+    <marker id="arrowhead-orange" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#ed7100"/>
+    </marker>
+    <marker id="arrowhead-pink" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#dd3578"/>
+    </marker>
+    <marker id="arrowhead-blue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#0073bb"/>
+    </marker>
+    <marker id="arrowhead-purple" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#8C4FFF"/>
+    </marker>
+  </defs>
+</svg>
