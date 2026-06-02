@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: Step Functions Workflow Pattern - Human in the loop
+Description: Step Functions Workflow Pattern - Human in the loop with one-click email approval
 
 Parameters:
   ModeratorEmailAddress:
@@ -15,15 +15,15 @@ Resources:
       Name: human-in-the-loop
       DefinitionUri: statemachine/statemachine.asl.json
       DefinitionSubstitutions:
+        SendApprovalEmailFunction: !GetAtt SendApprovalEmailFunction.Arn
         ProcessingLambda: !Ref ProcessingLambda
-        TopicName: !Ref NotificationTopic
-      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
-        - SNSPublishMessagePolicy:
-            TopicName: !GetAtt NotificationTopic.TopicName
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref SendApprovalEmailFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref ProcessingLambda
 
-  # Amazon SNS topic and subscription, triggers notification email when content needs to be reviewed.
+  # Amazon SNS topic for sending approval email notifications.
   NotificationTopic:
     Type: AWS::SNS::Topic
     Properties:
@@ -31,8 +31,45 @@ Resources:
         - Endpoint: !Ref ModeratorEmailAddress
           Protocol: "email"
 
+  # Lambda function that sends the approval email with clickable approve/reject links.
+  # Uses waitForTaskToken — the task token is URL-encoded before embedding in the links.
+  SendApprovalEmailFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: SendApprovalEmailFunction
+      CodeUri: lambda/
+      Handler: send_approval_email.lambda_handler
+      Runtime: python3.13
+      Timeout: 10
+      Environment:
+        Variables:
+          SNS_TOPIC_ARN: !Ref NotificationTopic
+          API_ENDPOINT: !Sub "https://${ApprovalApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/respond"
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt NotificationTopic.TopicName
+
+  # Lambda function that handles the approve/reject API Gateway callback.
+  # Decodes the task token and calls SendTaskSuccess or SendTaskFailure.
+  HandleApprovalFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: HandleApprovalFunction
+      CodeUri: lambda/
+      Handler: handle_approval.lambda_handler
+      Runtime: python3.13
+      Timeout: 10
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Statement:
+            - Effect: Allow
+              Action:
+                - states:SendTaskSuccess
+                - states:SendTaskFailure
+              Resource: '*'
+
   # AWS Lambda function processes the review result.
-  # Consider using different functions when your logic gets more complex.
   ProcessingLambda:
     Type: AWS::Serverless::Function
     Properties:
@@ -44,9 +81,60 @@ Resources:
       Policies:
         - AWSLambdaBasicExecutionRole
 
+  # API Gateway for handling approve/reject callbacks from email links.
+  ApprovalApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: HumanApprovalApi
+
+  ApprovalApiResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt ApprovalApi.RootResourceId
+      PathPart: respond
+      RestApiId: !Ref ApprovalApi
+
+  ApprovalApiMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: GET
+      ResourceId: !Ref ApprovalApiResource
+      RestApiId: !Ref ApprovalApi
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub
+          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaArn}/invocations
+          - LambdaArn: !GetAtt HandleApprovalFunction.Arn
+
+  ApprovalApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: ApprovalApiMethod
+    Properties:
+      RestApiId: !Ref ApprovalApi
+
+  ApprovalApiStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      DeploymentId: !Ref ApprovalApiDeployment
+      RestApiId: !Ref ApprovalApi
+      StageName: Prod
+
+  ApiGatewayPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref HandleApprovalFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApprovalApi}/*/GET/respond
+
 Outputs:
   StepFunctionConsoleUrl:
     Description: AWS Console URL of the created StepFunction
     Value: !Sub
       - "https://${AWS::Region}.console.aws.amazon.com/states/home?region=${AWS::Region}#/statemachines/view/${statemachine}"
       - statemachine: !Ref StateMachine
+  ApiEndpoint:
+    Description: API Gateway endpoint URL for approval callbacks
+    Value: !Sub "https://${ApprovalApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/respond"
