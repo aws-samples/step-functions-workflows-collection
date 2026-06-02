@@ -76,7 +76,7 @@ Resources:
       FunctionName: ProcessingLambda
       CodeUri: lambda/
       Handler: app.handler
-      Runtime: nodejs20.x
+      Runtime: nodejs24.x
       Timeout: 3
       Policies:
         - AWSLambdaBasicExecutionRole

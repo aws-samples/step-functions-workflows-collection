@@ -1,6 +1,6 @@
 # Human in the Loop
 
-This pattern allows you to integrate a human review or approval process into your workflows with **one-click email approval**. A Lambda function sends an approval request via SNS email containing clickable approve/reject links. The task token is URL-encoded to ensure special characters don't break the API Gateway callback URL. The workflow pauses until the reviewer clicks a link, which triggers an API Gateway endpoint to resume the Step Functions execution.
+This pattern allows you to integrate a human review or approval process into your workflows with **one-click email approval**. An AWS Lambda function sends an approval request via Amazon SNS email containing clickable approve/reject links. The task token is URL-encoded to ensure special characters don't break the Amazon API Gateway callback URL. The workflow pauses until the reviewer clicks a link, which triggers an API Gateway endpoint to resume the AWS Step Functions execution.
 
 Learn more about this workflow at Step Functions workflows collection: [Human in the Loop](https://serverlessland.com/workflows/human-in-the-loop)
 
