@@ -39,7 +39,7 @@ Important: this application uses various AWS services and there are costs associ
     ```bash
     cdk deploy --parameters ModeratorEmailAddress=your-email@example.com
     ```
-1. Note the outputs from the CDK deployment. These contain the resource names and/or ARNs which are used for testing.
+1. Note the outputs from the CDK deployment: the Step Functions console URL and the API Gateway endpoint URL.
 
 ## How it works
 
