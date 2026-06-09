@@ -55,6 +55,7 @@
     },
     "Handle failure": {
       "Type": "Task",
+      "Comment": "Invokes ProcessingLambda with failure result for downstream handling",
       "Resource": "arn:aws:states:::lambda:invoke",
       "Parameters": {
         "FunctionName": "${ProcessingLambda}",
@@ -79,6 +80,7 @@
     },
     "Handle rejection": {
       "Type": "Task",
+      "Comment": "Invokes ProcessingLambda with rejected result for downstream handling",
       "Resource": "arn:aws:states:::lambda:invoke",
       "Parameters": {
         "FunctionName": "${ProcessingLambda}",

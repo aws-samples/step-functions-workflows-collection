@@ -1,7 +1,7 @@
-/**
+"""
     MIT No Attribution
 
-    Copyright 2022 Amazon Web Services
+    Copyright 2026 Amazon Web Services
 
     Permission is hereby granted, free of charge, to any person obtaining a copy of this
     software and associated documentation files (the "Software"), to deal in the Software
@@ -15,12 +15,12 @@
     HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
     OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
-exports.handler = async (event) => {
-    // Create a basic response including the whole event
-    const response = {
-        statusCode: 200,
-        body: JSON.stringify(event),
-    };
-    return response;
-};
+"""
+import json
+
+
+def handler(event, context):
+    return {
+        'statusCode': 200,
+        'body': json.dumps(event),
+    }
