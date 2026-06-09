@@ -1,4 +1,4 @@
-# Human in the Loop (CDK)
+# Human in the Loop (AWS CDK)
 
 This pattern allows you to integrate a human review or approval process into your workflows with **one-click email approval**. An AWS Lambda function sends an approval request via Amazon SNS email containing clickable approve/reject links. The task token is URL-encoded to ensure special characters don't break the Amazon API Gateway callback URL. The workflow pauses until the reviewer clicks a link, which triggers an API Gateway endpoint to resume the AWS Step Functions execution.
 
