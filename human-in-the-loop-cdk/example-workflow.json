@@ -3,13 +3,13 @@
     "description": "Wait for an approval from a human reviewer with one-click email approve/reject links",
     "language": "Python",
     "simplicity": "2 - Pattern",
-    "usecase": "",
+    "usecase": "Automation",
     "type": "Standard",
     "diagram":"/resources/architecture.svg",
     "videoId": "",
     "level": "200",
-    "framework": "CDK",
-    "services": ["sns","lambda","apigateway"],
+    "framework": "AWS CDK",
+    "services": ["sns","lambda","apigw"],
     "introBox": {
       "headline": "How it works",
       "text": [
