@@ -1,0 +1,131 @@
+{
+  "Comment": "A state machine to integrate a human approver with one-click email approval",
+  "StartAt": "Notify Approver",
+  "States": {
+    "Notify Approver": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+      "Parameters": {
+        "FunctionName": "${SendApprovalEmailFunction}",
+        "Payload": {
+          "execution.$": "$$.Execution.Id",
+          "taskToken.$": "$$.Task.Token",
+          "input.$": "$"
+        }
+      },
+      "TimeoutSeconds": 3600,
+      "Next": "Approved?",
+      "ResultPath": "$.approvalStatus"
+    },
+    "Approved?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "And": [
+            {
+              "Variable": "$.approvalStatus",
+              "IsPresent": true
+            },
+            {
+              "Variable": "$.approvalStatus.result",
+              "IsPresent": true
+            },
+            {
+              "Variable": "$.approvalStatus.result",
+              "BooleanEquals": true
+            }
+          ],
+          "Next": "Handle approval"
+        },
+        {
+          "And": [
+            {
+              "Variable": "$.approvalStatus",
+              "IsPresent": true
+            },
+            {
+              "Variable": "$.approvalStatus.result",
+              "IsPresent": true
+            }
+          ],
+          "Next": "Handle rejection"
+        }
+      ],
+      "Default": "Handle failure"
+    },
+    "Handle failure": {
+      "Type": "Task",
+      "Comment": "Invokes ProcessingLambda with failure result for downstream handling",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${ProcessingLambda}",
+        "Payload": {
+          "input.$": "$",
+          "result": "failure"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "End": true
+    },
+    "Handle rejection": {
+      "Type": "Task",
+      "Comment": "Invokes ProcessingLambda with rejected result for downstream handling",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${ProcessingLambda}",
+        "Payload": {
+          "input.$": "$",
+          "result": "rejected"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "End": true
+    },
+    "Handle approval": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${ProcessingLambda}",
+        "Payload": {
+          "input.$": "$",
+          "result": "approved"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "End": true
+    }
+  }
+}

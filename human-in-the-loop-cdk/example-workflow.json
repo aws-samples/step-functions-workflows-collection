@@ -1,0 +1,80 @@
+{
+    "title": "Human in the Loop (AWS CDK)",
+    "description": "Wait for an approval from a human reviewer with one-click email approve/reject links",
+    "language": "Python",
+    "simplicity": "2 - Pattern",
+    "usecase": "",
+    "type": "Standard",
+    "diagram":"/resources/architecture.svg",
+    "videoId": "",
+    "level": "200",
+    "framework": "CDK",
+    "services": ["sns","lambda","apigateway"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "This pattern allows you to integrate a human review or approval process into your workflows with one-click email approval.",
+        "An AWS Lambda function sends an approval request via Amazon SNS email containing clickable approve/reject links. The task token is URL-encoded to avoid issues with special characters in Amazon API Gateway URLs.",
+        "The workflow pauses using the .waitForTaskToken service integration until the reviewer clicks an approve or reject link.",
+        "The link triggers an Amazon API Gateway endpoint backed by an AWS Lambda function that calls SendTaskSuccess or SendTaskFailure to resume the AWS Step Functions workflow.",
+        "Depending on the review outcome, a different processing path is followed."
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "Delete the stack: <code>cdk destroy</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "1. Bootstrap CDK, if needed: <code>cdk bootstrap aws://{your-aws-account-number}/{your-aws-region}</code>",
+        "2. Deploy the stack: <code>cdk deploy --parameters ModeratorEmailAddress=your-email@example.com</code>"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/human-in-the-loop-cdk/",
+        "templateDir":"human-in-the-loop-cdk",
+        "templateFile": "app.py",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "The AWS Step Functions Workshop",
+          "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+        },
+        {
+          "text": "AWS Step Functions Task Tokens",
+          "link": "https://docs.aws.amazon.com/step-functions/latest/dg/connect-to-resource.html#connect-wait-token"
+        },
+        {
+          "text": "AWS CDK Developer Guide",
+          "link": "https://docs.aws.amazon.com/cdk/v2/guide/home.html"
+        }
+      ]
+    },
+    "authors": [
+        {
+          "name": "Yogesh Nain",
+          "image": "https://avatars.githubusercontent.com/YogeshNain2015",
+          "bio": "Yogesh is a Cloud Support Engineer and SME of Lambda, API Gateway at Amazon Web Services.",
+          "linkedin": "yogesh-nain-a54133170"
+        }
+      ]
+  }
