@@ -1,0 +1,10 @@
+node_modules/
+cdk.out/
+.venv/
+.venv311/
+__pycache__/
+*.pyc
+*.js
+*.d.ts
+*.js.map
+package-lock.json

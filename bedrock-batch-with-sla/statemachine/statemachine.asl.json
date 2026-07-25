@@ -1,0 +1,307 @@
+{
+  "Comment": "Amazon Bedrock Batch Inference with On-Demand SLA Fallback",
+  "StartAt": "SubmitBatchJob",
+  "States": {
+    "SubmitBatchJob": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:bedrock:createModelInvocationJob",
+      "Parameters": {
+        "JobName.$": "$.jobId",
+        "RoleArn": "${BedrockServiceRoleArn}",
+        "ModelId": "${ModelId}",
+        "InputDataConfig": {
+          "S3InputDataConfig": {
+            "S3Uri.$": "$.inputUri"
+          }
+        },
+        "OutputDataConfig": {
+          "S3OutputDataConfig": {
+            "S3Uri.$": "$.outputUri"
+          }
+        },
+        "TimeoutDurationInHours": ${TimeoutDurationHours}
+      },
+      "ResultPath": "$.batchJob",
+      "Next": "RecordJob",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 3,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "FallbackEntry",
+          "ResultPath": "$.error"
+        }
+      ]
+    },
+    "RecordJob": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:updateItem",
+      "Parameters": {
+        "TableName": "${JobsTableName}",
+        "Key": {
+          "JobId": {
+            "S.$": "$.jobId"
+          }
+        },
+        "UpdateExpression": "SET BedrockJobArn = :arn, #status = :status, LastUpdated = :updated",
+        "ExpressionAttributeNames": {
+          "#status": "Status"
+        },
+        "ExpressionAttributeValues": {
+          ":arn": {
+            "S.$": "$.batchJob.JobArn"
+          },
+          ":status": {
+            "S": "Submitted"
+          },
+          ":updated": {
+            "S.$": "$$.State.EnteredTime"
+          }
+        }
+      },
+      "ResultPath": "$.dynamoResult",
+      "Next": "WaitForBatchCompletion"
+    },
+    "WaitForBatchCompletion": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+      "Parameters": {
+        "FunctionName": "${StoreTokenFunctionArn}",
+        "Payload": {
+          "jobId.$": "$.jobId",
+          "bedrockJobArn.$": "$.batchJob.JobArn",
+          "taskToken.$": "$$.Task.Token"
+        }
+      },
+      "TimeoutSeconds": ${BatchCutoffSeconds},
+      "ResultPath": "$.resumeResult",
+      "Next": "CheckOutcome",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.Timeout"],
+          "Next": "FallbackEntry",
+          "ResultPath": "$.timeoutError"
+        }
+      ]
+    },
+    "CheckOutcome": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.resumeResult.status",
+          "StringEquals": "Completed",
+          "Next": "DownstreamProcessing"
+        },
+        {
+          "Or": [
+            {
+              "Variable": "$.resumeResult.status",
+              "StringEquals": "Failed"
+            },
+            {
+              "Variable": "$.resumeResult.status",
+              "StringEquals": "Expired"
+            },
+            {
+              "Variable": "$.resumeResult.status",
+              "StringEquals": "PartiallyCompleted"
+            },
+            {
+              "Variable": "$.resumeResult.status",
+              "StringEquals": "FallbackRequested"
+            }
+          ],
+          "Next": "FallbackEntry"
+        }
+      ],
+      "Default": "FallbackEntry"
+    },
+    "FallbackEntry": {
+      "Type": "Pass",
+      "Comment": "Entry point for fallback path",
+      "Next": "StopBatchJob"
+    },
+    "StopBatchJob": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:bedrock:stopModelInvocationJob",
+      "Parameters": {
+        "JobIdentifier.$": "$.batchJob.JobArn"
+      },
+      "ResultPath": "$.stopResult",
+      "Next": "ReconcileRecords",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "ReconcileRecords",
+          "ResultPath": "$.stopError",
+          "Comment": "Continue even if stop fails (job may already be stopped)"
+        }
+      ]
+    },
+    "ReconcileRecords": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${ReconcileFunctionArn}",
+        "Payload": {
+          "jobId.$": "$.jobId",
+          "inputUri.$": "$.inputUri",
+          "outputUri.$": "$.outputUri"
+        }
+      },
+      "ResultSelector": {
+        "unprocessedKey.$": "$.Payload.unprocessedKey",
+        "unprocessedCount.$": "$.Payload.unprocessedCount",
+        "processedCount.$": "$.Payload.processedCount"
+      },
+      "ResultPath": "$.reconcileResult",
+      "Next": "AnyTodo",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 3,
+          "BackoffRate": 2.0
+        }
+      ]
+    },
+    "AnyTodo": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.reconcileResult.unprocessedCount",
+          "NumericGreaterThan": 0,
+          "Next": "RedriveOnDemand"
+        }
+      ],
+      "Default": "MergeResults"
+    },
+    "RedriveOnDemand": {
+      "Type": "Map",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "DISTRIBUTED",
+          "ExecutionType": "STANDARD"
+        },
+        "StartAt": "InvokeOnDemand",
+        "States": {
+          "InvokeOnDemand": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::bedrock:invokeModel",
+            "Parameters": {
+              "ModelId": "${ModelId}",
+              "Body": {
+                "anthropic_version": "bedrock-2023-05-31",
+                "max_tokens": 1024,
+                "messages.$": "$.modelInput.messages"
+              }
+            },
+            "ResultSelector": {
+              "recordId.$": "$$.Execution.Input.recordId",
+              "body.$": "$.Body"
+            },
+            "ResultPath": "$.modelOutput",
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "Bedrock.ThrottlingException"
+                ],
+                "IntervalSeconds": 2,
+                "BackoffRate": 2.0,
+                "MaxAttempts": 6,
+                "JitterStrategy": "FULL"
+              }
+            ],
+            "Catch": [
+              {
+                "ErrorEquals": ["States.ALL"],
+                "Next": "RecordError",
+                "ResultPath": "$.error"
+              }
+            ],
+            "End": true
+          },
+          "RecordError": {
+            "Type": "Pass",
+            "Parameters": {
+              "recordId.$": "$.recordId",
+              "error.$": "$.error"
+            },
+            "End": true
+          }
+        }
+      },
+      "MaxConcurrency": ${MaxConcurrency},
+      "ItemReader": {
+        "Resource": "arn:aws:states:::s3:getObject",
+        "ReaderConfig": {
+          "InputType": "JSONL"
+        },
+        "Parameters": {
+          "Bucket": "${OutputBucket}",
+          "Key.$": "$.reconcileResult.unprocessedKey"
+        }
+      },
+      "ToleratedFailurePercentage": 5,
+      "ResultWriter": {
+        "Resource": "arn:aws:states:::s3:putObject",
+        "Parameters": {
+          "Bucket": "${OutputBucket}",
+          "Prefix.$": "States.Format('ondemand-results/{}/', $.jobId)"
+        }
+      },
+      "ResultPath": "$.mapResult",
+      "Next": "MergeResults"
+    },
+    "MergeResults": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${MergeFunctionArn}",
+        "Payload": {
+          "jobId.$": "$.jobId",
+          "outputUri.$": "$.outputUri",
+          "reconcileResult.$": "$.reconcileResult"
+        }
+      },
+      "ResultSelector": {
+        "mergedKey.$": "$.Payload.mergedKey",
+        "totalRecords.$": "$.Payload.totalRecords"
+      },
+      "ResultPath": "$.mergeResult",
+      "Next": "DownstreamProcessing",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 3,
+          "BackoffRate": 2.0
+        }
+      ]
+    },
+    "DownstreamProcessing": {
+      "Type": "Pass",
+      "Comment": "Placeholder for customer-specific downstream processing",
+      "Result": "Processing complete",
+      "Next": "Success"
+    },
+    "Success": {
+      "Type": "Succeed"
+    }
+  }
+}

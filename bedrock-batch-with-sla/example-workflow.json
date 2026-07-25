@@ -1,0 +1,98 @@
+{
+    "title": "Amazon Bedrock Batch Inference with On-Demand SLA Fallback",
+    "description": "Runs Amazon Bedrock batch inference as the primary cost-effective path, with automatic fallback to on-demand inference using a Distributed Map when the SLA deadline is at risk. Uses the callback (task token) pattern to suspend execution cheaply while waiting for the batch job, and the saga pattern to ensure a clean terminal state on any failure.",
+    "language": "Python",
+    "simplicity": "3 - Application",
+    "usecase": "Machine Learning",
+    "type": "Standard",
+    "diagram": "/resources/statemachine.png",
+    "videoId": "",
+    "level": "300",
+    "framework": "AWS CDK",
+    "services": ["bedrock", "sfn", "lambda", "s3", "dynamodb", "cloudwatch", "sns", "eventbridge"],
+    "introBox": {
+      "headline": "How it works",
+      "text": [
+        "An Amazon S3 upload triggers a Registrar AWS Lambda function that starts the AWS Step Functions execution. The workflow submits an Amazon Bedrock batch inference job, records the job ARN in Amazon DynamoDB, then suspends using the callback (task token) pattern — consuming no compute while waiting.",
+        "The execution resumes through one of three triggers: the batch job completing (Amazon EventBridge), a stuck-job Amazon CloudWatch alarm (Amazon SNS → Lambda function), or an AWS Step Functions timeout. All three converge on the same fallback path: stop the batch job, reconcile which records were not yet processed, redrive them through a Distributed Map using on-demand Bedrock InvokeModel calls, and merge the results into a single output file."
+      ]
+    },
+    "testing": {
+      "headline": "Testing",
+      "text": [
+        "See the GitHub repo for detailed testing instructions."
+      ]
+    },
+    "cleanup": {
+      "headline": "Cleanup",
+      "text": [
+        "Delete the stack: <code>cdk destroy</code>."
+      ]
+    },
+    "deploy": {
+      "text": [
+        "npm install",
+        "cdk bootstrap aws://<ACCOUNT_ID>/<REGION>",
+        "cdk deploy -c modelId=us.anthropic.claude-sonnet-4-6 -c slaTotalMinutes=360"
+      ]
+    },
+    "gitHub": {
+      "template": {
+        "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/bedrock-batch-with-sla/",
+        "templateDir": "bedrock-batch-with-sla",
+        "templateFile": "stack.py",
+        "ASL": "statemachine/statemachine.asl.json"
+      },
+      "payloads": [
+        {
+          "headline": "",
+          "payloadURL": ""
+        }
+      ]
+    },
+    "resources": {
+      "headline": "Additional resources",
+      "bullets": [
+        {
+          "text": "Bedrock Batch Inference docs",
+          "link": "https://docs.aws.amazon.com/bedrock/latest/userguide/batch-inference.html"
+        },
+        {
+          "text": "Step Functions Callback Pattern (waitForTaskToken)",
+          "link": "https://docs.aws.amazon.com/step-functions/latest/dg/connect-to-resource.html"
+        },
+        {
+          "text": "Step Functions Distributed Map",
+          "link": "https://docs.aws.amazon.com/step-functions/latest/dg/concepts-asl-use-map-state-distributed.html"
+        },
+        {
+          "text": "JSONL support for Distributed Map ItemReader",
+          "link": "https://aws.amazon.com/blogs/compute/introducing-jsonl-support-with-step-functions-distributed-map/"
+        },
+        {
+          "text": "Monitor Bedrock Batch Inference with CloudWatch",
+          "link": "https://aws.amazon.com/blogs/machine-learning/monitor-amazon-bedrock-batch-inference-using-amazon-cloudwatch-metrics/"
+        },
+        {
+          "text": "EventBridge for Bedrock job state changes",
+          "link": "https://docs.aws.amazon.com/bedrock/latest/userguide/monitoring-eventbridge.html"
+        },
+        {
+          "text": "Saga Pattern on AWS",
+          "link": "https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/saga-patterns.html"
+        },
+        {
+          "text": "Cost optimization with Bedrock Batch Inference",
+          "link": "https://aws.amazon.com/blogs/machine-learning/effective-cost-optimization-strategies-for-amazon-bedrock/"
+        }
+      ]
+    },
+    "authors": [
+      {
+        "name": "Subha Venugopal",
+        "image": "https://dydc9epz6trv3.cloudfront.net/public/subha.jpg",
+        "bio": "Subha is an AI/ML Solutions Architect at AWS.\nShe is passionate about improving healthcare delivery and making it accessible to everyone, regardless of socioeconomic and geographical constraints 🚀💙.",
+        "linkedin": "subhavivek"
+      }
+    ]
+  }
