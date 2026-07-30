@@ -74,7 +74,7 @@ Resources:
                   - !Ref TTSResultsBucket
             Condition:
               Bool:
-                  aws:SecureTransport': false
+                  'aws:SecureTransport': false
       Bucket: !Ref TTSResultsBucket
     Metadata:
       SamResourceId: TTSResultsBucketPolicy
