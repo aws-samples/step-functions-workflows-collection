@@ -1,0 +1,65 @@
+{
+  "title": "AWS Feature Relevance Notification System",
+  "description": "GenAI powered workflow that scores and notifies through slack if a given AWS feature is relevant for a given workload",
+  "language": "python",
+  "simplicity": "3 - Advanced",
+  "usecase": "AWS publishes more than 200 feature announcements every month. Identifying which announcement benefits a given workload is a challenging task. This GenAI powered system with Step Functions orchestration scores the relevance of a feature and sends Notification to slack channel, thus enabling customers to automatically curate announcements that are beneficial for a given workload.",
+  "type": "Standard",
+  "diagram": "/architecture.png",
+  "videoId": "",
+  "level": "300",
+  "framework": "SAM",
+  "services": [
+    "lambda",
+    "eventbridge",
+    "stepfunctions",
+    "bedrock",
+    "dynamoDB"
+  ],
+  "introBox": {
+    "headline": "How it works",
+    "text": [
+      "This workflow demonstrates a GenAI system orchestrated by Step Functions workflow that reads AWS What's new RSS feeds and scores a new feature for it's relevance against a given workload profile.",
+      "The Step Functions workflow will also send notification to a slack channel if the AWS feature is relevant to a given workload profile."
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": [
+      "See the GitHub repo for detailed testing instructions."
+    ]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": [
+      "Delete the stack: <code>sam delete</code>."
+    ]
+  },
+  "deploy": {
+    "text": [
+      "sam deploy --guided"
+    ]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/aws-feature-relevance-notification-system/",
+      "templateDir": "aws-feature-relevance-notification-system",
+      "templateFile": "sam-app/template.yaml",
+      "ASL": "step-functions/statemachine.json"
+    },
+    "payloads": [
+      {
+        "headline": "",
+        "payloadURL": ""
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Rahul Sringeri",
+      "image": "",
+      "bio": "Rahul is a Technical Account Manager at AWS.",
+      "linkedin": ""
+    }
+  ]
+}

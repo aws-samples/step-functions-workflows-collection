@@ -1,0 +1,324 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  AWS Feature Relevance Notification System (SAM)
+  Scores AWS What's New announcements against workload profiles using Bedrock
+  and delivers enriched Slack notifications.
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Timeout: 120
+    MemorySize: 256
+    Architectures:
+      - arm64
+    Environment:
+      Variables:
+        POWERTOOLS_SERVICE_NAME: feature-relevance
+
+Parameters:
+  SlackWebhookUrl:
+    Type: String
+    Description: Slack Incoming Webhook URL
+    NoEcho: true
+    Default: ''
+
+  BedrockModelId:
+    Type: String
+    Default: us.anthropic.claude-sonnet-4-6
+    Description: Bedrock model ID for relevance scoring
+
+  KnowledgeBaseId:
+    Type: String
+    Default: ''
+    Description: Bedrock Knowledge Base ID (optional)
+
+Conditions:
+  HasKnowledgeBase: !Not [!Equals [!Ref KnowledgeBaseId, '']]
+
+Resources:
+
+  # ============================================================
+  # KMS Customer Managed Key
+  # ============================================================
+
+  EncryptionKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: CMK for feature-relevance resources
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: EnableRootAccountAccess
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action: kms:*
+            Resource: '*'
+          - Sid: AllowDynamoDBEncryption
+            Effect: Allow
+            Principal:
+              Service: dynamodb.amazonaws.com
+            Action:
+              - kms:Decrypt
+              - kms:Encrypt
+              - kms:GenerateDataKey*
+              - kms:DescribeKey
+              - kms:CreateGrant
+            Resource: '*'
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+          - Sid: AllowSQSEncryption
+            Effect: Allow
+            Principal:
+              Service: sqs.amazonaws.com
+            Action:
+              - kms:Decrypt
+              - kms:GenerateDataKey*
+              - kms:DescribeKey
+            Resource: '*'
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+          - Sid: AllowSecretsManagerEncryption
+            Effect: Allow
+            Principal:
+              Service: secretsmanager.amazonaws.com
+            Action:
+              - kms:Decrypt
+              - kms:Encrypt
+              - kms:GenerateDataKey*
+              - kms:DescribeKey
+              - kms:CreateGrant
+            Resource: '*'
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+
+  # ============================================================
+  # DynamoDB Tables
+  # ============================================================
+
+  WorkloadProfilesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub WorkloadProfiles-${AWS::StackName}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: workload_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: workload_id
+          KeyType: HASH
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !GetAtt EncryptionKey.Arn
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  AnnouncementStateTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub AnnouncementState-${AWS::StackName}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: announcement_url
+          AttributeType: S
+      KeySchema:
+        - AttributeName: announcement_url
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !GetAtt EncryptionKey.Arn
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  # ============================================================
+  # Secrets Manager
+  # ============================================================
+
+  SlackWebhookSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub slack-webhook-${AWS::StackName}
+      Description: Slack webhook URL for notifications
+      KmsKeyId: !GetAtt EncryptionKey.Arn
+      SecretString: !Sub '{"webhook_url":"${SlackWebhookUrl}"}'
+
+  # ============================================================
+  # Dead Letter Queue
+  # ============================================================
+
+  LambdaDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub feature-relevance-dlq-${AWS::StackName}
+      MessageRetentionPeriod: 1209600
+      KmsMasterKeyId: !GetAtt EncryptionKey.Arn
+
+  # ============================================================
+  # Lambda Functions
+  # ============================================================
+
+  RSSIngestionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub RSSIngestion-${AWS::StackName}
+      Handler: index.lambda_handler
+      CodeUri: ../lambdas/rss-ingestion/
+      ReservedConcurrentExecutions: 5
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: !GetAtt LambdaDLQ.Arn
+      Environment:
+        Variables:
+          STATE_TABLE: !Ref AnnouncementStateTable
+          PROFILES_TABLE: !Ref WorkloadProfilesTable
+          STATE_MACHINE_ARN: !GetAtt FeatureRelevanceStateMachine.Arn
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref WorkloadProfilesTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref AnnouncementStateTable
+        - StepFunctionsExecutionPolicy:
+            StateMachineName: !GetAtt FeatureRelevanceStateMachine.Name
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt LambdaDLQ.QueueName
+        - KMSDecryptPolicy:
+            KeyId: !Ref EncryptionKey
+      Events:
+        DailySchedule:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 day)
+            Description: Poll AWS What's New RSS feed daily
+
+  RelevanceScorerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub RelevanceScorer-${AWS::StackName}
+      Handler: index.lambda_handler
+      CodeUri: ../lambdas/relevance-scorer/
+      Timeout: 60
+      ReservedConcurrentExecutions: 10
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: !GetAtt LambdaDLQ.Arn
+      Environment:
+        Variables:
+          MODEL_ID: !Ref BedrockModelId
+          KNOWLEDGE_BASE_ID: !Ref KnowledgeBaseId
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: bedrock:InvokeModel
+              Resource:
+                - arn:aws:bedrock:*::foundation-model/*
+                - !Sub arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/${BedrockModelId}
+        - !If
+          - HasKnowledgeBase
+          - Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:Retrieve
+                  - bedrock:RetrieveAndGenerate
+                Resource: !Sub arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:knowledge-base/${KnowledgeBaseId}
+          - !Ref AWS::NoValue
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt LambdaDLQ.QueueName
+
+  SlackNotificationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub SlackNotification-${AWS::StackName}
+      Handler: index.lambda_handler
+      CodeUri: ../lambdas/slack-notification/
+      Timeout: 30
+      MemorySize: 128
+      ReservedConcurrentExecutions: 5
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: !GetAtt LambdaDLQ.Arn
+      Environment:
+        Variables:
+          SLACK_SECRET_ARN: !Ref SlackWebhookSecret
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: secretsmanager:GetSecretValue
+              Resource: !Ref SlackWebhookSecret
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt LambdaDLQ.QueueName
+        - KMSDecryptPolicy:
+            KeyId: !Ref EncryptionKey
+
+  WorkloadManagerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub WorkloadManager-${AWS::StackName}
+      Handler: index.lambda_handler
+      CodeUri: ../lambdas/workload-manager/
+      Timeout: 30
+      MemorySize: 128
+      ReservedConcurrentExecutions: 5
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: !GetAtt LambdaDLQ.Arn
+      Environment:
+        Variables:
+          PROFILES_TABLE: !Ref WorkloadProfilesTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref WorkloadProfilesTable
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt LambdaDLQ.QueueName
+        - KMSDecryptPolicy:
+            KeyId: !Ref EncryptionKey
+
+  # ============================================================
+  # Step Functions State Machine
+  # ============================================================
+
+  FeatureRelevanceStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name: !Sub FeatureRelevance-${AWS::StackName}
+      DefinitionUri: ../step-functions/state-machine.json
+      DefinitionSubstitutions:
+        RelevanceScorerFunctionArn: !GetAtt RelevanceScorerFunction.Arn
+        SlackNotificationFunctionArn: !GetAtt SlackNotificationFunction.Arn
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref RelevanceScorerFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref SlackNotificationFunction
+
+# ============================================================
+# Outputs
+# ============================================================
+
+Outputs:
+  StateMachineArn:
+    Value: !GetAtt FeatureRelevanceStateMachine.Arn
+
+  RSSIngestionFunctionName:
+    Value: !Ref RSSIngestionFunction
+
+  RelevanceScorerFunctionName:
+    Value: !Ref RelevanceScorerFunction
+
+  SlackNotificationFunctionName:
+    Value: !Ref SlackNotificationFunction
+
+  WorkloadManagerFunctionName:
+    Value: !Ref WorkloadManagerFunction
+
+  WorkloadProfilesTableName:
+    Value: !Ref WorkloadProfilesTable
