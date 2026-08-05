@@ -121,7 +121,7 @@ Resources:
                   - !Ref ResizedBucket
             Condition:
               Bool:
-                  aws:SecureTransport': false
+                'aws:SecureTransport': false
       Bucket: !Ref ResizedBucket
     Metadata:
       SamResourceId: ResizedBucketPolicy
