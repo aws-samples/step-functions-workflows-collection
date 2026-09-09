@@ -12,7 +12,7 @@
     "@aws-sdk/client-bedrock-runtime": "^3.425.0",
     "@aws-sdk/client-s3": "^3.425.0",
     "@aws-sdk/s3-request-presigner": "^3.425.0",
-    "adm-zip": "^0.5.10",
+    "adm-zip": "^0.6.0",
     "marked": "^9.1.0"
   }
 }
