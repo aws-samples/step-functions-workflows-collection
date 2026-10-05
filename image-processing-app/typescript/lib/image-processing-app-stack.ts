@@ -89,7 +89,7 @@ export class ImageProcessingAppStack extends Stack {
 
     const Sfn_CreateBucket = new Function(this, "Sfn_CreateBucket", {
       functionName: "BucketCreation",
-      runtime: Runtime.NODEJS_16_X,
+      runtime: Runtime.NODEJS_24_X,
       code: Code.fromAsset(path.join(__dirname, "./functions")),
       handler: "sfn-CreateBucket.handler",
       role: Cheque_Interface_Role,
@@ -103,7 +103,7 @@ export class ImageProcessingAppStack extends Stack {
 
     const Sfn_ZipImages = new Function(this, "Sfn_ZipImages", {
       functionName: "ZipImages",
-      runtime: Runtime.NODEJS_16_X,
+      runtime: Runtime.NODEJS_24_X,
       code: Code.fromAsset(path.join(__dirname, "./functions")),
       handler: "sfn-ZipImages.handler",
       role: Cheque_Interface_Role,
@@ -113,7 +113,7 @@ export class ImageProcessingAppStack extends Stack {
 
     const Sfn_GetChequeIds = new Function(this, "Sfn_GetChequeIds", {
       functionName: "GetChequeIDs",
-      runtime: Runtime.NODEJS_16_X,
+      runtime: Runtime.NODEJS_24_X,
       code: Code.fromAsset(path.join(__dirname, "./functions")),
       handler: "sfn-GetChequeIds.handler",
       role: Cheque_Interface_Role,
@@ -127,7 +127,7 @@ export class ImageProcessingAppStack extends Stack {
 
     const Sfn_GetChequeImages = new Function(this, "Sfn_GetChequeImages", {
       functionName: "GetChequeImages",
-      runtime: Runtime.NODEJS_16_X,
+      runtime: Runtime.NODEJS_24_X,
       code: Code.fromAsset(path.join(__dirname, "./functions")),
       handler: "sfn-GetCheque-Images.handler",
       role: Cheque_Interface_Role,

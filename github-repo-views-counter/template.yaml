@@ -39,7 +39,7 @@ Resources:
             TableName: DynamoTable
       CodeUri: functions/srcGitHub/
       Handler: app.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs24.x
       Timeout: 8
       Environment:
         Variables:

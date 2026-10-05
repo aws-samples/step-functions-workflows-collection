@@ -123,7 +123,7 @@ Resources:
     Properties:
       CodeUri: functions/call-webhook/
       Handler: app.lambdaHandler
-      Runtime: nodejs18.x
+      Runtime: nodejs24.x
       Architectures:
         - x86_64
       EventInvokeConfig:
@@ -148,7 +148,7 @@ Resources:
     Properties:
       CodeUri: functions/prepare-webhook/
       Handler: app.lambdaHandler
-      Runtime: nodejs18.x
+      Runtime: nodejs24.x
       Architectures:
         - x86_64
       Environment:
@@ -166,7 +166,7 @@ Resources:
     Properties:
       CodeUri: functions/add-subscription/
       Handler: app.lambdaHandler
-      Runtime: nodejs18.x
+      Runtime: nodejs24.x
       Architectures:
         - x86_64
       Environment:

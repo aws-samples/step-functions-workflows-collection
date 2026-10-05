@@ -150,7 +150,7 @@ resource "aws_lambda_function" "LambdaDoWorkFunction" {
   source_code_hash = filebase64sha256(data.archive_file.LambdaZipFile.output_path)
   role             = aws_iam_role.LambdaRole.arn
   handler          = "app.handler"
-  runtime          = "nodejs16.x"
+  runtime          = "nodejs24.x"
   timeout          = "60"
 }
 

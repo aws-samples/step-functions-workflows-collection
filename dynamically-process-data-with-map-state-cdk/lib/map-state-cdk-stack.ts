@@ -54,7 +54,7 @@ export class MapStateCdkStack extends Stack {
 
     //Lambda function that reads from SQS queue
     const readFromSQSLambda = new lambda.Function(this, "Read from SQS", {
-      runtime: lambda.Runtime.NODEJS_14_X,
+      runtime: lambda.Runtime.NODEJS_24_X,
       handler: "read-from-sqs.lambda_handler",
       code: lambda.Code.fromAsset("./functions/read-from-sqs"),
       environment: {
@@ -66,7 +66,7 @@ export class MapStateCdkStack extends Stack {
 
     //Lambda function that deletes proccessed messages from the SQS queue
     const deleteFromSQSLambda = new lambda.Function(this, "Delete from sqs", {
-      runtime: lambda.Runtime.NODEJS_14_X,
+      runtime: lambda.Runtime.NODEJS_24_X,
       handler: "delete-from-sqs.lambda_handler",
       code: lambda.Code.fromAsset("./functions/delete-from-sqs"),
       environment: {

@@ -174,7 +174,7 @@ export class StateMachine extends Construct {
         // AWS Lambda resource to connect to our API Gateway to kick
         // off our step function
         const sagaLambda = new NodejsFunction(this, 'sagaLambdaHandler', {
-            runtime: lambda.Runtime.NODEJS_16_X,
+            runtime: lambda.Runtime.NODEJS_24_X,
             entry: join('lambdas', 'sagaLambda.ts'),
             bundling: {
                 externalModules: ['aws-sdk'], // Use the 'aws-sdk' available in the Lambda runtime
@@ -208,7 +208,7 @@ export class StateMachine extends Construct {
       createLambda(scope:Construct, id:string, handler:string, table:dynamodb.Table){
 
           const fn = new NodejsFunction(scope, id, {
-            runtime: lambda.Runtime.NODEJS_16_X,
+            runtime: lambda.Runtime.NODEJS_24_X,
             entry: join('lambdas', handler),
             bundling: {
                 externalModules: ['aws-sdk'], // Use the 'aws-sdk' available in the Lambda runtime

@@ -582,7 +582,7 @@ Resources:
     Properties:
       CodeUri: function/process-order-table-records/
       Handler: app.handler
-      Runtime: nodejs16.x
+      Runtime: nodejs24.x
       Timeout: 15
       VpcConfig:
         SecurityGroupIds:
@@ -615,7 +615,7 @@ Resources:
     Properties:
       CodeUri: function/query-item-sales-report/
       Handler: app.handler
-      Runtime: nodejs16.x
+      Runtime: nodejs24.x
       Timeout: 15
       VpcConfig:
         SecurityGroupIds:
@@ -638,7 +638,7 @@ Resources:
     Properties:
       CodeUri: function/query-monthly-sales-by-item/
       Handler: app.handler
-      Runtime: nodejs16.x
+      Runtime: nodejs24.x
       Timeout: 15
       VpcConfig:
         SecurityGroupIds:
@@ -661,7 +661,7 @@ Resources:
     Properties:
       CodeUri: function/initialize-database/
       Handler: app.handler
-      Runtime: nodejs16.x
+      Runtime: nodejs24.x
       Timeout: 120
       VpcConfig:
         SecurityGroupIds:
@@ -695,7 +695,7 @@ Resources:
     Properties:
       CodeUri: function/initialize-database-custom-action/
       Handler: app.handler
-      Runtime: nodejs16.x
+      Runtime: nodejs24.x
       Timeout: 10
       Architectures:
         - x86_64

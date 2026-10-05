@@ -34,7 +34,7 @@ export class ChildStateMachine extends Construct {
                 role: updateDatabaseExecutionRole,
                 code: lambda.Code.fromAsset('./functions/update-database'),
                 handler: "app.lambdaHandler",
-                runtime: lambda.Runtime.NODEJS_16_X,
+                runtime: lambda.Runtime.NODEJS_24_X,
                 timeout: cdk.Duration.seconds(3)
             }
         );

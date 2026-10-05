@@ -30,7 +30,7 @@ export class WorkflowWithinAWorkflowCdkStack extends Stack {
 
     //Call back Lambda function 
     const callBackLambda = new lambda.Function(this, "Nesting Pattern Callback", {
-      runtime: lambda.Runtime.NODEJS_14_X,
+      runtime: lambda.Runtime.NODEJS_24_X,
       handler: "callback.lambda_handler",
       code: lambda.Code.fromAsset("./functions/callback"),
       role: lambdaFunctionsExecRole,

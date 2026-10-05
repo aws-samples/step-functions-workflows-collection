@@ -30,7 +30,7 @@ Resources:
     Properties:
       CodeUri: streaming_function/
       Handler: index.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs24.x
       Timeout: !Ref LambdaTimeout
       MemorySize: 128
       AutoPublishAlias: live

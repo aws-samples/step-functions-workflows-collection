@@ -9,7 +9,7 @@ Globals:
   Function:
     MemorySize: 2560 #Change to 1.5x end file size
     Architectures: ["arm64"]
-    Runtime: nodejs22.x
+    Runtime: nodejs24.x
     Timeout: 300
     Environment:
       Variables:

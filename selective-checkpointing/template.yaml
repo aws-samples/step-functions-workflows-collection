@@ -145,7 +145,7 @@ Resources:
       Role: !GetAtt ShipLambdaExecutionRole.Arn
       CodeUri: ShipPackageLambdaFunction/function/
       Handler: app.lambdaHandler
-      Runtime: nodejs16.x
+      Runtime: nodejs24.x
       Timeout: 8
       Events: 
         SQSEvent:
@@ -160,7 +160,7 @@ Resources:
       Role: !GetAtt UpdateDatabaseLambdaFunctionRole.Arn
       CodeUri: UpdateDatabaseLambdaFunction/function/
       Handler: app.lambdaHandler
-      Runtime: nodejs16.x
+      Runtime: nodejs24.x
       Timeout: 3
 
   UpdateDatabaseLambdaFunctionRole:

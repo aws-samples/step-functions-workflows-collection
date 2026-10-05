@@ -3,7 +3,7 @@ Transform: AWS::Serverless-2016-10-31
 Description: AWS Step Functions sample project for combining workflows using the Step Functions StartExecution API service integration in various patterns.
 Globals:
   Function:
-    Runtime: nodejs14.x
+    Runtime: nodejs24.x
     CodeUri: "functions/"
 Resources:
 # Callback Lambda function

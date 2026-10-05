@@ -27,13 +27,13 @@ export class WorkflowmonitorStack extends cdk.Stack {
 
     // Create Lambda functions to handle stop monitoring events and error events
     const monitoringErrorHandler = new lambda.Function(this, 'monitoringErrorHandler', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: lambda.Runtime.NODEJS_24_X,
       handler: 'index.handler',
       code: lambda.Code.fromAsset(path.join(__dirname, 'lambda-source/workflow-event-error-handler/')),
     });
 
     const monitoringStopHandler = new lambda.Function(this, 'monitoringStopHandler', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: lambda.Runtime.NODEJS_24_X,
       handler: 'index.handler',
       code: lambda.Code.fromAsset(path.join(__dirname, 'lambda-source/workflow-event-stop-handler/')),
     });

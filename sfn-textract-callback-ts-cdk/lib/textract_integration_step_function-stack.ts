@@ -229,7 +229,7 @@ export class TextractIntegrationStepFunctionStack extends cdk.Stack {
       {
         entry: 'src/callBackFunction/index.ts',
         handler: 'handler',
-        runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
+        runtime: cdk.aws_lambda.Runtime.NODEJS_24_X,
         architecture: cdk.aws_lambda.Architecture.X86_64,
         timeout: cdk.Duration.seconds(30),
         environment: {

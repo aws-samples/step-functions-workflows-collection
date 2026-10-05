@@ -71,7 +71,7 @@ export class ParentStateMachine extends Construct {
                 role: shipPackageExecutionRole,
                 code: lambda.Code.fromAsset('./functions/ship-package'),
                 handler: "app.lambdaHandler",
-                runtime: lambda.Runtime.NODEJS_16_X,
+                runtime: lambda.Runtime.NODEJS_24_X,
                 timeout: cdk.Duration.seconds(8)
             }
         );
