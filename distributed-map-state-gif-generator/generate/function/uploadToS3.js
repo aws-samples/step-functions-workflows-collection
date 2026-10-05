@@ -5,9 +5,8 @@
 'use strict'
 
 // // Configure S3
-const AWS = require('aws-sdk')
-AWS.config.update({ region: process.env.AWS_REGION })
-const s3 = new AWS.S3({ apiVersion: '2006-03-01' })
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3')
+const s3 = new S3Client({ region: process.env.AWS_REGION })
 
 const fs = require('fs')
 const path = require('path')
@@ -51,7 +50,7 @@ const uploadToS3 = async (file, folder) => {
 	}
 	console.log('uploadToS3: ', params.Key)
 	
-	return s3.putObject(params).promise()
+	return s3.send(new PutObjectCommand(params))
 	
 }
 

@@ -10,7 +10,7 @@ import {
   aws_stepfunctions as sfn,
   aws_stepfunctions_tasks as tasks,
 } from "aws-cdk-lib";
-import { Support } from "aws-sdk";
+import type { DescribeCasesRequest } from "@aws-sdk/client-support";
 import { Construct } from "constructs";
 
 interface supportNotificationsStackProps extends StackProps {
@@ -48,7 +48,7 @@ export class supportNotificationsStack extends Stack {
       {
         service: "support",
         action: "describeCases",
-        parameters: <Support.DescribeCasesRequest>{
+        parameters: <DescribeCasesRequest>{
           CaseIdList: sfn.JsonPath.array(sfn.JsonPath.entirePayload),
         },
         inputPath: "$.detail.case-id",

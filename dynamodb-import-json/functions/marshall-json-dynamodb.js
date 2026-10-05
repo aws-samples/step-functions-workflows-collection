@@ -1,16 +1,17 @@
-const AWS = require('aws-sdk');
-const s3 = new AWS.S3();
+const { S3Client, GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3');
+const s3 = new S3Client({});
 const { marshall } = require("@aws-sdk/util-dynamodb");
 
 const { S3_BUCKET } = process.env
 
-// get file from S3
+// get file from S3 as a UTF-8 string
 const getS3File = async (Key) => {
     const params = {
         Bucket: S3_BUCKET,
         Key: Key
     };
-    return await s3.getObject(params).promise();
+    const response = await s3.send(new GetObjectCommand(params));
+    return response.Body.transformToString('utf-8');
 }
 
 // Marshall JSON to DDB JSON
@@ -32,7 +33,7 @@ const saveFileToS3 = async (Key, file) => {
     Key: NewKey,
     Body: file
   }
-  await s3.upload(params).promise()
+  await s3.send(new PutObjectCommand(params))
   return NewKey
 }
 
@@ -46,9 +47,9 @@ exports.handler = async (event) => {
     // Get JSON file from S3
     const jsonFile = await getS3File(Key)
     // If start-sorkflow file then return contents
-    if (Key.split('/')[1] === 'start-workflow.json') return jsonFile.Body.toString()
+    if (Key.split('/')[1] === 'start-workflow.json') return jsonFile
     // Marshall JSON file
-    const marshalledJson = await marshallJson(jsonFile.Body.toString('utf-8'))
+    const marshalledJson = await marshallJson(jsonFile)
     // Save file to S3 bucket
     const saveFile = await saveFileToS3(Key, marshalledJson)
 

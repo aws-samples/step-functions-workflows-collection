@@ -5,9 +5,9 @@
 'use strict'
 
 // // Configure S3
-const AWS = require('aws-sdk')
-AWS.config.update({ region: process.env.AWS_REGION })
-const s3 = new AWS.S3({ apiVersion: '2006-03-01' })
+const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3')
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner')
+const s3 = new S3Client({ region: process.env.AWS_REGION })
 
 // Set paths for ffpmeg/ffprobe depending on local/Lambda usage
 const ffmpegPath = (process.env.localTest) ? require('@ffmpeg-installer/ffmpeg').path : '/opt/bin/ffmpeg'
@@ -48,10 +48,9 @@ const processMP4 = async (event) => {
 	// Get signed URL for source object
 	const params = {
 		Bucket: process.env.SourceBucketName, 
-		Key: originalMP4, 
-		Expires
+		Key: originalMP4
 	}
-	const url = s3.getSignedUrl('getObject', params)
+	const url = await getSignedUrl(s3, new GetObjectCommand(params), { expiresIn: Expires })
 	console.log('processMP4: ', { url, originalMP4, start, end })
 
 	// Extract frames from MP4 (1 per second)

@@ -13,7 +13,13 @@ import {
   aws_stepfunctions_tasks as tasks,
 } from "aws-cdk-lib";
 
-import { S3, TranscribeService } from "aws-sdk";
+import type { GetObjectRequest, PutObjectCommandInput } from "@aws-sdk/client-s3";
+import type {
+  CreateVocabularyFilterRequest,
+  GetTranscriptionJobRequest,
+  ListVocabularyFiltersRequest,
+  StartTranscriptionJobRequest,
+} from "@aws-sdk/client-transcribe";
 import { Construct } from "constructs";
 
 interface wordFilteringScriptGeneratorStackProps extends StackProps {
@@ -60,7 +66,7 @@ export class wordFilteringScriptGeneratorStack extends Stack {
       {
         service: "transcribe",
         action: "listVocabularyFilters",
-        parameters: <TranscribeService.ListVocabularyFiltersRequest>{
+        parameters: <ListVocabularyFiltersRequest>{
           NameContains: "wordFilter",
         },
         resultPath: "$.VocabularyListResult",
@@ -88,7 +94,7 @@ export class wordFilteringScriptGeneratorStack extends Stack {
       {
         service: "transcribe",
         action: "createVocabularyFilter",
-        parameters: <TranscribeService.CreateVocabularyFilterRequest>{
+        parameters: <CreateVocabularyFilterRequest>{
           LanguageCode: "en-US",
           VocabularyFilterName: "wordFilter",
           Words: props.wordsToFilter,
@@ -121,7 +127,7 @@ export class wordFilteringScriptGeneratorStack extends Stack {
       {
         service: "transcribe",
         action: "startTranscriptionJob",
-        parameters: <TranscribeService.StartTranscriptionJobRequest>{
+        parameters: <StartTranscriptionJobRequest>{
           TranscriptionJobName: sfn.JsonPath.stringAt("$$.Execution.Name"),
           Media: {
             MediaFileUri: sfn.JsonPath.format(
@@ -159,7 +165,7 @@ export class wordFilteringScriptGeneratorStack extends Stack {
       {
         service: "transcribe",
         action: "getTranscriptionJob",
-        parameters: <TranscribeService.GetTranscriptionJobRequest>{
+        parameters: <GetTranscriptionJobRequest>{
           TranscriptionJobName: sfn.JsonPath.stringAt(
             "$.TranscriptionResult.TranscriptionJob.TranscriptionJobName"
           ),
@@ -190,7 +196,7 @@ export class wordFilteringScriptGeneratorStack extends Stack {
       {
         service: "s3",
         action: "getObject",
-        parameters: <S3.GetObjectRequest>{
+        parameters: <GetObjectRequest>{
           Bucket: transcriptResultsBucket.bucketName,
           Key: sfn.JsonPath.format(
             "{}-temp.json",
@@ -214,7 +220,7 @@ export class wordFilteringScriptGeneratorStack extends Stack {
       {
         service: "s3",
         action: "putObject",
-        parameters: <S3.PutObjectRequest>{
+        parameters: <PutObjectCommandInput>{
           Bucket: transcriptResultsBucket.bucketName,
           Key: sfn.JsonPath.format(
             "{}-transcript.txt",

@@ -18,8 +18,8 @@
     "typescript": "^4.9.5"
   },
   "dependencies": {
+    "@aws-sdk/client-rekognition": "^3.700.0",
     "aws-cdk-lib": "^2.177.0",
-    "aws-sdk": "^2.1328.0",
     "constructs": "^10.1.249",
     "source-map-support": "^0.5.21"
   }
