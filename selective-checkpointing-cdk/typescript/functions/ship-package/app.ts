@@ -1,7 +1,9 @@
-var AWS = require('aws-sdk');
-var stepfunctions = new AWS.StepFunctions({apiVersion: '2016-11-23'});
+// SDK v3 is provided by the Lambda runtime, so it is loaded with require and not listed in package.json.
+const { SFNClient, SendTaskSuccessCommand, SendTaskFailureCommand } = require('@aws-sdk/client-sfn');
 
-exports.lambdaHandler = async (event: { Records: any; }, context: any, callback: any) => {
+const stepfunctions = new SFNClient({});
+
+export const lambdaHandler = async (event: { Records: any; }, context: any) => {
 
     await new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * 6000) + 1000));
 
@@ -18,13 +20,13 @@ exports.lambdaHandler = async (event: { Records: any; }, context: any, callback:
 
         // console.log(`Calling Step Functions to complete callback task with params ${JSON.stringify(params)}`);
         try {
-            let response = await stepfunctions.sendTaskSuccess(params).promise();
+            let response = await stepfunctions.send(new SendTaskSuccessCommand(params));
         } catch (error) {
-            let response = await stepfunctions.sendTaskFailure({
+            let response = await stepfunctions.send(new SendTaskFailureCommand({
                 "taskToken": taskToken,
-                "error": 500,
+                "error": "500",
                 "cause": JSON.stringify(error)
-            }).promise();
+            }));
             return {
                 'statusCode': 500,
                 'body': {

@@ -1,7 +1,7 @@
 import { SFNClient, SendTaskFailureCommand } from "@aws-sdk/client-sfn"; // SFN Modules import
 import { DynamoDBClient, GetItemCommand, DeleteItemCommand } from "@aws-sdk/client-dynamodb"; // DDB Modules import
 
-export const handler = async (event, context, callback) => {
+export const handler = async (event, context) => {
   console.log("--> Received event from EventBridge:");
   console.log(event);
   const ddbclient = new DynamoDBClient();

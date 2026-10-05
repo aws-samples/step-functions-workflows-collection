@@ -1,4 +1,5 @@
-const { DynamoDB } = require('aws-sdk');
+// AWS SDK for JavaScript v3 is provided by the nodejs24.x Lambda runtime
+const { DynamoDBClient, DeleteItemCommand } = require('@aws-sdk/client-dynamodb');
 export {};
 
 export const handler = async function(event:any) {
@@ -11,7 +12,7 @@ export const handler = async function(event:any) {
   }
 
 
-  const dynamo = new DynamoDB();
+  const dynamo = new DynamoDBClient({});
 
   var params = {
     TableName: process.env.TABLE_NAME,
@@ -22,7 +23,7 @@ export const handler = async function(event:any) {
   };
   
   // Call DynamoDB to remove the item from the table
-  let result = await dynamo.deleteItem(params).promise().catch((error: any) => {
+  let result = await dynamo.send(new DeleteItemCommand(params)).catch((error: any) => {
     throw new Error(error);
   });
 

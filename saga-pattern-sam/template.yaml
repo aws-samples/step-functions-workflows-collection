@@ -138,7 +138,6 @@ Resources:
           Variables:
             TABLE_NAME:
               Ref: StateMachineFlights
-            AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
         Handler: reserveFlight.handler
         Runtime: nodejs24.x
       DependsOn:
@@ -212,7 +211,6 @@ Resources:
         Variables:
           TABLE_NAME:
             Ref: StateMachineFlights
-          AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
       Handler: confirmFlight.handler
       Runtime: nodejs24.x
     DependsOn:
@@ -286,7 +284,6 @@ Resources:
         Variables:
           TABLE_NAME:
             Ref: StateMachineFlights
-          AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
       Handler: cancelFlight.handler
       Runtime: nodejs24.x
     DependsOn:
@@ -360,7 +357,6 @@ Resources:
         Variables:
           TABLE_NAME:
             Ref: StateMachineRentals
-          AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
       Handler: reserveRental.handler
       Runtime: nodejs24.x
     DependsOn:
@@ -431,7 +427,6 @@ Resources:
         Variables:
           TABLE_NAME:
             Ref: StateMachineRentals
-          AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
       Handler: confirmRental.handler
       Runtime: nodejs24.x
     DependsOn:
@@ -506,7 +501,6 @@ Resources:
         Variables:
           TABLE_NAME:
             Ref: StateMachineRentals
-          AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
       Handler: cancelRental.handler
       Runtime: nodejs24.x
     DependsOn:
@@ -579,7 +573,6 @@ Resources:
         Variables:
           TABLE_NAME:
             Ref: StateMachinePayments
-          AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
       Handler: processPayment.handler
       Runtime: nodejs24.x
     DependsOn:
@@ -651,7 +644,6 @@ Resources:
         Variables:
           TABLE_NAME:
             Ref: StateMachinePayments
-          AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
       Handler: refundPayment.handler
       Runtime: nodejs24.x
     DependsOn:
@@ -1041,7 +1033,6 @@ Resources:
         Variables:
           statemachine_arn:
             Ref: StateMachine
-          AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
       Handler: sagaLambda.handler
       Runtime: nodejs24.x
     DependsOn:

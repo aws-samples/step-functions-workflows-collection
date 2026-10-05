@@ -1,9 +1,9 @@
-const AWS = require('aws-sdk');
+// AWS SDK for JavaScript v3 is provided by the nodejs24.x Lambda runtime
+const { SFNClient, StartExecutionCommand } = require('@aws-sdk/client-sfn');
 
-const stepFunctions = new AWS.StepFunctions({
-});
+const stepFunctions = new SFNClient({});
 
-module.exports.handler = (event:any, context:any, callback:any) => {
+module.exports.handler = async (event:any, context:any) => {
 
     let runType = "success"; // failFlightsReservation , failFlightsConfirmation , failCarRentalReservation, failCarRentalConfirmation, failPayment
     let tripID =  context.awsRequestId;
@@ -35,27 +35,24 @@ module.exports.handler = (event:any, context:any, callback:any) => {
         input: JSON.stringify(input)
     };
 
-    stepFunctions.startExecution(params, (err:any, data:any) => {
-        if (err) {
+    try {
+        const data = await stepFunctions.send(new StartExecutionCommand(params));
 
-            console.log(err);
-            const response = {
-                statusCode: 500,
-                body: JSON.stringify({
-                message: 'There was an error processing your reservation'
-                })
-            };
-            callback(null, response);
-        } else {
+        console.log(data);
+        return {
+            statusCode: 200,
+            body: JSON.stringify({
+                message: 'Your reservation is being processed'
+            })
+        };
+    } catch (err) {
 
-            console.log(data);
-            const response = {
-                statusCode: 200,
-                body: JSON.stringify({
-                    message: 'Your reservation is being processed'
-                })
-            };
-            callback(null, response);
-        }
-    });
+        console.log(err);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({
+            message: 'There was an error processing your reservation'
+            })
+        };
+    }
 };

@@ -1,5 +1,6 @@
-const AWS = require("aws-sdk");
-const DDB = new AWS.DynamoDB.DocumentClient();
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const { DynamoDBDocumentClient, UpdateCommand } = require("@aws-sdk/lib-dynamodb");
+const DDB = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
 // Env Vars
 const { TABLE_NAME } = process.env;
@@ -15,7 +16,7 @@ const updateDDB = async ({id, taskToken}) => {
           }
     }
     console.log('PARAMS:', params)
-    const res = await DDB.update(params).promise()
+    const res = await DDB.send(new UpdateCommand(params))
     console.log('DDB RES:', res)
     return res;
 }

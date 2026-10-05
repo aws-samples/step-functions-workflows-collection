@@ -177,7 +177,7 @@ export class StateMachine extends Construct {
             runtime: lambda.Runtime.NODEJS_24_X,
             entry: join('lambdas', 'sagaLambda.ts'),
             bundling: {
-                externalModules: ['aws-sdk'], // Use the 'aws-sdk' available in the Lambda runtime
+                externalModules: ['@aws-sdk/*'], // Use the AWS SDK for JavaScript v3 provided by the Lambda runtime
             },
             environment: {
                 statemachine_arn: saga.stateMachineArn
@@ -211,7 +211,7 @@ export class StateMachine extends Construct {
             runtime: lambda.Runtime.NODEJS_24_X,
             entry: join('lambdas', handler),
             bundling: {
-                externalModules: ['aws-sdk'], // Use the 'aws-sdk' available in the Lambda runtime
+                externalModules: ['@aws-sdk/*'], // Use the AWS SDK for JavaScript v3 provided by the Lambda runtime
             },
             environment: {
                 TABLE_NAME: table.tableName

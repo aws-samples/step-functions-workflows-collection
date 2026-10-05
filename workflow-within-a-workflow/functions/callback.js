@@ -1,6 +1,8 @@
 console.log('Loading function');
-const AWS = require('aws-sdk');
-exports.lambda_handler = (event, context, callback) => {
+const { SFNClient, SendTaskSuccessCommand } = require('@aws-sdk/client-sfn');
+const stepfunctions = new SFNClient();
+
+exports.lambda_handler = async (event, context) => {
     console.log('event ' + JSON.stringify(event));
     console.log('context ' + JSON.stringify(context));
 
@@ -12,14 +14,12 @@ exports.lambda_handler = (event, context, callback) => {
         output: "\"" + message + "\""
     }
 
-    const stepfunctions = new AWS.StepFunctions();
-    stepfunctions.sendTaskSuccess(params, function (err, data) {
-        if (err) {
-            console.log("Error", err);
-            callback(null, err)
-        } else {
-            console.log("Success", data);
-            callback(null);
-        }
-    });
+    try {
+        const data = await stepfunctions.send(new SendTaskSuccessCommand(params));
+        console.log("Success", data);
+        return;
+    } catch (err) {
+        console.log("Error", err);
+        return err;
+    }
 }

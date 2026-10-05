@@ -94,10 +94,9 @@ async function sendResponse(event, context, responseStatus, responseData) {
       const req = request(options, (response) => {
         console.log("STATUS: " + response.statusCode);
         console.log("HEADERS: " + JSON.stringify(response.headers));
-        // Tell AWS Lambda that the function execution is done  
-        context.done();      
-      
-      
+        // Drain the response and resolve so the async handler can return
+        response.resume();
+        response.on('end', () => resolve());
       }).on('error', (err) => reject(err));
       // write data to request body
       req.write(responseBody);

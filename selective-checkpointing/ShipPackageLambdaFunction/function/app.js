@@ -1,8 +1,8 @@
 console.log('Loading function');
-var AWS = require('aws-sdk');
-var stepfunctions = new AWS.StepFunctions({apiVersion: '2016-11-23'});
+const { SFNClient, SendTaskSuccessCommand, SendTaskFailureCommand } = require('@aws-sdk/client-sfn');
+const stepfunctions = new SFNClient({});
 
-exports.lambdaHandler = async(event, context, callback) => {
+exports.lambdaHandler = async (event, context) => {
 
     await new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * 6000) + 1000));
 
@@ -19,19 +19,19 @@ exports.lambdaHandler = async(event, context, callback) => {
         };
         console.log(`Calling Step Functions to complete callback task with params ${JSON.stringify(params)}`);
         try {
-            let response = await stepfunctions.sendTaskSuccess(params).promise();
+            let response = await stepfunctions.send(new SendTaskSuccessCommand(params));
         } catch (error) {
-            let response = await stepfunctions.sendTaskFailure({"taskToken": taskToken, "error":500,"cause":error}).promise();
+            let response = await stepfunctions.send(new SendTaskFailureCommand({"taskToken": taskToken, "error": "500", "cause": JSON.stringify(error)}));
             return { 'statusCode': 500,
                 'body': {
-                    'updated': True
+                    'updated': true
                 }
             }
     }
     }
     return { 'statusCode': 200,
                 'body': {
-                    'updated': True
+                    'updated': true
                 }
             }
 }

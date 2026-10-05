@@ -1,14 +1,13 @@
-const AWS = require('aws-sdk');
+// AWS SDK for JavaScript v3 is provided by the nodejs24.x Lambda runtime
+const { SFNClient, StartExecutionCommand } = require('@aws-sdk/client-sfn');
 
+const stepFunctions = new SFNClient({});
 
-const stepFunctions = new AWS.StepFunctions({
-});
+module.exports.handler = async (event:any, context:any) => {
 
-module.exports.handler = (event:any, context:any, callback:any) => {
-    
     let runType = "success"; // failFlightsReservation , failFlightsConfirmation , failCarRentalReservation, failCarRentalConfirmation, failPayment
     let tripID =  context.awsRequestId;
-    
+
     if(null != event.queryStringParameters){
         if(typeof event.queryStringParameters.runType != 'undefined') {
             runType = event.queryStringParameters.runType;
@@ -30,33 +29,30 @@ module.exports.handler = (event:any, context:any, callback:any) => {
         "rental_to": "2021-07-17T00:00:00.000Z",
         "run_type": runType
     };
-    
+
     const params = {
         stateMachineArn: process.env.statemachine_arn,
         input: JSON.stringify(input)
     };
-    
-    stepFunctions.startExecution(params, (err:any, data:any) => {
-        if (err) {
-        
-            console.log(err);
-            const response = {
-                statusCode: 500,
-                body: JSON.stringify({
-                message: 'There was an error processing your reservation'
-                })
-            };
-            callback(null, response);
-        } else {
-            
-            console.log(data);
-            const response = {
-                statusCode: 200,
-                body: JSON.stringify({
-                    message: 'Your reservation is being processed'
-                })
-            };
-            callback(null, response);
-        }
-    });
+
+    try {
+        const data = await stepFunctions.send(new StartExecutionCommand(params));
+
+        console.log(data);
+        return {
+            statusCode: 200,
+            body: JSON.stringify({
+                message: 'Your reservation is being processed'
+            })
+        };
+    } catch (err) {
+
+        console.log(err);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({
+            message: 'There was an error processing your reservation'
+            })
+        };
+    }
 };
