@@ -35,7 +35,7 @@ Resources:
     Properties:
       CodeUri: sumFunction/function/
       Handler: app.lambdaHandler
-      Runtime: nodejs14.x
+      Runtime: nodejs24.x
       Timeout: 3
 
   LambdaFunctionAvgFunction:
@@ -43,7 +43,7 @@ Resources:
     Properties:
       CodeUri: AvgFunction/function/
       Handler: app.lambdaHandler
-      Runtime: nodejs14.x
+      Runtime: nodejs24.x
       Timeout: 3
 
   LambdaFunctionMaxMinFunction:
@@ -51,7 +51,7 @@ Resources:
     Properties:
       CodeUri: MaxMinFunction/function/
       Handler: app.lambdaHandler
-      Runtime: nodejs14.x
+      Runtime: nodejs24.x
       Timeout: 3
       
 ##########################################################################

@@ -53,7 +53,7 @@ Resources:
       FunctionName: LoadMonitorFunction
       CodeUri: lambda/loadmonitor/
       Handler: index.handler
-      Runtime: nodejs20.x
+      Runtime: nodejs24.x
 
   # IAM role for the LoadGeneratorStateMachine step function to invoke the nested step function and the load monitor Lambda function
   LoadGeneratorRole:

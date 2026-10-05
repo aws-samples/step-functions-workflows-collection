@@ -20,7 +20,7 @@ const connection = await mysql.createPool({
 
 console.log('Connected to MySQL')
 
-export async function handler(event, context, callback) {
+export async function handler(event, context) {
 
   try {
 

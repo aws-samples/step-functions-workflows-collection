@@ -82,23 +82,41 @@ Resources:
       Code:
         ZipFile:
           Fn::Sub:
-          - "console.log('Loading function');\nconst AWS = require('aws-sdk');\n\n\
-            exports.lambda_handler = (event, context, callback) => {\n    var docClient\
-            \ = new AWS.DynamoDB.DocumentClient();\n    var messageIds = []\n\n  \
-            \  for (var i = 0; i < 10; i++) {\n      console.log(\"Adding a new item...\"\
-            );\n      var messageId = \"MessageNo\" + i.toString();\n      messageIds.push(messageId);\n\
-            \n      var message = \"Hi! This is message no \" + i.toString();\n  \
-            \    var params = {\n          TableName: \"${ddbTableName}\",\n     \
-            \     Item:{\n              \"MessageId\": messageId,\n              \"\
-            Message\": message\n          }\n      };\n      docClient.put(params,\
-            \ function(err, data) {\n          if (err) {\n              console.error(\"\
-            Unable to add item. Error JSON:\", JSON.stringify(err, null, 2));\n  \
-            \        } else {\n              console.log(\"Added item:\", JSON.stringify(data,\
-            \ null, 2));\n          }\n      });\n    };\n    messageIds.push(\"DONE\"\
-            );\n    callback(null, messageIds);\n};"
+          - |
+            console.log('Loading function');
+            const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+            const { DynamoDBDocumentClient, PutCommand } = require('@aws-sdk/lib-dynamodb');
+
+            const docClient = DynamoDBDocumentClient.from(new DynamoDBClient());
+
+            exports.lambda_handler = async (event, context) => {
+                var messageIds = [];
+                var puts = [];
+
+                for (var i = 0; i < 10; i++) {
+                    console.log("Adding a new item...");
+                    var messageId = "MessageNo" + i.toString();
+                    messageIds.push(messageId);
+
+                    var message = "Hi! This is message no " + i.toString();
+                    var params = {
+                        TableName: "${ddbTableName}",
+                        Item: {
+                            "MessageId": messageId,
+                            "Message": message
+                        }
+                    };
+                    puts.push(docClient.send(new PutCommand(params))
+                        .then((data) => console.log("Added item:", JSON.stringify(data, null, 2)))
+                        .catch((err) => console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2))));
+                }
+                await Promise.all(puts);
+                messageIds.push("DONE");
+                return messageIds;
+            };
           - ddbTableName:
               Ref: DDBTable
-      Runtime: nodejs14.x
+      Runtime: nodejs24.x
       Timeout: '60'
     Metadata:
       SamResourceId: SeedingFunction

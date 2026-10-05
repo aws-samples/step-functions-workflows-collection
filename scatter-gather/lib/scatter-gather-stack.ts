@@ -21,7 +21,7 @@ export class ScatterGatherStack extends cdk.Stack {
 
       // Lambda function representing a single responder (e.g. quote look-up)
       const quoteResponder = new lambda.Function(this, 'QuoteResponder_' + i.toString(), {
-        runtime: lambda.Runtime.NODEJS_18_X,
+        runtime: lambda.Runtime.NODEJS_24_X,
         code: lambda.Code.fromAsset('lambda'),
         handler: 'quote-responder.handler',
         environment: { 'RESPONDER_ID': i.toString()}

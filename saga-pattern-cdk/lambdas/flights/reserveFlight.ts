@@ -1,4 +1,5 @@
-const { DynamoDB } = require('aws-sdk');
+// AWS SDK for JavaScript v3 is provided by the nodejs24.x Lambda runtime
+const { DynamoDBClient, PutItemCommand } = require('@aws-sdk/client-dynamodb');
 export {};
 
 export const handler = async function(event:any) {
@@ -13,7 +14,7 @@ export const handler = async function(event:any) {
   }
 
   // create AWS SDK clients
-  const dynamo = new DynamoDB();
+  const dynamo = new DynamoDBClient({});
 
   var params = {
       TableName: process.env.TABLE_NAME,
@@ -31,7 +32,7 @@ export const handler = async function(event:any) {
     };
   
   // Call DynamoDB to add the item to the table
-  let result = await dynamo.putItem(params).promise().catch((error: any) => {
+  let result = await dynamo.send(new PutItemCommand(params)).catch((error: any) => {
     throw new Error(error);
   });
 

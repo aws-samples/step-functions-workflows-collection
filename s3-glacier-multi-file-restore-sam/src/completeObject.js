@@ -1,6 +1,8 @@
-const aws = require('aws-sdk');
-const db = new aws.DynamoDB.DocumentClient();
-const stepfunctions = new aws.StepFunctions();
+const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocumentClient, GetCommand, DeleteCommand } = require('@aws-sdk/lib-dynamodb');
+const { SFNClient, SendTaskSuccessCommand } = require('@aws-sdk/client-sfn');
+const db = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+const stepfunctions = new SFNClient({});
 const dbTableName = process.env.DB_TABLE_NAME;
 
 exports.handler = async (event, context) => {
@@ -19,7 +21,7 @@ exports.handler = async (event, context) => {
             S3Key: key
         }
     };
-    var data = await db.get(params).promise();
+    var data = await db.send(new GetCommand(params));
     
     if(!data.Item) {
         console.error("failed to get task token for " + key);
@@ -42,12 +44,12 @@ exports.handler = async (event, context) => {
                   "key": key
                 })
             };
-            await stepfunctions.sendTaskSuccess(params).promise();
+            await stepfunctions.send(new SendTaskSuccessCommand(params));
         } catch (err) {
             console.error(err);
         }
     }
     
-    await db.delete(params).promise();
+    await db.send(new DeleteCommand(params));
     
 };

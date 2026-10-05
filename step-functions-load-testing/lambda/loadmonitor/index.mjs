@@ -1,4 +1,4 @@
-export const handler = function iterator(event, context, callback) {
+export const handler = async function iterator(event, context) {
     const { timer } = event;
     const { start = Date.now(), duration, targetConcurrency, rampUpDuration } = timer;
     const step = Math.round(targetConcurrency / rampUpDuration);
@@ -11,7 +11,7 @@ export const handler = function iterator(event, context, callback) {
         stepTimer = Date.now();
     }
 
-    callback(null, {
+    return {
         timer: {
             start,
             duration,
@@ -22,5 +22,5 @@ export const handler = function iterator(event, context, callback) {
             stepTimer
         },
         items: Array(currentConcurrency || targetConcurrency).fill(1)
-    });
+    };
 };

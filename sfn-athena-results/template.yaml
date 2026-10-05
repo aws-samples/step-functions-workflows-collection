@@ -38,7 +38,7 @@ Resources:
     Properties:
       CodeUri: functions/process-results/
       Handler: app.lambdaHandler
-      Runtime: nodejs16.x
+      Runtime: nodejs24.x
       Architectures:
         - x86_64
       Policies:

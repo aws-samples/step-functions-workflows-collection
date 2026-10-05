@@ -6,20 +6,19 @@
 
 //const { createSnippets } = require('./snippet')
 const { ffProbe } = require('./ffmpeg-promisify')
-const AWS = require('aws-sdk')
-AWS.config.update({ region: process.env.AWS_REGION })
-const s3 = new AWS.S3({ apiVersion: '2006-03-01' })
+const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3')
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner')
+const s3 = new S3Client({ region: process.env.AWS_REGION })
 
 // The Lambda handler
 exports.lambdaHandler = async (event) => {
 
 	const params = {
 		Bucket: event.bucket, 
-		Key: event.key, 
-		Expires: 300
+		Key: event.key
 	}
 
-  	const url = s3.getSignedUrl('getObject', params)
+  	const url = await getSignedUrl(s3, new GetObjectCommand(params), { expiresIn: 300 })
 
 	// Get length of source video
 	const metadata = await ffProbe(url)

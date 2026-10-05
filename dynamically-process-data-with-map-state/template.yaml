@@ -3,7 +3,7 @@ Transform: AWS::Serverless-2016-10-31
 Description: AWS Step Functions sample project for mapping over an array of elements
 Globals:
   Function:
-    Runtime: nodejs14.x
+    Runtime: nodejs24.x
     CodeUri: "functions/"
 Parameters:
   # During deployment, this paramter will prompt for the email address of the user to receive notifications of SQS messages

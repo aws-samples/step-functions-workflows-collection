@@ -53,7 +53,7 @@ export class SmartCronJobStack extends Stack {
 
     //Lambda function to run the scheduled task
     const scheduler = new lambda.Function(this,"Scheduler",{
-        runtime: lambda.Runtime.NODEJS_16_X,
+        runtime: lambda.Runtime.NODEJS_24_X,
         code: lambda.Code.fromAsset("lambda"),
         handler: "index.handler",
         environment: {

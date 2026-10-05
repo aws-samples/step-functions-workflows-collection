@@ -12,7 +12,6 @@ import {
   aws_stepfunctions_tasks as tasks,
 } from "aws-cdk-lib";
 
-import { Polly, S3 } from "aws-sdk";
 import { Construct } from "constructs";
 
 export class ttsConverterStack extends Stack {
@@ -44,7 +43,7 @@ export class ttsConverterStack extends Stack {
     const getTextFile = new tasks.CallAwsService(this, "GetTextFile", {
       service: "s3",
       action: "getObject",
-      parameters: <S3.GetObjectRequest>{
+      parameters: {
         Bucket: sfn.JsonPath.stringAt("$.detail.bucket.name"),
         Key: sfn.JsonPath.stringAt("$.detail.object.key"),
       },
@@ -61,7 +60,7 @@ export class ttsConverterStack extends Stack {
       {
         service: "polly",
         action: "startSpeechSynthesisTask",
-        parameters: <Polly.StartSpeechSynthesisTaskInput>{
+        parameters: {
           OutputFormat: "mp3",
           OutputS3BucketName: ttsResultsBucket.bucketName,
           Text: sfn.JsonPath.stringAt("$.filecontent"),
@@ -91,7 +90,7 @@ export class ttsConverterStack extends Stack {
       {
         service: "polly",
         action: "getSpeechSynthesisTask",
-        parameters: <Polly.GetSpeechSynthesisTaskInput>{
+        parameters: {
           TaskId: sfn.JsonPath.stringAt("$.SynthesisTask.TaskId"),
         },
         iamResources: ["*"],

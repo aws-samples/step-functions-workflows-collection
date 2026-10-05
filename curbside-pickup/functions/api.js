@@ -1,6 +1,8 @@
-const AWS = require("aws-sdk");
-const DDB = new AWS.DynamoDB.DocumentClient();
-const stepfunctions = new AWS.StepFunctions();
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const { DynamoDBDocumentClient, ScanCommand } = require("@aws-sdk/lib-dynamodb");
+const { SFNClient, SendTaskSuccessCommand, StartExecutionCommand } = require("@aws-sdk/client-sfn");
+const DDB = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+const stepfunctions = new SFNClient({});
 
 // Env Vars
 const { TABLE_NAME, STATEMACHINE_ARN } = process.env;
@@ -20,7 +22,7 @@ const buildRes = async (data, status) => {
 
 const getDDB = async () => {
     // get all data from dynamodb table
-    const res = await DDB.scan({ TableName: TABLE_NAME }).promise()
+    const { $metadata, ...res } = await DDB.send(new ScanCommand({ TableName: TABLE_NAME }))
     console.log('DDB RES:', res)
     return res;
 }
@@ -36,7 +38,7 @@ const postTaskToken = async (body) => {
         taskToken: taskToken,
     }
     console.log('Task Params -- ', params) 
-    await stepfunctions.sendTaskSuccess(params).promise()
+    await stepfunctions.send(new SendTaskSuccessCommand(params))
     return 'TASK-SUCCESS'; 
 }
 
@@ -46,7 +48,7 @@ const postOrder = async (body) => {
         stateMachineArn: STATEMACHINE_ARN,
         input: body
     }
-    await stepfunctions.startExecution(params).promise()
+    await stepfunctions.send(new StartExecutionCommand(params))
     return 'ORDER-SUCCESS';
 }
 

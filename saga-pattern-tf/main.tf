@@ -81,7 +81,7 @@ resource "aws_lambda_function" "reserve_flight_function" {
   function_name    = "${local.project_name}-reserve-flight-fn"
   role             = aws_iam_role.reserve_flight_role.arn
   handler          = "reserveFlight.handler"
-  runtime          = "nodejs16.x"
+  runtime          = "nodejs24.x"
   filename         = "${path.module}/dist/lambdas/flights/reserveFlight.zip"
   source_code_hash = data.archive_file.reserve_flight.output_base64sha256
   environment {
@@ -153,7 +153,7 @@ resource "aws_lambda_function" "reserve_car_rental_function" {
   function_name    = "${local.project_name}-reserve-car-rental-fn"
   role             = aws_iam_role.reserve_car_rental_role.arn
   handler          = "reserveRental.handler"
-  runtime          = "nodejs16.x"
+  runtime          = "nodejs24.x"
   filename         = "${path.module}/dist/lambdas/rentals/reserveRental.zip"
   source_code_hash = data.archive_file.reserve_car_rental.output_base64sha256
   environment {
@@ -224,7 +224,7 @@ resource "aws_lambda_function" "process_payment_function" {
   function_name    = "${local.project_name}-process-payment-fn"
   role             = aws_iam_role.process_payment_role.arn
   handler          = "processPayment.handler"
-  runtime          = "nodejs16.x"
+  runtime          = "nodejs24.x"
   filename         = "${path.module}/dist/lambdas/payment/processPayment.zip"
   source_code_hash = data.archive_file.process_payment.output_base64sha256
   environment {
@@ -296,7 +296,7 @@ resource "aws_lambda_function" "confirm_flight_function" {
   function_name    = "${local.project_name}-confirm-flight-fn"
   role             = aws_iam_role.confirm_flight_role.arn
   handler          = "confirmFlight.handler"
-  runtime          = "nodejs16.x"
+  runtime          = "nodejs24.x"
   filename         = "${path.module}/dist/lambdas/flights/confirmFlight.zip"
   source_code_hash = data.archive_file.confirm_flight.output_base64sha256
   environment {
@@ -368,7 +368,7 @@ resource "aws_lambda_function" "confirm_car_rental_function" {
   function_name    = "${local.project_name}-confirm-car-rental-fn"
   role             = aws_iam_role.confirm_car_rental_role.arn
   handler          = "confirmRental.handler"
-  runtime          = "nodejs16.x"
+  runtime          = "nodejs24.x"
   filename         = "${path.module}/dist/lambdas/rentals/confirmRental.zip"
   source_code_hash = data.archive_file.confirm_car_rental.output_base64sha256
   environment {
@@ -438,7 +438,7 @@ resource "aws_lambda_function" "refund_payment_function" {
   function_name    = "${local.project_name}-refund-payment-fn"
   role             = aws_iam_role.refund_payment_role.arn
   handler          = "refundPayment.handler"
-  runtime          = "nodejs16.x"
+  runtime          = "nodejs24.x"
   filename         = "${path.module}/dist/lambdas/payment/refundPayment.zip"
   source_code_hash = data.archive_file.refund_payment.output_base64sha256
   environment {
@@ -508,7 +508,7 @@ resource "aws_lambda_function" "cancel_car_reservation_function" {
   function_name    = "${local.project_name}-cancel-rental-fn"
   role             = aws_iam_role.cancel_car_reservation_role.arn
   handler          = "cancelRental.handler"
-  runtime          = "nodejs16.x"
+  runtime          = "nodejs24.x"
   filename         = "${path.module}/dist/lambdas/rentals/cancelRental.zip"
   source_code_hash = data.archive_file.cancel_car_reservation.output_base64sha256
   environment {
@@ -579,7 +579,7 @@ resource "aws_lambda_function" "cancel_flight_function" {
   function_name    = "${local.project_name}-cancel-flight-fn"
   role             = aws_iam_role.cancel_flight_role.arn
   handler          = "cancelFlight.handler"
-  runtime          = "nodejs16.x"
+  runtime          = "nodejs24.x"
   filename         = "${path.module}/dist/lambdas/flights/cancelFlight.zip"
   source_code_hash = data.archive_file.cancel_flight.output_base64sha256
   environment {
@@ -768,7 +768,7 @@ resource "aws_lambda_function" "saga_lambda_function" {
   function_name    = "${local.project_name}-saga-Lambda-fn"
   role             = aws_iam_role.saga_lambda_role.arn
   handler          = "sagaLambda.handler"
-  runtime          = "nodejs16.x"
+  runtime          = "nodejs24.x"
   filename         = "${path.module}/dist/lambdas/sagaLambda.zip"
   source_code_hash = data.archive_file.saga_lambda.output_base64sha256
   environment {

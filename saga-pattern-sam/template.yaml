@@ -138,9 +138,8 @@ Resources:
           Variables:
             TABLE_NAME:
               Ref: StateMachineFlights
-            AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
         Handler: reserveFlight.handler
-        Runtime: nodejs16.x
+        Runtime: nodejs24.x
       DependsOn:
         - StateMachinereserveFlightLambdaHandlerServiceRoleDefaultPolicy
         - StateMachinereserveFlightLambdaHandlerServiceRole
@@ -212,9 +211,8 @@ Resources:
         Variables:
           TABLE_NAME:
             Ref: StateMachineFlights
-          AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
       Handler: confirmFlight.handler
-      Runtime: nodejs16.x
+      Runtime: nodejs24.x
     DependsOn:
       - StateMachineconfirmFlightLambdaHandlerServiceRoleDefaultPolicy
       - StateMachineconfirmFlightLambdaHandlerServiceRole
@@ -286,9 +284,8 @@ Resources:
         Variables:
           TABLE_NAME:
             Ref: StateMachineFlights
-          AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
       Handler: cancelFlight.handler
-      Runtime: nodejs16.x
+      Runtime: nodejs24.x
     DependsOn:
       - StateMachinecancelFlightLambdaHandlerServiceRoleDefaultPolicy
       - StateMachinecancelFlightLambdaHandlerServiceRole
@@ -360,9 +357,8 @@ Resources:
         Variables:
           TABLE_NAME:
             Ref: StateMachineRentals
-          AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
       Handler: reserveRental.handler
-      Runtime: nodejs16.x
+      Runtime: nodejs24.x
     DependsOn:
       - StateMachinereserveRentalLambdaHandlerServiceRoleDefaultPolicy
       - StateMachinereserveRentalLambdaHandlerServiceRole
@@ -431,9 +427,8 @@ Resources:
         Variables:
           TABLE_NAME:
             Ref: StateMachineRentals
-          AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
       Handler: confirmRental.handler
-      Runtime: nodejs16.x
+      Runtime: nodejs24.x
     DependsOn:
       - StateMachineconfirmRentalLambdaHandlerServiceRoleDefaultPolicy
       - StateMachineconfirmRentalLambdaHandlerServiceRole
@@ -506,9 +501,8 @@ Resources:
         Variables:
           TABLE_NAME:
             Ref: StateMachineRentals
-          AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
       Handler: cancelRental.handler
-      Runtime: nodejs16.x
+      Runtime: nodejs24.x
     DependsOn:
       - StateMachinecancelRentalLambdaHandlerServiceRoleDefaultPolicy
       - StateMachinecancelRentalLambdaHandlerServiceRole
@@ -579,9 +573,8 @@ Resources:
         Variables:
           TABLE_NAME:
             Ref: StateMachinePayments
-          AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
       Handler: processPayment.handler
-      Runtime: nodejs16.x
+      Runtime: nodejs24.x
     DependsOn:
       - StateMachineprocessPaymentLambdaHandlerServiceRoleDefaultPolicy
       - StateMachineprocessPaymentLambdaHandlerServiceRole
@@ -651,9 +644,8 @@ Resources:
         Variables:
           TABLE_NAME:
             Ref: StateMachinePayments
-          AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
       Handler: refundPayment.handler
-      Runtime: nodejs16.x
+      Runtime: nodejs24.x
     DependsOn:
       - StateMachinerefundPaymentLambdaHandlerServiceRoleDefaultPolicy
       - StateMachinerefundPaymentLambdaHandlerServiceRole
@@ -1041,9 +1033,8 @@ Resources:
         Variables:
           statemachine_arn:
             Ref: StateMachine
-          AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
       Handler: sagaLambda.handler
-      Runtime: nodejs16.x
+      Runtime: nodejs24.x
     DependsOn:
       - StateMachinesagaLambdaHandlerServiceRoleDefaultPolicy
       - StateMachinesagaLambdaHandlerServiceRole

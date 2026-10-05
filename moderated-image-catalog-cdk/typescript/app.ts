@@ -13,7 +13,6 @@ import {
   aws_stepfunctions as sfn,
   aws_stepfunctions_tasks as tasks,
 } from "aws-cdk-lib";
-import { Rekognition } from "aws-sdk";
 import { Construct } from "constructs";
 
 interface moderatedImageCatalogStackProps extends StackProps {
@@ -72,7 +71,7 @@ export class moderatedImageCatalogStack extends Stack {
       {
         service: "rekognition",
         action: "detectModerationLabels",
-        parameters: <Rekognition.DetectModerationLabelsRequest>{
+        parameters: {
           Image: {
             S3Object: {
               Bucket: sfn.JsonPath.stringAt("$.bucket"),
@@ -118,7 +117,7 @@ export class moderatedImageCatalogStack extends Stack {
       {
         service: "rekognition",
         action: "detectLabels",
-        parameters: <Rekognition.DetectLabelsRequest>{
+        parameters: {
           Image: {
             S3Object: {
               Bucket: sfn.JsonPath.stringAt("$.bucket"),
@@ -144,7 +143,7 @@ export class moderatedImageCatalogStack extends Stack {
       {
         service: "rekognition",
         action: "detectText",
-        parameters: <Rekognition.DetectTextRequest>{
+        parameters: {
           Image: {
             S3Object: {
               Bucket: sfn.JsonPath.stringAt("$.bucket"),

@@ -32,7 +32,7 @@ Resources:
     Properties:
       CodeUri: ModuloFunction/function/
       Handler: app.lambdaHandler
-      Runtime: nodejs16.x
+      Runtime: nodejs24.x
       Timeout: 3
       Environment:
         Variables:
@@ -43,7 +43,7 @@ Resources:
     Properties:
       CodeUri: CallToApiFunction/function/
       Handler: app.lambdaHandler
-      Runtime: nodejs16.x
+      Runtime: nodejs24.x
       Timeout: 3
       Environment:
         Variables:

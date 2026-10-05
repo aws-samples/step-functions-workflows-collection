@@ -6,7 +6,7 @@ Description: AWS Step Functions Workflow sample project for restoring multiple f
 Globals:
   Function:
     #Common function options
-    Runtime: nodejs16.x
+    Runtime: nodejs24.x
     MemorySize: 128
     CodeUri: "src/"
     Timeout: 30

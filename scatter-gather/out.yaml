@@ -31,7 +31,7 @@ Resources:
         Fn::GetAtt:
           - QuoteResponder1ServiceRole60C93223
           - Arn
-      Runtime: nodejs18.x
+      Runtime: nodejs24.x
     DependsOn:
       - QuoteResponder1ServiceRole60C93223
     Metadata:
@@ -71,7 +71,7 @@ Resources:
         Fn::GetAtt:
           - QuoteResponder2ServiceRole8602CD03
           - Arn
-      Runtime: nodejs18.x
+      Runtime: nodejs24.x
     DependsOn:
       - QuoteResponder2ServiceRole8602CD03
     Metadata:
@@ -111,7 +111,7 @@ Resources:
         Fn::GetAtt:
           - QuoteResponder3ServiceRole28800967
           - Arn
-      Runtime: nodejs18.x
+      Runtime: nodejs24.x
     DependsOn:
       - QuoteResponder3ServiceRole28800967
     Metadata:
@@ -151,7 +151,7 @@ Resources:
         Fn::GetAtt:
           - QuoteResponder4ServiceRoleE482D62C
           - Arn
-      Runtime: nodejs18.x
+      Runtime: nodejs24.x
     DependsOn:
       - QuoteResponder4ServiceRoleE482D62C
     Metadata:
@@ -191,7 +191,7 @@ Resources:
         Fn::GetAtt:
           - QuoteResponder5ServiceRoleF59D9C46
           - Arn
-      Runtime: nodejs18.x
+      Runtime: nodejs24.x
     DependsOn:
       - QuoteResponder5ServiceRoleF59D9C46
     Metadata:

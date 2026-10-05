@@ -5,9 +5,9 @@
 'use strict'
 
 // Configure S3
-const AWS = require('aws-sdk')
-AWS.config.update({ region: process.env.AWS_REGION })
-const s3 = new AWS.S3({ apiVersion: '2006-03-01' })
+const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3')
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner')
+const s3 = new S3Client({ region: process.env.AWS_REGION })
 
 const { ffProbe } = require('./ffmpeg-promisify')
 const { writeBatch } = require ('./eventbridge.js')
@@ -16,10 +16,9 @@ const createSnippets = async (record) => {
 	// Get signed URL for source object
 	const params = {
 		Bucket: record.s3.bucket.name, 
-		Key: record.s3.object.key, 
-		Expires: 300
+		Key: record.s3.object.key
 	}
-	const url = s3.getSignedUrl('getObject', params)
+	const url = await getSignedUrl(s3, new GetObjectCommand(params), { expiresIn: 300 })
 
 	// Get length of source video
 	const metadata = await ffProbe(url)

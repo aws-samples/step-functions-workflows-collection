@@ -21,7 +21,7 @@ Globals:
   Function:
     MemorySize: 512
     Architectures: ["arm64"]
-    Runtime: nodejs16.x
+    Runtime: nodejs24.x
     Timeout: 30
     Environment:
       Variables:

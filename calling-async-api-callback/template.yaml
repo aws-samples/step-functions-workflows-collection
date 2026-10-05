@@ -61,7 +61,7 @@ Resources:
       MemorySize: 128
       Timeout: 3
       Handler: index.handler
-      Runtime: nodejs20.x
+      Runtime: nodejs24.x
       Architectures:
         - x86_64
       Policies:
@@ -86,7 +86,7 @@ Resources:
       MemorySize: 128
       Timeout: 3
       Handler: index.handler
-      Runtime: nodejs20.x
+      Runtime: nodejs24.x
       Architectures:
         - x86_64
       Environment:
@@ -123,7 +123,7 @@ Resources:
       MemorySize: 128
       Timeout: 3
       Handler: index.handler
-      Runtime: nodejs20.x
+      Runtime: nodejs24.x
       Architectures:
         - x86_64
       Environment:

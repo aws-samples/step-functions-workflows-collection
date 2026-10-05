@@ -1,16 +1,10 @@
-const aws = require('aws-sdk');
+const { SQSClient, DeleteMessageCommand } = require('@aws-sdk/client-sqs');
 const sqsQueueUrl = process.env.SQS_QUEUE_URL; 
-exports.lambda_handler = (event, context, callback) => {
-  const sqs = new aws.SQS();
+const sqs = new SQSClient();
 
-  sqs.deleteMessage({
+exports.lambda_handler = async (event) => {
+  return await sqs.send(new DeleteMessageCommand({
     QueueUrl: sqsQueueUrl,
     ReceiptHandle: event.ReceiptHandle
-  }).promise()
-    .then(data => {
-      callback(null, data);
-    })
-    .catch(err => {
-      callback(err);
-    });
+  }));
 };

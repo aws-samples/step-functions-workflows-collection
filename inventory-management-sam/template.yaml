@@ -52,7 +52,7 @@ Resources:
       Handler: index.handler
       MemorySize: 512
       Architectures: ["arm64"]
-      Runtime: nodejs18.x
+      Runtime: nodejs24.x
       Timeout: 60
       Policies:
         - DynamoDBWritePolicy: # Needed permission to write to DynamoDB (Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html)
@@ -67,7 +67,7 @@ Resources:
       Handler: index.handler
       MemorySize: 256
       Architectures: ["arm64"]
-      Runtime: nodejs18.x
+      Runtime: nodejs24.x
       Timeout: 10
       Environment:
         Variables:
@@ -223,7 +223,7 @@ Resources:
       Handler: index.handler
       MemorySize: 256
       Architectures: ["arm64"]
-      Runtime: nodejs18.x
+      Runtime: nodejs24.x
       Timeout: 30
       Environment:
         Variables:
@@ -320,7 +320,7 @@ Resources:
       Handler: index.handler
       MemorySize: 256
       Architectures: ["arm64"]
-      Runtime: nodejs18.x
+      Runtime: nodejs24.x
       Timeout: 30
       Role: !GetAtt CallBackEmailLambdaRole.Arn
 
@@ -358,7 +358,7 @@ Resources:
       Handler: index.handler
       MemorySize: 256
       Architectures: ["arm64"]
-      Runtime: nodejs18.x
+      Runtime: nodejs24.x
       Timeout: 30
       Environment:
         Variables:
@@ -378,7 +378,7 @@ Resources:
       Handler: index.handler
       MemorySize: 256
       Architectures: ["arm64"]
-      Runtime: nodejs18.x
+      Runtime: nodejs24.x
       Timeout: 60
       Environment:
         Variables:

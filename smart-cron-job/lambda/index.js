@@ -1,6 +1,8 @@
-const aws = require('aws-sdk');
-const docClient = new aws.DynamoDB.DocumentClient();
-var stepfunctions = new aws.StepFunctions()
+const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocumentClient, QueryCommand } = require('@aws-sdk/lib-dynamodb');
+const { SFNClient, StartExecutionCommand } = require('@aws-sdk/client-sfn');
+const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+var stepfunctions = new SFNClient({})
 
 
 const SF_ARN = process.env.SF_ARN;
@@ -46,7 +48,7 @@ async function triggerStepFunction(event) {
         input: JSON.stringify(event),
     };
 
-    return await stepfunctions.startExecution(params).promise();
+    return await stepfunctions.send(new StartExecutionCommand(params));
 }
 
 function getDate() {
@@ -69,7 +71,7 @@ async function queryItems(today) {
         }
     };
     try {
-        const data = await docClient.query(ddb_params).promise();
+        const data = await docClient.send(new QueryCommand(ddb_params));
         return data;
     } catch (err) {
         console.error(

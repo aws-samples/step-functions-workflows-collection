@@ -87,7 +87,7 @@ Resources:
       Properties:
         CodeUri: snippet/function/
         Handler: app.lambdaHandler
-        Runtime: nodejs16.x
+        Runtime: nodejs24.x
         Timeout: 30
         MemorySize: 10240
         Layers:
@@ -107,7 +107,7 @@ Resources:
       Properties:
         CodeUri: generate/function/
         Handler: app.lambdaHandler
-        Runtime: nodejs16.x
+        Runtime: nodejs24.x
         Timeout: 30
         MemorySize: 4096
         Layers:
