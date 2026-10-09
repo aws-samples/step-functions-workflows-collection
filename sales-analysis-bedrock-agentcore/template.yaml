@@ -1,0 +1,361 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >-
+  Analyze sales data CSV with multi-agent AI and human approval.
+  Provisions a Bedrock AgentCore Harness with Code Interpreter, a Standard Step Functions
+  state machine triggered by S3 upload via EventBridge, two invokeHarness calls
+  (data analyst with Code Interpreter, then report writer), human-in-the-loop approval
+  via API Gateway clickable links, and a DynamoDB table to record approved reports.
+
+Parameters:
+  ApprovalEmail:
+    Type: String
+    Description: Email address to receive report approval notifications.
+    Default: ''
+
+Conditions:
+  HasEmail: !Not [!Equals [!Ref ApprovalEmail, '']]
+
+Resources:
+
+  # --- S3 Bucket for CSV uploads ---
+  DataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub
+        - sales-data-${UniqueSuffix}
+        - UniqueSuffix: !Select [4, !Split ['-', !Select [2, !Split ['/', !Ref 'AWS::StackId']]]]
+      NotificationConfiguration:
+        EventBridgeConfiguration:
+          EventBridgeEnabled: true
+
+  # --- Custom Resource Lambda to seed sample CSV ---
+  SeedDataRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: PutSampleData
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: s3:PutObject
+                Resource: !Sub ${DataBucket.Arn}/*
+
+  SeedDataFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/seed-data-function/
+      Handler: app.handler
+      Runtime: python3.13
+      Timeout: 30
+      Role: !GetAtt SeedDataRole.Arn
+
+  SeedData:
+    Type: Custom::SeedData
+    DependsOn:
+      - DataBucket
+    Properties:
+      ServiceToken: !GetAtt SeedDataFunction.Arn
+      BucketName: !Ref DataBucket
+
+  # --- EventBridge Rule: S3 upload triggers Step Functions ---
+  EventBridgeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: events.amazonaws.com }
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: StartExecution
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: states:StartExecution
+                Resource: !GetAtt SalesAnalysisStateMachine.Arn
+
+  S3UploadRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - aws.s3
+        detail-type:
+          - Object Created
+        detail:
+          bucket:
+            name:
+              - !Ref DataBucket
+          object:
+            key:
+              - suffix: .csv
+      State: ENABLED
+      Targets:
+        - Id: StartSalesAnalysis
+          Arn: !GetAtt SalesAnalysisStateMachine.Arn
+          RoleArn: !GetAtt EventBridgeRole.Arn
+          InputTransformer:
+            InputPathsMap:
+              bucket: $.detail.bucket.name
+              key: $.detail.object.key
+            InputTemplate: '{"bucket": "<bucket>", "key": "<key>"}'
+
+  # --- SNS Topic for HITL approval notification ---
+  ApprovalTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub
+        - SalesReportApproval-${UniqueSuffix}
+        - UniqueSuffix: !Select [4, !Split ['-', !Select [2, !Split ['/', !Ref 'AWS::StackId']]]]
+
+  ApprovalSubscription:
+    Type: AWS::SNS::Subscription
+    Condition: HasEmail
+    Properties:
+      TopicArn: !Ref ApprovalTopic
+      Protocol: email
+      Endpoint: !Ref ApprovalEmail
+
+  # --- API Gateway + Lambda for HITL approve/reject links ---
+  ApprovalFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: SendTaskResponse
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - states:SendTaskSuccess
+                  - states:SendTaskFailure
+                Resource: '*'
+
+  ApprovalFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/approval-function/
+      Handler: app.handler
+      Runtime: python3.13
+      Timeout: 10
+      Role: !GetAtt ApprovalFunctionRole.Arn
+
+  ApprovalApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub
+        - SalesReportApproval-${UniqueSuffix}
+        - UniqueSuffix: !Select [4, !Split ['-', !Select [2, !Split ['/', !Ref 'AWS::StackId']]]]
+      ProtocolType: HTTP
+
+  ApprovalIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref ApprovalApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt ApprovalFunction.Arn
+      PayloadFormatVersion: '2.0'
+
+  ApprovalRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ApprovalApi
+      RouteKey: GET /respond
+      Target: !Sub integrations/${ApprovalIntegration}
+
+  ApprovalStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref ApprovalApi
+      StageName: $default
+      AutoDeploy: true
+
+  ApprovalLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ApprovalFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${ApprovalApi}/*
+
+  # --- DynamoDB Table for approved reports ---
+  ReportsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub
+        - SalesReports-${UniqueSuffix}
+        - UniqueSuffix: !Select [4, !Split ['-', !Select [2, !Split ['/', !Ref 'AWS::StackId']]]]
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: report_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: report_id
+          KeyType: HASH
+
+  # --- Harness Execution Role ---
+  HarnessExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: bedrock-agentcore.amazonaws.com }
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: InvokeFoundationModel
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                  - bedrock:InvokeModelWithResponseStream
+                Resource:
+                  - !Sub arn:${AWS::Partition}:bedrock:*::foundation-model/amazon.nova-lite-v1:0
+        - PolicyName: CodeInterpreter
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock-agentcore:StartCodeInterpreterSession
+                  - bedrock-agentcore:StopCodeInterpreterSession
+                  - bedrock-agentcore:GetCodeInterpreterSession
+                  - bedrock-agentcore:ListCodeInterpreterSessions
+                  - bedrock-agentcore:InvokeCodeInterpreter
+                Resource: !Sub arn:${AWS::Partition}:bedrock-agentcore:${AWS::Region}:aws:code-interpreter/*
+        - PolicyName: ReadS3Data
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub ${DataBucket.Arn}/*
+        - PolicyName: HarnessMemory
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock-agentcore:ListEvents
+                  - bedrock-agentcore:PutEvent
+                  - bedrock-agentcore:GetEvent
+                  - bedrock-agentcore:CreateEvent
+                  - bedrock-agentcore:CreateMemory
+                  - bedrock-agentcore:GetMemory
+                  - bedrock-agentcore:ListMemories
+                Resource: !Sub arn:${AWS::Partition}:bedrock-agentcore:${AWS::Region}:${AWS::AccountId}:memory/*
+
+  # --- AgentCore Harness ---
+  Harness:
+    Type: AWS::BedrockAgentCore::Harness
+    Properties:
+      HarnessName: !Sub
+        - SalesAnalysis_${UniqueSuffix}
+        - UniqueSuffix: !Select [4, !Split ['-', !Select [2, !Split ['/', !Ref 'AWS::StackId']]]]
+      ExecutionRoleArn: !GetAtt HarnessExecutionRole.Arn
+      Model:
+        BedrockModelConfig:
+          ModelId: amazon.nova-lite-v1:0
+      Tools:
+        - Type: agentcore_code_interpreter
+          Name: aws_codeinterpreter_v1
+          Config:
+            AgentCoreCodeInterpreter:
+              CodeInterpreterArn: !Sub arn:${AWS::Partition}:bedrock-agentcore:${AWS::Region}:aws:code-interpreter/aws.codeinterpreter.v1
+      SystemPrompt:
+        - Text: >-
+            You are a data analysis assistant. You have access to S3 via shell commands.
+            When given an S3 URI, use the shell tool to download the file with: aws s3 cp <uri> /tmp/data.csv
+            Then use aws_codeinterpreter_v1 to analyze the data.
+            Always respond with structured JSON when instructed.
+
+  # --- State Machine Execution Role ---
+  StateMachineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: states.amazonaws.com }
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: InvokeHarness
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock-agentcore:InvokeHarness
+                  - bedrock-agentcore:InvokeAgentRuntime
+                Resource: !GetAtt Harness.Arn
+        - PolicyName: WriteDynamoDB
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: dynamodb:PutItem
+                Resource: !GetAtt ReportsTable.Arn
+        - PolicyName: PublishSNS
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: sns:Publish
+                Resource: !Ref ApprovalTopic
+
+  # --- State Machine ---
+  SalesAnalysisStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/statemachine.asl.json
+      DefinitionSubstitutions:
+        HarnessArn: !GetAtt Harness.Arn
+        CodeInterpreterArn: !Sub arn:${AWS::Partition}:bedrock-agentcore:${AWS::Region}:aws:code-interpreter/aws.codeinterpreter.v1
+        ApprovalTopicArn: !Ref ApprovalTopic
+        ApprovalUrl: !GetAtt ApprovalApi.ApiEndpoint
+        ReportsTableName: !Ref ReportsTable
+      Role: !GetAtt StateMachineRole.Arn
+
+Outputs:
+  StateMachineArn:
+    Description: ARN of the sales analysis state machine
+    Value: !Ref SalesAnalysisStateMachine
+  HarnessArn:
+    Description: ARN of the Bedrock AgentCore Harness
+    Value: !GetAtt Harness.Arn
+  DataBucketName:
+    Description: S3 bucket for uploading CSV files
+    Value: !Ref DataBucket
+  ApprovalTopicArn:
+    Description: SNS topic ARN for report approval notifications
+    Value: !Ref ApprovalTopic
+  ApprovalApiUrl:
+    Description: API Gateway URL for approve/reject actions
+    Value: !GetAtt ApprovalApi.ApiEndpoint
+  ReportsTableName:
+    Description: DynamoDB table where reports are recorded
+    Value: !Ref ReportsTable
