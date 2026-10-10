@@ -34,7 +34,7 @@ Important: this application uses various AWS services and there are costs associ
     ```
     cdk deploy \
       --parameters AgentRuntimeArns=arn:aws:bedrock-agentcore:us-east-1:123456789012:runtime/agent1,arn:aws:bedrock-agentcore:us-east-1:123456789012:runtime/agent2 \
-      --parameters BedrockModelId=us.anthropic.claude-sonnet-4-20250514-v1:0
+      --parameters BedrockModelId=us.anthropic.claude-sonnet-4-6
     ```
 1. Note the outputs from the CDK deployment process. These contain the resource names and/or ARNs which are used for testing.
 
