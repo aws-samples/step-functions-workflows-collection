@@ -1,0 +1,90 @@
+{
+  "title": "Sales Analysis with Bedrock AgentCore Harness and Human In the Loop",
+  "description": "Analyze sales CSV data using Amazon Bedrock AgentCore invokeHarness with Code Interpreter, generate executive reports with multi-agent AI, and gate publishing behind human-in-the-loop approval via clickable email links.",
+  "language": "Python",
+  "simplicity": "3 - Application",
+  "usecase": "AI/ML",
+  "type": "Standard",
+  "diagram": "/resources/statemachine.png",
+  "videoId": "",
+  "level": "300",
+  "framework": "SAM",
+  "services": [
+    "stepfunctions",
+    "bedrockagentcore",
+    "s3",
+    "sns",
+    "dynamodb",
+    "eventbridge",
+    "apigateway",
+    "lambda"
+  ],
+  "introBox": {
+    "headline": "How it works",
+    "text": [
+      "This workflow demonstrates a multi-agent AI pipeline with human oversight, triggered by an S3 file upload.",
+      "1. An S3 CSV upload triggers the state machine via Amazon EventBridge.",
+      "2. The first invokeHarness call uses a data analyst system prompt with Code Interpreter to download and analyze the CSV data, computing metrics like revenue by region, growth rates, and return rates.",
+      "3. The second invokeHarness call uses a report writer system prompt to generate a concise executive summary from the analysis results.",
+      "4. The workflow pauses using waitForTaskToken and sends an SNS notification with clickable Approve/Reject links via API Gateway.",
+      "5. Upon approval or rejection, the final report is recorded to a DynamoDB table with the corresponding status."
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": [
+      "See the GitHub repo for detailed testing instructions."
+    ]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": [
+      "Delete the stack: `sam delete`."
+    ]
+  },
+  "deploy": {
+    "text": [
+      "sam deploy --guided"
+    ]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/sales-analysis-bedrock-agentcore/",
+      "templateDir": "sales-analysis-bedrock-agentcore",
+      "templateFile": "template.yaml",
+      "ASL": "statemachine/statemachine.asl.json"
+    },
+    "payloads": [
+      {
+        "headline": "",
+        "payloadURL": ""
+      }
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "The AWS Step Functions Workshop",
+        "link": "https://catalog.workshops.aws/stepfunctions/en-US"
+      },
+      {
+        "text": "Amazon Bedrock AgentCore Documentation",
+        "link": "https://docs.aws.amazon.com/bedrock-agentcore/latest/userguide/"
+      },
+      {
+        "text": "Call a third-party API with Step Functions",
+        "link": "https://docs.aws.amazon.com/step-functions/latest/dg/connect-third-party-apis.html"
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Sahithi Ginjupalli",
+      "image": "https://drive.google.com/file/d/1YcKYuGz3LfzSxiwb2lWJfpyi49SbvOSr/view?usp=sharing",
+      "bio": "Cloud Engineer at AWS with a passion for diving deep into cloud and AI services to build innovative serverless applications.",
+      "linkedin": "ginjupalli-sahithi-37460a18b",
+      "twitter": ""
+    }
+  ]
+}

@@ -1,0 +1,151 @@
+{
+  "Comment": "Analyze sales CSV data with two AI agents (data analyst + report writer) and human approval via clickable links, triggered by S3 upload.",
+  "QueryLanguage": "JSONata",
+  "StartAt": "Analyze Data",
+  "States": {
+    "Analyze Data": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::bedrockagentcore:invokeHarness",
+      "Arguments": {
+        "HarnessArn": "${HarnessArn}",
+        "RuntimeSessionId": "{% $states.context.Execution.Name & '-analyze' %}",
+        "Messages": [
+          {
+            "Role": "user",
+            "Content": [
+              {
+                "Text": "{% 'Download and analyze the CSV file at s3://' & $states.input.bucket & '/' & $states.input.key & '\n\nUse shell to download the file, then use aws_codeinterpreter_v1 to analyze it. Calculate: total revenue by region, total revenue by product, quarter-over-quarter growth rates, return rates by product, and identify top and bottom performers.\n\nReturn EXACTLY one JSON object with keys: revenue_by_region (object), revenue_by_product (object), growth_highlights (array of strings), concern_areas (array of strings), top_performer (string), bottom_performer (string). No prose, no markdown.' %}"
+              }
+            ]
+          }
+        ],
+        "SystemPrompt": [
+          {
+            "Text": "You are a data analyst. First download the file from S3 using: aws s3 cp <uri> /tmp/data.csv -- then use the aws_codeinterpreter_v1 tool to perform precise calculations. Respond with EXACTLY one JSON object and nothing else. Do not include thinking tags, reasoning, prose, or markdown. The first character of your response must be { and the last must be }."
+          }
+        ],
+        "Tools": [
+          {
+            "Type": "agentcore_code_interpreter",
+            "Name": "aws_codeinterpreter_v1",
+            "Config": {
+              "AgentCoreCodeInterpreter": {
+                "CodeInterpreterArn": "${CodeInterpreterArn}"
+              }
+            }
+          }
+        ],
+        "MaxIterations": 15,
+        "TimeoutSeconds": 600
+      },
+      "Output": {
+        "bucket": "{% $states.input.bucket %}",
+        "key": "{% $states.input.key %}",
+        "analysis": "{% $states.result.Output.Message.Content[0].Text %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "BedrockAgentCore.ThrottlingException",
+            "BedrockAgentCore.InternalServerException"
+          ],
+          "IntervalSeconds": 3,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Generate Report"
+    },
+    "Generate Report": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::bedrockagentcore:invokeHarness",
+      "Arguments": {
+        "HarnessArn": "${HarnessArn}",
+        "RuntimeSessionId": "{% $states.context.Execution.Name & '-report' %}",
+        "Messages": [
+          {
+            "Role": "user",
+            "Content": [
+              {
+                "Text": "{% 'Based on the following data analysis, write a concise executive report.\n\nSource file: ' & $states.input.key & '\nAnalysis results:\n' & $states.input.analysis & '\n\nReturn EXACTLY one JSON object with keys: title (string), executive_summary (string, 2-3 sentences), key_findings (array of strings, 3-5 bullet points), recommendations (array of strings, 2-3 actionable items). No prose, no markdown.' %}"
+              }
+            ]
+          }
+        ],
+        "SystemPrompt": [
+          {
+            "Text": "You are an executive report writer. Transform data analysis into clear, actionable business reports. Respond with EXACTLY one JSON object and nothing else. Do not include thinking tags, reasoning, prose, or markdown. The first character of your response must be { and the last must be }."
+          }
+        ],
+        "MaxIterations": 5,
+        "TimeoutSeconds": 120
+      },
+      "Output": {
+        "report_id": "{% $states.context.Execution.Name %}",
+        "source_file": "{% $states.input.key %}",
+        "report": "{% $states.result.Output.Message.Content[0].Text %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "BedrockAgentCore.ThrottlingException",
+            "BedrockAgentCore.InternalServerException"
+          ],
+          "IntervalSeconds": 3,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Request Human Approval"
+    },
+    "Request Human Approval": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish.waitForTaskToken",
+      "Arguments": {
+        "TopicArn": "${ApprovalTopicArn}",
+        "Subject": "Sales Report Ready for Approval",
+        "Message": "{% 'A new sales analysis report is ready for your review.' & '\n\nReport ID: ' & $states.input.report_id & '\nSource: ' & $states.input.source_file & '\n\n--- REPORT ---\n' & $states.input.report & '\n--- END REPORT ---\n\nClick to APPROVE:\n${ApprovalUrl}/respond?action=approve&token=' & $encodeUrlComponent($states.context.Task.Token) & '\n\nClick to REJECT:\n${ApprovalUrl}/respond?action=reject&token=' & $encodeUrlComponent($states.context.Task.Token) %}"
+      },
+      "HeartbeatSeconds": 86400,
+      "Output": {
+        "report_id": "{% $states.input.report_id %}",
+        "source_file": "{% $states.input.source_file %}",
+        "report": "{% $states.input.report %}",
+        "status": "APPROVED"
+      },
+      "Catch": [
+        {
+          "ErrorEquals": ["States.TaskFailed"],
+          "Next": "Record Report",
+          "Output": {
+            "report_id": "{% $states.input.report_id %}",
+            "source_file": "{% $states.input.source_file %}",
+            "report": "{% $states.input.report %}",
+            "status": "REJECTED"
+          }
+        }
+      ],
+      "Next": "Record Report"
+    },
+    "Record Report": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:putItem",
+      "Arguments": {
+        "TableName": "${ReportsTableName}",
+        "Item": {
+          "report_id": { "S": "{% $states.input.report_id %}" },
+          "source_file": { "S": "{% $states.input.source_file %}" },
+          "report": { "S": "{% $states.input.report %}" },
+          "status": { "S": "{% $states.input.status %}" },
+          "recorded_at": { "S": "{% $now() %}" }
+        }
+      },
+      "Output": {
+        "report_id": "{% $states.input.report_id %}",
+        "status": "{% $states.input.status %}",
+        "table_name": "${ReportsTableName}"
+      },
+      "End": true
+    }
+  }
+}
