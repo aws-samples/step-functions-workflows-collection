@@ -1,0 +1,46 @@
+{
+  "workload_id": "cc-001",
+  "workload_name": "Creative Cloud Asset Storage",
+  "customer": "Enterprise Customer",
+  "account_ids": ["345678901234", "456789012345"],
+  "business_unit": "Creative Cloud",
+  "pod_owner": "Enterprise Pod Beta",
+  "pod_slack_channel": "#pod-beta-aws-features",
+  "workload_tier": "tier-0",
+  "free_text_description": "Global asset storage and rendering pipeline for Creative Cloud subscribers (30M+ users). Users upload, store, sync, and render creative assets (PSD, AI, video files) across desktop and mobile. Architecture uses S3 for primary object storage (50PB+, multi-region), Lambda for image thumbnail generation and format conversion, Step Functions for video transcoding orchestration, MediaConvert for video processing, CloudFront for global asset delivery, and RDS Aurora PostgreSQL for metadata catalog. Write-heavy workload with 500K uploads/hour peak. Uses S3 Intelligent-Tiering for cost optimization and S3 Replication for multi-region availability. Security-critical: all assets encrypted with customer-managed KMS keys.",
+  "key_services": [
+    "Amazon S3",
+    "AWS Lambda",
+    "AWS Step Functions",
+    "Amazon CloudFront",
+    "Amazon RDS",
+    "AWS Elemental MediaConvert",
+    "AWS KMS",
+    "Amazon SQS",
+    "Amazon SNS",
+    "Amazon Aurora"
+  ],
+  "architecture_context": {
+    "compute": "Lambda (10K concurrent, ARM64), Step Functions (video pipeline)",
+    "storage": "S3 (50PB+, Intelligent-Tiering), Aurora PostgreSQL (metadata)",
+    "delivery": "CloudFront (global, 100+ PoPs, custom domain)",
+    "processing": "MediaConvert (video), Lambda (images)",
+    "messaging": "SQS (processing queue), SNS (notifications)"
+  },
+  "pain_points": [
+    "S3 costs growing 20% YoY with user base growth",
+    "Lambda cold starts affect thumbnail generation latency",
+    "Aurora writer instance scaling during upload spikes",
+    "Cross-region replication costs for disaster recovery"
+  ],
+  "cost_profile": {
+    "monthly_total": 1200000,
+    "top_services_by_spend": {
+      "Amazon S3": 520000,
+      "Amazon CloudFront": 280000,
+      "AWS Lambda": 145000,
+      "Amazon RDS": 98000,
+      "AWS Elemental MediaConvert": 85000
+    }
+  }
+}

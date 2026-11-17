@@ -1,0 +1,47 @@
+{
+  "workload_id": "dxp-001",
+  "workload_name": "Digital Experience Platform",
+  "customer": "Enterprise Customer",
+  "account_ids": ["123456789012", "234567890123"],
+  "business_unit": "Digital Experience",
+  "pod_owner": "Enterprise Pod Alpha",
+  "pod_slack_channel": "#pod-alpha-aws-features",
+  "workload_tier": "tier-0",
+  "free_text_description": "Real-time customer data platform processing 2M events/sec for personalization and analytics. The platform ingests clickstream, transaction, and behavioral data from 50+ global properties. Architecture uses EKS on Graviton3 (340 nodes across 3 AZs) for event processors, DynamoDB for hot customer profile storage (500K RCU peak, single-digit ms reads), S3 for the data lake (2PB, Parquet/Iceberg format), Kinesis Data Streams for event ingestion (200 shards), and CloudFront for global content delivery. The workload is latency-critical with p99 < 50ms requirement for profile lookups and cost-sensitive at $750K/month compute spend. Currently on EKS 1.29, considering migration to Fargate for batch processing workloads. Uses KMS for encryption at rest, Private Endpoints for all data plane traffic, and AWS PrivateLink for cross-VPC service communication.",
+  "key_services": [
+    "Amazon EKS",
+    "Amazon DynamoDB",
+    "Amazon S3",
+    "Amazon Kinesis",
+    "Amazon CloudFront",
+    "AWS KMS",
+    "Amazon VPC",
+    "AWS PrivateLink",
+    "Amazon ECR",
+    "AWS Fargate"
+  ],
+  "architecture_context": {
+    "compute": "EKS on Graviton3 (m7g.4xlarge), 340 nodes, 3 AZs",
+    "storage": "S3 data lake (2PB), DynamoDB (500K RCU)",
+    "streaming": "Kinesis Data Streams (200 shards, 2M events/sec)",
+    "networking": "CloudFront (50+ PoPs), PrivateLink, Transit Gateway",
+    "security": "KMS encryption, Private Endpoints, VPC endpoints",
+    "compliance": "SOC2, GDPR, HIPAA-eligible"
+  },
+  "pain_points": [
+    "EKS upgrade cadence is operationally heavy",
+    "DynamoDB costs spike during seasonal events",
+    "Cross-region replication latency for APAC users",
+    "Graviton migration in progress but not complete"
+  ],
+  "cost_profile": {
+    "monthly_total": 750000,
+    "top_services_by_spend": {
+      "Amazon EKS": 320000,
+      "Amazon DynamoDB": 180000,
+      "Amazon S3": 95000,
+      "Amazon Kinesis": 64000,
+      "Amazon CloudFront": 52000
+    }
+  }
+}

@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.DS_Store
+/tmp/
+*.zip
+~$*
+*.mp4
+.ash/
+.aws-sam/

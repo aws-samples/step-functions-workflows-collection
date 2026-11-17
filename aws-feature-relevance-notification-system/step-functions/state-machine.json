@@ -1,0 +1,102 @@
+{
+  "Comment": "AWS Feature Relevance Scoring Pipeline - Scores announcements against workload profiles and sends Slack notifications",
+  "StartAt": "ScoreRelevance",
+  "States": {
+    "ScoreRelevance": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${RelevanceScorerFunctionArn}",
+        "Payload.$": "$"
+      },
+      "ResultSelector": {
+        "scoring.$": "$.Payload"
+      },
+      "ResultPath": "$.scoringResult",
+      "Next": "CheckRelevanceThreshold",
+      "Retry": [
+        {
+          "ErrorEquals": ["Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.TooManyRequestsException"],
+          "IntervalSeconds": 5,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "ScoringFailed",
+          "ResultPath": "$.error"
+        }
+      ]
+    },
+    "CheckRelevanceThreshold": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "And": [
+            {
+              "Variable": "$.workload.workload_tier",
+              "StringEquals": "tier-0"
+            },
+            {
+              "Variable": "$.scoringResult.scoring.relevance_score",
+              "NumericGreaterThanEquals": 25
+            }
+          ],
+          "Next": "PrepareNotification",
+          "Comment": "Tier-0 workloads have lower threshold (25)"
+        },
+        {
+          "Variable": "$.scoringResult.scoring.relevance_score",
+          "NumericGreaterThanEquals": 40,
+          "Next": "PrepareNotification",
+          "Comment": "Standard threshold (40)"
+        }
+      ],
+      "Default": "BelowThreshold"
+    },
+    "PrepareNotification": {
+      "Type": "Pass",
+      "Parameters": {
+        "announcement.$": "$.announcement",
+        "scoring.$": "$.scoringResult.scoring"
+      },
+      "Next": "SendSlackNotification"
+    },
+    "SendSlackNotification": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${SlackNotificationFunctionArn}",
+        "Payload.$": "$"
+      },
+      "ResultPath": "$.notificationResult",
+      "End": true,
+      "Retry": [
+        {
+          "ErrorEquals": ["Lambda.ServiceException", "Lambda.TooManyRequestsException"],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 2,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "BelowThreshold": {
+      "Type": "Pass",
+      "Result": {
+        "status": "skipped",
+        "reason": "Relevance score below threshold"
+      },
+      "End": true
+    },
+    "ScoringFailed": {
+      "Type": "Pass",
+      "Result": {
+        "status": "error",
+        "reason": "Scoring Lambda failed"
+      },
+      "End": true
+    }
+  }
+}
