@@ -21,9 +21,12 @@
   "introBox": {
     "headline": "How it works",
     "text": [
-      "An AWS Step Functions workflow reviews a batch of card transactions with three agents, each a call to the same Amazon Bedrock AgentCore harness through the optimized InvokeHarness integration. A fraud analyst lists suspicious transactions, and a compliance specialist explains them and ends with a verdict token: RISK_IMMEDIATE, RISK_REVIEW or RISK_NONE.",
-      "A Choice state routes on the token. Clear fraud goes to a third agent that drafts a customer notification, then to approval. A RISK_REVIEW verdict, a missing token, an incomplete reply or a failed call goes to human review, and only RISK_NONE closes the batch without a person. Approval emails from Amazon SNS link to the Amazon Cognito sign-in page, and an AWS Lambda function behind Amazon API Gateway records the decision for users in the approvers group. Every outcome is stored in Amazon DynamoDB.",
-      "This pattern deploys one AgentCore harness, one Step Functions state machine, one SNS topic, one Cognito user pool, one HTTP API, one Lambda function and one DynamoDB table."
+      "You start this AWS Step Functions workflow with an account holder and a batch of card transactions. The workflow reviews the batch with up to three AI agents. Each agent is a call to the same Amazon Bedrock AgentCore harness through the optimized InvokeHarness integration, so there is no agent code to deploy: each call sets its own system prompt, and the calls use Anthropic Claude Haiku 4.5.",
+      "The first call, with a fraud analyst system prompt, lists the suspicious transactions and the reason for each. The second call, with a compliance specialist system prompt, explains each finding with a confidence level and ends with one verdict token: RISK_IMMEDIATE, RISK_REVIEW or RISK_NONE.",
+      "A Choice state routes on that token instead of on parsed JSON, so a reply that starts with extra text still routes correctly. RISK_IMMEDIATE goes to a third call, with a fraud operations system prompt, that drafts a customer notification and case notes, and the draft goes to an approver. Only RISK_NONE closes the batch automatically. A RISK_REVIEW verdict, a missing or unclear token, an incomplete reply or a failed agent call goes to human review, so an uncertain answer never takes the automatic path. The workflow also checks each call's StopReason, because a refusal or a reply that a content filter stopped still completes successfully.",
+      "For a draft or a review, the workflow publishes an email through Amazon SNS with Approve and Reject links and waits for up to 24 hours using a task token. Each link opens the Amazon Cognito sign-in page. After sign-in, an AWS Lambda function behind Amazon API Gateway exchanges the authorization code, checks that the user is in the approvers group and returns the decision to the workflow. Only the reviewer email address that you deploy with gets a Cognito user, users can't sign themselves up, and a link stops working after a decision or after the wait ends.",
+      "Every route ends by writing the route, the decision, the approver and the explanation to Amazon DynamoDB, including the failed-agent route, where the explanation is recorded as none. Agent calls retry on throttling and the final write retries on transient errors. The harness allows no tools, and harness memory is turned off so that one customer's data can't appear in another batch.",
+      "This workflow deploys one AgentCore harness, one Step Functions state machine, one SNS topic, one Cognito user pool, one HTTP API, one Lambda function and one DynamoDB table."
     ]
   },
   "testing": {
@@ -82,7 +85,7 @@
   "authors": [
     {
       "name": "Surya Sai D",
-      "bio": "Surya Sai D is a Technical Account Manager at Amazon Web Services. His expertise lies with Serverless and Event Driven Architectures. Surya has been an active contributor to the Serverless community with his blogs and speaking sessions.",
+      "bio": "Surya Sai D is a Technical Account Manager at Amazon Web Services whose expertise lies with Serverless and Event Driven Architectures.",
       "linkedin": "surya-sai-d-64920416a"
     }
   ]
