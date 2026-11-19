@@ -23,9 +23,12 @@
   "introBox": {
     "headline": "How it works",
     "text": [
-      "An upload of a CSV file to Amazon S3 starts an AWS Step Functions workflow through Amazon EventBridge. The workflow calls one Amazon Bedrock AgentCore harness twice with the optimized InvokeHarness integration. The first call acts as a data analyst: its Python code runs in a custom AgentCore Code Interpreter that can read the file and write the figures back to S3. The workflow reads and checks that file itself, then the second call writes a short report.",
-      "The workflow emails the report through Amazon SNS with Approve and Reject links and waits for up to 24 hours. Each link opens the Amazon Cognito sign-in page, and an AWS Lambda function behind Amazon API Gateway records the decision only for users in the approvers group. The decision is stored in Amazon DynamoDB.",
-      "This pattern deploys one AgentCore harness, one custom Code Interpreter, one Step Functions state machine, one S3 bucket, one EventBridge rule, one SNS topic, one Cognito user pool, one HTTP API, one Lambda function and one DynamoDB table."
+      "An upload of a CSV file under input/ in an Amazon S3 bucket starts an AWS Step Functions workflow through Amazon EventBridge. The workflow runs two AI agents in sequence. Both are calls to the same Amazon Bedrock AgentCore harness through the optimized InvokeHarness integration, so there is no agent code to deploy: each call sets its own system prompt, model and allowed tools.",
+      "The first call acts as a data analyst. The agent writes Python that runs in a custom AgentCore Code Interpreter. The code reads the CSV, computes revenue and return rates by region, and writes the figures to results/<execution name>.json. The custom Code Interpreter uses a role that can read input/ and write only under results/, and AllowedTools limits the harness to that Code Interpreter, so the agent can't use built-in tools such as shell or web_fetch.",
+      "The workflow doesn't trust the agent's reply for the numbers. It reads the figures file itself with an S3 GetObject task, and a Choice state checks that the file holds the expected figures. If the file is missing, isn't valid JSON or lacks the figures, the workflow fails instead of asking for approval. Only then does the second harness call, with a report writer system prompt and no tools, turn the figures into a short executive report. A second Choice state checks that the reply ended normally and holds text.",
+      "The workflow then publishes the report to an Amazon SNS topic with Approve and Reject links and waits for up to 24 hours using a task token. Each link opens the Amazon Cognito sign-in page. After sign-in, Cognito sends the approver to an Amazon API Gateway endpoint, and an AWS Lambda function exchanges the authorization code, checks that the user is in the approvers group and returns the decision to the workflow. Only the approver email address that you deploy with gets a Cognito user, users can't sign themselves up, and a link stops working after a decision or after the wait ends.",
+      "Finally, the workflow writes the report, the figures, the decision and the approver's email address to Amazon DynamoDB. Agent and write tasks retry on throttling and transient errors. Harness memory is turned off, because managed memory is shared by every session of the same actor and Step Functions calls all use the same actor, so data from one file could otherwise appear in another run.",
+      "This workflow deploys one AgentCore harness, one custom Code Interpreter, one Step Functions state machine, one S3 bucket, one EventBridge rule, one SNS topic, one Cognito user pool, one HTTP API, one Lambda function and one DynamoDB table."
     ]
   },
   "testing": {
@@ -88,7 +91,7 @@
   "authors": [
     {
       "name": "Surya Sai D",
-      "bio": "Surya Sai D is a Technical Account Manager at Amazon Web Services. His expertise lies with Serverless and Event Driven Architectures. Surya has been an active contributor to the Serverless community with his blogs and speaking sessions.",
+      "bio": "Surya Sai D is a Technical Account Manager at Amazon Web Services whose expertise lies with Serverless and Event Driven Architectures.",
       "linkedin": "surya-sai-d-64920416a"
     }
   ]
