@@ -3,30 +3,28 @@
   "description": "Route a batch of transactions on the verdict of Amazon Bedrock AgentCore harness agents. Risky batches wait for a reviewer who signs in with Amazon Cognito.",
   "language": "Python",
   "simplicity": "2 - Pattern",
-  "usecase": "",
+  "usecase": "Agentic AI",
   "type": "Standard",
   "diagram": "/resources/statemachine.png",
   "videoId": "",
   "level": "300",
-  "framework": "SAM",
+  "framework": "AWS SAM",
   "services": [
-    "stepfunctions",
+    "sfn",
+    "bedrock-agentcore",
     "bedrock",
     "sns",
     "cognito",
-    "apigateway",
-    "lambda",
+    "apigw",
+    "lambda-event-functions",
     "dynamodb"
   ],
   "introBox": {
     "headline": "How it works",
     "text": [
-      "You start this AWS Step Functions workflow with an account holder and a batch of card transactions. The workflow reviews the batch with up to three AI agents. Each agent is a call to the same Amazon Bedrock AgentCore harness through the optimized InvokeHarness integration, so there is no agent code to deploy: each call sets its own system prompt, and the calls use Anthropic Claude Haiku 4.5.",
-      "The first call, with a fraud analyst system prompt, lists the suspicious transactions and the reason for each. The second call, with a compliance specialist system prompt, explains each finding with a confidence level and ends with one verdict token: RISK_IMMEDIATE, RISK_REVIEW or RISK_NONE.",
-      "A Choice state routes on that token instead of on parsed JSON, so a reply that starts with extra text still routes correctly. RISK_IMMEDIATE goes to a third call, with a fraud operations system prompt, that drafts a customer notification and case notes, and the draft goes to an approver. Only RISK_NONE closes the batch automatically. A RISK_REVIEW verdict, a missing or unclear token, an incomplete reply or a failed agent call goes to human review, so an uncertain answer never takes the automatic path. The workflow also checks each call's StopReason, because a refusal or a reply that a content filter stopped still completes successfully.",
-      "For a draft or a review, the workflow publishes an email through Amazon SNS with Approve and Reject links and waits for up to 24 hours using a task token. Each link opens the Amazon Cognito sign-in page. After sign-in, an AWS Lambda function behind Amazon API Gateway exchanges the authorization code, checks that the user is in the approvers group and returns the decision to the workflow. Only the reviewer email address that you deploy with gets a Cognito user, users can't sign themselves up, and a link stops working after a decision or after the wait ends.",
-      "Every route ends by writing the route, the decision, the approver and the explanation to Amazon DynamoDB, including the failed-agent route, where the explanation is recorded as none. Agent calls retry on throttling and the final write retries on transient errors. The harness allows no tools, and harness memory is turned off so that one customer's data can't appear in another batch.",
-      "This workflow deploys one AgentCore harness, one Step Functions state machine, one SNS topic, one Cognito user pool, one HTTP API, one Lambda function and one DynamoDB table."
+      "You start this AWS Step Functions workflow with an account holder and a batch of card transactions. Up to three calls to one Amazon Bedrock AgentCore harness review the batch through the optimized InvokeHarness integration, so there is no agent code to deploy.",
+      "A fraud analyst call lists the suspicious transactions. A compliance call explains them and ends with a verdict token, which a Choice state routes on. RISK_NONE closes the batch automatically. RISK_IMMEDIATE goes to a third call that drafts a customer notification and case notes for approval. RISK_REVIEW, an unclear token or a failed call goes to human review.",
+      "Requests arrive by Amazon SNS email with Approve and Reject links, and the workflow waits up to 24 hours. The reviewer signs in with Amazon Cognito, and an AWS Lambda function behind Amazon API Gateway returns the decision. The workflow records each outcome in Amazon DynamoDB."
     ]
   },
   "testing": {
