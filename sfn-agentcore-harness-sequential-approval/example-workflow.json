@@ -3,32 +3,30 @@
   "description": "Run two Amazon Bedrock AgentCore harness agents in sequence on a CSV file in Amazon S3, then wait for an approver who signs in with Amazon Cognito.",
   "language": "Python",
   "simplicity": "2 - Pattern",
-  "usecase": "",
+  "usecase": "Agentic AI",
   "type": "Standard",
   "diagram": "/resources/statemachine.png",
   "videoId": "",
   "level": "300",
-  "framework": "SAM",
+  "framework": "AWS SAM",
   "services": [
-    "stepfunctions",
+    "sfn",
+    "bedrock-agentcore",
     "bedrock",
     "s3",
     "eventbridge",
     "sns",
     "cognito",
-    "apigateway",
-    "lambda",
+    "apigw",
+    "lambda-event-functions",
     "dynamodb"
   ],
   "introBox": {
     "headline": "How it works",
     "text": [
-      "An upload of a CSV file under input/ in an Amazon S3 bucket starts an AWS Step Functions workflow through Amazon EventBridge. The workflow runs two AI agents in sequence. Both are calls to the same Amazon Bedrock AgentCore harness through the optimized InvokeHarness integration, so there is no agent code to deploy: each call sets its own system prompt, model and allowed tools.",
-      "The first call acts as a data analyst. The agent writes Python that runs in a custom AgentCore Code Interpreter. The code reads the CSV, computes revenue and return rates by region, and writes the figures to results/<execution name>.json. The custom Code Interpreter uses a role that can read input/ and write only under results/, and AllowedTools limits the harness to that Code Interpreter, so the agent can't use built-in tools such as shell or web_fetch.",
-      "The workflow doesn't trust the agent's reply for the numbers. It reads the figures file itself with an S3 GetObject task, and a Choice state checks that the file holds the expected figures. If the file is missing, isn't valid JSON or lacks the figures, the workflow fails instead of asking for approval. Only then does the second harness call, with a report writer system prompt and no tools, turn the figures into a short executive report. A second Choice state checks that the reply ended normally and holds text.",
-      "The workflow then publishes the report to an Amazon SNS topic with Approve and Reject links and waits for up to 24 hours using a task token. Each link opens the Amazon Cognito sign-in page. After sign-in, Cognito sends the approver to an Amazon API Gateway endpoint, and an AWS Lambda function exchanges the authorization code, checks that the user is in the approvers group and returns the decision to the workflow. Only the approver email address that you deploy with gets a Cognito user, users can't sign themselves up, and a link stops working after a decision or after the wait ends.",
-      "Finally, the workflow writes the report, the figures, the decision and the approver's email address to Amazon DynamoDB. Agent and write tasks retry on throttling and transient errors. Harness memory is turned off, because managed memory is shared by every session of the same actor and Step Functions calls all use the same actor, so data from one file could otherwise appear in another run.",
-      "This workflow deploys one AgentCore harness, one custom Code Interpreter, one Step Functions state machine, one S3 bucket, one EventBridge rule, one SNS topic, one Cognito user pool, one HTTP API, one Lambda function and one DynamoDB table."
+      "Uploading a CSV file under input/ in an Amazon S3 bucket starts this AWS Step Functions workflow through Amazon EventBridge. The workflow calls one Amazon Bedrock AgentCore harness twice in sequence through the optimized InvokeHarness integration, so there is no agent code to deploy.",
+      "The first call writes Python that runs in a custom AgentCore Code Interpreter, works out revenue and return rates by region, and saves the figures as JSON under results/. The workflow reads that file with an S3 GetObject task and checks the figures in a Choice state. The second call turns them into a short executive report.",
+      "The workflow emails the report through Amazon SNS with Approve and Reject links and waits up to 24 hours. The approver signs in with Amazon Cognito, and an AWS Lambda function behind Amazon API Gateway returns the decision, which goes to Amazon DynamoDB with the report. A failed check stops the workflow before approval."
     ]
   },
   "testing": {
