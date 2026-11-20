@@ -1,0 +1,90 @@
+{
+  "title": "AWS Step Functions conditional routing on an Amazon Bedrock AgentCore harness agent verdict",
+  "description": "Route a batch of transactions on the verdict of Amazon Bedrock AgentCore harness agents. Risky batches wait for a reviewer who signs in with Amazon Cognito.",
+  "language": "Python",
+  "simplicity": "2 - Pattern",
+  "usecase": "Agentic AI",
+  "type": "Standard",
+  "diagram": "/resources/statemachine.png",
+  "videoId": "",
+  "level": "300",
+  "framework": "AWS SAM",
+  "services": [
+    "sfn",
+    "bedrock-agentcore",
+    "bedrock",
+    "sns",
+    "cognito",
+    "apigw",
+    "lambda-event-functions",
+    "dynamodb"
+  ],
+  "introBox": {
+    "headline": "How it works",
+    "text": [
+      "You start this AWS Step Functions workflow with an account holder and a batch of card transactions. Up to three calls to one Amazon Bedrock AgentCore harness review the batch through the optimized InvokeHarness integration, so there is no agent code to deploy.",
+      "A fraud analyst call lists the suspicious transactions. A compliance call explains them and ends with a verdict token, which a Choice state routes on. RISK_NONE closes the batch automatically. RISK_IMMEDIATE goes to a third call that drafts a customer notification and case notes for approval. RISK_REVIEW, an unclear token or a failed call goes to human review.",
+      "Requests arrive by Amazon SNS email with Approve and Reject links, and the workflow waits up to 24 hours. The reviewer signs in with Amazon Cognito, and an AWS Lambda function behind Amazon API Gateway returns the decision. The workflow records each outcome in Amazon DynamoDB."
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": [
+      "See the GitHub repo for detailed testing instructions."
+    ]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": [
+      "Stop running executions, then delete the stack: <code>sam delete</code>."
+    ]
+  },
+  "deploy": {
+    "text": [
+      "sam build",
+      "sam deploy --guided"
+    ]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/sfn-agentcore-harness-conditional-routing/",
+      "templateDir": "sfn-agentcore-harness-conditional-routing",
+      "templateFile": "template.yaml",
+      "ASL": "statemachine/statemachine.asl.json"
+    },
+    "payloads": [
+      {
+        "headline": "",
+        "payloadURL": ""
+      }
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "Invoke Amazon Bedrock AgentCore harness with Step Functions",
+        "link": "https://docs.aws.amazon.com/step-functions/latest/dg/connect-bedrockagentcore.html"
+      },
+      {
+        "text": "Amazon Bedrock AgentCore harness",
+        "link": "https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/harness.html"
+      },
+      {
+        "text": "Harness tools and allowedTools",
+        "link": "https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/harness-tools.html"
+      },
+      {
+        "text": "Choice workflow state",
+        "link": "https://docs.aws.amazon.com/step-functions/latest/dg/state-choice.html"
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Surya Sai D",
+      "bio": "Surya Sai D is a Technical Account Manager at Amazon Web Services whose expertise lies with Serverless and Event Driven Architectures.",
+      "linkedin": "surya-sai-d-64920416a"
+    }
+  ]
+}
