@@ -1,0 +1,96 @@
+{
+  "title": "AWS Step Functions sequential agents on Amazon Bedrock AgentCore harness with human approval",
+  "description": "Run two Amazon Bedrock AgentCore harness agents in sequence on a CSV file in Amazon S3, then wait for an approver who signs in with Amazon Cognito.",
+  "language": "Python",
+  "simplicity": "2 - Pattern",
+  "usecase": "Agentic AI",
+  "type": "Standard",
+  "diagram": "/resources/statemachine.png",
+  "videoId": "",
+  "level": "300",
+  "framework": "AWS SAM",
+  "services": [
+    "sfn",
+    "bedrock-agentcore",
+    "bedrock",
+    "s3",
+    "eventbridge",
+    "sns",
+    "cognito",
+    "apigw",
+    "lambda-event-functions",
+    "dynamodb"
+  ],
+  "introBox": {
+    "headline": "How it works",
+    "text": [
+      "Uploading a CSV file under input/ in an Amazon S3 bucket starts this AWS Step Functions workflow through Amazon EventBridge. The workflow calls one Amazon Bedrock AgentCore harness twice in sequence through the optimized InvokeHarness integration, so there is no agent code to deploy.",
+      "The first call writes Python that runs in a custom AgentCore Code Interpreter, works out revenue and return rates by region, and saves the figures as JSON under results/. The workflow reads that file with an S3 GetObject task and checks the figures in a Choice state. The second call turns them into a short executive report.",
+      "The workflow emails the report through Amazon SNS with Approve and Reject links and waits up to 24 hours. The approver signs in with Amazon Cognito, and an AWS Lambda function behind Amazon API Gateway returns the decision, which goes to Amazon DynamoDB with the report. A failed check stops the workflow before approval."
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": [
+      "See the GitHub repo for detailed testing instructions."
+    ]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": [
+      "Stop running executions, empty the bucket and stop any Code Interpreter session, then delete the stack: <code>sam delete</code>."
+    ]
+  },
+  "deploy": {
+    "text": [
+      "sam build",
+      "sam deploy --guided"
+    ]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/sfn-agentcore-harness-sequential-approval/",
+      "templateDir": "sfn-agentcore-harness-sequential-approval",
+      "templateFile": "template.yaml",
+      "ASL": "statemachine/statemachine.asl.json"
+    },
+    "payloads": [
+      {
+        "headline": "",
+        "payloadURL": ""
+      }
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "Invoke Amazon Bedrock AgentCore harness with Step Functions",
+        "link": "https://docs.aws.amazon.com/step-functions/latest/dg/connect-bedrockagentcore.html"
+      },
+      {
+        "text": "Amazon Bedrock AgentCore harness",
+        "link": "https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/harness.html"
+      },
+      {
+        "text": "Harness tools and allowedTools",
+        "link": "https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/harness-tools.html"
+      },
+      {
+        "text": "Wait for a callback with a task token",
+        "link": "https://docs.aws.amazon.com/step-functions/latest/dg/connect-to-resource.html#connect-wait-token"
+      },
+      {
+        "text": "AgentCore Code Interpreter",
+        "link": "https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/code-interpreter-tool.html"
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Surya Sai D",
+      "bio": "Surya Sai D is a Technical Account Manager at Amazon Web Services whose expertise lies with Serverless and Event Driven Architectures.",
+      "linkedin": "surya-sai-d-64920416a"
+    }
+  ]
+}
