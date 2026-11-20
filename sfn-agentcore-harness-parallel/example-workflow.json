@@ -3,30 +3,28 @@
   "description": "Fan out three Amazon Bedrock AgentCore harness agents in parallel on a document uploaded to Amazon S3, and publish the merged report only if all three finish.",
   "language": "Python",
   "simplicity": "2 - Pattern",
-  "usecase": "",
+  "usecase": "Agentic AI",
   "type": "Standard",
   "diagram": "/resources/statemachine.png",
   "videoId": "",
   "level": "300",
-  "framework": "SAM",
+  "framework": "AWS SAM",
   "services": [
-    "stepfunctions",
+    "sfn",
+    "bedrock-agentcore",
     "bedrock",
     "s3",
     "eventbridge",
-    "lambda",
+    "lambda-event-functions",
     "dynamodb",
     "sns"
   ],
   "introBox": {
     "headline": "How it works",
     "text": [
-      "An upload of a text document under docs/ in an Amazon S3 bucket starts an AWS Step Functions workflow through Amazon EventBridge. An AWS Lambda function reads the document and returns its text. It rejects files larger than 200,000 bytes, because the text travels in the state payload, which Step Functions limits to 256 KiB. For larger documents, keep the text in S3 and pass a reference instead.",
-      "A Parallel state then calls the same Amazon Bedrock AgentCore harness three times at once through the optimized InvokeHarness integration, so there is no agent code to deploy. Each branch sets its own system prompt: a summarizer, a risk analyst and an action-item extractor. Each answers from the text in the message and ends its section with SECTION_COMPLETE. The harness default model, Amazon Nova Lite, answers all three. Each call uses $uuid() for its session ID, because a session ID must be 33 to 100 characters.",
-      "The harness allows no tools, and each prompt says that the document is in the message. Without AllowedTools, a harness also offers built-in tools such as shell and web_fetch, and an agent might look for a file instead of reading the message. Harness memory is turned off, because managed memory is shared by every session of the same actor and Step Functions calls all use the same actor, so one document's content could otherwise appear in another report.",
-      "After the Parallel state, a Choice state continues only if all three calls ended normally and each answer holds the completion marker. If any branch fails or doesn't finish its section, the workflow stops at a Fail state and publishes nothing, so a partial report never goes out. A second Lambda function removes the markers and any thinking blocks and merges the three sections into one report.",
-      "The workflow stores the report in Amazon DynamoDB and emails it through Amazon SNS. The three agent calls retry on throttling, and the DynamoDB and SNS tasks retry on transient errors, so a short service error doesn't lose a report after all three model calls have finished.",
-      "This workflow deploys one AgentCore harness, one Step Functions state machine, one S3 bucket, one EventBridge rule, two Lambda functions, one DynamoDB table and one SNS topic."
+      "Uploading a text document under docs/ in an Amazon S3 bucket starts this AWS Step Functions workflow through Amazon EventBridge. An AWS Lambda function reads the document and passes its text on.",
+      "A Parallel state then calls one Amazon Bedrock AgentCore harness three times at once through the optimized InvokeHarness integration, so there is no agent code to deploy. Each branch has its own system prompt: a summarizer, a risk analyst and an action-item extractor. Amazon Nova Lite answers all three.",
+      "A Choice state continues only if all three branches finished their sections. If one didn't, the workflow stops and publishes nothing, so a partial report never goes out. A second Lambda function merges the sections into one report, which the workflow stores in Amazon DynamoDB and emails through Amazon SNS."
     ]
   },
   "testing": {
