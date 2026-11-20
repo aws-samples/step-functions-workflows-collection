@@ -1,0 +1,90 @@
+{
+  "title": "AWS Step Functions parallel agents on one Amazon Bedrock AgentCore harness",
+  "description": "Fan out three Amazon Bedrock AgentCore harness agents in parallel on a document uploaded to Amazon S3, and publish the merged report only if all three finish.",
+  "language": "Python",
+  "simplicity": "2 - Pattern",
+  "usecase": "Agentic AI",
+  "type": "Standard",
+  "diagram": "/resources/statemachine.png",
+  "videoId": "",
+  "level": "300",
+  "framework": "AWS SAM",
+  "services": [
+    "sfn",
+    "bedrock-agentcore",
+    "bedrock",
+    "s3",
+    "eventbridge",
+    "lambda-event-functions",
+    "dynamodb",
+    "sns"
+  ],
+  "introBox": {
+    "headline": "How it works",
+    "text": [
+      "Uploading a text document under docs/ in an Amazon S3 bucket starts this AWS Step Functions workflow through Amazon EventBridge. An AWS Lambda function reads the document and passes its text on.",
+      "A Parallel state then calls one Amazon Bedrock AgentCore harness three times at once through the optimized InvokeHarness integration, so there is no agent code to deploy. Each branch has its own system prompt: a summarizer, a risk analyst and an action-item extractor. Amazon Nova Lite answers all three.",
+      "A Choice state continues only if all three branches finished their sections. If one didn't, the workflow stops and publishes nothing, so a partial report never goes out. A second Lambda function merges the sections into one report, which the workflow stores in Amazon DynamoDB and emails through Amazon SNS."
+    ]
+  },
+  "testing": {
+    "headline": "Testing",
+    "text": [
+      "See the GitHub repo for detailed testing instructions."
+    ]
+  },
+  "cleanup": {
+    "headline": "Cleanup",
+    "text": [
+      "Empty the bucket, then delete the stack: <code>sam delete</code>."
+    ]
+  },
+  "deploy": {
+    "text": [
+      "sam build",
+      "sam deploy --guided"
+    ]
+  },
+  "gitHub": {
+    "template": {
+      "repoURL": "https://github.com/aws-samples/step-functions-workflows-collection/tree/main/sfn-agentcore-harness-parallel/",
+      "templateDir": "sfn-agentcore-harness-parallel",
+      "templateFile": "template.yaml",
+      "ASL": "statemachine/statemachine.asl.json"
+    },
+    "payloads": [
+      {
+        "headline": "",
+        "payloadURL": ""
+      }
+    ]
+  },
+  "resources": {
+    "headline": "Additional resources",
+    "bullets": [
+      {
+        "text": "Invoke Amazon Bedrock AgentCore harness with Step Functions",
+        "link": "https://docs.aws.amazon.com/step-functions/latest/dg/connect-bedrockagentcore.html"
+      },
+      {
+        "text": "Amazon Bedrock AgentCore harness",
+        "link": "https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/harness.html"
+      },
+      {
+        "text": "Harness tools and allowedTools",
+        "link": "https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/harness-tools.html"
+      },
+      {
+        "text": "Parallel workflow state",
+        "link": "https://docs.aws.amazon.com/step-functions/latest/dg/state-parallel.html"
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Surya Sai D",
+      "bio": "Surya Sai D is a Technical Account Manager at Amazon Web Services whose expertise lies with Serverless and Event Driven Architectures.",
+      "linkedin": "surya-sai-d-64920416a"
+    }
+  ]
+}
